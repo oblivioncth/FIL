@@ -1,62 +1,84 @@
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
 #include <QSet>
 #include <QFile>
 #include <QtXml>
 #include <assert.h>
 #include <QFileInfo>
+#include <QPushButton>
+#include <QLineEdit>
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
+#include "version.h"
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+
+//===============================================================================================================
+// MAIN WINDOW
+//===============================================================================================================
+
+//-Constructor---------------------------------------------------------------------------------------------------
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     // Setup
     ui->setupUi(this);
+    QApplication::setApplicationName(VER_PRODUCTNAME_STR);
+    setWindowTitle(VER_PRODUCTNAME_STR);
 
-    QSet<QString> gameIDs;
-    QSet<QString> additionalAppIDs;
 
-    int additionalAppsStartLine = -1;
+}
 
-    const QString fullXMLPath = QFileInfo("..\\OFILb\\Authorware.xml").canonicalFilePath();
+//-Destructor----------------------------------------------------------------------------------------------------
+MainWindow::~MainWindow() { delete ui; }
 
-    QFile platformXML(fullXMLPath);
-    if(platformXML.open(QFile::ReadOnly | QFile::Text))
+//-Instance Functions--------------------------------------------------------------------------------------------
+//Private:
+void MainWindow::initializeForms()
+{
+
+}
+
+//-Slots---------------------------------------------------------------------------------------------------------
+//Private:
+void MainWindow::all_on_pushButton_clicked()
+{
+    // Get the object that called this slot
+    QPushButton *senderPushButton = qobject_cast<QPushButton *>(sender());
+
+    // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
+    if(senderPushButton == nullptr)
+        assert("Pointer conversion to push button failed");
+
+    // Determine sender and take corresponding action
+    if(senderPushButton == ui->pushButton_launchBoxBrowse)
     {
-        QXmlStreamReader xmlReader;
-        xmlReader.setDevice(&platformXML);
 
-        if (xmlReader.readNextStartElement())
-        {
-            if (xmlReader.name() == "LaunchBox")
-            {
-                // Loop over entire XML document
-                while(xmlReader.readNextStartElement())
-                {
-                    if(xmlReader.name() == "AdditionalApplication" && additionalAppsStartLine == -1)
-                        additionalAppsStartLine = xmlReader.lineNumber();
-                    else if(xmlReader.name() == "ID")
-                        gameIDs.insert(xmlReader.readElementText());
-                    else if(xmlReader.name() == "Id")
-                        additionalAppIDs.insert(xmlReader.readElementText());
-                    else
-                        xmlReader.skipCurrentElement();
-                }
-            }
-            else
-                assert("nope");
-        }
-        else
-            assert("nope");
+    }
+    else if(senderPushButton == ui->pushButton_flashpointBrowse)
+    {
+
     }
     else
-        assert("no open");
-
-    platformXML.close();
+        assert("Unhandled use of all_on_pushButton_clicked() slot");
 }
 
-MainWindow::~MainWindow()
+void MainWindow::all_on_linedEdit_textEdited()
 {
-    delete ui;
+    // Get the object that called this slot
+    QLineEdit *senderLineEdit = qobject_cast<QLineEdit *>(sender());
+
+    // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
+    if(senderLineEdit == nullptr)
+        assert("Pointer conversion to line edit failed");
+
+    // Determine sender and take corresponding action
+    if(senderLineEdit == ui->lineEdit_launchBoxPath)
+    {
+
+    }
+    else if(senderLineEdit == ui->lineEdit_flashpointPath)
+    {
+
+    }
+    else
+        assert("Unhandled use of all_on_linedEdit_textEdited() slot");
 }
+
 

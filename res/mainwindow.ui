@@ -13,10 +13,186 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
-  <widget class="QWidget" name="centralwidget"/>
-  <widget class="QMenuBar" name="menubar"/>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QGroupBox" name="groupBox_appPathInputs">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>381</width>
+      <height>141</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Application Paths</string>
+    </property>
+    <widget class="QLabel" name="label_launchBoxPath">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>30</y>
+       <width>111</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>LaunchBox Location:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_flashPointPath">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>80</y>
+       <width>111</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Flashpoint Location:</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="lineEdit_launchBoxPath">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>50</y>
+       <width>301</width>
+       <height>22</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="lineEdit_flashpointPath">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>100</y>
+       <width>301</width>
+       <height>22</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_launchBoxBrowse">
+     <property name="geometry">
+      <rect>
+       <x>320</x>
+       <y>50</y>
+       <width>51</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>...</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_flashpointBrowse">
+     <property name="geometry">
+      <rect>
+       <x>320</x>
+       <y>100</y>
+       <width>51</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>...</string>
+     </property>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionExit"/>
+   </widget>
+   <addaction name="menuFile"/>
+  </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>pushButton_flashpointBrowse</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>all_on_pushButton_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>355</x>
+     <y>145</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_launchBoxBrowse</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>all_on_pushButton_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>355</x>
+     <y>95</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEdit_launchBoxPath</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>all_on_lineEdit_textEdited()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>170</x>
+     <y>94</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEdit_flashpointPath</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>all_on_lineEdit_textEdited()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>170</x>
+     <y>144</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>all_on_pushButton_clicked()</slot>
+  <slot>all_on_lineEdit_textEdited()</slot>
+ </slots>
 </ui>
