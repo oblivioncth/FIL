@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>res/icon/Invalid_Install.png</file>
+        <file>res/icon/Mismatch_Install.png</file>
+        <file>res/icon/No_Install.png</file>
+        <file>res/icon/Valid_Install.png</file>
+    </qresource>
+</RCC>

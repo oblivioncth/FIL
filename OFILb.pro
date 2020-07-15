@@ -1,8 +1,8 @@
-QT       += core gui xml
+QT       += core gui xml sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++11
+CONFIG += c++17
 
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
@@ -16,14 +16,21 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    src/flashpointinstall.cpp \
+    src/importprocessdialog.cpp \
+    src/launchboxinstall.cpp \
     src/main.cpp \
     src/mainwindow.cpp
 
 HEADERS += \
+    src/flashpointinstall.h \
+    src/importprocessdialog.h \
+    src/launchboxinstall.h \
     src/mainwindow.h \
     src/version.h
 
 FORMS += \
+    res/importprocessdialog.ui \
     res/mainwindow.ui
 
 # Default rules for deployment.
@@ -32,3 +39,17 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RC_FILE = resources.rc
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/lib/ -lQx_static64_0-0-1-2_Qt_5-15-0
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/lib/ -lQx_static64_0-0-1-2_Qt_5-15-0d
+
+INCLUDEPATH += $$PWD/include
+DEPENDPATH += $$PWD/include
+
+win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/libQx_static64_0-0-1-2_Qt_5-15-0.a
+else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/libQx_static64_0-0-1-2_Qt_5-15-0d.a
+else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/Qx_static64_0-0-1-2_Qt_5-15-0.lib
+else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/Qx_static64_0-0-1-2_Qt_5-15-0d.lib
+
+RESOURCES += \
+    resources.qrc
