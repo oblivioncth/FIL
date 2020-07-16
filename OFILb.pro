@@ -17,20 +17,17 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     src/flashpointinstall.cpp \
-    src/importprocessdialog.cpp \
     src/launchboxinstall.cpp \
     src/main.cpp \
     src/mainwindow.cpp
 
 HEADERS += \
     src/flashpointinstall.h \
-    src/importprocessdialog.h \
     src/launchboxinstall.h \
     src/mainwindow.h \
     src/version.h
 
 FORMS += \
-    res/importprocessdialog.ui \
     res/mainwindow.ui
 
 # Default rules for deployment.

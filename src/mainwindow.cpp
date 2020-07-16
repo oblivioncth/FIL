@@ -377,6 +377,13 @@ void MainWindow::importProcess()
     QStringList platformsToImport = getSelectedPlatforms();
     QStringList playlistsToImport = getSelectedPlaylists();
     UpdateMode updateMode = getSelectedUpdateMode();
+
+    // Initial Query Lists
+    QList<QPair<QString, QSqlQuery>> gameQueries;
+    QList<QPair<QStirng,
+    QList<QPair<QString, QSqlQuery>> playlistQueries;
+    QList
+
 }
 
 //-Slots---------------------------------------------------------------------------------------------------------
