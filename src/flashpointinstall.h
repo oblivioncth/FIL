@@ -49,6 +49,7 @@ public:
         static inline const QString COL_NAME = "name";
         static inline const QString COL_WAIT_EXIT = "waitForExit";
         static inline const QString COL_PARENT_ID = "parentGameId";
+        static inline const QString ENTRY_EXTRAS = ":extras:";
 
         static inline const QSet COLUMN_SET = {COL_ID, COL_APP_PATH, COL_AUTORUN, COL_LAUNCH_COMMNAND, COL_NAME, COL_WAIT_EXIT, COL_PARENT_ID};
     };
@@ -61,7 +62,7 @@ public:
         static inline const QString COL_TITLE = "title";
         static inline const QString COL_DESCRIPTION = "description";
 
-        static inline const QSet COLUMN_SET = {COL_ID, COL_TITLE, COL_DESCRIPTION };
+        static inline const QSet COLUMN_SET = {COL_ID, COL_TITLE, COL_DESCRIPTION};
     };
 
     class DBTable_Playlist_Game
@@ -124,10 +125,15 @@ public:
     bool matchesTargetVersion();
     QSqlDatabase openDatabaseConnection();
     void closeDatabaseConnection();
-    QSqlError checkDatabaseForRequiredTables(QSet<QString>& missingTablesReturnBuffer);
-    QSqlError checkDatabaseForRequiredColumns(QSet<QString>& missingColumsReturnBuffer);
+    QSqlError checkDatabaseForRequiredTables(QSet<QString>& missingTablesBuffer);
+    QSqlError checkDatabaseForRequiredColumns(QSet<QString>& missingColumsBuffer);
     QSqlError populatePlatforms();
     QSqlError populatePlaylists();
+
+    QSqlError initialGameQuery(QList<std::tuple<QString, QSqlQuery, int>>& platform_query_sizeListBuffer, QStringList selectedPlatforms);
+    QSqlError initialAdditionalAppQuery(std::pair<QSqlQuery, int>& query_sizeBuffer);
+    QSqlError initialPlaylistQuery(std::pair<QSqlQuery, int>& query_sizeBuffer, QStringList selectedPlaylists);
+    QSqlError initialPlaylistGameQuery(QList<std::tuple<QString, QSqlQuery, int>>& playlist_query_sizeListBuffer, QList<std::pair<QString, QString>> playlistNamesAndIDs);
 
     QStringList getPlatformList();
     QStringList getPlaylistList();

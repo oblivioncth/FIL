@@ -37,8 +37,9 @@ private:
     // Messages - LB XML read
     static inline const QString MSG_LB_XML_UNEXPECTED_ERROR = "An unexpected error occured while reading Launchbox XMLs:";
 
-    // Messages - Import Operation
-    static inline const QString MSG_FP_DB_INITIAL_QUERY = "Making initial Flashpoint database queries...";
+    // ProgressDialog - Import Operation
+    static inline const QString PD_LABEL_FP_DB_INITIAL_QUERY = "Making initial Flashpoint database queries...";
+    static inline const QString PD_BUTTON_CANCEL = "Cancel";
 
     // Dialog captions
     static inline const QString CAPTION_LAUNCHBOX_BROWSE = "Select the root directory of your LaunchBox install...";

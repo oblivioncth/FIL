@@ -7,10 +7,10 @@
 #include <QPushButton>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QProgressDialog>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "version.h"
-#include <QDebug>
 
 
 //===============================================================================================================
@@ -39,7 +39,7 @@ void MainWindow::initializeForms()
 
     // TODO: THIS IS FOR DEBUG PURPOSES. REMOVE
     checkLaunchBoxInput("D:/LaunchBox");
-    checkFlashpointInput("E:/Downloads/qBittorrent/Flashpoint 8.1 Ultimate/Flashpoint");
+    checkFlashpointInput("C:/Users/Player/Desktop/FP");
 }
 
 void MainWindow::setInputStage(InputStage stage)
@@ -378,12 +378,67 @@ void MainWindow::importProcess()
     QStringList playlistsToImport = getSelectedPlaylists();
     UpdateMode updateMode = getSelectedUpdateMode();
 
-    // Initial Query Lists
-    QList<QPair<QString, QSqlQuery>> gameQueries;
-    QList<QPair<QStirng,
-    QList<QPair<QString, QSqlQuery>> playlistQueries;
-    QList
+    // Process tools
+    QSqlError queryError;
+    int totalSteps;
 
+    // Lookup caches
+    QSet<QString> targetGameIDs;
+
+    // Initial query buffers
+    QList<std::tuple<QString, QSqlQuery, int>> gameQueries;
+    std::pair<QSqlQuery, int> additionalAppQuery;
+    std::pair<QSqlQuery, int> playlistQueries;
+    QList<std::tuple<QString, QSqlQuery, int>> playlistGameQueries;
+
+    // Create progress dialog, set initial busy state and show
+    QProgressDialog importProgressDialog(PD_LABEL_FP_DB_INITIAL_QUERY, PD_BUTTON_CANCEL, 0, 0);
+    importProgressDialog.setWindowModality(Qt::WindowModal);
+    importProgressDialog.show();
+
+    // Make initial game query
+    queryError = mFlashpointInstall->initialGameQuery(gameQueries, platformsToImport);
+    if(queryError.isValid())
+    {
+        postSqlError(queryError);
+        return;
+    }
+
+    // Make initial additional apps query
+    queryError = mFlashpointInstall->initialAdditionalAppQuery(additionalAppQuery);
+    if(queryError.isValid())
+    {
+        postSqlError(queryError);
+        return;
+    }
+
+    // Make initial playlists query
+    queryError = mFlashpointInstall->initialPlaylistQuery(playlistQueries, playlistsToImport);
+    if(queryError.isValid())
+    {
+        postSqlError(queryError);
+        return;
+    }
+
+    // Build ID list for playlist game query
+    QList<std::pair<QString, QString>> targetPlaylistNamesAndIDs;
+    for(int i = 0; i < playlistQueries.second; i++)
+    {
+        playlistQueries.first.next(); // Advance to next record
+        targetPlaylistNamesAndIDs.append(std::make_pair(playlistQueries.first.value(FlashpointInstall::DBTable_Playlist::COL_TITLE).toString(),
+                                                        playlistQueries.first.value(FlashpointInstall::DBTable_Playlist::COL_ID).toString()));
+    }
+
+    // Make initial playlist games query
+    queryError = mFlashpointInstall->initialPlaylistGameQuery(playlistGameQueries, targetPlaylistNamesAndIDs);
+    if(queryError.isValid())
+    {
+        postSqlError(queryError);
+        return;
+    }
+
+    // Determine workload
+    //totalSteps = gameQueries.size() +
 }
 
 //-Slots---------------------------------------------------------------------------------------------------------
@@ -438,6 +493,8 @@ void MainWindow::all_on_pushButton_clicked()
         for(int i = 0; i < ui->listWidget_playlistChoices->count(); i++)
             ui->listWidget_playlistChoices->item(i)->setCheckState(Qt::Unchecked);
     }
+    else if(senderPushButton == ui->pushButton_startImport)
+        importProcess();
     else if(senderPushButton == ui->pushButton_exit)
         QApplication::quit();
     else
