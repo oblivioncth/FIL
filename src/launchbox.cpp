@@ -100,12 +100,12 @@ bool LaunchBoxAdditionalApp::isWaitForExit() const { return mWaitForExit; }
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 LaunchBoxPlaylistGame::LaunchBoxPlaylistGame(FP::FlashpointPlaylistGame flashpointPlaylistGame, Qx::FreeIndexTracker<int>& inUseDBIDs,
-                                             QHash<QUuid, QPair<QString, QString>>& gameID_title_platformMap)
+                                             QHash<QUuid, EntryDetails>& playlistGameDetailsMap)
 {
     // Set members
     mGameID = flashpointPlaylistGame.getGameID();
-    mGameTitle =  gameID_title_platformMap.value(mGameID).first;
-    mGamePlatform = gameID_title_platformMap.value(mGameID).second;
+    mGameTitle =  playlistGameDetailsMap.value(mGameID).title;
+    mGamePlatform = playlistGameDetailsMap.value(mGameID).platform;
     mManualOrder = flashpointPlaylistGame.getOrder();
     mLBDatabaseID = !inUseDBIDs.isReserved(flashpointPlaylistGame.getID()) ? flashpointPlaylistGame.getID() : inUseDBIDs.reserveFirstFree();
 }

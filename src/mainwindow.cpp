@@ -386,10 +386,10 @@ void MainWindow::importProcess()
     QSet<QString> targetGameIDs;
 
     // Initial query buffers
-    QList<std::tuple<QString, QSqlQuery, int>> gameQueries;
-    std::pair<QSqlQuery, int> additionalAppQuery;
-    std::pair<QSqlQuery, int> playlistQueries;
-    QList<std::tuple<QString, QSqlQuery, int>> playlistGameQueries;
+    QList<FP::FlashpointInstall::DBQueryBuffer> gameQueries;
+    FP::FlashpointInstall::DBQueryBuffer additionalAppQuery;
+    FP::FlashpointInstall::DBQueryBuffer playlistQueries;
+    QList<FP::FlashpointInstall::DBQueryBuffer> playlistGameQueries;
 
     // Create progress dialog, set initial busy state and show
     QProgressDialog importProgressDialog(PD_LABEL_FP_DB_INITIAL_QUERY, PD_BUTTON_CANCEL, 0, 0);
@@ -421,16 +421,16 @@ void MainWindow::importProcess()
     }
 
     // Build ID list for playlist game query
-    QList<std::pair<QString, QString>> targetPlaylistNamesAndIDs;
-    for(int i = 0; i < playlistQueries.second; i++)
+    QList<FP::FlashpointInstall::DBPlaylist> targetKnownPlaylists;
+    for(int i = 0; i < playlistQueries.size; i++)
     {
-        playlistQueries.first.next(); // Advance to next record
-        targetPlaylistNamesAndIDs.append(std::make_pair(playlistQueries.first.value(FP::FlashpointInstall::DBTable_Playlist::COL_TITLE).toString(),
-                                                        playlistQueries.first.value(FP::FlashpointInstall::DBTable_Playlist::COL_ID).toString()));
+        playlistQueries.result.next(); // Advance to next record
+        targetKnownPlaylists.append({playlistQueries.result.value(FP::FlashpointInstall::DBTable_Playlist::COL_TITLE).toString(),
+                                     QUuid(playlistQueries.result.value(FP::FlashpointInstall::DBTable_Playlist::COL_ID).toString())});
     }
 
     // Make initial playlist games query
-    queryError = mFlashpointInstall->initialPlaylistGameQuery(playlistGameQueries, targetPlaylistNamesAndIDs);
+    queryError = mFlashpointInstall->initialPlaylistGameQuery(playlistGameQueries, targetKnownPlaylists);
     if(queryError.isValid())
     {
         postSqlError(queryError);

@@ -98,6 +98,13 @@ public:
 
 class LaunchBoxPlaylistGame
 {
+//-Class Structs----------------------------------------------------------------------------------------------------
+    struct EntryDetails
+    {
+        QString title;
+        QString platform;
+    };
+
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
     QUuid mGameID;
@@ -109,7 +116,7 @@ private:
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
     LaunchBoxPlaylistGame(FP::FlashpointPlaylistGame flashpointPlaylistGame, Qx::FreeIndexTracker<int>& inUseDBIDs,
-                          QHash<QUuid, QPair<QString, QString>>& gameID_title_platformMap);
+                          QHash<QUuid, EntryDetails>& playlistGameDetailsMap);
 
 //-Desctructor-------------------------------------------------------------------------------------------------
 public:

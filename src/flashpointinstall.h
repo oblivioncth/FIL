@@ -105,6 +105,26 @@ public:
         static QString parametersFromStandard(QString originalAppPath, QString originalAppParams);
     };
 
+//-Class Structs-------------------------------------------------------------------------------------------------
+    struct DBTableSpecs
+    {
+        QString name;
+        QStringList columns;
+    };
+
+    struct DBQueryBuffer
+    {
+        QString source;
+        QSqlQuery result;
+        int size;
+    };
+
+    struct DBPlaylist
+    {
+        QString name;
+        QUuid ID;
+    };
+
 //-Class Variables-----------------------------------------------------------------------------------------------
 public:
     // Paths
@@ -118,10 +138,10 @@ public:
 
     // Database
     static inline const QString DATABASE_CONNECTION_NAME = "Flashpoint Database";
-    static inline const QSet<QPair<QString, QStringList>> DATABASE_TABLE_COLUMN_SET = {qMakePair(DBTable_Game::NAME, DBTable_Game::COLUMN_LIST),
-                                                                                         qMakePair(DBTable_Additonal_App::NAME, DBTable_Additonal_App::COLUMN_LIST),
-                                                                                         qMakePair(DBTable_Playlist::NAME, DBTable_Playlist::COLUMN_LIST),
-                                                                                         qMakePair(DBTable_Playlist_Game::NAME, DBTable_Playlist_Game::COLUMN_LIST)};
+    static inline const QList<DBTableSpecs> DATABASE_SPECS_LIST = {{DBTable_Game::NAME, DBTable_Game::COLUMN_LIST},
+                                                                        {DBTable_Additonal_App::NAME, DBTable_Additonal_App::COLUMN_LIST},
+                                                                        {DBTable_Playlist::NAME, DBTable_Playlist::COLUMN_LIST},
+                                                                        {DBTable_Playlist_Game::NAME, DBTable_Playlist_Game::COLUMN_LIST}};
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -159,10 +179,10 @@ public:
     QSqlError populatePlatforms();
     QSqlError populatePlaylists();
 
-    QSqlError initialGameQuery(QList<std::tuple<QString, QSqlQuery, int>>& platform_query_sizeListBuffer, QStringList selectedPlatforms) const;
-    QSqlError initialAdditionalAppQuery(std::pair<QSqlQuery, int>& query_sizeBuffer) const;
-    QSqlError initialPlaylistQuery(std::pair<QSqlQuery, int>& query_sizeBuffer, QStringList selectedPlaylists) const;
-    QSqlError initialPlaylistGameQuery(QList<std::tuple<QString, QSqlQuery, int>>& playlist_query_sizeListBuffer, QList<std::pair<QString, QString>> playlistNamesAndIDs) const;
+    QSqlError initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QStringList selectedPlatforms) const;
+    QSqlError initialAdditionalAppQuery(DBQueryBuffer& resultBuffer) const;
+    QSqlError initialPlaylistQuery(DBQueryBuffer& resultBuffer, QStringList selectedPlaylists) const;
+    QSqlError initialPlaylistGameQuery(QList<DBQueryBuffer>& resultBuffer, QList<DBPlaylist> knownPlaylistsToQuery) const;
 
     QStringList getPlatformList() const;
     QStringList getPlaylistList() const;

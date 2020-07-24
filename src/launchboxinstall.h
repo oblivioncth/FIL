@@ -4,6 +4,7 @@
 #include <QString>
 #include <QDir>
 #include <QSet>
+#include <QtXml>
 #include "qx-io.h"
 
 namespace LB {
@@ -75,7 +76,18 @@ public:
         static inline const QString ELEMENT_LB_DB_ID = "LaunchBoxDbId";
     };
 
-//-Class Variables-----------------------------------------------------------------------------------------------
+//-Class Enums------------------------------------------------------------------------------------------------------
+public:
+    enum XMLDocType {Platform, Playlist};
+
+//-Class Structs----------------------------------------------------------------------------------------------------
+    struct XMLDocMeta
+    {
+        XMLDocType type;
+        QString name;
+    };
+
+//-Class Variables--------------------------------------------------------------------------------------------------
 public:
     // Paths
     static inline const QString PLATFORMS_PATH = "Data/Platforms";
@@ -96,6 +108,11 @@ private:
     QStringList mExistingPlatformsList;
     QStringList mExistingPlaylistList;
 
+    // XML Interaction
+    QDomDocument mCurrentXMLDocument;
+    XMLDocMeta mCurrentXMLDocumentMetaData;
+    QSet<QString> mModifiedXMLDocuments;
+
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
     LaunchBoxInstall(QString installPath);
@@ -109,6 +126,8 @@ public:
 public:
    Qx::IO::IOOpReport populateExistingPlatforms();
    Qx::IO::IOOpReport populateExistingPlaylists();
+
+   //bool openXMLDocument(XMLDocType type, )
 
    QStringList getExistingPlatformsList() const;
    QStringList getExistingPlaylistsList() const;
