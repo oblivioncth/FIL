@@ -48,7 +48,6 @@ Thumbs.db
 *.ib_pdb_index
 *.idb
 *.ilk
-*.pdb
 *.sln
 *.suo
 *.vcproj

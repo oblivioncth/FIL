@@ -66,9 +66,9 @@ void MainWindow::setInputStage(InputStage stage)
 
 void MainWindow::checkLaunchBoxInput(QString installPath)
 {
-    if(LaunchBoxInstall::pathIsValidLaunchBoxInstall(installPath))
+    if(LB::LaunchBoxInstall::pathIsValidLaunchBoxInstall(installPath))
     {
-        mLaunchBoxInstall = std::make_unique<LaunchBoxInstall>(installPath);
+        mLaunchBoxInstall = std::make_unique<LB::LaunchBoxInstall>(installPath);
         ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
         if(mFlashpointInstall)
             gatherInstallInfo();
@@ -84,9 +84,9 @@ void MainWindow::checkLaunchBoxInput(QString installPath)
 
 void MainWindow::checkFlashpointInput(QString installPath)
 {
-    if(FlashpointInstall::pathIsValidFlashpointInstall(installPath))
+    if(FP::FlashpointInstall::pathIsValidFlashpointInstall(installPath))
     {
-        mFlashpointInstall = std::make_unique<FlashpointInstall>(installPath);
+        mFlashpointInstall = std::make_unique<FP::FlashpointInstall>(installPath);
 
         if(mFlashpointInstall->matchesTargetVersion())
             ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
@@ -341,7 +341,7 @@ void MainWindow::importSelectionReaction(QListWidgetItem* item, QWidget* parent)
 
 }
 
-QStringList MainWindow::getSelectedPlatforms()
+QStringList MainWindow::getSelectedPlatforms() const
 {
     QStringList selectedPlatforms;
 
@@ -352,7 +352,7 @@ QStringList MainWindow::getSelectedPlatforms()
     return selectedPlatforms;
 }
 
-QStringList MainWindow::getSelectedPlaylists()
+QStringList MainWindow::getSelectedPlaylists() const
 {
     QStringList selectedPlaylists;
 
@@ -363,7 +363,7 @@ QStringList MainWindow::getSelectedPlaylists()
     return selectedPlaylists;
 }
 
-MainWindow::UpdateMode MainWindow::getSelectedUpdateMode()
+MainWindow::UpdateMode MainWindow::getSelectedUpdateMode() const
 {
     if(ui->radioButton_onlyAdd->isChecked())
         return UpdateMode::NEW_ONLY;
@@ -425,8 +425,8 @@ void MainWindow::importProcess()
     for(int i = 0; i < playlistQueries.second; i++)
     {
         playlistQueries.first.next(); // Advance to next record
-        targetPlaylistNamesAndIDs.append(std::make_pair(playlistQueries.first.value(FlashpointInstall::DBTable_Playlist::COL_TITLE).toString(),
-                                                        playlistQueries.first.value(FlashpointInstall::DBTable_Playlist::COL_ID).toString()));
+        targetPlaylistNamesAndIDs.append(std::make_pair(playlistQueries.first.value(FP::FlashpointInstall::DBTable_Playlist::COL_TITLE).toString(),
+                                                        playlistQueries.first.value(FP::FlashpointInstall::DBTable_Playlist::COL_ID).toString()));
     }
 
     // Make initial playlist games query
@@ -439,6 +439,8 @@ void MainWindow::importProcess()
 
     // Determine workload
     //totalSteps = gameQueries.size() +
+
+
 }
 
 //-Slots---------------------------------------------------------------------------------------------------------

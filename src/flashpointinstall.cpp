@@ -2,6 +2,23 @@
 #include <QFileInfo>
 #include "qx.h"
 
+namespace FP
+{
+
+//===============================================================================================================
+// FLASHPOINT INSTALL/OFLIb
+//===============================================================================================================
+
+//-Class Functions--------------------------------------------------------------------------------------------
+//Public:
+QString FlashpointInstall::OFLIb::parametersFromStandard(QString originalAppPath, QString originalAppParams)
+{
+    if(originalAppPath == DBTable_Additonal_App::ENTRY_MESSAGE)
+        return MSG_ARG.arg(originalAppParams);
+    else
+        return APP_ARG.arg(originalAppPath) + " " + PARAM_ARG.arg(originalAppParams);
+}
+
 //===============================================================================================================
 // FLASHPOINT INSTALL
 //===============================================================================================================
@@ -20,6 +37,7 @@ FlashpointInstall::FlashpointInstall(QString installPath)
     mScreenshotsDirectory = QDir(installPath + "/" + SCREENSHOTS_PATH);
     mDatabaseFile = std::make_unique<QFile>(installPath + "/" + DATABASE_PATH);
     mMainEXEFile = std::make_unique<QFile>(installPath + "/" + MAIN_EXE_PATH);
+    mOFLIbEXEFile = std::make_unique<QFile>(installPath + "/" + OFLIb::EXE_NAME);
 
     // Create database connection
     QSqlDatabase fpDB = QSqlDatabase::addDatabase("QSQLITE", DATABASE_CONNECTION_NAME);
@@ -51,7 +69,7 @@ bool FlashpointInstall::pathIsValidFlashpointInstall(QString installPath)
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-bool FlashpointInstall::matchesTargetVersion()
+bool FlashpointInstall::matchesTargetVersion() const
 {
     mMainEXEFile->open(QFile::ReadOnly);
     QByteArray mainEXEFileData = mMainEXEFile->readAll();
@@ -74,12 +92,12 @@ QSqlDatabase FlashpointInstall::openDatabaseConnection()
 void FlashpointInstall::closeDatabaseConnection() { QSqlDatabase::database(DATABASE_CONNECTION_NAME, false).close(); }
 
 
-QSqlError FlashpointInstall::checkDatabaseForRequiredTables(QSet<QString>& missingTablesReturnBuffer)
+QSqlError FlashpointInstall::checkDatabaseForRequiredTables(QSet<QString>& missingTablesReturnBuffer) const
 {
     // Prep return buffer
     missingTablesReturnBuffer.clear();
 
-    for(QPair<QString, QSet<QString>> tableAndColumns : DATABASE_TABLE_COLUMN_SET)
+    for(QPair<QString, QStringList> tableAndColumns : DATABASE_TABLE_COLUMN_SET)
         missingTablesReturnBuffer.insert(tableAndColumns.first);
 
     // Get tables from DB
@@ -97,7 +115,7 @@ QSqlError FlashpointInstall::checkDatabaseForRequiredTables(QSet<QString>& missi
     return  QSqlError();
 }
 
-QSqlError FlashpointInstall::checkDatabaseForRequiredColumns(QSet<QString> &missingColumsReturnBuffer)
+QSqlError FlashpointInstall::checkDatabaseForRequiredColumns(QSet<QString> &missingColumsReturnBuffer) const
 {
 
     // Ensure return buffer starts empty
@@ -109,7 +127,7 @@ QSqlError FlashpointInstall::checkDatabaseForRequiredColumns(QSet<QString> &miss
     // Ensure each table has the required columns
     QSet<QString> existingColumns;
 
-    for(QPair<QString, QSet<QString>> tableAndColumns : DATABASE_TABLE_COLUMN_SET)
+    for(QPair<QString, QStringList> tableAndColumns : DATABASE_TABLE_COLUMN_SET)
     {
         // Clear previous data
         existingColumns.clear();
@@ -182,7 +200,7 @@ QSqlError FlashpointInstall::populatePlaylists()
     return QSqlError();
 }
 
-QSqlError FlashpointInstall::initialGameQuery(QList<std::tuple<QString, QSqlQuery, int>>& platform_query_sizeListBuffer, QStringList selectedPlatforms)
+QSqlError FlashpointInstall::initialGameQuery(QList<std::tuple<QString, QSqlQuery, int>>& platform_query_sizeListBuffer, QStringList selectedPlatforms) const
 {
     // Ensure return buffer is reset
     platform_query_sizeListBuffer.clear();
@@ -194,8 +212,9 @@ QSqlError FlashpointInstall::initialGameQuery(QList<std::tuple<QString, QSqlQuer
     {
         // Query all games for the current platform (TODO: Restrict the columns of this query to only those actually used)
 
-        QSqlQuery initialQuery("SELECT * FROM " + DBTable_Game::NAME + " WHERE " +
-                               DBTable_Game::COL_PLATFORM + " = '" + platform + "'" , fpDB);
+        QSqlQuery initialQuery("SELECT " + DBTable_Game::COLUMN_LIST.join(",") + " FROM " + DBTable_Game::NAME + " WHERE " +
+                               DBTable_Game::COL_PLATFORM + " = '" + platform + "' AND " +
+                               DBTable_Game::COL_LIBRARY + " = '" + DBTable_Game::GAME_LIBRARY + "'", fpDB);
 
         // Return if error occurs
         if(initialQuery.lastError().isValid())
@@ -217,7 +236,7 @@ QSqlError FlashpointInstall::initialGameQuery(QList<std::tuple<QString, QSqlQuer
     return QSqlError();
 }
 
-QSqlError FlashpointInstall::initialAdditionalAppQuery(std::pair<QSqlQuery, int>& query_sizeBuffer)
+QSqlError FlashpointInstall::initialAdditionalAppQuery(std::pair<QSqlQuery, int>& query_sizeBuffer) const
 {
     // Ensure return buffer is null
     query_sizeBuffer = std::make_pair(QSqlQuery(), -1);
@@ -226,7 +245,7 @@ QSqlError FlashpointInstall::initialAdditionalAppQuery(std::pair<QSqlQuery, int>
     QSqlDatabase fpDB = QSqlDatabase::database(DATABASE_CONNECTION_NAME);
 
     // Make query (TODO: Restrict the columns of this query to only those actually used)
-    QSqlQuery initialQuery("SELECT * FROM " + DBTable_Additonal_App::NAME + " WHERE " +
+    QSqlQuery initialQuery("SELECT " + DBTable_Additonal_App::COLUMN_LIST.join(",") + " FROM " + DBTable_Additonal_App::NAME + " WHERE " +
                            DBTable_Additonal_App::COL_APP_PATH + " != '" + DBTable_Additonal_App::ENTRY_EXTRAS + "'", fpDB);
 
     // Return if error occurs
@@ -248,7 +267,7 @@ QSqlError FlashpointInstall::initialAdditionalAppQuery(std::pair<QSqlQuery, int>
     return QSqlError();
 }
 
-QSqlError FlashpointInstall::initialPlaylistQuery(std::pair<QSqlQuery, int>& query_sizeBuffer, QStringList selectedPlaylists)
+QSqlError FlashpointInstall::initialPlaylistQuery(std::pair<QSqlQuery, int>& query_sizeBuffer, QStringList selectedPlaylists) const
 {
     // Ensure return buffer is null
     query_sizeBuffer = std::make_pair(QSqlQuery(), -1);
@@ -257,7 +276,7 @@ QSqlError FlashpointInstall::initialPlaylistQuery(std::pair<QSqlQuery, int>& que
     QSqlDatabase fpDB = QSqlDatabase::database(DATABASE_CONNECTION_NAME);
 
     // Query all selected playlists (TODO: Restrict the columns of this query to only those actually used)
-    QSqlQuery initialQuery("SELECT * FROM " + DBTable_Playlist::NAME + " WHERE " +
+    QSqlQuery initialQuery("SELECT " + DBTable_Playlist::COLUMN_LIST.join(",") + " FROM " + DBTable_Playlist::NAME + " WHERE " +
                            DBTable_Playlist::COL_TITLE + " IN ('" + selectedPlaylists.join(",'") + "')", fpDB);
 
     // Return if error occurs
@@ -279,7 +298,7 @@ QSqlError FlashpointInstall::initialPlaylistQuery(std::pair<QSqlQuery, int>& que
     return QSqlError();
 }
 
-QSqlError FlashpointInstall::initialPlaylistGameQuery(QList<std::tuple<QString, QSqlQuery, int>>& playlist_query_sizeListBuffer, QList<std::pair<QString, QString>> playlistNamesAndIDs)
+QSqlError FlashpointInstall::initialPlaylistGameQuery(QList<std::tuple<QString, QSqlQuery, int>>& playlist_query_sizeListBuffer, QList<std::pair<QString, QString>> playlistNamesAndIDs) const
 {
     // Ensure return buffer is empty
     playlist_query_sizeListBuffer.clear();
@@ -290,8 +309,8 @@ QSqlError FlashpointInstall::initialPlaylistGameQuery(QList<std::tuple<QString, 
     for(std::pair<QString, QString> playlistNameAndID : playlistNamesAndIDs)
     {
         // Query all games for the current playlist (TODO: Restrict the columns of this query to only those actually used)
-        QSqlQuery initialQuery("SELECT * FROM " + DBTable_Playlist_Game::NAME + " WHERE " +
-                               DBTable_Playlist_Game::COL_ID + " = '" + playlistNameAndID.second + "'", fpDB);
+        QSqlQuery initialQuery("SELECT " + DBTable_Playlist_Game::COLUMN_LIST.join(",") + " FROM " + DBTable_Playlist_Game::NAME + " WHERE " +
+                               DBTable_Playlist_Game::COL_PLAYLIST_ID + " = '" + playlistNameAndID.second + "'", fpDB);
 
         // Return if error occurs
         if(initialQuery.lastError().isValid())
@@ -313,6 +332,10 @@ QSqlError FlashpointInstall::initialPlaylistGameQuery(QList<std::tuple<QString, 
     return QSqlError();
 }
 
-QStringList FlashpointInstall::getPlatformList() { return mPlatformList; }
+QStringList FlashpointInstall::getPlatformList() const { return mPlatformList; }
 
-QStringList FlashpointInstall::getPlaylistList() { return  mPlaylistList; }
+QStringList FlashpointInstall::getPlaylistList() const { return  mPlaylistList; }
+
+QString FlashpointInstall::getOFLIbPath() const { return mOFLIbEXEFile->fileName(); }
+
+}

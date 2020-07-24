@@ -2,6 +2,9 @@
 #include <QFileInfo>
 #include <QDir>
 
+namespace LB
+{
+
 //===============================================================================================================
 // LAUNCHBOX INSTALL
 //===============================================================================================================
@@ -36,9 +39,9 @@ bool LaunchBoxInstall::pathIsValidLaunchBoxInstall(QString installPath)
 //-Instance Functions----------------------------------------------------------------------------------------------
 //Public:
 Qx::IO::IOOpReport LaunchBoxInstall::populateExistingPlatforms() { return Qx::IO::getDirFileList(mExistingPlatformsList, mPlatformsDirectory, false, {"xml"}); }
-
 Qx::IO::IOOpReport LaunchBoxInstall::populateExistingPlaylists() { return Qx::IO::getDirFileList(mExistingPlatformsList, mPlatformsDirectory, false, {"xml"}); }
+QStringList LaunchBoxInstall::getExistingPlatformsList() const { return mExistingPlatformsList; }
+QStringList LaunchBoxInstall::getExistingPlaylistsList() const { return mExistingPlaylistList; }
 
-QStringList LaunchBoxInstall::getExistingPlatformsList() { return mExistingPlatformsList; }
 
-QStringList LaunchBoxInstall::getExistingPlaylistsList() { return mExistingPlaylistList; }
+}

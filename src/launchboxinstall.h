@@ -6,8 +6,36 @@
 #include <QSet>
 #include "qx-io.h"
 
+namespace LB {
+
 class LaunchBoxInstall
 {
+//-Inner Classes-------------------------------------------------------------------------------------------------
+public:
+    class XMLMainElement_Game
+    {
+    public:
+
+    };
+
+    class XMLMainElement_AdditionalApp
+    {
+    public:
+
+    };
+
+    class XMLMainElement_PlaylistHeader
+    {
+    public:
+
+    };
+
+    class XMLMainElement_PlaylistGame
+    {
+    public:
+
+    };
+
 //-Class Variables-----------------------------------------------------------------------------------------------
 public:
     static inline const QString PLATFORMS_PATH = "Data/Platforms";
@@ -39,9 +67,10 @@ public:
    Qx::IO::IOOpReport populateExistingPlatforms();
    Qx::IO::IOOpReport populateExistingPlaylists();
 
-   QStringList getExistingPlatformsList();
-   QStringList getExistingPlaylistsList();
+   QStringList getExistingPlatformsList() const;
+   QStringList getExistingPlaylistsList() const;
 
 };
 
+}
 #endif // LAUNCHBOXINSTALL_H
