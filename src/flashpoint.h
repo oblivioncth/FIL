@@ -3,6 +3,7 @@
 
 #include <QString>
 #include <QDateTime>
+#include <QUuid>
 
 namespace FP
 {
@@ -14,7 +15,7 @@ public:
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
-    QString mID;
+    QUuid mID;
     QString mTitle;
     QString mSeries;
     QString mDeveloper;
@@ -37,7 +38,7 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    FlashpointGame(QString id, QString title, QString series, QString developer, QString publisher, QString rawDateAdded,
+    FlashpointGame(QString rawID, QString title, QString series, QString developer, QString publisher, QString rawDateAdded,
                    QString rawDateModified, QString platform, QString rawBroken, QString playMode, QString status,
                    QString notes, QString source, QString appPath, QString launchCommand, QString rawReleaseDate, QString version,
                    QString originalDescription, QString language, QString orderTitle);
@@ -52,7 +53,7 @@ private:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    QString getID() const;
+    QUuid getID() const;
     QString getTitle() const;
     QString getSeries() const;
     QString getDeveloper() const;
@@ -78,17 +79,17 @@ class FlashpointAdditonalApp
 {
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
-    QString mID;
+    QUuid mID;
     QString mAppPath;
     bool mAutorunBefore;
     QString mLaunchCommand;
     QString mName;
     bool mWaitExit;
-    QString mParentID;
+    QUuid mParentID;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    FlashpointAdditonalApp(QString id, QString appPath, QString rawAutorunBefore, QString launchCommand, QString name, QString rawWaitExit, QString parentID);
+    FlashpointAdditonalApp(QString rawID, QString appPath, QString rawAutorunBefore, QString launchCommand, QString name, QString rawWaitExit, QString rawParentID);
 
 //-Desctructor-------------------------------------------------------------------------------------------------
 public:
@@ -96,13 +97,13 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    QString getID() const;
+    QUuid getID() const;
     QString getAppPath() const;
     bool isAutorunBefore() const;
     QString getLaunchCommand() const;
     QString getName() const;
     bool isWaitExit() const;
-    QString getParentID() const;
+    QUuid getParentID() const;
 };
 
 class FlashpointPlaylistGame
@@ -113,11 +114,11 @@ private:
     QString mPlaylistID;
     int mOrder;
     QString mNotes;
-    QString mGameID;
+    QUuid mGameID;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    FlashpointPlaylistGame(int id, QString playlistID, QString rawOrder, QString notes, QString gameID);
+    FlashpointPlaylistGame(int id, QString playlistID, QString rawOrder, QString notes, QString rawGameID);
 
 //-Desctructor-------------------------------------------------------------------------------------------------
 public:
@@ -129,7 +130,7 @@ public:
     QString getPlaylistID() const;
     int getOrder() const;
     QString getNotes() const;
-    QString getGameID() const;
+    QUuid getGameID() const;
 };
 
 }

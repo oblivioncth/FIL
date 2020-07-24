@@ -20,6 +20,7 @@ LaunchBoxGame::LaunchBoxGame(FP::FlashpointGame flashpointGame, QString fullOFLI
     mPlatform = flashpointGame.getPlatform();
     mSortTitle = flashpointGame.getOrderTitle();
     mDateAdded = flashpointGame.getDateAdded();
+    mDateModified = flashpointGame.getDateModified();
     mBroken = flashpointGame.isBroken();
     mPlayMode = flashpointGame.getPlayMode();
     mStatus = flashpointGame.getStatus();
@@ -39,7 +40,7 @@ LaunchBoxGame::~LaunchBoxGame() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QString LaunchBoxGame::getID() const { return mID; }
+QUuid LaunchBoxGame::getID() const { return mID; }
 QString LaunchBoxGame::getTitle() const { return mTitle; }
 QString LaunchBoxGame::getSeries() const { return mSeries; }
 QString LaunchBoxGame::getDeveloper() const { return mDeveloper; }
@@ -47,6 +48,7 @@ QString LaunchBoxGame::getPublisher() const { return mPublisher; }
 QString LaunchBoxGame::getPlatform() const { return mPlatform; }
 QString LaunchBoxGame::getSortTitle() const { return mSortTitle; }
 QDateTime LaunchBoxGame::getDateAdded() const { return mDateAdded; }
+QDateTime LaunchBoxGame::getDateModified() const { return mDateModified; }
 bool LaunchBoxGame::isBroken() const { return mBroken; }
 QString LaunchBoxGame::getPlayMode() const { return mPlayMode; }
 QString LaunchBoxGame::getStatus() const { return mStatus; }
@@ -83,8 +85,8 @@ LaunchBoxAdditionalApp::~LaunchBoxAdditionalApp() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QString LaunchBoxAdditionalApp::getID() const { return mID; }
-QString LaunchBoxAdditionalApp::getGameID() const { return mGameID; }
+QUuid LaunchBoxAdditionalApp::getID() const { return mID; }
+QUuid LaunchBoxAdditionalApp::getGameID() const { return mGameID; }
 QString LaunchBoxAdditionalApp::getAppPath() const { return mAppPath; }
 QString LaunchBoxAdditionalApp::getCommandLine() const { return mCommandLine; }
 bool LaunchBoxAdditionalApp::isAutorunBefore() const { return mAutorunBefore; }
@@ -98,7 +100,7 @@ bool LaunchBoxAdditionalApp::isWaitForExit() const { return mWaitForExit; }
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 LaunchBoxPlaylistGame::LaunchBoxPlaylistGame(FP::FlashpointPlaylistGame flashpointPlaylistGame, Qx::FreeIndexTracker<int>& inUseDBIDs,
-                                             QHash<QString, QPair<QString, QString>>& gameID_title_platformMap)
+                                             QHash<QUuid, QPair<QString, QString>>& gameID_title_platformMap)
 {
     // Set members
     mGameID = flashpointPlaylistGame.getGameID();
@@ -114,7 +116,7 @@ LaunchBoxPlaylistGame::~LaunchBoxPlaylistGame() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QString LaunchBoxPlaylistGame::getGameID() const { return mGameID; };
+QUuid LaunchBoxPlaylistGame::getGameID() const { return mGameID; };
 int LaunchBoxPlaylistGame::getLBDatabaseID() const { return mLBDatabaseID; }
 QString LaunchBoxPlaylistGame::getGameTitle() const { return mGameTitle; }
 QString LaunchBoxPlaylistGame::getGamePlatform() const { return mGamePlatform; }
@@ -141,7 +143,7 @@ LaunchBoxPlaylistHeader::~LaunchBoxPlaylistHeader() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QString LaunchBoxPlaylistHeader::getPlaylistID() const { return mPlaylistID; }
+QUuid LaunchBoxPlaylistHeader::getPlaylistID() const { return mPlaylistID; }
 QString LaunchBoxPlaylistHeader::getName() const { return mName; }
 QString LaunchBoxPlaylistHeader::getNestedName() const { return mNestedName; }
 QString LaunchBoxPlaylistHeader::getNotes() const { return mNotes; }

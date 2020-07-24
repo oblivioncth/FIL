@@ -14,7 +14,7 @@ class LaunchBoxGame
 {
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
-    QString mID;
+    QUuid mID;
     QString mTitle;
     QString mSeries;
     QString mDeveloper;
@@ -22,6 +22,7 @@ private:
     QString mPlatform;
     QString mSortTitle;
     QDateTime mDateAdded;
+    QDateTime mDateModified;
     bool mBroken;
     QString mPlayMode;
     QString mStatus;
@@ -43,7 +44,7 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    QString getID() const;
+    QUuid getID() const;
     QString getTitle() const;
     QString getSeries() const;
     QString getDeveloper() const;
@@ -51,6 +52,7 @@ public:
     QString getPlatform() const;
     QString getSortTitle() const;
     QDateTime getDateAdded() const;
+    QDateTime getDateModified() const;
     bool isBroken() const;
     QString getPlayMode() const;
     QString getStatus() const;
@@ -67,8 +69,8 @@ class LaunchBoxAdditionalApp
 {
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
-    QString mID;
-    QString mGameID;
+    QUuid mID;
+    QUuid mGameID;
     QString mAppPath;
     QString mCommandLine;
     bool mAutorunBefore;
@@ -85,8 +87,8 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    QString getID() const;
-    QString getGameID() const;
+    QUuid getID() const;
+    QUuid getGameID() const;
     QString getAppPath() const;
     QString getCommandLine() const;
     bool isAutorunBefore() const;
@@ -98,7 +100,7 @@ class LaunchBoxPlaylistGame
 {
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
-    QString mGameID;
+    QUuid mGameID;
     int mLBDatabaseID;
     QString mGameTitle;
     QString mGamePlatform;
@@ -107,7 +109,7 @@ private:
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
     LaunchBoxPlaylistGame(FP::FlashpointPlaylistGame flashpointPlaylistGame, Qx::FreeIndexTracker<int>& inUseDBIDs,
-                          QHash<QString, QPair<QString, QString>>& gameID_title_platformMap);
+                          QHash<QUuid, QPair<QString, QString>>& gameID_title_platformMap);
 
 //-Desctructor-------------------------------------------------------------------------------------------------
 public:
@@ -115,7 +117,7 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    QString getGameID() const;
+    QUuid getGameID() const;
     int getLBDatabaseID() const;
     QString getGameTitle() const;
     QString getGamePlatform() const;
@@ -126,7 +128,7 @@ class LaunchBoxPlaylistHeader
 {
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
-    QString mPlaylistID;
+    QUuid mPlaylistID;
     QString mName;
     QString mNestedName;
     QString mNotes;
@@ -141,7 +143,7 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    QString getPlaylistID() const;
+    QUuid getPlaylistID() const;
     QString getName() const;
     QString getNestedName() const;
     QString getNotes() const;

@@ -9,13 +9,12 @@ namespace FP
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-FlashpointGame::FlashpointGame(QString id, QString title, QString series, QString developer, QString publisher, QString rawDateAdded,
+FlashpointGame::FlashpointGame(QString rawID, QString title, QString series, QString developer, QString publisher, QString rawDateAdded,
                                QString rawDateModified, QString platform, QString rawBroken, QString playMode, QString status,
                                QString notes, QString source, QString appPath, QString launchCommand, QString rawReleaseDate, QString version,
                                QString originalDescription, QString language, QString orderTitle)
 {
     // Set members that can be directly copied
-    mID = id;
     mTitle = title;
     mSeries = series;
     mDeveloper = developer;
@@ -34,6 +33,7 @@ FlashpointGame::FlashpointGame(QString id, QString title, QString series, QStrin
     mBroken = rawBroken.toInt() != 0;
 
     // Set other members
+    mID = QUuid(rawID);
     mDateAdded = QDateTime::fromString(rawDateAdded, Qt::ISODateWithMs);
     mDateModified = QDateTime::fromString(rawDateModified, Qt::ISODateWithMs);
     mReleaseDate = QDateTime::fromString(kosherizeRawDate(rawReleaseDate), Qt::ISODate);
@@ -67,7 +67,7 @@ QString FlashpointGame::kosherizeRawDate(QString date)
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QString FlashpointGame::getID() const { return mID; }
+QUuid FlashpointGame::getID() const { return mID; }
 QString FlashpointGame::getTitle() const { return mTitle; }
 QString FlashpointGame::getSeries() const { return mSeries; }
 QString FlashpointGame::getDeveloper() const { return mDeveloper; }
@@ -94,19 +94,20 @@ QString FlashpointGame::getOrderTitle() const { return mOrderTitle; }
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-FlashpointAdditonalApp::FlashpointAdditonalApp(QString id, QString appPath, QString rawAutorunBefore, QString launchCommand,
-                                               QString name, QString rawWaitExit, QString parentID)
+FlashpointAdditonalApp::FlashpointAdditonalApp(QString rawID, QString appPath, QString rawAutorunBefore, QString launchCommand,
+                                               QString name, QString rawWaitExit, QString rawParentID)
 {
     // Set members that can be directly copied
-    mID = id;
     mAppPath = appPath;
     mLaunchCommand = launchCommand;
     mName = name;
-    mParentID = parentID;
+
 
     // Set other members
+    mID = QUuid(rawID);
     mAutorunBefore = rawAutorunBefore.toInt() != 0;
     mWaitExit = rawWaitExit.toInt() != 0;
+    mParentID = QUuid(rawParentID);
 }
 
 //-Destructor------------------------------------------------------------------------------------------------
@@ -115,13 +116,13 @@ FlashpointAdditonalApp::~FlashpointAdditonalApp() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QString FlashpointAdditonalApp::getID() const { return mID; }
+QUuid FlashpointAdditonalApp::getID() const { return mID; }
 QString FlashpointAdditonalApp::getAppPath() const { return mAppPath; }
 bool FlashpointAdditonalApp::isAutorunBefore() const { return  mAutorunBefore; }
 QString FlashpointAdditonalApp::getLaunchCommand() const { return mLaunchCommand; }
 QString FlashpointAdditonalApp::getName() const { return mName; }
 bool FlashpointAdditonalApp::isWaitExit() const { return mWaitExit; }
-QString FlashpointAdditonalApp::getParentID() const { return mParentID; }
+QUuid FlashpointAdditonalApp::getParentID() const { return mParentID; }
 
 //===============================================================================================================
 // FLASHPOINT PLAYLIST GAME
@@ -129,19 +130,19 @@ QString FlashpointAdditonalApp::getParentID() const { return mParentID; }
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-FlashpointPlaylistGame::FlashpointPlaylistGame(int id, QString playlistID, QString rawOrder, QString notes, QString gameID)
+FlashpointPlaylistGame::FlashpointPlaylistGame(int id, QString playlistID, QString rawOrder, QString notes, QString rawGameID)
 {
     // Set members that can be directly copied
     mID = id;
     mPlaylistID = playlistID;
     mNotes = notes;
-    mGameID = gameID;
 
     // Set other members
     bool validInt = false;
     mOrder = rawOrder.toInt(&validInt);
     if(!validInt)
         mOrder = -1;
+    mGameID = QUuid(rawGameID);
 }
 
 //-Destructor------------------------------------------------------------------------------------------------
@@ -155,5 +156,5 @@ int FlashpointPlaylistGame::getID() const { return mID; }
 QString FlashpointPlaylistGame::getPlaylistID() const { return mPlaylistID; }
 int FlashpointPlaylistGame::getOrder() const { return mOrder; }
 QString FlashpointPlaylistGame::getNotes() const { return mNotes; }
-QString FlashpointPlaylistGame::getGameID() const { return mGameID; }
+QUuid FlashpointPlaylistGame::getGameID() const { return mGameID; }
 }
