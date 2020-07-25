@@ -10,8 +10,16 @@
 namespace LB
 {
 
+//-Namespace Global Structs-----------------------------------------------------------------------------------------
+struct OtherField
+{
+    QString name;
+    QString value;
+};
+
 class LaunchBoxGame
 {
+
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
     QUuid mID;
@@ -33,9 +41,14 @@ private:
     QString mCommandLine;
     QDateTime mReleaseDate;
     QString mVersion;
+    QSet<OtherField> mOtherFields;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
+    LaunchBoxGame(QString rawID, QString title, QString series, QString developer, QString publisher, QString platform, QString sortTitle, QString rawDateAdded,
+                  QString rawDateModified, QString rawBroken, QString playMode, QString status, QString region, QString notes, QString source, QString appPath,
+                  QString commandLine, QString rawReleaseDate, QString version, QSet<OtherField> otherFields);
+
     LaunchBoxGame(FP::FlashpointGame flashpointGame, QString fullOFLIbPath);
 
 //-Desctructor-------------------------------------------------------------------------------------------------
@@ -63,6 +76,7 @@ public:
     QString getCommandLine() const;
     QDateTime getReleaseDate() const;
     QString getVersion() const;
+    QSet<OtherField> getOtherFields() const;
 };
 
 class LaunchBoxAdditionalApp
@@ -76,9 +90,12 @@ private:
     bool mAutorunBefore;
     QString mName;
     bool mWaitForExit;
+    QSet<OtherField> mOtherFields;
 
-//-Constructor-------------------------------------------------------------------------------------------------
+//-Constructor------------------------------------------------------------------------------------------------------
 public:
+    LaunchBoxAdditionalApp(QString rawID, QString rawGameID, QString appPath, QString commandLine, QString rawAutorunBefore, QString name, QString rawWaitForExit, QSet<OtherField> otherFields);
+
     LaunchBoxAdditionalApp(FP::FlashpointAdditonalApp flashpointAdditionalApp, QString fullOFLIbPath);
 
 //-Desctructor-------------------------------------------------------------------------------------------------
@@ -94,6 +111,7 @@ public:
     bool isAutorunBefore() const;
     QString getName() const;
     bool isWaitForExit() const;
+    QSet<OtherField> getOtherFields() const;
 };
 
 class LaunchBoxPlaylistGame
@@ -112,9 +130,12 @@ private:
     QString mGameTitle;
     QString mGamePlatform;
     int mManualOrder;
+    QSet<OtherField> mOtherFields;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
+    LaunchBoxPlaylistGame(QString rawGameID, QString rawLBDatabaseID, QString gameTitle, QString gamePlatform, QString rawManualOrder, QSet<OtherField> otherFields);
+
     LaunchBoxPlaylistGame(FP::FlashpointPlaylistGame flashpointPlaylistGame, Qx::FreeIndexTracker<int>& inUseDBIDs,
                           QHash<QUuid, EntryDetails>& playlistGameDetailsMap);
 
@@ -129,6 +150,7 @@ public:
     QString getGameTitle() const;
     QString getGamePlatform() const;
     int getManualOrder() const;
+    QSet<OtherField> getOtherFields() const;
 };
 
 class LaunchBoxPlaylistHeader
@@ -139,10 +161,11 @@ private:
     QString mName;
     QString mNestedName;
     QString mNotes;
+    QSet<OtherField> mOtherFields;
 
 //-Constructor-------------------------------------------------------------------------------------------------
-public:
-    LaunchBoxPlaylistHeader(QString playlistID, QString name, QString nestedName, QString notes);
+public:    
+    LaunchBoxPlaylistHeader(QString rawPlaylistID, QString name, QString nestedName, QString notes, QSet<OtherField> otherFields);
 
 //-Desctructor-------------------------------------------------------------------------------------------------
 public:
@@ -154,6 +177,7 @@ public:
     QString getName() const;
     QString getNestedName() const;
     QString getNotes() const;
+    QSet<OtherField> getOtherFields() const;
 };
 }
 #endif // LAUNCHBOX_H

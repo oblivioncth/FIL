@@ -159,30 +159,17 @@ void MainWindow::gatherInstallInfo()
 bool MainWindow::parseLaunchBoxData()
 {
     // IO Error check instance
-    Qx::IO::IOOpReport errorCheck;
+    Qx::IO::IOOpReport existingCheck;
 
-    // Get list of existing platforms
-    errorCheck = mLaunchBoxInstall->populateExistingPlatforms();
-
-    // IO Error Check
-    if(!errorCheck.wasSuccessful())
-    {
-        postIOError(errorCheck);
-        return false;
-    }
-
-    // Get list of existing playlists
-    errorCheck = mLaunchBoxInstall->populateExistingPlaylists();
+    // Get list of existing platforms and playlists
+    existingCheck = mLaunchBoxInstall->populateExistingItems();
 
     // IO Error Check
-    if(!errorCheck.wasSuccessful())
-    {
-        postIOError(errorCheck);
-        return false;
-    }
+    if(!existingCheck.wasSuccessful())
+        postIOError(existingCheck);
 
     // Return true on success
-    return true;
+    return existingCheck.wasSuccessful();
 }
 
 bool MainWindow::parseFlashpointData()
@@ -237,28 +224,16 @@ bool MainWindow::parseFlashpointData()
         return false;
     }
 
-    // Get list of available platforms
-    errorCheck = mFlashpointInstall->populatePlatforms();
+    // Get list of available platforms and playlists
+    errorCheck = mFlashpointInstall->populateAvailableItems();
 
     // SQL Error Check
     if(errorCheck.isValid())
-    {
         postSqlError(errorCheck);
-        return false;
-    }
-
-    // Get list of available playlists
-    errorCheck = mFlashpointInstall->populatePlaylists();
-
-    // SQL Error Check
-    if(errorCheck.isValid())
-    {
-        postSqlError(errorCheck);
-        return false;
-    }
 
     // Return true on success
-    return true;
+    return !errorCheck.isValid();
+
 }
 
 void MainWindow::postSqlError(QSqlError sqlError)

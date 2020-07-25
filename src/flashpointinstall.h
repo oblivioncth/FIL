@@ -176,8 +176,7 @@ public:
     void closeDatabaseConnection();
     QSqlError checkDatabaseForRequiredTables(QSet<QString>& missingTablesBuffer) const;
     QSqlError checkDatabaseForRequiredColumns(QSet<QString>& missingColumsBuffer) const;
-    QSqlError populatePlatforms();
-    QSqlError populatePlaylists();
+    QSqlError populateAvailableItems();
 
     QSqlError initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QStringList selectedPlatforms) const;
     QSqlError initialAdditionalAppQuery(DBQueryBuffer& resultBuffer) const;

@@ -38,8 +38,16 @@ bool LaunchBoxInstall::pathIsValidLaunchBoxInstall(QString installPath)
 
 //-Instance Functions----------------------------------------------------------------------------------------------
 //Public:
-Qx::IO::IOOpReport LaunchBoxInstall::populateExistingPlatforms() { return Qx::IO::getDirFileList(mExistingPlatformsList, mPlatformsDirectory, false, {"xml"}); }
-Qx::IO::IOOpReport LaunchBoxInstall::populateExistingPlaylists() { return Qx::IO::getDirFileList(mExistingPlatformsList, mPlatformsDirectory, false, {"xml"}); }
+Qx::IO::IOOpReport LaunchBoxInstall::populateExistingItems()
+{
+    Qx::IO::IOOpReport existingCheck = Qx::IO::getDirFileList(mExistingPlatformsList, mPlatformsDirectory, false, {"xml"});
+
+    if(existingCheck.wasSuccessful())
+        existingCheck = Qx::IO::getDirFileList(mExistingPlatformsList, mPlatformsDirectory, false, {"xml"});
+
+    return existingCheck;
+}
+
 QStringList LaunchBoxInstall::getExistingPlatformsList() const { return mExistingPlatformsList; }
 QStringList LaunchBoxInstall::getExistingPlaylistsList() const { return mExistingPlaylistList; }
 

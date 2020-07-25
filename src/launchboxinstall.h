@@ -124,8 +124,7 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-   Qx::IO::IOOpReport populateExistingPlatforms();
-   Qx::IO::IOOpReport populateExistingPlaylists();
+   Qx::IO::IOOpReport populateExistingItems();
 
    //bool openXMLDocument(XMLDocType type, )
 

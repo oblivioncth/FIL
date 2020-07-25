@@ -9,6 +9,35 @@ namespace LB
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
+LaunchBoxGame::LaunchBoxGame(QString rawID, QString title, QString series, QString developer, QString publisher, QString platform, QString sortTitle, QString rawDateAdded,
+              QString rawDateModified, QString rawBroken, QString playMode, QString status, QString region, QString notes, QString source, QString appPath,
+              QString commandLine, QString rawReleaseDate, QString version, QSet<OtherField> otherFields)
+{
+    // Set members that can be directly copied
+    mTitle = title;
+    mSeries = series;
+    mDeveloper = developer;
+    mPublisher = publisher;
+    mPlatform = platform;
+    mSortTitle = sortTitle;
+    mPlayMode = playMode;
+    mStatus = status;
+    mRegion = region;
+    mNotes = notes;
+    mSource = source;
+    mAppPath = appPath;
+    mCommandLine = commandLine;
+    mVersion = version;
+    mOtherFields = otherFields;
+
+    // Set other members
+    mID = QUuid(rawID);
+    mDateAdded = QDateTime::fromString(rawDateAdded, Qt::ISODateWithMs);
+    mDateModified = QDateTime::fromString(rawDateModified, Qt::ISODateWithMs);
+    mBroken = rawBroken.toInt() != 0;
+    mReleaseDate = QDateTime::fromString(rawReleaseDate, Qt::ISODateWithMs);
+}
+
 LaunchBoxGame::LaunchBoxGame(FP::FlashpointGame flashpointGame, QString fullOFLIbPath)
 {
     // Set members
@@ -66,6 +95,21 @@ QString LaunchBoxGame::getVersion() const { return mVersion; }
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
+LaunchBoxAdditionalApp::LaunchBoxAdditionalApp(QString rawID, QString rawGameID, QString appPath, QString commandLine, QString rawAutorunBefore, QString name, QString rawWaitForExit, QSet<OtherField> otherFields)
+{
+    // Set members that can be directly coppied
+    mAppPath = appPath;
+    mCommandLine = commandLine;
+    mName = name;
+    mOtherFields = otherFields;
+
+    // Set other members
+    mID = QUuid(rawID);
+    mGameID = QUuid(rawGameID);
+    mAutorunBefore = rawAutorunBefore != 0;
+    mWaitForExit = rawWaitForExit != 0;
+}
+
 LaunchBoxAdditionalApp::LaunchBoxAdditionalApp(FP::FlashpointAdditonalApp flashpointAdditionalApp, QString fullOFLIbPath)
 {
     // Set members
@@ -99,6 +143,24 @@ bool LaunchBoxAdditionalApp::isWaitForExit() const { return mWaitForExit; }
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
+LaunchBoxPlaylistGame::LaunchBoxPlaylistGame(QString rawGameID, QString rawLBDatabaseID, QString gameTitle, QString gamePlatform, QString rawManualOrder, QSet<OtherField> otherFields)
+{
+    // Set members that can be directly copied
+    mGameTitle = gameTitle;
+    mGamePlatform = gamePlatform;
+    mOtherFields = otherFields;
+
+    // Set other members
+    mGameID = QUuid(rawGameID);
+    bool validInt = false;
+    mLBDatabaseID = rawLBDatabaseID.toInt(&validInt);
+    if(!validInt)
+        mLBDatabaseID = -1;
+    mManualOrder = rawManualOrder.toInt(&validInt);
+    if(!validInt)
+        mManualOrder = -1;
+}
+
 LaunchBoxPlaylistGame::LaunchBoxPlaylistGame(FP::FlashpointPlaylistGame flashpointPlaylistGame, Qx::FreeIndexTracker<int>& inUseDBIDs,
                                              QHash<QUuid, EntryDetails>& playlistGameDetailsMap)
 {
@@ -128,13 +190,14 @@ int LaunchBoxPlaylistGame::getManualOrder() const { return mManualOrder; }
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-LaunchBoxPlaylistHeader::LaunchBoxPlaylistHeader(QString playlistID, QString name, QString nestedName, QString notes)
+LaunchBoxPlaylistHeader::LaunchBoxPlaylistHeader(QString rawPlaylistID, QString name, QString nestedName, QString notes, QSet<OtherField> otherFields)
 {
     // Set members
-    mPlaylistID = playlistID;
+    mPlaylistID = rawPlaylistID;
     mName = name;
     mNestedName = nestedName;
     mNotes = notes;
+    mOtherFields = otherFields;
 }
 
 //-Destructor------------------------------------------------------------------------------------------------

@@ -154,7 +154,7 @@ QSqlError FlashpointInstall::checkDatabaseForRequiredColumns(QSet<QString> &miss
     return QSqlError();
 }
 
-QSqlError FlashpointInstall::populatePlatforms()
+QSqlError FlashpointInstall::populateAvailableItems()
 {
     // Get database
     QSqlDatabase fpDB = QSqlDatabase::database(DATABASE_CONNECTION_NAME);
@@ -173,16 +173,7 @@ QSqlError FlashpointInstall::populatePlatforms()
     // Sort list
     mPlatformList.sort();
 
-    // Return invalid SqlError
-    return QSqlError();
-}
-
-QSqlError FlashpointInstall::populatePlaylists()
-{
-    // Get database and create reference query model
-    QSqlDatabase fpDB = QSqlDatabase::database(DATABASE_CONNECTION_NAME);
-
-    // Make platform query
+    // Make playlist query
     QSqlQuery playlistQuery("SELECT DISTINCT " + DBTable_Playlist::COL_TITLE + " FROM " + DBTable_Playlist::NAME, fpDB);
 
     // Return if error occurs
