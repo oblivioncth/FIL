@@ -63,6 +63,8 @@ LaunchBoxGame::LaunchBoxGame(FP::FlashpointGame flashpointGame, QString fullOFLI
     mVersion = flashpointGame.getVersion();
 }
 
+LaunchBoxGame::LaunchBoxGame() {}
+
 //-Destructor------------------------------------------------------------------------------------------------
 //Public:
 LaunchBoxGame::~LaunchBoxGame() {}
@@ -123,6 +125,8 @@ LaunchBoxAdditionalApp::LaunchBoxAdditionalApp(FP::FlashpointAdditonalApp flashp
     mWaitForExit = flashpointAdditionalApp.isWaitExit();
 }
 
+LaunchBoxAdditionalApp::LaunchBoxAdditionalApp() {}
+
 //-Destructor------------------------------------------------------------------------------------------------
 //Public:
 LaunchBoxAdditionalApp::~LaunchBoxAdditionalApp() {}
@@ -172,6 +176,8 @@ LaunchBoxPlaylistGame::LaunchBoxPlaylistGame(FP::FlashpointPlaylistGame flashpoi
     mLBDatabaseID = !inUseDBIDs.isReserved(flashpointPlaylistGame.getID()) ? flashpointPlaylistGame.getID() : inUseDBIDs.reserveFirstFree();
 }
 
+LaunchBoxPlaylistGame::LaunchBoxPlaylistGame() {}
+
 //-Destructor------------------------------------------------------------------------------------------------
 //Public:
 LaunchBoxPlaylistGame::~LaunchBoxPlaylistGame() {}
@@ -199,6 +205,8 @@ LaunchBoxPlaylistHeader::LaunchBoxPlaylistHeader(QString rawPlaylistID, QString 
     mNotes = notes;
     mOtherFields = otherFields;
 }
+
+LaunchBoxPlaylistHeader::LaunchBoxPlaylistHeader() {}
 
 //-Destructor------------------------------------------------------------------------------------------------
 //Public:

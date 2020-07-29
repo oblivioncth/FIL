@@ -2,6 +2,7 @@
 
 #include <QApplication>
 
+
 int main(int argc, char *argv[])
 {
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
@@ -9,4 +10,6 @@ int main(int argc, char *argv[])
     MainWindow w;
     w.show();
     return a.exec();
+
+    QString nonMember = "test";
 }

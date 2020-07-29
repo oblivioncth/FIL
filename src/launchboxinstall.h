@@ -6,11 +6,27 @@
 #include <QSet>
 #include <QtXml>
 #include "qx-io.h"
+#include "launchbox.h"
 
 namespace LB {
 
 class LaunchBoxInstall
 {
+//-Class Enums---------------------------------------------------------------------------------------------------
+public:
+    enum XMLDocType {Platform, Playlist};
+
+//-Class Structs----------------------------------------------------------------------------------------------------
+public:
+    struct XMLHandle
+    {
+        XMLDocType type;
+        QString name;
+
+        friend inline bool operator== (const XMLHandle& lhs, const XMLHandle& rhs) noexcept;
+        friend inline uint qHash(const XMLHandle& key, uint seed) noexcept;
+    };
+
 //-Inner Classes-------------------------------------------------------------------------------------------------
 public:
     class XMLMainElement_Game
@@ -76,15 +92,31 @@ public:
         static inline const QString ELEMENT_LB_DB_ID = "LaunchBoxDbId";
     };
 
-//-Class Enums------------------------------------------------------------------------------------------------------
-public:
-    enum XMLDocType {Platform, Playlist};
-
-//-Class Structs----------------------------------------------------------------------------------------------------
-    struct XMLDocMeta
+    class LBXMLDoc
     {
-        XMLDocType type;
-        QString name;
+    //-Class Variables--------------------------------------------------------------------------------------------------
+    public:
+        std::unique_ptr<QFile> mDocumentFile;
+        XMLHandle mHandleTarget;
+
+        QList<LaunchBoxGame> mGames;
+        QList<LaunchBoxAdditionalApp> mAdditionalApps;
+        LaunchBoxPlaylistHeader mPlaylistHeader;
+        QList<LaunchBoxPlaylistGame> mPlaylistGames;
+
+
+    //-Constructor--------------------------------------------------------------------------------------------------------
+    public:
+        LBXMLDoc(std::unique_ptr<QFile> xmlFile,  XMLHandle xmlMetaData);
+
+    //-Instance Functions--------------------------------------------------------------------------------------------------
+    public:
+        bool isValid();
+
+        QXmlStreamReader::Error readAll();
+        void close();
+
+        XMLHandle getHandleTarget();
     };
 
 //-Class Variables--------------------------------------------------------------------------------------------------
@@ -95,7 +127,11 @@ public:
     static inline const QString MAIN_EXE_PATH = "LaunchBox.exe";
 
     // XML
+    static inline const QString XML_EXT = ".xml";
     static inline const QString XML_ROOT_ELEMENT = "LaunchBox";
+
+    // General
+    static inline const QString MODIFIED_FILE_EXT = ".obk";
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -105,13 +141,12 @@ private:
     QDir mPlaylistsDirectory;
 
     // XML Information
-    QStringList mExistingPlatformsList;
-    QStringList mExistingPlaylistList;
+    QSet<QString> mExistingPlatforms;
+    QSet<QString> mExistingPlaylists;
 
     // XML Interaction
-    QDomDocument mCurrentXMLDocument;
-    XMLDocMeta mCurrentXMLDocumentMetaData;
     QSet<QString> mModifiedXMLDocuments;
+    QHash<XMLHandle, std::shared_ptr<LBXMLDoc>> mLeasedHandles;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -121,15 +156,16 @@ public:
 public:
    static bool pathIsValidLaunchBoxInstall(QString installPath);
 
-
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
    Qx::IO::IOOpReport populateExistingItems();
 
-   //bool openXMLDocument(XMLDocType type, )
+   std::shared_ptr<LBXMLDoc> openXMLDocument(XMLHandle requestHandle);
+   bool saveXMLDocument(std::shared_ptr<LBXMLDoc> document);
+   bool revertAllChanges();
 
-   QStringList getExistingPlatformsList() const;
-   QStringList getExistingPlaylistsList() const;
+   QSet<QString> getExistingPlatforms() const;
+   QSet<QString> getExistingPlaylists() const;
 
 };
 

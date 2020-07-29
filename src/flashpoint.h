@@ -36,6 +36,7 @@ private:
     QString mLanguage;
     QString mOrderTitle;
 
+
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
     FlashpointGame(QString rawID, QString title, QString series, QString developer, QString publisher, QString rawDateAdded,
@@ -89,6 +90,7 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
+
     FlashpointAdditonalApp(QString rawID, QString appPath, QString rawAutorunBefore, QString launchCommand, QString name, QString rawWaitExit, QString rawParentID);
 
 //-Desctructor-------------------------------------------------------------------------------------------------

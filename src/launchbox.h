@@ -51,6 +51,8 @@ public:
 
     LaunchBoxGame(FP::FlashpointGame flashpointGame, QString fullOFLIbPath);
 
+    LaunchBoxGame();
+
 //-Desctructor-------------------------------------------------------------------------------------------------
 public:
     ~LaunchBoxGame();
@@ -98,6 +100,8 @@ public:
 
     LaunchBoxAdditionalApp(FP::FlashpointAdditonalApp flashpointAdditionalApp, QString fullOFLIbPath);
 
+    LaunchBoxAdditionalApp();
+
 //-Desctructor-------------------------------------------------------------------------------------------------
 public:
     ~LaunchBoxAdditionalApp();
@@ -139,6 +143,8 @@ public:
     LaunchBoxPlaylistGame(FP::FlashpointPlaylistGame flashpointPlaylistGame, Qx::FreeIndexTracker<int>& inUseDBIDs,
                           QHash<QUuid, EntryDetails>& playlistGameDetailsMap);
 
+    LaunchBoxPlaylistGame();
+
 //-Desctructor-------------------------------------------------------------------------------------------------
 public:
     ~LaunchBoxPlaylistGame();
@@ -166,6 +172,8 @@ private:
 //-Constructor-------------------------------------------------------------------------------------------------
 public:    
     LaunchBoxPlaylistHeader(QString rawPlaylistID, QString name, QString nestedName, QString notes, QSet<OtherField> otherFields);
+
+    LaunchBoxPlaylistHeader();
 
 //-Desctructor-------------------------------------------------------------------------------------------------
 public:

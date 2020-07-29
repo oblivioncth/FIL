@@ -129,7 +129,7 @@ void MainWindow::gatherInstallInfo()
                 currentItem = ui->listWidget_platformChoices->item(i);
                 currentItem->setCheckState(Qt::Unchecked);
 
-                if(mLaunchBoxInstall->getExistingPlatformsList().contains(currentItem->text()))
+                if(mLaunchBoxInstall->getExistingPlatforms().contains(currentItem->text()))
                     currentItem->setBackground(QBrush(mExistingItemColor));
             }
 
@@ -139,7 +139,7 @@ void MainWindow::gatherInstallInfo()
                 currentItem->setFlags(currentItem->flags() | Qt::ItemIsUserCheckable);
                 currentItem->setCheckState(Qt::Unchecked);
 
-                if(mLaunchBoxInstall->getExistingPlaylistsList().contains(currentItem->text()))
+                if(mLaunchBoxInstall->getExistingPlaylists().contains(currentItem->text()))
                     currentItem->setBackground(QBrush(mExistingItemColor));
             }
 
@@ -274,8 +274,8 @@ void MainWindow::importSelectionReaction(QListWidgetItem* item, QWidget* parent)
     if(item->checkState() == Qt::Checked)
     {
         ui->pushButton_startImport->setEnabled(true);
-        ui->groupBox_updateMode->setEnabled((parent == ui->listWidget_platformChoices && mLaunchBoxInstall->getExistingPlatformsList().contains(item->text())) ||
-                                            (parent == ui->listWidget_playlistChoices && mLaunchBoxInstall->getExistingPlaylistsList().contains(item->text())));
+        ui->groupBox_updateMode->setEnabled((parent == ui->listWidget_platformChoices && mLaunchBoxInstall->getExistingPlatforms().contains(item->text())) ||
+                                            (parent == ui->listWidget_playlistChoices && mLaunchBoxInstall->getExistingPlaylists().contains(item->text())));
     }
     else
     {
@@ -289,7 +289,7 @@ void MainWindow::importSelectionReaction(QListWidgetItem* item, QWidget* parent)
             {
                 keepStartButtonEnabled = true;
 
-                if(mLaunchBoxInstall->getExistingPlatformsList().contains(ui->listWidget_platformChoices->item(i)->text()))
+                if(mLaunchBoxInstall->getExistingPlatforms().contains(ui->listWidget_platformChoices->item(i)->text()))
                     keepUpdateGroupEnabled = true;
             }
         }
@@ -303,7 +303,7 @@ void MainWindow::importSelectionReaction(QListWidgetItem* item, QWidget* parent)
                 {
                     keepStartButtonEnabled = true;
 
-                    if(mLaunchBoxInstall->getExistingPlaylistsList().contains(ui->listWidget_playlistChoices->item(i)->text()))
+                    if(mLaunchBoxInstall->getExistingPlaylists().contains(ui->listWidget_playlistChoices->item(i)->text()))
                         keepUpdateGroupEnabled = true;
                 }
             }
@@ -495,7 +495,7 @@ void MainWindow::all_on_lineEdit_editingFinished()
             QFileInfo selectedDir = QFileInfo(QDir::cleanPath(QDir::fromNativeSeparators(ui->lineEdit_launchBoxPath->text())));
 
             if(selectedDir.exists() && selectedDir.isDir())
-                checkLaunchBoxInput(selectedDir.absoluteFilePath());
+                checkLaunchBoxInput(selectedDir.absolutePath());
             else
             {
                 ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
@@ -512,7 +512,7 @@ void MainWindow::all_on_lineEdit_editingFinished()
             QFileInfo selectedDir = QFileInfo(QDir::cleanPath(ui->lineEdit_flashpointPath->text()));
 
             if(selectedDir.exists() && selectedDir.isDir())
-                checkFlashpointInput(selectedDir.absoluteFilePath());
+                checkFlashpointInput(selectedDir.absolutePath());
             else
             {
                 ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
