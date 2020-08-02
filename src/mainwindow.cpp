@@ -577,6 +577,4 @@ void MainWindow::all_on_listWidget_itemChanged(QListWidgetItem* item) // Proxy f
         importSelectionReaction(item, ui->listWidget_playlistChoices);
     else
         assert("Unhandled use of all_on_listWidget_itemChanged() slot");
-
-
 }

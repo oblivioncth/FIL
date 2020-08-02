@@ -33,28 +33,102 @@ uint qHash(const LaunchBoxInstall::XMLHandle& key, uint seed) noexcept
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-LaunchBoxInstall::LBXMLDoc::LBXMLDoc(std::unique_ptr<QFile> xmlFile,  XMLHandle xmlMetaData)
+LaunchBoxInstall::LBXMLDoc::LBXMLDoc(std::unique_ptr<QFile> xmlFile,  XMLHandle xmlMetaData, const Key&) : mDocumentFile(std::move(xmlFile)), mHandleTarget(xmlMetaData)
 {
+    // TODO: MAKE ME
+    mDocumentFile = std::move(xmlFile);
+    mHandleTarget = xmlMetaData;
+
 
 }
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-bool LaunchBoxInstall::LBXMLDoc::isValid()
-{
-    // TODO: MAKE ME
-    return true;
-}
-
 QXmlStreamReader::Error LaunchBoxInstall::LBXMLDoc::readAll()
 {
+    // Attached File
+    QXmlStreamReader itemReader(mDocumentFile.get());
+
+    bool isLaunchboxXml = false;
+
+    // Read file
+    while(!itemReader.atEnd())
+    {
+        itemReader.readNextStartElement();
+
+        if(itemReader.read)
+
+
+
+
+    }
+
+
     // TODO: MAKE ME
     return QXmlStreamReader::Error::NoError;
 
 }
-void LaunchBoxInstall::LBXMLDoc::close() { mDocumentFile->close(); }
+void LaunchBoxInstall::LBXMLDoc::close(bool flushData)
+{
+    mDocumentFile->close();
+    mDocumentFile.reset();
 
-LaunchBoxInstall::XMLHandle LaunchBoxInstall::LBXMLDoc::getHandleTarget() { return mHandleTarget; }
+    if(flushData)
+    {
+        mGames.clear();
+        mAdditionalApps.clear();
+        mPlaylistHeader = LB::LaunchBoxPlaylistHeader();
+        mPlaylistGames.clear();
+    }
+}
+
+bool LaunchBoxInstall::LBXMLDoc::isValid() const
+{
+    //TODO: MAKE ME
+    return true;
+}
+
+LaunchBoxInstall::XMLHandle LaunchBoxInstall::LBXMLDoc::getHandleTarget() const { return mHandleTarget; }
+
+const QList<LaunchBoxGame>& LaunchBoxInstall::LBXMLDoc::getGames() const
+{
+    if(mHandleTarget.type != Platform)
+        return DUMMY_GAME_LIST;
+
+    return mGames;
+}
+
+const QList<LaunchBoxAdditionalApp>& LaunchBoxInstall::LBXMLDoc::getAdditionalApps() const
+{
+    if(mHandleTarget.type != Platform)
+        return DUMMY_ADDITIONAL_APP_LIST;
+
+    return mAdditionalApps;
+}
+
+const LaunchBoxPlaylistHeader& LaunchBoxInstall::LBXMLDoc::getPlaylistHeader() const
+{
+    if(mHandleTarget.type != Playlist)
+        return DUMMY_PLAYLIST_HEADER;
+
+    return mPlaylistHeader;
+}
+
+const QList<LaunchBoxPlaylistGame>& LaunchBoxInstall::LBXMLDoc::getPlaylistGames() const
+{
+    if(mHandleTarget.type != Platform)
+        return DUMMY_PLAYLIST_GAME_LIST;
+
+    return mPlaylistGames;
+}
+
+void LaunchBoxInstall::LBXMLDoc::addGame(LaunchBoxGame game){ mGames.append(game); }
+
+void LaunchBoxInstall::LBXMLDoc::addAdditionalApp(LaunchBoxAdditionalApp app) { mAdditionalApps.append(app); }
+
+void LaunchBoxInstall::LBXMLDoc::setPlaylistHeader(LaunchBoxPlaylistHeader header) { mPlaylistHeader = header; }
+
+void LaunchBoxInstall::LBXMLDoc::addPlaylistGame(LaunchBoxPlaylistGame playlistGame) { mPlaylistGames.append(playlistGame); }
 
 //===============================================================================================================
 // LAUNCHBOX INSTALL
@@ -127,7 +201,7 @@ std::shared_ptr<LaunchBoxInstall::LBXMLDoc> LaunchBoxInstall::openXMLDocument(XM
     xmlFile->open(QFile::ReadWrite); // Ensures that empty file is created if the target doesn't exist
 
     // Create new handle to requested document
-    std::shared_ptr<LBXMLDoc> newHandle = std::make_shared<LBXMLDoc>(std::move(xmlFile), requestHandle);
+    std::shared_ptr<LBXMLDoc> newHandle = std::make_shared<LBXMLDoc>(std::move(xmlFile), requestHandle, LBXMLDoc::Key{});
 
     // Add handle to lease map
     mLeasedHandles.insert(requestHandle, newHandle);

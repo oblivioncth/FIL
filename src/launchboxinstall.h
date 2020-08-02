@@ -94,8 +94,26 @@ public:
 
     class LBXMLDoc
     {
-    //-Class Variables--------------------------------------------------------------------------------------------------
+    //-Inner Classes----------------------------------------------------------------------------------------------------
     public:
+        class Key
+        {
+            friend class LaunchBoxInstall;
+        private:
+            Key() {};
+            Key(const Key&) = default;
+        };
+
+    //-Class Variables--------------------------------------------------------------------------------------------------
+    private:
+        const QList<LaunchBoxGame> DUMMY_GAME_LIST;
+        QList<LaunchBoxAdditionalApp> DUMMY_ADDITIONAL_APP_LIST;
+        LaunchBoxPlaylistHeader DUMMY_PLAYLIST_HEADER;
+        QList<LaunchBoxPlaylistGame> DUMMY_PLAYLIST_GAME_LIST;
+
+
+    //-Instance Variables--------------------------------------------------------------------------------------------------
+    private:
         std::unique_ptr<QFile> mDocumentFile;
         XMLHandle mHandleTarget;
 
@@ -107,16 +125,24 @@ public:
 
     //-Constructor--------------------------------------------------------------------------------------------------------
     public:
-        LBXMLDoc(std::unique_ptr<QFile> xmlFile,  XMLHandle xmlMetaData);
+        explicit LBXMLDoc(std::unique_ptr<QFile> xmlFile,  XMLHandle xmlMetaData, const Key&);
 
     //-Instance Functions--------------------------------------------------------------------------------------------------
     public:
-        bool isValid();
-
         QXmlStreamReader::Error readAll();
-        void close();
+        void close(bool flushData = true);
 
-        XMLHandle getHandleTarget();
+        bool isValid() const;
+        XMLHandle getHandleTarget() const;
+        const QList<LaunchBoxGame>& getGames() const;
+        const QList<LaunchBoxAdditionalApp>& getAdditionalApps() const;
+        const LaunchBoxPlaylistHeader& getPlaylistHeader() const;
+        const QList<LaunchBoxPlaylistGame>& getPlaylistGames() const;
+
+       void addGame(LaunchBoxGame game);
+       void addAdditionalApp(LaunchBoxAdditionalApp app);
+       void setPlaylistHeader(LaunchBoxPlaylistHeader header);
+       void addPlaylistGame(LaunchBoxPlaylistGame playlistGame);
     };
 
 //-Class Variables--------------------------------------------------------------------------------------------------
