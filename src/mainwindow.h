@@ -50,8 +50,8 @@ private:
     Ui::MainWindow *ui;
     QColor mExistingItemColor;
 
-    std::unique_ptr<LB::LaunchBoxInstall> mLaunchBoxInstall;
-    std::unique_ptr<FP::FlashpointInstall> mFlashpointInstall;
+    std::unique_ptr<LB::Install> mLaunchBoxInstall;
+    std::unique_ptr<FP::Install> mFlashpointInstall;
 
     int mLineEdit_launchBoxPath_blocker = 0; // Required due to an oversight with QLineEdit::editingFinished()
     int mLineEdit_flashpointPath_blocker = 0; // Required due to an oversight with QLineEdit::editingFinished()
@@ -77,7 +77,7 @@ private:
     bool parseFlashpointData();
     void postSqlError(QSqlError sqlError);
     void postListError(QString mainText, QStringList detailedItems);
-    void postIOError(Qx::IO::IOOpReport report);
+    void postIOError(Qx::IOOpReport report);
     void importSelectionReaction(QListWidgetItem* item, QWidget* parent);
     QStringList getSelectedPlatforms() const;
     QStringList getSelectedPlaylists() const;

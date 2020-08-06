@@ -10,7 +10,6 @@
 #include <QtEndian>
 #include <QWidget>
 #include <QSet>
-#include <QSet>
 #include "assert.h"
 
 namespace Qx

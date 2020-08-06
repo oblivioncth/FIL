@@ -3,49 +3,53 @@
 
 namespace FP
 {
+
 //===============================================================================================================
-// FLASHPOINT GAME
+// GAME
 //===============================================================================================================
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-FlashpointGame::FlashpointGame(QString rawID, QString title, QString series, QString developer, QString publisher, QString rawDateAdded,
-                               QString rawDateModified, QString platform, QString rawBroken, QString playMode, QString status,
-                               QString notes, QString source, QString appPath, QString launchCommand, QString rawReleaseDate, QString version,
-                               QString originalDescription, QString language, QString orderTitle)
-{
-    // Set members that can be directly copied
-    mTitle = title;
-    mSeries = series;
-    mDeveloper = developer;
-    mPublisher = publisher;
-    mPlatform = platform;
-    mPlayMode = playMode;
-    mStatus = status;
-    mNotes = notes;
-    mSource = source;
-    mAppPath = appPath;
-    mLaunchCommand = launchCommand;
-    mVersion = version;
-    mOriginalDescription = originalDescription;
-    mLanguage = language;
-    mOrderTitle = orderTitle;
-    mBroken = rawBroken.toInt() != 0;
-
-    // Set other members
-    mID = QUuid(rawID);
-    mDateAdded = QDateTime::fromString(rawDateAdded, Qt::ISODateWithMs);
-    mDateModified = QDateTime::fromString(rawDateModified, Qt::ISODateWithMs);
-    mReleaseDate = QDateTime::fromString(kosherizeRawDate(rawReleaseDate), Qt::ISODate);
-}
+Game::Game() {}
 
 //-Destructor------------------------------------------------------------------------------------------------
 //Public:
-FlashpointGame::~FlashpointGame() {}
+Game::~Game() {}
+
+//-Instance Functions------------------------------------------------------------------------------------------------
+//Public:
+QUuid Game::getID() const { return mID; }
+QString Game::getTitle() const { return mTitle; }
+QString Game::getSeries() const { return mSeries; }
+QString Game::getDeveloper() const { return mDeveloper; }
+QString Game::getPublisher() const { return mPublisher; }
+QDateTime Game::getDateAdded() const { return mDateAdded; }
+QDateTime Game::getDateModified() const { return mDateModified; }
+QString Game::getPlatform() const { return mPlatform; }
+QString Game::getPlayMode() const { return mPlayMode; }
+bool Game::isBroken() const { return mBroken; }
+QString Game::getStatus() const { return mStatus; }
+QString Game::getNotes() const{ return mNotes; }
+QString Game::getSource() const { return mSource; }
+QString Game::getAppPath() const { return mAppPath; }
+QString Game::getLaunchCommand() const { return mLaunchCommand; }
+QDateTime Game::getReleaseDate() const { return mReleaseDate; }
+QString Game::getVersion() const { return mVersion; }
+QString Game::getOriginalDescription() const { return mOriginalDescription; }
+QString Game::getLanguage() const { return mLanguage; }
+QString Game::getOrderTitle() const { return mOrderTitle; }
+
+//===============================================================================================================
+// GAME BUILDER
+//===============================================================================================================
+
+//-Constructor-------------------------------------------------------------------------------------------------
+//Public:
+GameBuilder::GameBuilder() {}
 
 //-Class Functions---------------------------------------------------------------------------------------------
 //Private:
-QString FlashpointGame::kosherizeRawDate(QString date)
+QString GameBuilder::kosherizeRawDate(QString date)
 {
     static const QString DEFAULT_MONTH = "-01";
     static const QString DEFAULT_DAY = "-01";
@@ -65,96 +69,119 @@ QString FlashpointGame::kosherizeRawDate(QString date)
         return QString(); // Invalid date provided
 }
 
-//-Instance Functions------------------------------------------------------------------------------------------------
+//-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-QUuid FlashpointGame::getID() const { return mID; }
-QString FlashpointGame::getTitle() const { return mTitle; }
-QString FlashpointGame::getSeries() const { return mSeries; }
-QString FlashpointGame::getDeveloper() const { return mDeveloper; }
-QString FlashpointGame::getPublisher() const { return mPublisher; }
-QDateTime FlashpointGame::getDateAdded() const { return mDateAdded; }
-QDateTime FlashpointGame::getDateModified() const { return mDateModified; }
-QString FlashpointGame::getPlatform() const { return mPlatform; }
-QString FlashpointGame::getPlayMode() const { return mPlayMode; }
-bool FlashpointGame::isBroken() const { return mBroken; }
-QString FlashpointGame::getStatus() const { return mStatus; }
-QString FlashpointGame::getNotes() const{ return mNotes; }
-QString FlashpointGame::getSource() const { return mSource; }
-QString FlashpointGame::getAppPath() const { return mAppPath; }
-QString FlashpointGame::getLaunchCommand() const { return mLaunchCommand; }
-QDateTime FlashpointGame::getReleaseDate() const { return mReleaseDate; }
-QString FlashpointGame::getVersion() const { return mVersion; }
-QString FlashpointGame::getOriginalDescription() const { return mOriginalDescription; }
-QString FlashpointGame::getLanguage() const { return mLanguage; }
-QString FlashpointGame::getOrderTitle() const { return mOrderTitle; }
+GameBuilder& GameBuilder::wID(QString rawID) { mGameBlueprint.mID = QUuid(rawID); return *this; }
+GameBuilder& GameBuilder::wTitle(QString title) { mGameBlueprint.mTitle = title; return *this; }
+GameBuilder& GameBuilder::wSeries(QString series) { mGameBlueprint.mSeries = series; return *this; }
+GameBuilder& GameBuilder::wDeveloper(QString developer) { mGameBlueprint.mDeveloper = developer; return *this; }
+GameBuilder& GameBuilder::wPublisher(QString publisher) { mGameBlueprint.mPublisher = publisher; return *this; }
+GameBuilder& GameBuilder::wDateAdded(QString rawDateAdded) { mGameBlueprint.mDateAdded = QDateTime::fromString(rawDateAdded, Qt::ISODateWithMs); return *this; }
+GameBuilder& GameBuilder::wDateModified(QString rawDateModified) { mGameBlueprint.mDateModified = QDateTime::fromString(rawDateModified, Qt::ISODateWithMs); return *this; }
+GameBuilder& GameBuilder::wPlatform(QString platform) { mGameBlueprint.mPlatform = platform; return *this; }
+GameBuilder& GameBuilder::wBroken(QString rawBroken)  { mGameBlueprint.mBroken = rawBroken.toInt() != 0; return *this; }
+GameBuilder& GameBuilder::wPlayMode(QString playMode) { mGameBlueprint.mPlayMode = playMode; return *this; }
+GameBuilder& GameBuilder::wStatus(QString status) { mGameBlueprint.mStatus = status; return *this; }
+GameBuilder& GameBuilder::wNotes(QString notes)  { mGameBlueprint.mNotes = notes; return *this; }
+GameBuilder& GameBuilder::wSource(QString source)  { mGameBlueprint.mSource = source; return *this; }
+GameBuilder& GameBuilder::wAppPath(QString appPath)  { mGameBlueprint.mAppPath = appPath; return *this; }
+GameBuilder& GameBuilder::wLaunchCommand(QString launchCommand) { mGameBlueprint.mLaunchCommand = launchCommand; return *this; }
+GameBuilder& GameBuilder::wReleaseDate(QString rawReleaseDate)  { mGameBlueprint.mReleaseDate = QDateTime::fromString(kosherizeRawDate(rawReleaseDate), Qt::ISODate); return *this; }
+GameBuilder& GameBuilder::wVersion(QString version)  { mGameBlueprint.mVersion = version; return *this; }
+GameBuilder& GameBuilder::wOriginalDescription(QString originalDescription)  { mGameBlueprint.mOriginalDescription = originalDescription; return *this; }
+GameBuilder& GameBuilder::wLanguage(QString language)  { mGameBlueprint.mLanguage = language; return *this; }
+GameBuilder& GameBuilder::wOrderTitle(QString orderTitle)  { mGameBlueprint.mOrderTitle = orderTitle; return *this; }
+
+Game GameBuilder::build() { return mGameBlueprint; }
 
 //===============================================================================================================
-// FLASHPOINT ADDITIONAL APP
-//===============================================================================================================
-
-//-Constructor------------------------------------------------------------------------------------------------
-//Public:
-FlashpointAdditonalApp::FlashpointAdditonalApp(QString rawID, QString appPath, QString rawAutorunBefore, QString launchCommand,
-                                               QString name, QString rawWaitExit, QString rawParentID)
-{
-    // Set members that can be directly copied
-    mAppPath = appPath;
-    mLaunchCommand = launchCommand;
-    mName = name;
-
-
-    // Set other members
-    mID = QUuid(rawID);
-    mAutorunBefore = rawAutorunBefore.toInt() != 0;
-    mWaitExit = rawWaitExit.toInt() != 0;
-    mParentID = QUuid(rawParentID);
-}
-
-//-Destructor------------------------------------------------------------------------------------------------
-//Public:
-FlashpointAdditonalApp::~FlashpointAdditonalApp() {}
-
-//-Instance Functions------------------------------------------------------------------------------------------------
-//Public:
-QUuid FlashpointAdditonalApp::getID() const { return mID; }
-QString FlashpointAdditonalApp::getAppPath() const { return mAppPath; }
-bool FlashpointAdditonalApp::isAutorunBefore() const { return  mAutorunBefore; }
-QString FlashpointAdditonalApp::getLaunchCommand() const { return mLaunchCommand; }
-QString FlashpointAdditonalApp::getName() const { return mName; }
-bool FlashpointAdditonalApp::isWaitExit() const { return mWaitExit; }
-QUuid FlashpointAdditonalApp::getParentID() const { return mParentID; }
-
-//===============================================================================================================
-// FLASHPOINT PLAYLIST GAME
+// ADD APP
 //===============================================================================================================
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-FlashpointPlaylistGame::FlashpointPlaylistGame(int id, QString playlistID, QString rawOrder, QString notes, QString rawGameID)
-{
-    // Set members that can be directly copied
-    mID = id;
-    mPlaylistID = playlistID;
-    mNotes = notes;
-
-    // Set other members
-    bool validInt = false;
-    mOrder = rawOrder.toInt(&validInt);
-    if(!validInt)
-        mOrder = -1;
-    mGameID = QUuid(rawGameID);
-}
+AddApp::AddApp() {}
 
 //-Destructor------------------------------------------------------------------------------------------------
 //Public:
-FlashpointPlaylistGame::~FlashpointPlaylistGame() {}
+AddApp::~AddApp() {}
+
+//-Instance Functions------------------------------------------------------------------------------------------------
+//Public:
+QUuid AddApp::getID() const { return mID; }
+QString AddApp::getAppPath() const { return mAppPath; }
+bool AddApp::isAutorunBefore() const { return  mAutorunBefore; }
+QString AddApp::getLaunchCommand() const { return mLaunchCommand; }
+QString AddApp::getName() const { return mName; }
+bool AddApp::isWaitExit() const { return mWaitExit; }
+QUuid AddApp::getParentID() const { return mParentID; }
+
+//===============================================================================================================
+// ADD APP BUILDER
+//===============================================================================================================
+
+//-Constructor-------------------------------------------------------------------------------------------------
+//Public:
+AddAppBuilder::AddAppBuilder() {}
+
+//-Instance Functions------------------------------------------------------------------------------------------
+//Public:
+AddAppBuilder& AddAppBuilder::wID(QString rawID) { mAddAppBlueprint.mID = QUuid(rawID); return *this; }
+AddAppBuilder& AddAppBuilder::wAppPath(QString appPath) { mAddAppBlueprint.mAppPath = appPath; return *this; }
+AddAppBuilder& AddAppBuilder::wAutorunBefore(QString rawAutorunBefore)  { mAddAppBlueprint.mAutorunBefore = rawAutorunBefore.toInt() != 0; return *this; }
+AddAppBuilder& AddAppBuilder::wLaunchCommand(QString launchCommand) { mAddAppBlueprint.mLaunchCommand = launchCommand; return *this; }
+AddAppBuilder& AddAppBuilder::wName(QString name) { mAddAppBlueprint.mName = name; return *this; }
+AddAppBuilder& AddAppBuilder::wWaitExit(QString rawWaitExit)  { mAddAppBlueprint.mWaitExit = rawWaitExit.toInt() != 0; return *this; }
+AddAppBuilder& AddAppBuilder::wParentID(QString rawParentID) { mAddAppBlueprint.mParentID = QUuid(rawParentID); return *this; }
+
+AddApp AddAppBuilder::build() { return mAddAppBlueprint; }
+
+//===============================================================================================================
+// PLAYLIST GAME
+//===============================================================================================================
+
+//-Constructor------------------------------------------------------------------------------------------------
+//Public:
+PlaylistGame::PlaylistGame() {}
+
+//-Destructor------------------------------------------------------------------------------------------------
+//Public:
+PlaylistGame::~PlaylistGame() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
 
-int FlashpointPlaylistGame::getID() const { return mID; }
-QString FlashpointPlaylistGame::getPlaylistID() const { return mPlaylistID; }
-int FlashpointPlaylistGame::getOrder() const { return mOrder; }
-QString FlashpointPlaylistGame::getNotes() const { return mNotes; }
-QUuid FlashpointPlaylistGame::getGameID() const { return mGameID; }
-}
+int PlaylistGame::getID() const { return mID; }
+QUuid PlaylistGame::getPlaylistID() const { return mPlaylistID; }
+int PlaylistGame::getOrder() const { return mOrder; }
+QString PlaylistGame::getNotes() const { return mNotes; }
+QUuid PlaylistGame::getGameID() const { return mGameID; }
+
+//===============================================================================================================
+// PLAYLIST GAME BUILDER
+//===============================================================================================================
+
+//-Constructor-------------------------------------------------------------------------------------------------
+//Public:
+   PlaylistGameBuilder::PlaylistGameBuilder() {}
+
+//-Instance Functions------------------------------------------------------------------------------------------
+//Public:
+    PlaylistGameBuilder& PlaylistGameBuilder::wID(QString rawID) { mPlaylistGameBlueprint.mID = rawID.toInt(); return *this; }
+    PlaylistGameBuilder& PlaylistGameBuilder::wPlaylistID(QString rawPlaylistID) { mPlaylistGameBlueprint.mPlaylistID = QUuid(rawPlaylistID); return *this; }
+
+    PlaylistGameBuilder& PlaylistGameBuilder::wOrder(QString rawOrder)
+    {
+        bool validInt = false;
+        mPlaylistGameBlueprint.mOrder = rawOrder.toInt(&validInt);
+        if(!validInt)
+            mPlaylistGameBlueprint.mOrder = -1;
+
+        return *this;
+    }
+
+    PlaylistGameBuilder& PlaylistGameBuilder::wNotes(QString notes) { mPlaylistGameBlueprint.mNotes = notes; return *this; }
+    PlaylistGameBuilder& PlaylistGameBuilder::wGameID(QString rawGameID) { mPlaylistGameBlueprint.mGameID = QUuid(rawGameID); return *this; }
+
+    PlaylistGame PlaylistGameBuilder::build() { return mPlaylistGameBlueprint; }
+};

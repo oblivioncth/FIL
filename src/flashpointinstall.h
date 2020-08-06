@@ -10,7 +10,7 @@
 namespace FP
 {
 
-class FlashpointInstall
+class Install
 {
 //-Inner Classes-------------------------------------------------------------------------------------------------
 public:
@@ -159,15 +159,15 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    FlashpointInstall(QString installPath);
+    Install(QString installPath);
 
 //-Desctructor-------------------------------------------------------------------------------------------------
 public:
-    ~FlashpointInstall();
+    ~Install();
 
 //-Class Functions------------------------------------------------------------------------------------------------------
 public:
-    static bool pathIsValidFlashpointInstall(QString installPath);
+    static bool pathIsValidtInstall(QString installPath);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
@@ -179,7 +179,7 @@ public:
     QSqlError populateAvailableItems();
 
     QSqlError initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QStringList selectedPlatforms) const;
-    QSqlError initialAdditionalAppQuery(DBQueryBuffer& resultBuffer) const;
+    QSqlError initialAddAppQuery(DBQueryBuffer& resultBuffer) const;
     QSqlError initialPlaylistQuery(DBQueryBuffer& resultBuffer, QStringList selectedPlaylists) const;
     QSqlError initialPlaylistGameQuery(QList<DBQueryBuffer>& resultBuffer, QList<DBPlaylist> knownPlaylistsToQuery) const;
 

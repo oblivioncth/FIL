@@ -8,8 +8,14 @@
 namespace FP
 {
 
-class FlashpointGame
+//-Class Forward Declarations---------------------------------------------------------------------------------------
+class GameBuilder;
+class AddAppBuilder;
+class PlaylistGameBuilder;
+
+class Game
 {
+    friend class GameBuilder;
 //-Class Enums------------------------------------------------------------------------------------------------------
 public:
 
@@ -39,18 +45,11 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    FlashpointGame(QString rawID, QString title, QString series, QString developer, QString publisher, QString rawDateAdded,
-                   QString rawDateModified, QString platform, QString rawBroken, QString playMode, QString status,
-                   QString notes, QString source, QString appPath, QString launchCommand, QString rawReleaseDate, QString version,
-                   QString originalDescription, QString language, QString orderTitle);
+    Game();
 
 //-Desctructor-------------------------------------------------------------------------------------------------
 public:
-    ~FlashpointGame();
-
-//-Class Functions---------------------------------------------------------------------------------------------
-private:
-    static QString kosherizeRawDate(QString date);
+    ~Game();
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
@@ -76,8 +75,50 @@ public:
     QString getOrderTitle() const;
 };
 
-class FlashpointAdditonalApp
+class GameBuilder
 {
+//-Instance Variables------------------------------------------------------------------------------------------
+private:
+    Game mGameBlueprint;
+
+//-Constructor-------------------------------------------------------------------------------------------------
+public:
+    GameBuilder();
+
+//-Class Functions---------------------------------------------------------------------------------------------
+private:
+    static QString kosherizeRawDate(QString date);
+
+//-Instance Functions------------------------------------------------------------------------------------------
+public:
+    GameBuilder& wID(QString rawID);
+    GameBuilder& wTitle(QString title);
+    GameBuilder& wSeries(QString series);
+    GameBuilder& wDeveloper(QString developer);
+    GameBuilder& wPublisher(QString publisher);
+    GameBuilder& wDateAdded(QString rawDateAdded);
+    GameBuilder& wDateModified(QString rawDateModified);
+    GameBuilder& wPlatform(QString platform);
+    GameBuilder& wBroken(QString rawBroken);
+    GameBuilder& wPlayMode(QString playMode);
+    GameBuilder& wStatus(QString status);
+    GameBuilder& wNotes(QString notes);
+    GameBuilder& wSource(QString source);
+    GameBuilder& wAppPath(QString appPath);
+    GameBuilder& wLaunchCommand(QString launchCommand);
+    GameBuilder& wReleaseDate(QString rawReleaseDate);
+    GameBuilder& wVersion(QString version);
+    GameBuilder& wOriginalDescription(QString originalDescription);
+    GameBuilder& wLanguage(QString language);
+    GameBuilder& wOrderTitle(QString orderTitle);
+
+    Game build();
+};
+
+class AddApp
+{
+    friend class AddAppBuilder;
+
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
     QUuid mID;
@@ -90,12 +131,11 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-
-    FlashpointAdditonalApp(QString rawID, QString appPath, QString rawAutorunBefore, QString launchCommand, QString name, QString rawWaitExit, QString rawParentID);
+    AddApp();
 
 //-Desctructor-------------------------------------------------------------------------------------------------
 public:
-    ~FlashpointAdditonalApp();
+    ~AddApp();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
@@ -108,31 +148,77 @@ public:
     QUuid getParentID() const;
 };
 
-class FlashpointPlaylistGame
+class AddAppBuilder
 {
+//-Instance Variables------------------------------------------------------------------------------------------
+private:
+    AddApp mAddAppBlueprint;
+
+//-Constructor-------------------------------------------------------------------------------------------------
+public:
+    AddAppBuilder();
+
+//-Instance Functions------------------------------------------------------------------------------------------
+public:
+    AddAppBuilder& wID(QString rawID);
+    AddAppBuilder& wAppPath(QString appPath);
+    AddAppBuilder& wAutorunBefore(QString rawAutorunBefore);
+    AddAppBuilder& wLaunchCommand(QString launchCommand);
+    AddAppBuilder& wName(QString name);
+    AddAppBuilder& wWaitExit(QString rawWaitExit);
+    AddAppBuilder& wParentID(QString rawParentID);
+
+    AddApp build();
+};
+
+class PlaylistGame
+{
+    friend class PlaylistGameBuilder;
+
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
     int mID;
-    QString mPlaylistID;
+    QUuid mPlaylistID;
     int mOrder;
     QString mNotes;
     QUuid mGameID;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    FlashpointPlaylistGame(int id, QString playlistID, QString rawOrder, QString notes, QString rawGameID);
+    PlaylistGame();
 
 //-Desctructor-------------------------------------------------------------------------------------------------
 public:
-    ~FlashpointPlaylistGame();
+    ~PlaylistGame();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
     int getID() const;
-    QString getPlaylistID() const;
+    QUuid getPlaylistID() const;
     int getOrder() const;
     QString getNotes() const;
     QUuid getGameID() const;
+};
+
+class PlaylistGameBuilder
+{
+//-Instance Variables------------------------------------------------------------------------------------------
+private:
+    PlaylistGame mPlaylistGameBlueprint;
+
+//-Constructor-------------------------------------------------------------------------------------------------
+public:
+    PlaylistGameBuilder();
+
+//-Instance Functions------------------------------------------------------------------------------------------
+public:
+    PlaylistGameBuilder& wID(QString rawID);
+    PlaylistGameBuilder& wPlaylistID(QString rawPlaylistID);
+    PlaylistGameBuilder& wOrder(QString rawOrder);
+    PlaylistGameBuilder& wNotes(QString notes);
+    PlaylistGameBuilder& wGameID(QString rawGameID);
+
+    PlaylistGame build();
 };
 
 }

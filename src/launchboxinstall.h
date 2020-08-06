@@ -6,12 +6,17 @@
 #include <QSet>
 #include <QtXml>
 #include "qx-io.h"
+#include "qx-xml.h"
 #include "launchbox.h"
 
 namespace LB {
 
-class LaunchBoxInstall
+class Install
 {
+//-Class Forward Declarations--------------------------------------------------------------------------------------
+public:
+    class XMLReader;
+
 //-Class Enums---------------------------------------------------------------------------------------------------
 public:
     enum XMLDocType {Platform, Playlist};
@@ -55,10 +60,10 @@ public:
         static inline const QString ELEMENT_VERSION = "Version";
     };
 
-    class XMLMainElement_AdditionalApp
+    class XMLMainElement_AddApp
     {
     public:
-        static inline const QString NAME = "AdditionalApplication";
+        static inline const QString NAME = "AddApplication";
 
         static inline const QString ELEMENT_ID = "Id";
         static inline const QString ELEMENT_GAME_ID = "GameID";
@@ -85,64 +90,83 @@ public:
     public:
         static inline const QString NAME = "PlaylistGame";
 
-        static inline const QString ELEMENT_GAME_ID = "GameId";
+        static inline const QString ELEMENT_ID = "GameId";
         static inline const QString ELEMENT_GAME_TITLE = "GameTitle";
         static inline const QString ELEMENT_GAME_PLATFORM = "GamePlatform";
         static inline const QString ELEMENT_MANUAL_ORDER = "ManualOrder";
         static inline const QString ELEMENT_LB_DB_ID = "LaunchBoxDbId";
     };
 
-    class LBXMLDoc
+    class XMLDoc
     {
+        friend class XMLReader;
     //-Inner Classes----------------------------------------------------------------------------------------------------
     public:
         class Key
         {
-            friend class LaunchBoxInstall;
+            friend class Install;
         private:
             Key() {};
             Key(const Key&) = default;
         };
-
-    //-Class Variables--------------------------------------------------------------------------------------------------
-    private:
-        const QList<LaunchBoxGame> DUMMY_GAME_LIST;
-        QList<LaunchBoxAdditionalApp> DUMMY_ADDITIONAL_APP_LIST;
-        LaunchBoxPlaylistHeader DUMMY_PLAYLIST_HEADER;
-        QList<LaunchBoxPlaylistGame> DUMMY_PLAYLIST_GAME_LIST;
-
 
     //-Instance Variables--------------------------------------------------------------------------------------------------
     private:
         std::unique_ptr<QFile> mDocumentFile;
         XMLHandle mHandleTarget;
 
-        QList<LaunchBoxGame> mGames;
-        QList<LaunchBoxAdditionalApp> mAdditionalApps;
-        LaunchBoxPlaylistHeader mPlaylistHeader;
-        QList<LaunchBoxPlaylistGame> mPlaylistGames;
-
+        QList<Game> mGames = QList<Game>();
+        QList<AddApp> mAddApps = QList<AddApp>();
+        PlaylistHeader mPlaylistHeader = PlaylistHeader();
+        QList<PlaylistGame> mPlaylistGames = QList<PlaylistGame>();
 
     //-Constructor--------------------------------------------------------------------------------------------------------
     public:
-        explicit LBXMLDoc(std::unique_ptr<QFile> xmlFile,  XMLHandle xmlMetaData, const Key&);
+        explicit XMLDoc(std::unique_ptr<QFile> xmlFile,  XMLHandle xmlMetaData, const Key&);
 
     //-Instance Functions--------------------------------------------------------------------------------------------------
     public:
-        QXmlStreamReader::Error readAll();
-        void close(bool flushData = true);
-
-        bool isValid() const;
         XMLHandle getHandleTarget() const;
-        const QList<LaunchBoxGame>& getGames() const;
-        const QList<LaunchBoxAdditionalApp>& getAdditionalApps() const;
-        const LaunchBoxPlaylistHeader& getPlaylistHeader() const;
-        const QList<LaunchBoxPlaylistGame>& getPlaylistGames() const;
+        const QList<Game>& getGames() const;
+        const QList<AddApp>& getAddApps() const;
+        const PlaylistHeader& getPlaylistHeader() const;
+        const QList<PlaylistGame>& getPlaylistGames() const;
 
-       void addGame(LaunchBoxGame game);
-       void addAdditionalApp(LaunchBoxAdditionalApp app);
-       void setPlaylistHeader(LaunchBoxPlaylistHeader header);
-       void addPlaylistGame(LaunchBoxPlaylistGame playlistGame);
+        void addGame(Game game);
+        void addAddApp(AddApp app);
+        void setPlaylistHeader(PlaylistHeader header);
+        void addPlaylistGame(PlaylistGame playlistGame);
+    };
+
+    class XMLReader
+    {
+    //-Class variables-----------------------------------------------------------------------------------------------------
+    public:
+        static inline const QString ERR_DOC_ALREADY_OPEN = "The target XML file is already open";
+        static inline const QString ERR_DOC_IN_USE = "The target XML file is in use by another program";
+        static inline const QString ERR_NOT_LB_DOC = "The target XML file is not a LaunchBox document.";
+        static inline const QString ERR_DOC_TYPE_MISMATCH = "The document contained an element that belongs to a different document type than expected.";
+
+    //-Instance Variables--------------------------------------------------------------------------------------------------
+    private:
+        QXmlStreamReader mStreamReader;
+        XMLDoc* mTargetDocument;
+
+    //-Constructor--------------------------------------------------------------------------------------------------------
+    public:
+        XMLReader(XMLDoc* targetDoc);
+
+    //-Instance Functions-------------------------------------------------------------------------------------------------
+    public:
+        Qx::XmlStreamReaderError readInto();
+
+    private:
+        Qx::XmlStreamReaderError readLaunchBoxDocument();
+        void parseGame();
+        void parseAddApp();
+        void parsePlaylistHeader();
+        void parsePlaylistGame();
+
     };
 
 //-Class Variables--------------------------------------------------------------------------------------------------
@@ -172,22 +196,22 @@ private:
 
     // XML Interaction
     QSet<QString> mModifiedXMLDocuments;
-    QHash<XMLHandle, std::shared_ptr<LBXMLDoc>> mLeasedHandles;
+    QSet<XMLHandle> mLeasedHandles;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    LaunchBoxInstall(QString installPath);
+    Install(QString installPath);
 
 //-Class Functions------------------------------------------------------------------------------------------------------
 public:
-   static bool pathIsValidLaunchBoxInstall(QString installPath);
+   static bool pathIsValidInstall(QString installPath);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-   Qx::IO::IOOpReport populateExistingItems();
+   Qx::IOOpReport populateExistingItems();
 
-   std::shared_ptr<LBXMLDoc> openXMLDocument(XMLHandle requestHandle);
-   bool saveXMLDocument(std::shared_ptr<LBXMLDoc> document);
+   Qx::XmlStreamReaderError openXMLDocument(std::unique_ptr<XMLDoc>& returnBuffer, XMLHandle requestHandle);
+   bool saveXMLDocument(std::unique_ptr<XMLDoc> document);
    bool revertAllChanges();
 
    QSet<QString> getExistingPlatforms() const;

@@ -66,9 +66,9 @@ void MainWindow::setInputStage(InputStage stage)
 
 void MainWindow::checkLaunchBoxInput(QString installPath)
 {
-    if(LB::LaunchBoxInstall::pathIsValidLaunchBoxInstall(installPath))
+    if(LB::Install::pathIsValidInstall(installPath))
     {
-        mLaunchBoxInstall = std::make_unique<LB::LaunchBoxInstall>(installPath);
+        mLaunchBoxInstall = std::make_unique<LB::Install>(installPath);
         ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
         if(mFlashpointInstall)
             gatherInstallInfo();
@@ -84,9 +84,9 @@ void MainWindow::checkLaunchBoxInput(QString installPath)
 
 void MainWindow::checkFlashpointInput(QString installPath)
 {
-    if(FP::FlashpointInstall::pathIsValidFlashpointInstall(installPath))
+    if(FP::Install::pathIsValidtInstall(installPath))
     {
-        mFlashpointInstall = std::make_unique<FP::FlashpointInstall>(installPath);
+        mFlashpointInstall = std::make_unique<FP::Install>(installPath);
 
         if(mFlashpointInstall->matchesTargetVersion())
             ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
@@ -159,7 +159,7 @@ void MainWindow::gatherInstallInfo()
 bool MainWindow::parseLaunchBoxData()
 {
     // IO Error check instance
-    Qx::IO::IOOpReport existingCheck;
+    Qx::IOOpReport existingCheck;
 
     // Get list of existing platforms and playlists
     existingCheck = mLaunchBoxInstall->populateExistingItems();
@@ -258,7 +258,7 @@ void MainWindow::postListError(QString mainText, QStringList detailedItems)
     listError.exec();
 }
 
-void MainWindow::postIOError(Qx::IO::IOOpReport report)
+void MainWindow::postIOError(Qx::IOOpReport report)
 {
     QMessageBox ioErrorMsg;
     ioErrorMsg.setIcon(QMessageBox::Critical);
@@ -361,10 +361,10 @@ void MainWindow::importProcess()
     QSet<QString> targetGameIDs;
 
     // Initial query buffers
-    QList<FP::FlashpointInstall::DBQueryBuffer> gameQueries;
-    FP::FlashpointInstall::DBQueryBuffer additionalAppQuery;
-    FP::FlashpointInstall::DBQueryBuffer playlistQueries;
-    QList<FP::FlashpointInstall::DBQueryBuffer> playlistGameQueries;
+    QList<FP::Install::DBQueryBuffer> gameQueries;
+    FP::Install::DBQueryBuffer addAppQuery;
+    FP::Install::DBQueryBuffer playlistQueries;
+    QList<FP::Install::DBQueryBuffer> playlistGameQueries;
 
     // Create progress dialog, set initial busy state and show
     QProgressDialog importProgressDialog(PD_LABEL_FP_DB_INITIAL_QUERY, PD_BUTTON_CANCEL, 0, 0);
@@ -379,8 +379,8 @@ void MainWindow::importProcess()
         return;
     }
 
-    // Make initial additional apps query
-    queryError = mFlashpointInstall->initialAdditionalAppQuery(additionalAppQuery);
+    // Make initial add apps query
+    queryError = mFlashpointInstall->initialAddAppQuery(addAppQuery);
     if(queryError.isValid())
     {
         postSqlError(queryError);
@@ -396,12 +396,12 @@ void MainWindow::importProcess()
     }
 
     // Build ID list for playlist game query
-    QList<FP::FlashpointInstall::DBPlaylist> targetKnownPlaylists;
+    QList<FP::Install::DBPlaylist> targetKnownPlaylists;
     for(int i = 0; i < playlistQueries.size; i++)
     {
         playlistQueries.result.next(); // Advance to next record
-        targetKnownPlaylists.append({playlistQueries.result.value(FP::FlashpointInstall::DBTable_Playlist::COL_TITLE).toString(),
-                                     QUuid(playlistQueries.result.value(FP::FlashpointInstall::DBTable_Playlist::COL_ID).toString())});
+        targetKnownPlaylists.append({playlistQueries.result.value(FP::Install::DBTable_Playlist::COL_TITLE).toString(),
+                                     QUuid(playlistQueries.result.value(FP::Install::DBTable_Playlist::COL_ID).toString())});
     }
 
     // Make initial playlist games query

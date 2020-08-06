@@ -5,12 +5,12 @@ namespace FP
 {
 
 //===============================================================================================================
-// FLASHPOINT INSTALL::OFLIb
+// INSTALL::OFLIb
 //===============================================================================================================
 
 //-Class Functions--------------------------------------------------------------------------------------------
 //Public:
-QString FlashpointInstall::OFLIb::parametersFromStandard(QString originalAppPath, QString originalAppParams)
+QString Install::OFLIb::parametersFromStandard(QString originalAppPath, QString originalAppParams)
 {
     if(originalAppPath == DBTable_Additonal_App::ENTRY_MESSAGE)
         return MSG_ARG.arg(originalAppParams);
@@ -19,16 +19,16 @@ QString FlashpointInstall::OFLIb::parametersFromStandard(QString originalAppPath
 }
 
 //===============================================================================================================
-// FLASHPOINT INSTALL
+// INSTALL
 //===============================================================================================================
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-FlashpointInstall::FlashpointInstall(QString installPath)
+Install::Install(QString installPath)
 {
     // Ensure instance will be valid
-    if(!pathIsValidFlashpointInstall(installPath))
-        assert("Cannot create a FlashpointInstall instance with an invalid installPath. Check first with FlashpointInstall::pathIsValidFlashpointInstall(QString).");
+    if(!pathIsValidtInstall(installPath))
+        assert("Cannot create a Install instance with an invalid installPath. Check first with Install::pathIsValidInstall(QString).");
 
     // Initialize files and directories;
     mRootDirectory = QDir(installPath);
@@ -46,14 +46,14 @@ FlashpointInstall::FlashpointInstall(QString installPath)
 
 //-Destructor------------------------------------------------------------------------------------------------
 //Public:
-FlashpointInstall::~FlashpointInstall()
+Install::~Install()
 {
     closeDatabaseConnection();
 }
 
 //-Class Functions------------------------------------------------------------------------------------------------
 //Public:
-bool FlashpointInstall::pathIsValidFlashpointInstall(QString installPath)
+bool Install::pathIsValidtInstall(QString installPath)
 {
     QFileInfo logosFolder(installPath + "/" + LOGOS_PATH);
     QFileInfo screenshotsFolder(installPath + "/" + SCREENSHOTS_PATH);
@@ -68,7 +68,7 @@ bool FlashpointInstall::pathIsValidFlashpointInstall(QString installPath)
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-bool FlashpointInstall::matchesTargetVersion() const
+bool Install::matchesTargetVersion() const
 {
     mMainEXEFile->open(QFile::ReadOnly);
     QByteArray mainEXEFileData = mMainEXEFile->readAll();
@@ -76,7 +76,7 @@ bool FlashpointInstall::matchesTargetVersion() const
     return Qx::Integrity::generateChecksum(mainEXEFileData, QCryptographicHash::Sha256) == TARGET_EXE_SHA256;
 }
 
-QSqlDatabase FlashpointInstall::openDatabaseConnection()
+QSqlDatabase Install::openDatabaseConnection()
 {
     QSqlDatabase fpDB = QSqlDatabase::database(DATABASE_CONNECTION_NAME, false);
 
@@ -88,10 +88,10 @@ QSqlDatabase FlashpointInstall::openDatabaseConnection()
     return QSqlDatabase();
 }
 
-void FlashpointInstall::closeDatabaseConnection() { QSqlDatabase::database(DATABASE_CONNECTION_NAME, false).close(); }
+void Install::closeDatabaseConnection() { QSqlDatabase::database(DATABASE_CONNECTION_NAME, false).close(); }
 
 
-QSqlError FlashpointInstall::checkDatabaseForRequiredTables(QSet<QString>& missingTablesReturnBuffer) const
+QSqlError Install::checkDatabaseForRequiredTables(QSet<QString>& missingTablesReturnBuffer) const
 {
     // Prep return buffer
     missingTablesReturnBuffer.clear();
@@ -114,7 +114,7 @@ QSqlError FlashpointInstall::checkDatabaseForRequiredTables(QSet<QString>& missi
     return  QSqlError();
 }
 
-QSqlError FlashpointInstall::checkDatabaseForRequiredColumns(QSet<QString> &missingColumsReturnBuffer) const
+QSqlError Install::checkDatabaseForRequiredColumns(QSet<QString> &missingColumsReturnBuffer) const
 {
 
     // Ensure return buffer starts empty
@@ -153,7 +153,7 @@ QSqlError FlashpointInstall::checkDatabaseForRequiredColumns(QSet<QString> &miss
     return QSqlError();
 }
 
-QSqlError FlashpointInstall::populateAvailableItems()
+QSqlError Install::populateAvailableItems()
 {
     // Get database
     QSqlDatabase fpDB = QSqlDatabase::database(DATABASE_CONNECTION_NAME);
@@ -190,7 +190,7 @@ QSqlError FlashpointInstall::populateAvailableItems()
     return QSqlError();
 }
 
-QSqlError FlashpointInstall::initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QStringList selectedPlatforms) const
+QSqlError Install::initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QStringList selectedPlatforms) const
 {
     // Ensure return buffer is reset
     resultBuffer.clear();
@@ -226,7 +226,7 @@ QSqlError FlashpointInstall::initialGameQuery(QList<DBQueryBuffer>& resultBuffer
     return QSqlError();
 }
 
-QSqlError FlashpointInstall::initialAdditionalAppQuery(DBQueryBuffer& resultBuffer) const
+QSqlError Install::initialAddAppQuery(DBQueryBuffer& resultBuffer) const
 {
     // Ensure return buffer is effectively null
     resultBuffer.source = QString();
@@ -261,7 +261,7 @@ QSqlError FlashpointInstall::initialAdditionalAppQuery(DBQueryBuffer& resultBuff
     return QSqlError();
 }
 
-QSqlError FlashpointInstall::initialPlaylistQuery(DBQueryBuffer& resultBuffer, QStringList selectedPlaylists) const
+QSqlError Install::initialPlaylistQuery(DBQueryBuffer& resultBuffer, QStringList selectedPlaylists) const
 {
     // Ensure return buffer is effectively null
     resultBuffer.source = QString();
@@ -296,7 +296,7 @@ QSqlError FlashpointInstall::initialPlaylistQuery(DBQueryBuffer& resultBuffer, Q
     return QSqlError();
 }
 
-QSqlError FlashpointInstall::initialPlaylistGameQuery(QList<DBQueryBuffer>& resultBuffer, QList<DBPlaylist> knownPlaylistsToQuery) const
+QSqlError Install::initialPlaylistGameQuery(QList<DBQueryBuffer>& resultBuffer, QList<DBPlaylist> knownPlaylistsToQuery) const
 {
     // Ensure return buffer is empty
     resultBuffer.clear();
@@ -330,10 +330,10 @@ QSqlError FlashpointInstall::initialPlaylistGameQuery(QList<DBQueryBuffer>& resu
     return QSqlError();
 }
 
-QStringList FlashpointInstall::getPlatformList() const { return mPlatformList; }
+QStringList Install::getPlatformList() const { return mPlatformList; }
 
-QStringList FlashpointInstall::getPlaylistList() const { return  mPlaylistList; }
+QStringList Install::getPlaylistList() const { return  mPlaylistList; }
 
-QString FlashpointInstall::getOFLIbPath() const { return mOFLIbEXEFile->fileName(); }
+QString Install::getOFLIbPath() const { return mOFLIbEXEFile->fileName(); }
 
 }
