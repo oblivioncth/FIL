@@ -289,6 +289,222 @@ void Install::XMLReader::parsePlaylistGame()
 }
 
 //===============================================================================================================
+// INSTALL::XMLWriter
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Public:
+Install::XMLWriter::XMLWriter(XMLDoc* sourceDoc)
+    : mSourceDocument(sourceDoc) {}
+
+//-Instance Functions-------------------------------------------------------------------------------------------------
+//Public:
+bool Install::XMLWriter::writeOutOf()
+{
+    // Hook writer to document handle
+    mStreamWriter.setDevice(mSourceDocument->mDocumentFile.get());
+
+    // Enable auto formating
+    mStreamWriter.setAutoFormatting(true);
+
+    // Write standard XML header
+    mStreamWriter.writeStartDocument();
+
+    // Write main LaunchBox tag
+    mStreamWriter.writeStartElement(XML_ROOT_ELEMENT);
+
+    // Write main body
+    if(!writeLaunchBoxDocument())
+        return false;
+
+    // Close main LaunchBox tag
+    mStreamWriter.writeEndElement();
+
+    // Finish document
+    mStreamWriter.writeEndDocument();
+
+    // Return true on success
+    return true;
+}
+
+//Private:
+bool Install::XMLWriter::writeLaunchBoxDocument()
+{
+    // Platform procedure
+    if(mSourceDocument->getHandleTarget().type == Platform)
+    {
+        // Write all games
+        for(const Game& game : mSourceDocument->getGames())
+        {
+            if(!writeGame(game))
+                return false;
+        }
+
+        // Write all additional apps
+        for(const AddApp& addApp : mSourceDocument->getAddApps())
+        {
+            if(!writeAddApp(addApp))
+                return false;
+        }
+    }
+    else // Playlist procedure
+    {
+        // Write playlist header
+        if(!writePlaylistHeader(mSourceDocument->getPlaylistHeader()))
+            return false;
+
+        // Write all playlist games
+        for(const PlaylistGame& playlistGame : mSourceDocument->getPlaylistGames())
+        {
+            if(!writePlaylistGame(playlistGame))
+                return false;
+        }
+    }
+
+    // Return true on success
+    return true;
+}
+
+bool Install::XMLWriter::writeGame(const Game& game)
+{
+    // Write opening tag
+    mStreamWriter.writeStartElement(XMLMainElement_Game::NAME);
+
+    // Write known tags
+    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_ID, game.getID().toString(QUuid::WithoutBraces));
+    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_TITLE, game.getTitle());
+    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_SERIES, game.getSeries());
+    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_DEVELOPER, game.getDeveloper());
+    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_PUBLISHER, game.getPublisher());
+    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_PLATFORM, game.getPlatform());
+    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_SORT_TITLE, game.getSortTitle());
+    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_DATE_ADDED, game.getDateAdded().toString(Qt::ISODateWithMs));
+    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_DATE_MODIFIED, game.getDateModified().toString(Qt::ISODateWithMs));
+    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_BROKEN,  QString::number(game.isBroken()));
+    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_PLAYMODE, game.getPlayMode());
+    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_STATUS, game.getStatus());
+    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_REGION, game.getRegion());
+    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_NOTES, game.getNotes());
+    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_SOURCE, game.getSource());
+    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_APP_PATH, game.getAppPath());
+    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_COMMAND_LINE, game.getCommandLine());
+    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_RELEASE_DATE, game.getReleaseDate().toString(Qt::ISODateWithMs));
+    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_VERSION, game.getVersion());
+
+    if(mStreamWriter.hasError())
+        return false;
+
+    // Write other tags
+    for(OtherField otherField : game.getOtherFields())
+    {
+        mStreamWriter.writeTextElement(otherField.name, otherField.value);
+
+        if(mStreamWriter.hasError())
+            return false;
+    }
+
+    // Close game tag
+    mStreamWriter.writeEndElement();
+
+    // Return true on success
+    return true;
+}
+
+bool Install::XMLWriter::writeAddApp(const AddApp& addApp)
+{
+    // Write opening tag
+    mStreamWriter.writeStartElement(XMLMainElement_AddApp::NAME);
+
+    // Write known tags
+    mStreamWriter.writeTextElement(XMLMainElement_AddApp::ELEMENT_ID, addApp.getID().toString(QUuid::WithoutBraces));
+    mStreamWriter.writeTextElement(XMLMainElement_AddApp::ELEMENT_GAME_ID, addApp.getID().toString(QUuid::WithoutBraces));
+    mStreamWriter.writeTextElement(XMLMainElement_AddApp::ELEMENT_APP_PATH, addApp.getAppPath());
+    mStreamWriter.writeTextElement(XMLMainElement_AddApp::ELEMENT_COMMAND_LINE, addApp.getCommandLine());
+    mStreamWriter.writeTextElement(XMLMainElement_AddApp::ELEMENT_AUTORUN_BEFORE, QString::number(addApp.isAutorunBefore()));
+    mStreamWriter.writeTextElement(XMLMainElement_AddApp::ELEMENT_NAME, addApp.getName());
+    mStreamWriter.writeTextElement(XMLMainElement_AddApp::ELEMENT_WAIT_FOR_EXIT, QString::number(addApp.isWaitForExit()));
+
+    if(mStreamWriter.hasError())
+        return false;
+
+    // Write other tags
+    for(OtherField otherField : addApp.getOtherFields())
+    {
+        mStreamWriter.writeTextElement(otherField.name, otherField.value);
+
+        if(mStreamWriter.hasError())
+            return false;
+    }
+
+    // Close game tag
+    mStreamWriter.writeEndElement();
+
+    // Return true on success
+    return true;
+}
+
+bool Install::XMLWriter::writePlaylistHeader(const PlaylistHeader& playlistHeader)
+{
+    // Write opening tag
+    mStreamWriter.writeStartElement(XMLMainElement_PlaylistHeader::NAME);
+
+    // Write known tags
+    mStreamWriter.writeTextElement(XMLMainElement_PlaylistHeader::ELEMENT_ID, playlistHeader.getPlaylistID().toString(QUuid::WithoutBraces));
+    mStreamWriter.writeTextElement(XMLMainElement_PlaylistHeader::ELEMENT_NAME, playlistHeader.getName());
+    mStreamWriter.writeTextElement(XMLMainElement_PlaylistHeader::ELEMENT_NESTED_NAME, playlistHeader.getNestedName());
+    mStreamWriter.writeTextElement(XMLMainElement_PlaylistHeader::ELEMENT_NOTES, playlistHeader.getNotes());
+
+    if(mStreamWriter.hasError())
+        return false;
+
+    // Write other tags
+    for(OtherField otherField : playlistHeader.getOtherFields())
+    {
+        mStreamWriter.writeTextElement(otherField.name, otherField.value);
+
+        if(mStreamWriter.hasError())
+            return false;
+    }
+
+    // Close game tag
+    mStreamWriter.writeEndElement();
+
+    // Return true on success
+    return true;
+}
+
+bool Install::XMLWriter::writePlaylistGame(const PlaylistGame& playlistGame)
+{
+    // Write opening tag
+    mStreamWriter.writeStartElement(XMLMainElement_PlaylistGame::NAME);
+
+    // Write known tags
+    mStreamWriter.writeTextElement(XMLMainElement_PlaylistGame::ELEMENT_ID, playlistGame.getGameID().toString(QUuid::WithoutBraces));
+    mStreamWriter.writeTextElement(XMLMainElement_PlaylistGame::ELEMENT_GAME_TITLE, playlistGame.getGameTitle());
+    mStreamWriter.writeTextElement(XMLMainElement_PlaylistGame::ELEMENT_GAME_PLATFORM, playlistGame.getGamePlatform());
+    mStreamWriter.writeTextElement(XMLMainElement_PlaylistGame::ELEMENT_MANUAL_ORDER, QString::number(playlistGame.getManualOrder()));
+    mStreamWriter.writeTextElement(XMLMainElement_PlaylistGame::ELEMENT_LB_DB_ID, QString::number(playlistGame.getLBDatabaseID()));
+
+    if(mStreamWriter.hasError())
+        return false;
+
+    // Write other tags
+    for(OtherField otherField : playlistGame.getOtherFields())
+    {
+        mStreamWriter.writeTextElement(otherField.name, otherField.value);
+
+        if(mStreamWriter.hasError())
+            return false;
+    }
+
+    // Close game tag
+    mStreamWriter.writeEndElement();
+
+    // Return true on success
+    return true;
+}
+
+//===============================================================================================================
 // INSTALL
 //===============================================================================================================
 
@@ -395,8 +611,23 @@ Qx::XmlStreamReaderError Install::openXMLDocument(std::unique_ptr<XMLDoc>& retur
 
 bool Install::saveXMLDocument(std::unique_ptr<XMLDoc> document)
 {
-    // TODO: MAKE ME
-    return true;
+    // Prepare writer
+    XMLWriter docWriter(document.get());
+
+    // Write to file
+    bool successfulWrite = docWriter.writeOutOf();
+
+    // Close document file
+    document->mDocumentFile->close();
+
+    // Remove handle reservation
+    mLeasedHandles.remove(document->getHandleTarget());
+
+    // Ensure document is cleared
+    document.reset();
+
+    // Return write status and let document ptr auto delete
+    return successfulWrite;
 }
 
 bool Install::revertAllChanges()

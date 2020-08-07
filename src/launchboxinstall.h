@@ -16,6 +16,7 @@ class Install
 //-Class Forward Declarations--------------------------------------------------------------------------------------
 public:
     class XMLReader;
+    class XMLWriter;
 
 //-Class Enums---------------------------------------------------------------------------------------------------
 public:
@@ -100,6 +101,9 @@ public:
     class XMLDoc
     {
         friend class XMLReader;
+        friend class XMLWriter;
+        friend class Install;
+
     //-Inner Classes----------------------------------------------------------------------------------------------------
     public:
         class Key
@@ -166,7 +170,33 @@ public:
         void parseAddApp();
         void parsePlaylistHeader();
         void parsePlaylistGame();
+    };
 
+    class XMLWriter
+    {
+        //-Class variables-----------------------------------------------------------------------------------------------------
+        public:
+            static inline const QString ERR_WRITE_FAILED = "Writing to the %1 %2 failed";
+
+        //-Instance Variables--------------------------------------------------------------------------------------------------
+        private:
+            QXmlStreamWriter mStreamWriter;
+            XMLDoc* mSourceDocument;
+
+        //-Constructor--------------------------------------------------------------------------------------------------------
+        public:
+            XMLWriter(XMLDoc* sourceDoc);
+
+        //-Instance Functions-------------------------------------------------------------------------------------------------
+        public:
+            bool writeOutOf();
+
+        private:
+            bool writeLaunchBoxDocument();
+            bool writeGame(const Game& game);
+            bool writeAddApp(const AddApp& addApp);
+            bool writePlaylistHeader(const PlaylistHeader& playlistHeader);
+            bool writePlaylistGame(const PlaylistGame& playlistGame);
     };
 
 //-Class Variables--------------------------------------------------------------------------------------------------
