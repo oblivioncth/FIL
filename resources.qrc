@@ -4,5 +4,6 @@
         <file>res/icon/Mismatch_Install.png</file>
         <file>res/icon/No_Install.png</file>
         <file>res/icon/Valid_Install.png</file>
+        <file>res/icon/Update_Mode_Info.png</file>
     </qresource>
 </RCC>

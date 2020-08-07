@@ -18,10 +18,19 @@ class MainWindow : public QMainWindow
 
 //-Class Enums------------------------------------------------------------------------------------------------
     enum InputStage {PATHS, IMPORTS};
-    enum UpdateMode {NEW_ONLY, REVISE_EXISTING};
 
 //-Class Variables--------------------------------------------------------------------------------------------
 private:
+    // Messages - Help
+    static inline const QString MSG_UPDATE_MODE_HELP = "<b>New Only</b> - Only games not already present in your collection will be added, existing entries will be left completely untouched\n"
+                                                       "\n"
+                                                       "<b>New & Existing</b> - Games not already present in your collection will be added and existing entries will have their descriptive metadata (i.e. Title, Author, etc.) replaced by the "
+                                                       "the details present in the target Flashpoint version; however, personal metadata (i.e. Playcount, Acheivements, etc.) will be be altered\n"
+                                                       "\n"
+                                                       "<b>Remove Obsolete</b> - Games in your collection that no longer present in the target version of Flashpoint will be removed. You will no longer be able to play such games if this option "
+                                                       "is unchecked, but this may be useful for archival purposes or incase you later want to revert to a previous version of Flashpoint and maintain the entries personal metadata. Note that "
+                                                       "this option will still cause missing games to be removed even if you are going backwards to a previous version of FP, as implied above.";
+
     // Messages - Input
     static inline const QString MSG_LB_INSTALL_INVALID = "The specified directory either doesn't contain a valid LaunchBox install, or it contains a version that is incompatible with this tool.";
     static inline const QString MSG_FP_INSTALL_INVALID = "The specified directory either doesn't contain a valid Flashpoint install, or it contains a version that is incompatible with this tool.";
@@ -44,6 +53,7 @@ private:
     // Dialog captions
     static inline const QString CAPTION_LAUNCHBOX_BROWSE = "Select the root directory of your LaunchBox install...";
     static inline const QString CAPTION_FLASHPOINT_BROWSE = "Select the root directory of your Flashpoint install...";
+    static inline const QString CAPTION_UPDATE_MODE_HELP = "Update mode options";
 
 //-Instance Variables--------------------------------------------------------------------------------------------
 private:
@@ -81,7 +91,7 @@ private:
     void importSelectionReaction(QListWidgetItem* item, QWidget* parent);
     QStringList getSelectedPlatforms() const;
     QStringList getSelectedPlaylists() const;
-    UpdateMode getSelectedUpdateMode() const;
+    LB::Install::UpdateOptions getSelectedUpdateOptions() const;
     void importProcess();
 
 //-Slots---------------------------------------------------------------------------------------------------------

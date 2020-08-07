@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>489</width>
-    <height>667</height>
+    <height>710</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -269,7 +269,7 @@
       <x>10</x>
       <y>480</y>
       <width>471</width>
-      <height>91</height>
+      <height>121</height>
      </rect>
     </property>
     <property name="title">
@@ -285,7 +285,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Only Add New Games</string>
+      <string>New Only</string>
      </property>
      <property name="checked">
       <bool>true</bool>
@@ -296,12 +296,12 @@
       <rect>
        <x>20</x>
        <y>60</y>
-       <width>241</width>
+       <width>211</width>
        <height>17</height>
       </rect>
      </property>
      <property name="text">
-      <string>Add New And Update Existing Games</string>
+      <string>New &amp;&amp; Existing</string>
      </property>
     </widget>
     <widget class="QLabel" name="label">
@@ -397,12 +397,45 @@
       <string/>
      </property>
     </widget>
+    <widget class="QCheckBox" name="checkBox_removeObsolete">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>90</y>
+       <width>241</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Remove Obsolete (Recommended)</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_updateModeHelp">
+     <property name="geometry">
+      <rect>
+       <x>270</x>
+       <y>60</y>
+       <width>71</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Help</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../resources.qrc">
+       <normaloff>:/res/icon/Update_Mode_Info.png</normaloff>:/res/icon/Update_Mode_Info.png</iconset>
+     </property>
+    </widget>
    </widget>
    <widget class="QPushButton" name="pushButton_startImport">
     <property name="geometry">
      <rect>
       <x>400</x>
-      <y>590</y>
+      <y>650</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -415,7 +448,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>590</y>
+      <y>650</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -431,7 +464,7 @@
      <x>0</x>
      <y>0</y>
      <width>489</width>
-     <height>24</height>
+     <height>20</height>
     </rect>
    </property>
   </widget>
@@ -698,6 +731,22 @@
     <hint type="destinationlabel">
      <x>244</x>
      <y>333</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_updateModeHelp</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>all_on_pushButton_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>315</x>
+     <y>570</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>244</x>
+     <y>354</y>
     </hint>
    </hints>
   </connection>

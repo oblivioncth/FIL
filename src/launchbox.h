@@ -17,15 +17,6 @@ class PlaylistHeaderBuilder;
 class PlaylistGameBuilder;
 
 //-Namespace Global Structs-----------------------------------------------------------------------------------------
-struct OtherField
-{
-    QString name;
-    QString value;
-
-    friend inline bool operator== (const OtherField& lhs, const OtherField& rhs) noexcept;
-    friend inline uint qHash(const OtherField& key, uint seed) noexcept;
-};
-
 class Game
 {
     friend class GameBuilder;
@@ -83,7 +74,9 @@ public:
     QString getCommandLine() const;
     QDateTime getReleaseDate() const;
     QString getVersion() const;
-    QSet<OtherField> getOtherFields() const;
+    QHash<QString, QString> getOtherFields() const;
+
+    void setOtherFields(QHash<QString, QString> otherFields);
 };
 
 class GameBuilder
@@ -117,7 +110,7 @@ public:
     GameBuilder& wCommandLine(QString commandLine);
     GameBuilder& wReleaseDate(QString rawReleaseDate);
     GameBuilder& wVersion(QString version);
-    GameBuilder& wOtherField(OtherField otherField);
+    GameBuilder& wOtherField(QPair<QString, QString> otherField);
 
     Game build();
 };
@@ -155,7 +148,9 @@ public:
     bool isAutorunBefore() const;
     QString getName() const;
     bool isWaitForExit() const;
-    QSet<OtherField> getOtherFields() const;
+    QHash<QString, QString> getOtherFields() const;
+
+    void setOtherFields(QHash<QString, QString> otherFields);
 };
 
 class AddAppBuilder
@@ -177,7 +172,7 @@ public:
     AddAppBuilder& wAutorunBefore(QString rawAutorunBefore);
     AddAppBuilder& wName(QString name);
     AddAppBuilder& wWaitForExit(QString rawWaitForExit);
-    AddAppBuilder& wOtherField(OtherField otherField);
+    AddAppBuilder& wOtherField(QPair<QString, QString> otherField);
 
     AddApp build();
 };
@@ -196,7 +191,7 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    PlaylistHeader(QString rawPlaylistID, QString name, QString nestedName, QString notes, QSet<OtherField> otherFields);
+    PlaylistHeader(QString rawPlaylistID, QString name, QString nestedName, QString notes, QHash<QString, QString> otherFields);
 
     PlaylistHeader();
 
@@ -210,7 +205,9 @@ public:
     QString getName() const;
     QString getNestedName() const;
     QString getNotes() const;
-    QSet<OtherField> getOtherFields() const;
+    QHash<QString, QString> getOtherFields() const;
+
+    void setOtherFields(QHash<QString, QString> otherFields);
 };
 
 class PlaylistHeaderBuilder
@@ -229,7 +226,7 @@ public:
     PlaylistHeaderBuilder& wName(QString name);
     PlaylistHeaderBuilder& wNestedName(QString nestedName);
     PlaylistHeaderBuilder& wNotes(QString notes);
-    PlaylistHeaderBuilder& wOtherField(OtherField otherField);
+    PlaylistHeaderBuilder& wOtherField(QPair<QString, QString> otherField);
 
     PlaylistHeader build();
 };
@@ -271,7 +268,9 @@ public:
     QString getGameTitle() const;
     QString getGamePlatform() const;
     int getManualOrder() const;
-    QSet<OtherField> getOtherFields() const;
+    QHash<QString, QString> getOtherFields() const;
+
+    void setOtherFields(QHash<QString, QString> otherFields);
 };
 
 class PlaylistGameBuilder
@@ -291,7 +290,7 @@ public:
     PlaylistGameBuilder& wGameTitle(QString gameTitle);
     PlaylistGameBuilder& wGamePlatform(QString gamePlatform);
     PlaylistGameBuilder& wManualOrder(QString rawManualOrder);
-    PlaylistGameBuilder& wOtherField(OtherField otherField);
+    PlaylistGameBuilder& wOtherField(QPair<QString, QString> otherField);
 
     PlaylistGame build();
 };

@@ -21,9 +21,15 @@ public:
 //-Class Enums---------------------------------------------------------------------------------------------------
 public:
     enum XMLDocType {Platform, Playlist};
-
+    enum ImportMode {OnlyNew, NewAndExisting};
 //-Class Structs----------------------------------------------------------------------------------------------------
 public:
+    struct UpdateOptions
+    {
+        ImportMode importMode;
+        bool removeObsolete;
+    };
+
     struct XMLHandle
     {
         XMLDocType type;
@@ -34,7 +40,7 @@ public:
     };
 
 //-Inner Classes-------------------------------------------------------------------------------------------------
-public:
+public:    
     class XMLMainElement_Game
     {
     public:
@@ -118,23 +124,24 @@ public:
     private:
         std::unique_ptr<QFile> mDocumentFile;
         XMLHandle mHandleTarget;
+        UpdateOptions mUpdateOptions;
 
-        QList<Game> mGames = QList<Game>();
-        QList<AddApp> mAddApps = QList<AddApp>();
-        PlaylistHeader mPlaylistHeader = PlaylistHeader();
-        QList<PlaylistGame> mPlaylistGames = QList<PlaylistGame>();
+        QHash<QUuid, Game> mGames;
+        QHash<QUuid, AddApp> mAddApps;
+        PlaylistHeader mPlaylistHeader;
+        QHash<QUuid, PlaylistGame> mPlaylistGames;
 
     //-Constructor--------------------------------------------------------------------------------------------------------
     public:
-        explicit XMLDoc(std::unique_ptr<QFile> xmlFile,  XMLHandle xmlMetaData, const Key&);
+        explicit XMLDoc(std::unique_ptr<QFile> xmlFile, XMLHandle xmlMetaData, UpdateOptions updateOptions, const Key&);
 
     //-Instance Functions--------------------------------------------------------------------------------------------------
     public:
         XMLHandle getHandleTarget() const;
-        const QList<Game>& getGames() const;
-        const QList<AddApp>& getAddApps() const;
+        const QHash<QUuid, Game>& getGames() const;
+        const QHash<QUuid, AddApp>& getAddApps() const;
         const PlaylistHeader& getPlaylistHeader() const;
-        const QList<PlaylistGame>& getPlaylistGames() const;
+        const QHash<QUuid, PlaylistGame>& getPlaylistGames() const;
 
         void addGame(Game game);
         void addAddApp(AddApp app);
@@ -146,10 +153,12 @@ public:
     {
     //-Class variables-----------------------------------------------------------------------------------------------------
     public:
-        static inline const QString ERR_DOC_ALREADY_OPEN = "The target XML file is already open";
-        static inline const QString ERR_DOC_IN_USE = "The target XML file is in use by another program";
-        static inline const QString ERR_NOT_LB_DOC = "The target XML file is not a LaunchBox document.";
-        static inline const QString ERR_DOC_TYPE_MISMATCH = "The document contained an element that belongs to a different document type than expected.";
+        static inline const QString ERR_DOC_ALREADY_OPEN = "The target XML file (%1 | %2) is already open";
+        static inline const QString ERR_DOC_IN_USE = "The target XML file (%1 | %2) is in use by another program";
+        static inline const QString ERR_NOT_LB_DOC = "The target XML file (%1 | %2) is not a LaunchBox document.";
+        static inline const QString ERR_BAK_WONT_DEL = "The existing backup of the target XML file (%1 | %2) could not be removed.";
+        static inline const QString ERR_CANT_MAKE_BAK = "Could not create a backup of the target XML file (%1 | %2).";
+        static inline const QString ERR_DOC_TYPE_MISMATCH = "The document (%1 | %2) contained an element that belongs to a different document type than expected.";
 
     //-Instance Variables--------------------------------------------------------------------------------------------------
     private:
@@ -175,8 +184,8 @@ public:
     class XMLWriter
     {
         //-Class variables-----------------------------------------------------------------------------------------------------
-        public:
-            static inline const QString ERR_WRITE_FAILED = "Writing to the %1 %2 failed";
+        public: // TODO: Make sure this error is used with its arugments
+            static inline const QString ERR_WRITE_FAILED = "Writing to the target XML file (%1 | %2) failed";
 
         //-Instance Variables--------------------------------------------------------------------------------------------------
         private:
@@ -209,9 +218,11 @@ public:
     // XML
     static inline const QString XML_EXT = ".xml";
     static inline const QString XML_ROOT_ELEMENT = "LaunchBox";
-
-    // General
     static inline const QString MODIFIED_FILE_EXT = ".obk";
+
+    // XML Errors
+    static inline const QString ERR_CANT_REVERT_CHANGES = "Changes to one or more XML files could not be reverted. Check the platforms and playlists folder "
+                                                          "for backups with the extension (" + MODIFIED_FILE_EXT + ") and restore them manually as needed.";
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -233,6 +244,9 @@ public:
     Install(QString installPath);
 
 //-Class Functions------------------------------------------------------------------------------------------------------
+private:
+   static QString populateErrorWithTarget(QString error, XMLHandle target);
+
 public:
    static bool pathIsValidInstall(QString installPath);
 
@@ -240,7 +254,7 @@ public:
 public:
    Qx::IOOpReport populateExistingItems();
 
-   Qx::XmlStreamReaderError openXMLDocument(std::unique_ptr<XMLDoc>& returnBuffer, XMLHandle requestHandle);
+   Qx::XmlStreamReaderError openXMLDocument(std::unique_ptr<XMLDoc>& returnBuffer, XMLHandle requestHandle, UpdateOptions updateOptions);
    bool saveXMLDocument(std::unique_ptr<XMLDoc> document);
    bool revertAllChanges();
 

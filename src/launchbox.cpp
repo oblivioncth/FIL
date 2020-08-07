@@ -4,41 +4,6 @@
 namespace LB
 {
 
-//-Functions-----------------------------------------------------------------------------------------------------
-namespace // Anonymous namespace for effectively private (to this cpp) functions
-{
-    QSet<OtherField> otherFieldHashToSet(const QHash<QString, QString>& otherFieldHash)
-    {
-        QSet<OtherField> otherFieldSet;
-
-        for (QHash<QString, QString>::const_iterator i = otherFieldHash.constBegin(); i != otherFieldHash.constEnd(); ++i)
-            otherFieldSet.insert({i.key(), i.value()});
-
-        return otherFieldSet;
-    }
-}
-
-//===============================================================================================================
-// OTHER FIELD
-//===============================================================================================================
-
-//-Opperators----------------------------------------------------------------------------------------------------
-//Public:
-bool operator==(const OtherField& lhs, const OtherField& rhs) noexcept
-{
-    return lhs.name == rhs.name && lhs.value == rhs.value;
-}
-
-//-Hashing------------------------------------------------------------------------------------------------------
-uint qHash(const OtherField& key, uint seed) noexcept
-{
-    QtPrivate::QHashCombine hash;
-    seed = hash(seed, key.name);
-    seed = hash(seed, key.value);
-
-    return seed;
-}
-
 //===============================================================================================================
 // GAME
 //===============================================================================================================
@@ -93,7 +58,9 @@ QString Game::getAppPath() const { return mAppPath; }
 QString Game::getCommandLine() const { return mCommandLine; }
 QDateTime Game::getReleaseDate() const { return mReleaseDate; }
 QString Game::getVersion() const { return mVersion; }
-QSet<OtherField> Game::getOtherFields() const { return otherFieldHashToSet(mOtherFields); }
+QHash<QString, QString> Game::getOtherFields() const { return mOtherFields; }
+
+void Game::setOtherFields(QHash<QString, QString> otherFields) { mOtherFields = otherFields; }
 
 //===============================================================================================================
 // GAME BUILDER
@@ -142,9 +109,9 @@ GameBuilder& GameBuilder::wReleaseDate(QString rawReleaseDate)
 
 GameBuilder& GameBuilder::wVersion(QString version) { mGameBlueprint.mVersion = version; return *this; }
 
-GameBuilder& GameBuilder::wOtherField(OtherField otherField)
+GameBuilder& GameBuilder::wOtherField(QPair<QString, QString> otherField)
 {
-    mGameBlueprint.mOtherFields[otherField.name] = otherField.value;
+    mGameBlueprint.mOtherFields[otherField.first] = otherField.second;
     return *this;
 }
 
@@ -180,7 +147,8 @@ QString AddApp::getCommandLine() const { return mCommandLine; }
 bool AddApp::isAutorunBefore() const { return mAutorunBefore; }
 QString AddApp::getName() const { return mName; }
 bool AddApp::isWaitForExit() const { return mWaitForExit; }
-QSet<OtherField> AddApp::getOtherFields() const { return otherFieldHashToSet(mOtherFields); }
+QHash<QString, QString> AddApp::getOtherFields() const { return mOtherFields; }
+void AddApp::setOtherFields(QHash<QString, QString> otherFields) { mOtherFields = otherFields; }
 
 //===============================================================================================================
 // ADD APP BUILDER
@@ -199,9 +167,9 @@ AddAppBuilder& AddAppBuilder::wCommandLine(QString commandLine) { mAddAppBluepri
 AddAppBuilder& AddAppBuilder::wAutorunBefore(QString rawAutorunBefore) { mAddAppBlueprint.mAutorunBefore = rawAutorunBefore != 0; return *this; }
 AddAppBuilder& AddAppBuilder::wName(QString name) { mAddAppBlueprint.mName = name; return *this; }
 AddAppBuilder& AddAppBuilder::wWaitForExit(QString rawWaitForExit) { mAddAppBlueprint.mWaitForExit = rawWaitForExit != 0; return *this; }
-AddAppBuilder& AddAppBuilder::wOtherField(OtherField otherField)
+AddAppBuilder& AddAppBuilder::wOtherField(QPair<QString, QString> otherField)
 {
-    mAddAppBlueprint.mOtherFields[otherField.name] = otherField.value;
+    mAddAppBlueprint.mOtherFields[otherField.first] = otherField.second;
     return *this;
 }
 
@@ -225,7 +193,8 @@ QUuid PlaylistHeader::getPlaylistID() const { return mPlaylistID; }
 QString PlaylistHeader::getName() const { return mName; }
 QString PlaylistHeader::getNestedName() const { return mNestedName; }
 QString PlaylistHeader::getNotes() const { return mNotes; }
-QSet<OtherField> PlaylistHeader::getOtherFields() const { return otherFieldHashToSet(mOtherFields); }
+QHash<QString, QString> PlaylistHeader::getOtherFields() const { return mOtherFields; }
+void PlaylistHeader::setOtherFields(QHash<QString, QString> otherFields) { mOtherFields = otherFields; }
 
 //===============================================================================================================
 // PLAYLIST HEADER BUILDER
@@ -242,9 +211,9 @@ PlaylistHeaderBuilder& PlaylistHeaderBuilder::wName(QString name) { mPlaylistHea
 PlaylistHeaderBuilder& PlaylistHeaderBuilder::wNestedName(QString nestedName) { mPlaylistHeaderBlueprint.mNestedName = nestedName; return *this;}
 PlaylistHeaderBuilder& PlaylistHeaderBuilder::wNotes(QString notes) { mPlaylistHeaderBlueprint.mNotes = notes; return *this;}
 
-PlaylistHeaderBuilder& PlaylistHeaderBuilder::wOtherField(OtherField otherField)
+PlaylistHeaderBuilder& PlaylistHeaderBuilder::wOtherField(QPair<QString, QString> otherField)
 {
-    mPlaylistHeaderBlueprint.mOtherFields[otherField.name] = otherField.value;
+    mPlaylistHeaderBlueprint.mOtherFields[otherField.first] = otherField.second;
     return *this;
 }
 
@@ -278,7 +247,8 @@ int PlaylistGame::getLBDatabaseID() const { return mLBDatabaseID; }
 QString PlaylistGame::getGameTitle() const { return mGameTitle; }
 QString PlaylistGame::getGamePlatform() const { return mGamePlatform; }
 int PlaylistGame::getManualOrder() const { return mManualOrder; }
-QSet<OtherField> PlaylistGame::getOtherFields() const { return otherFieldHashToSet(mOtherFields); }
+QHash<QString, QString> PlaylistGame::getOtherFields() const { return mOtherFields; }
+void PlaylistGame::setOtherFields(QHash<QString, QString> otherFields) { mOtherFields = otherFields; }
 
 //===============================================================================================================
 // PLAYLIST GAME BUILDER
@@ -313,9 +283,9 @@ PlaylistGameBuilder& PlaylistGameBuilder::wManualOrder(QString rawManualOrder)
     return *this;
 }
 
-PlaylistGameBuilder& PlaylistGameBuilder::wOtherField(OtherField otherField)
+PlaylistGameBuilder& PlaylistGameBuilder::wOtherField(QPair<QString, QString> otherField)
 {
-    mPlaylistGameBlueprint.mOtherFields[otherField.name] = otherField.value;
+    mPlaylistGameBlueprint.mOtherFields[otherField.first] = otherField.second;
     return *this;
 }
 

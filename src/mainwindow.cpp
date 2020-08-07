@@ -338,12 +338,9 @@ QStringList MainWindow::getSelectedPlaylists() const
     return selectedPlaylists;
 }
 
-MainWindow::UpdateMode MainWindow::getSelectedUpdateMode() const
+LB::Install::UpdateOptions MainWindow::getSelectedUpdateOptions() const
 {
-    if(ui->radioButton_onlyAdd->isChecked())
-        return UpdateMode::NEW_ONLY;
-    else
-        return UpdateMode::REVISE_EXISTING;
+    return {ui->radioButton_onlyAdd->isChecked() ? LB::Install::OnlyNew : LB::Install::NewAndExisting, ui->checkBox_removeObsolete->isChecked() };
 }
 
 void MainWindow::importProcess()
@@ -351,7 +348,7 @@ void MainWindow::importProcess()
     // Grab options
     QStringList platformsToImport = getSelectedPlatforms();
     QStringList playlistsToImport = getSelectedPlaylists();
-    UpdateMode updateMode = getSelectedUpdateMode();
+    LB::Install::UpdateOptions updateOptions = getSelectedUpdateOptions();
 
     // Process tools
     QSqlError queryError;
@@ -470,6 +467,8 @@ void MainWindow::all_on_pushButton_clicked()
         for(int i = 0; i < ui->listWidget_playlistChoices->count(); i++)
             ui->listWidget_playlistChoices->item(i)->setCheckState(Qt::Unchecked);
     }
+    else if(senderPushButton == ui->pushButton_updateModeHelp)
+        QMessageBox::information(this, CAPTION_UPDATE_MODE_HELP, MSG_UPDATE_MODE_HELP);
     else if(senderPushButton == ui->pushButton_startImport)
         importProcess();
     else if(senderPushButton == ui->pushButton_exit)

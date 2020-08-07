@@ -200,8 +200,7 @@ QSqlError Install::initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QStringL
 
     for(QString platform : selectedPlatforms)
     {
-        // Query all games for the current platform (TODO: Restrict the columns of this query to only those actually used)
-
+        // Query all games for the current platform
         QSqlQuery initialQuery("SELECT " + DBTable_Game::COLUMN_LIST.join(",") + " FROM " + DBTable_Game::NAME + " WHERE " +
                                DBTable_Game::COL_PLATFORM + " = '" + platform + "' AND " +
                                DBTable_Game::COL_LIBRARY + " = '" + DBTable_Game::GAME_LIBRARY + "'", fpDB);
@@ -271,7 +270,7 @@ QSqlError Install::initialPlaylistQuery(DBQueryBuffer& resultBuffer, QStringList
     // Get database
     QSqlDatabase fpDB = QSqlDatabase::database(DATABASE_CONNECTION_NAME);
 
-    // Query all selected playlists (TODO: Restrict the columns of this query to only those actually used)
+    // Query all selected playlists
     QSqlQuery initialQuery("SELECT " + DBTable_Playlist::COLUMN_LIST.join(",") + " FROM " + DBTable_Playlist::NAME + " WHERE " +
                            DBTable_Playlist::COL_TITLE + " IN ('" + selectedPlaylists.join(",'") + "')", fpDB);
 
