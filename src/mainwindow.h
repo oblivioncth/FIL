@@ -85,9 +85,10 @@ private:
     void gatherInstallInfo();
     bool parseLaunchBoxData();
     bool parseFlashpointData();
-    void postSqlError(QSqlError sqlError);
+    void postSqlError(QString mainText, QSqlError sqlError);
     void postListError(QString mainText, QStringList detailedItems);
-    void postIOError(Qx::IOOpReport report);
+    void postIOError(QString mainText, Qx::IOOpReport report);
+    void postXMLError(QString mainText, Qx::XmlStreamReaderError xmlError);
     void importSelectionReaction(QListWidgetItem* item, QWidget* parent);
     QStringList getSelectedPlatforms() const;
     QStringList getSelectedPlaylists() const;

@@ -640,7 +640,7 @@ Qx::XmlStreamReaderError Install::openXMLDocument(std::unique_ptr<XMLDoc>& retur
         if(xmlFile->open(QFile::ReadWrite)) // Ensures that empty file is created if the target doesn't exist
         {
             // Create new handle to requested document
-            std::unique_ptr<XMLDoc> returnBuffer = std::make_unique<XMLDoc>(std::move(xmlFile), requestHandle, updateOptions, XMLDoc::Key{});
+            returnBuffer = std::make_unique<XMLDoc>(std::move(xmlFile), requestHandle, updateOptions, XMLDoc::Key{});
 
             // Read existing file if present
             if((requestHandle.type == Platform && mExistingPlatforms.contains(requestHandle.name)) ||

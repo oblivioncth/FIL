@@ -55,6 +55,7 @@ void MainWindow::setInputStage(InputStage stage)
             ui->groupBox_updateMode->setEnabled(false);
             ui->radioButton_onlyAdd->setChecked(true);
             ui->radioButton_updateExisting->setChecked(false);
+            ui->checkBox_removeObsolete->setChecked(true);
             ui->pushButton_startImport->setEnabled(false);
         break;
 
@@ -166,7 +167,7 @@ bool MainWindow::parseLaunchBoxData()
 
     // IO Error Check
     if(!existingCheck.wasSuccessful())
-        postIOError(existingCheck);
+        postIOError(MSG_LB_XML_UNEXPECTED_ERROR, existingCheck);
 
     // Return true on success
     return existingCheck.wasSuccessful();
@@ -195,7 +196,7 @@ bool MainWindow::parseFlashpointData()
     // SQL Error Check
     if(errorCheck.isValid())
     {
-        postSqlError(errorCheck);
+        postSqlError(MSG_FP_DB_UNEXPECTED_ERROR, errorCheck);
         return false;
     }
 
@@ -213,7 +214,7 @@ bool MainWindow::parseFlashpointData()
     // SQL Error Check
     if(errorCheck.isValid())
     {
-        postSqlError(errorCheck);
+        postSqlError(MSG_FP_DB_UNEXPECTED_ERROR, errorCheck);
         return false;
     }
 
@@ -229,18 +230,18 @@ bool MainWindow::parseFlashpointData()
 
     // SQL Error Check
     if(errorCheck.isValid())
-        postSqlError(errorCheck);
+        postSqlError(MSG_FP_DB_UNEXPECTED_ERROR, errorCheck);
 
     // Return true on success
     return !errorCheck.isValid();
 
 }
 
-void MainWindow::postSqlError(QSqlError sqlError)
+void MainWindow::postSqlError(QString mainText, QSqlError sqlError)
 {
     QMessageBox sqlErrorMsg;
     sqlErrorMsg.setIcon(QMessageBox::Critical);
-    sqlErrorMsg.setText(MSG_FP_DB_UNEXPECTED_ERROR);
+    sqlErrorMsg.setText(mainText);
     sqlErrorMsg.setInformativeText(sqlError.text());
     sqlErrorMsg.setStandardButtons(QMessageBox::Ok);
 
@@ -258,15 +259,26 @@ void MainWindow::postListError(QString mainText, QStringList detailedItems)
     listError.exec();
 }
 
-void MainWindow::postIOError(Qx::IOOpReport report)
+void MainWindow::postIOError(QString mainText, Qx::IOOpReport report)
 {
     QMessageBox ioErrorMsg;
     ioErrorMsg.setIcon(QMessageBox::Critical);
-    ioErrorMsg.setText(MSG_LB_XML_UNEXPECTED_ERROR);
+    ioErrorMsg.setText(mainText);
     ioErrorMsg.setInformativeText(report.getOutcome());
     ioErrorMsg.setStandardButtons(QMessageBox::Ok);
 
     ioErrorMsg.exec();
+}
+
+void MainWindow::postXMLError(QString mainText, Qx::XmlStreamReaderError xmlError)
+{
+    QMessageBox xmlErrorMsg;
+    xmlErrorMsg.setIcon(QMessageBox::Critical);
+    xmlErrorMsg.setText(mainText);
+    xmlErrorMsg.setInformativeText(xmlError.getText());
+    xmlErrorMsg.setStandardButtons(QMessageBox::Ok);
+
+    xmlErrorMsg.exec();
 }
 
 void MainWindow::importSelectionReaction(QListWidgetItem* item, QWidget* parent)
@@ -372,7 +384,7 @@ void MainWindow::importProcess()
     queryError = mFlashpointInstall->initialGameQuery(gameQueries, platformsToImport);
     if(queryError.isValid())
     {
-        postSqlError(queryError);
+        postSqlError(MSG_FP_DB_UNEXPECTED_ERROR, queryError);
         return;
     }
 
@@ -380,7 +392,7 @@ void MainWindow::importProcess()
     queryError = mFlashpointInstall->initialAddAppQuery(addAppQuery);
     if(queryError.isValid())
     {
-        postSqlError(queryError);
+        postSqlError(MSG_FP_DB_UNEXPECTED_ERROR, queryError);
         return;
     }
 
@@ -388,7 +400,7 @@ void MainWindow::importProcess()
     queryError = mFlashpointInstall->initialPlaylistQuery(playlistQueries, playlistsToImport);
     if(queryError.isValid())
     {
-        postSqlError(queryError);
+        postSqlError(MSG_FP_DB_UNEXPECTED_ERROR, queryError);
         return;
     }
 
@@ -405,12 +417,67 @@ void MainWindow::importProcess()
     queryError = mFlashpointInstall->initialPlaylistGameQuery(playlistGameQueries, targetKnownPlaylists);
     if(queryError.isValid())
     {
-        postSqlError(queryError);
+        postSqlError(MSG_FP_DB_UNEXPECTED_ERROR, queryError);
         return;
     }
 
     // Determine workload
     //totalSteps = gameQueries.size() +
+
+    // Process games by platform
+    for(int i = 0; i < gameQueries.size(); i++)
+    {
+        // Get current queryResult
+        FP::Install::DBQueryBuffer currentQueryResult = gameQueries.at(i);
+
+        // Open LB platform doc
+        LB::Install::XMLHandle docRequest = {LB::Install::Platform, currentQueryResult.source};
+        std::unique_ptr<LB::Install::XMLDoc> currentPlatformXML;
+        Qx::XmlStreamReaderError platformReadError = mLaunchBoxInstall->openXMLDocument(currentPlatformXML, docRequest, updateOptions);
+
+        // Stop import if error occured
+        if(platformReadError.isValid())
+        {
+            postXMLError(MSG_LB_XML_UNEXPECTED_ERROR, platformReadError);
+            return;
+        }
+
+        // Add/Update games
+        for(int j = 0; j < currentQueryResult.size; j++)
+        {
+            // Advance to next record
+            playlistQueries.result.next();
+
+            // Build game from record
+            FP::GameBuilder fpGb;
+            fpGb.wID(playlistQueries.result.value(FP::Install::DBTable_Game::COL_ID).toString());
+            fpGb.wTitle(playlistQueries.result.value(FP::Install::DBTable_Game::COL_TITLE).toString());
+            fpGb.wSeries(playlistQueries.result.value(FP::Install::DBTable_Game::COL_SERIES).toString());
+            fpGb.wDeveloper(playlistQueries.result.value(FP::Install::DBTable_Game::COL_DEVELOPER).toString());
+            fpGb.wPublisher(playlistQueries.result.value(FP::Install::DBTable_Game::COL_PUBLISHER).toString());
+            fpGb.wDateAdded(playlistQueries.result.value(FP::Install::DBTable_Game::COL_DATE_ADDED).toString());
+            fpGb.wDateModified(playlistQueries.result.value(FP::Install::DBTable_Game::COL_DATE_MODIFIED).toString());
+            fpGb.wPlatform(playlistQueries.result.value(FP::Install::DBTable_Game::COL_PLATFORM).toString());
+            fpGb.wBroken(playlistQueries.result.value(FP::Install::DBTable_Game::COL_BROKEN).toString());
+            fpGb.wPlayMode(playlistQueries.result.value(FP::Install::DBTable_Game::COL_PLAY_MODE).toString());
+            fpGb.wStatus(playlistQueries.result.value(FP::Install::DBTable_Game::COL_STATUS).toString());
+            fpGb.wNotes(playlistQueries.result.value(FP::Install::DBTable_Game::COL_NOTES).toString());
+            fpGb.wSource(playlistQueries.result.value(FP::Install::DBTable_Game::COL_SOURCE).toString());
+            fpGb.wAppPath(playlistQueries.result.value(FP::Install::DBTable_Game::COL_APP_PATH).toString());
+            fpGb.wLaunchCommand(playlistQueries.result.value(FP::Install::DBTable_Game::COL_LAUNCH_COMMAND).toString());
+            fpGb.wReleaseDate(playlistQueries.result.value(FP::Install::DBTable_Game::COL_RELEASE_DATE).toString());
+            fpGb.wVersion(playlistQueries.result.value(FP::Install::DBTable_Game::COL_VERSION).toString());
+            fpGb.wOriginalDescription(playlistQueries.result.value(FP::Install::DBTable_Game::COL_ORIGINAL_DESC).toString());
+            fpGb.wLanguage(playlistQueries.result.value(FP::Install::DBTable_Game::COL_LANGUAGE).toString());
+            fpGb.wOrderTitle(playlistQueries.result.value(FP::Install::DBTable_Game::COL_ORDER_TITLE).toString());
+
+            FP::Game fpGame = fpGb.build();
+
+            // Convert FP game to LB game and add to document
+            currentPlatformXML->addGame(LB::Game(fpGame, mFlashpointInstall->getOFLIbPath()));
+        }
+    }
+
 
 
 }
