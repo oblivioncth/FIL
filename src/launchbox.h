@@ -49,10 +49,6 @@ public:
     Game(FP::Game flashpointGame, QString fullOFLIbPath);
     Game();
 
-//-Desctructor-------------------------------------------------------------------------------------------------
-public:
-    ~Game();
-
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
     QUuid getID() const;
@@ -74,9 +70,10 @@ public:
     QString getCommandLine() const;
     QDateTime getReleaseDate() const;
     QString getVersion() const;
-    QHash<QString, QString> getOtherFields() const;
+    QHash<QString, QString>& getOtherFields();
+    const QHash<QString, QString>& getOtherFields() const;
 
-    void setOtherFields(QHash<QString, QString> otherFields);
+    void transferOtherFields(QHash<QString, QString>& otherFields);
 };
 
 class GameBuilder
@@ -135,10 +132,6 @@ public:
     AddApp(FP::AddApp flashpointAddApp, QString fullOFLIbPath);
     AddApp();
 
-//-Desctructor-------------------------------------------------------------------------------------------------
-public:
-    ~AddApp();
-
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
     QUuid getID() const;
@@ -148,9 +141,10 @@ public:
     bool isAutorunBefore() const;
     QString getName() const;
     bool isWaitForExit() const;
-    QHash<QString, QString> getOtherFields() const;
+    QHash<QString, QString>& getOtherFields();
+    const QHash<QString, QString>& getOtherFields() const;
 
-    void setOtherFields(QHash<QString, QString> otherFields);
+    void transferOtherFields(QHash<QString, QString>& otherFields);
 };
 
 class AddAppBuilder
@@ -191,13 +185,8 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    PlaylistHeader(QString rawPlaylistID, QString name, QString nestedName, QString notes, QHash<QString, QString> otherFields);
-
+    PlaylistHeader(FP::Playlist flashpointPlaylist);
     PlaylistHeader();
-
-//-Desctructor-------------------------------------------------------------------------------------------------
-public:
-    ~PlaylistHeader();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
@@ -205,9 +194,10 @@ public:
     QString getName() const;
     QString getNestedName() const;
     QString getNotes() const;
-    QHash<QString, QString> getOtherFields() const;
+    QHash<QString, QString>& getOtherFields();
+    const QHash<QString, QString>& getOtherFields() const;
 
-    void setOtherFields(QHash<QString, QString> otherFields);
+    void transferOtherFields(QHash<QString, QString>& otherFields);
 };
 
 class PlaylistHeaderBuilder
@@ -236,9 +226,11 @@ class PlaylistGame
     friend class PlaylistGameBuilder;
 
 //-Class Structs----------------------------------------------------------------------------------------------------
+public:
     struct EntryDetails
     {
         QString title;
+        QString fileName;
         QString platform;
     };
 
@@ -247,30 +239,29 @@ private:
     QUuid mGameID;
     int mLBDatabaseID;
     QString mGameTitle;
+    QString mGameFileName;
     QString mGamePlatform;
     int mManualOrder;
     QHash<QString, QString> mOtherFields;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    PlaylistGame(FP::PlaylistGame flashpointPlaylistGame, Qx::FreeIndexTracker<int>& inUseDBIDs,
-                          QHash<QUuid, EntryDetails>& playlistGameDetailsMap);
+    PlaylistGame(FP::PlaylistGame flashpointPlaylistGame, const QHash<QUuid, EntryDetails>& playlistGameDetailsMap);
     PlaylistGame();
-
-//-Desctructor-------------------------------------------------------------------------------------------------
-public:
-    ~PlaylistGame();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
     QUuid getGameID() const;
     int getLBDatabaseID() const;
     QString getGameTitle() const;
+    QString getGameFileName() const;
     QString getGamePlatform() const;
     int getManualOrder() const;
-    QHash<QString, QString> getOtherFields() const;
+    QHash<QString, QString>& getOtherFields();
+    const QHash<QString, QString>& getOtherFields() const;
 
-    void setOtherFields(QHash<QString, QString> otherFields);
+    void transferOtherFields(QHash<QString, QString>& otherFields);
+    void setLBDatabaseID(int lbDBID);
 };
 
 class PlaylistGameBuilder
@@ -288,6 +279,7 @@ public:
     PlaylistGameBuilder& wGameID(QString rawGameID);
     PlaylistGameBuilder& wLBDatabaseID(QString rawLBDatabaseID);
     PlaylistGameBuilder& wGameTitle(QString gameTitle);
+    PlaylistGameBuilder& wGameFileName(QString gameFileName);
     PlaylistGameBuilder& wGamePlatform(QString gamePlatform);
     PlaylistGameBuilder& wManualOrder(QString rawManualOrder);
     PlaylistGameBuilder& wOtherField(QPair<QString, QString> otherField);

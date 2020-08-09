@@ -12,7 +12,7 @@ namespace LB
 
 //-Opperators----------------------------------------------------------------------------------------------------
 //Public:
-bool operator==(const Install::XMLHandle& lhs, const Install::XMLHandle& rhs) noexcept
+bool operator== (const Install::XMLHandle& lhs, const Install::XMLHandle& rhs) noexcept
 {
     return lhs.type == rhs.type && lhs.name == rhs.name;
 }
@@ -33,69 +33,137 @@ uint qHash(const Install::XMLHandle& key, uint seed) noexcept
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-Install::XMLDoc::XMLDoc(std::unique_ptr<QFile> xmlFile, XMLHandle xmlMetaData, UpdateOptions updateOptions, const Key&)
-    : mDocumentFile(std::move(xmlFile)), mHandleTarget(xmlMetaData), mUpdateOptions(updateOptions) {}
+Install::XMLDoc::XMLDoc(std::unique_ptr<QFile> xmlFile, XMLHandle xmlMetaData, UpdateOptions updateOptions, Qx::FreeIndexTracker<int>* lbDBFIDT, const Key&)
+    : mDocumentFile(std::move(xmlFile)), mHandleTarget(xmlMetaData), mUpdateOptions(updateOptions), mPlaylistGameFreeLBDBIDTracker(lbDBFIDT) {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
 Install::XMLHandle Install::XMLDoc::getHandleTarget() const { return mHandleTarget; }
 
-const QHash<QUuid, Game>& Install::XMLDoc::getGames() const { return mGames; }
-
-const QHash<QUuid, AddApp>& Install::XMLDoc::getAddApps() const { return mAddApps; }
-
+const QHash<QUuid, Game>& Install::XMLDoc::getFinalGames() const { return mGamesFinal; }
+const QHash<QUuid, AddApp>& Install::XMLDoc::getFinalAddApps() const { return mAddAppsFinal; }
 const PlaylistHeader& Install::XMLDoc::getPlaylistHeader() const { return mPlaylistHeader; }
+const QHash<QUuid, PlaylistGame>& Install::XMLDoc::getFinalPlaylistGames() const { return mPlaylistGamesFinal; }
 
-const QHash<QUuid, PlaylistGame>& Install::XMLDoc::getPlaylistGames() const { return mPlaylistGames; }
+bool Install::XMLDoc::containsGame(QUuid gameID) const { return mGamesFinal.contains(gameID) || mGamesExisting.contains(gameID); }
+bool Install::XMLDoc::containsAddApp(QUuid addAppId) const { return mAddAppsFinal.contains(addAppId) || mAddAppsExisting.contains(addAppId); }
+bool Install::XMLDoc::containsPlaylistGame(QUuid gameID) const { return mPlaylistGamesFinal.contains(gameID) || mPlaylistGamesExisting.contains(gameID); }
 
 void Install::XMLDoc::addGame(Game game)
 {
+    // Only act if this doc is the appropriate type
     if(mHandleTarget.type == Platform)
     {
-        bool gameAlreadyExists = mGames.contains(game.getID());
+        QUuid key = game.getID();
 
-        if(gameAlreadyExists && mUpdateOptions.importMode == NewAndExisting)
+        // Check if game exists
+        if(mGamesExisting.contains(key))
         {
-            game.setOtherFields(mGames.value(game.getID()).getOtherFields());
-            mGames[game.getID()] = game;
+            // Replace if existing update is on, move existing otherwise
+            if(mUpdateOptions.importMode == NewAndExisting)
+            {
+                game.transferOtherFields(mGamesExisting[key].getOtherFields());
+                mGamesFinal[key] = game;
+                mGamesExisting.remove(key);
+            }
+            else
+            {
+                mGamesFinal[key] = std::move(mGamesExisting[key]);
+                mGamesExisting.remove(key);
+            }
+
         }
-        else if(!gameAlreadyExists)
-            mGames[game.getID()] = game;
+        else
+            mGamesFinal[key] = game;
     }
 }
 
 void Install::XMLDoc::addAddApp(AddApp app)
 {
+    // Only act if this doc is the appropriate type
     if(mHandleTarget.type == Platform)
     {
-        bool appAlreadyExists = mAddApps.contains(app.getID());
+        QUuid key = app.getID();
 
-        if(appAlreadyExists && mUpdateOptions.importMode == NewAndExisting)
+        // Check if add app exists
+        if(mAddAppsExisting.contains(key))
         {
-            app.setOtherFields(mAddApps.value(app.getID()).getOtherFields());
-            mAddApps[app.getID()] = app;
+            // Replace if existing update is on, move existing otherwise
+            if(mUpdateOptions.importMode == NewAndExisting)
+            {
+                app.transferOtherFields(mAddAppsExisting[key].getOtherFields());
+                mAddAppsFinal[key] = app;
+                mAddAppsExisting.remove(key);
+            }
+            else
+            {
+                mAddAppsFinal[key] = std::move(mAddAppsExisting[key]);
+                mAddAppsExisting.remove(key);
+            }
+
         }
-        else if(!appAlreadyExists)
-            mAddApps[app.getID()] = app;
+        else
+            mAddAppsFinal[key] = app;
     }
 }
 
 void Install::XMLDoc::setPlaylistHeader(PlaylistHeader header)
 {
-    if(mHandleTarget.type == Platform)
+    // Only act if this doc is the appropriate type
+    if(mHandleTarget.type == Playlist)
     {
-        header.setOtherFields(mPlaylistHeader.getOtherFields());
+        header.transferOtherFields(mPlaylistHeader.getOtherFields());
         mPlaylistHeader = header;
     }
 }
 
 void Install::XMLDoc::addPlaylistGame(PlaylistGame playlistGame)
 {
-    if(mHandleTarget.type == Platform)
+    // Only act if this doc is the appropriate type
+    if(mHandleTarget.type == Playlist)
     {
-        playlistGame.setOtherFields(mPlaylistGames.value(playlistGame.getGameID()).getOtherFields());
-        mPlaylistGames[playlistGame.getGameID()] = playlistGame;
+        QUuid key = playlistGame.getGameID();
+
+        // Check if playlist game exists
+        if(mPlaylistGamesExisting.contains(key))
+        {
+            // Replace if existing update is on, move existing otherwise
+            if(mUpdateOptions.importMode == NewAndExisting)
+            {
+                playlistGame.transferOtherFields(mPlaylistGamesExisting[key].getOtherFields());
+                playlistGame.setLBDatabaseID(mPlaylistGamesExisting[key].getLBDatabaseID());
+                mPlaylistGamesFinal[key] = playlistGame;
+                mPlaylistGamesExisting.remove(key);
+            }
+            else
+            {
+                mPlaylistGamesFinal[key] = std::move(mPlaylistGamesExisting[key]);
+                mPlaylistGamesExisting.remove(key);
+            }
+
+        }
+        else
+        {
+            playlistGame.setLBDatabaseID(mPlaylistGameFreeLBDBIDTracker->reserveFirstFree());
+            mPlaylistGamesFinal[key] = playlistGame;
+        }
     }
+}
+
+void Install::XMLDoc::finalize()
+{
+    // Copy items to final list if obsolete entries are to be kept
+    if(!mUpdateOptions.removeObsolete)
+    {
+        mGamesFinal.insert(mGamesExisting);
+        mAddAppsFinal.insert(mAddAppsExisting);
+        mPlaylistGamesFinal.insert(mPlaylistGamesExisting);
+    }
+
+    // Clear existing lists
+    mGamesExisting.clear();
+    mAddAppsExisting.clear();
+    mPlaylistGamesExisting.clear();
 }
 
 //===============================================================================================================
@@ -230,7 +298,8 @@ void Install::XMLReader::parseGame()
     }
 
     // Build Game and add to document
-    mTargetDocument->addGame(gb.build());
+    LB::Game existingGame = gb.build();
+    mTargetDocument->mGamesExisting[existingGame.getID()] = existingGame;
 }
 
 void Install::XMLReader::parseAddApp()
@@ -260,7 +329,8 @@ void Install::XMLReader::parseAddApp()
     }
 
     // Build Additional App and add to document
-    mTargetDocument->addAddApp(aab.build());
+    LB::AddApp existingAddApp = aab.build();
+    mTargetDocument->mAddAppsExisting[existingAddApp.getID()] = existingAddApp;
 
 }
 void Install::XMLReader::parsePlaylistHeader()
@@ -284,7 +354,7 @@ void Install::XMLReader::parsePlaylistHeader()
     }
 
     // Build Playlist Header and add to document
-    mTargetDocument->setPlaylistHeader(phb.build());
+    mTargetDocument->mPlaylistHeader = phb.build();
 
 }
 
@@ -300,6 +370,8 @@ void Install::XMLReader::parsePlaylistGame()
             pgb.wGameID(mStreamReader.readElementText());
         else if(mStreamReader.name() == XMLMainElement_PlaylistGame::ELEMENT_GAME_TITLE)
             pgb.wGameTitle(mStreamReader.readElementText());
+        else if(mStreamReader.name() == XMLMainElement_PlaylistGame::ELEMENT_GAME_FILE_NAME)
+            pgb.wGameFileName(mStreamReader.readElementText());
         else if(mStreamReader.name() == XMLMainElement_PlaylistGame::ELEMENT_GAME_PLATFORM)
             pgb.wGamePlatform(mStreamReader.readElementText());
         else if(mStreamReader.name() == XMLMainElement_PlaylistGame::ELEMENT_MANUAL_ORDER)
@@ -310,8 +382,17 @@ void Install::XMLReader::parsePlaylistGame()
             pgb.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
     }
 
-    // Build Playlist Game and add to document
-    mTargetDocument->addPlaylistGame(pgb.build());
+    // Build Playlist Game
+    LB::PlaylistGame existingPlaylistGame = pgb.build();
+
+    // Correct LB ID if it is invalid and then add it to tracker
+    if(existingPlaylistGame.getLBDatabaseID() < 0)
+        existingPlaylistGame.setLBDatabaseID(mTargetDocument->mPlaylistGameFreeLBDBIDTracker->reserveFirstFree());
+    else
+        mTargetDocument->mPlaylistGameFreeLBDBIDTracker->release(existingPlaylistGame.getLBDatabaseID());
+
+    // Add to document
+    mTargetDocument->mPlaylistGamesExisting[existingPlaylistGame.getGameID()] = existingPlaylistGame;
 }
 
 //===============================================================================================================
@@ -360,14 +441,14 @@ bool Install::XMLWriter::writeLaunchBoxDocument()
     if(mSourceDocument->getHandleTarget().type == Platform)
     {
         // Write all games
-        for(const Game& game : mSourceDocument->getGames())
+        for(const Game& game : mSourceDocument->getFinalGames())
         {
             if(!writeGame(game))
                 return false;
         }
 
         // Write all additional apps
-        for(const AddApp& addApp : mSourceDocument->getAddApps())
+        for(const AddApp& addApp : mSourceDocument->getFinalAddApps())
         {
             if(!writeAddApp(addApp))
                 return false;
@@ -380,7 +461,7 @@ bool Install::XMLWriter::writeLaunchBoxDocument()
             return false;
 
         // Write all playlist games
-        for(const PlaylistGame& playlistGame : mSourceDocument->getPlaylistGames())
+        for(const PlaylistGame& playlistGame : mSourceDocument->getFinalPlaylistGames())
         {
             if(!writePlaylistGame(playlistGame))
                 return false;
@@ -562,13 +643,12 @@ bool Install::pathIsValidInstall(QString installPath)
 }
 
 //-Instance Functions----------------------------------------------------------------------------------------------
-//Private:
+//Public:
 QString Install::populateErrorWithTarget(QString error, XMLHandle target)
 {
-    return error.arg(target.type).arg(target.name);
+    return error.arg(target.type == Platform ? "Platform" : "Playlist").arg(target.name);
 }
 
-//Public:
 Qx::IOOpReport Install::populateExistingItems()
 {
     // Clear existing
@@ -594,7 +674,7 @@ Qx::IOOpReport Install::populateExistingItems()
 }
 
 // Get a handle to the specified XML file (do not include ".xml" extension)
-Qx::XmlStreamReaderError Install::openXMLDocument(std::unique_ptr<XMLDoc>& returnBuffer, XMLHandle requestHandle, UpdateOptions updateOptions)
+Qx::XmlStreamReaderError Install::openXMLDocument(std::unique_ptr<XMLDoc>& returnBuffer, XMLHandle requestHandle, UpdateOptions updateOptions, Qx::FreeIndexTracker<int>* lbDBFIDT)
 {
     // Ensure return buffer is reset
     returnBuffer.reset();
@@ -640,7 +720,7 @@ Qx::XmlStreamReaderError Install::openXMLDocument(std::unique_ptr<XMLDoc>& retur
         if(xmlFile->open(QFile::ReadWrite)) // Ensures that empty file is created if the target doesn't exist
         {
             // Create new handle to requested document
-            returnBuffer = std::make_unique<XMLDoc>(std::move(xmlFile), requestHandle, updateOptions, XMLDoc::Key{});
+            returnBuffer = std::make_unique<XMLDoc>(std::move(xmlFile), requestHandle, updateOptions, lbDBFIDT, XMLDoc::Key{});
 
             // Read existing file if present
             if((requestHandle.type == Platform && mExistingPlatforms.contains(requestHandle.name)) ||

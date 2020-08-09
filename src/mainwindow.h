@@ -88,7 +88,8 @@ private:
     void postSqlError(QString mainText, QSqlError sqlError);
     void postListError(QString mainText, QStringList detailedItems);
     void postIOError(QString mainText, Qx::IOOpReport report);
-    void postXMLError(QString mainText, Qx::XmlStreamReaderError xmlError);
+    void postXMLReadError(QString mainText, Qx::XmlStreamReaderError xmlError);
+    void postGenericError(QString mainText, QString informativeText = QString());
     void importSelectionReaction(QListWidgetItem* item, QWidget* parent);
     QStringList getSelectedPlatforms() const;
     QStringList getSelectedPlaylists() const;

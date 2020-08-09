@@ -11,6 +11,7 @@ namespace FP
 //-Class Forward Declarations---------------------------------------------------------------------------------------
 class GameBuilder;
 class AddAppBuilder;
+class PlaylistBuilder;
 class PlaylistGameBuilder;
 
 class Game
@@ -46,10 +47,6 @@ private:
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
     Game();
-
-//-Desctructor-------------------------------------------------------------------------------------------------
-public:
-    ~Game();
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
@@ -133,9 +130,13 @@ private:
 public:
     AddApp();
 
-//-Desctructor-------------------------------------------------------------------------------------------------
+//-Operators-----------------------------------------------------------------------------------------------------------
 public:
-    ~AddApp();
+    friend bool operator== (const AddApp& lhs, const AddApp& rhs) noexcept;
+
+//-Hashing-------------------------------------------------------------------------------------------------------------
+public:
+    friend uint qHash(const AddApp& key, uint seed) noexcept;
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
@@ -171,6 +172,50 @@ public:
     AddApp build();
 };
 
+class Playlist
+{
+    friend class PlaylistBuilder;
+
+//-Instance Variables-----------------------------------------------------------------------------------------------
+private:
+    QUuid mID;
+    QString mTitle;
+    QString mDescription;
+    QString mAuthor;
+
+//-Constructor-------------------------------------------------------------------------------------------------
+public:
+    Playlist();
+
+//-Instance Functions------------------------------------------------------------------------------------------------------
+public:
+    QUuid getID() const;
+    QString getTitle() const;
+    QString getDescription() const;
+    QString getAuthor() const;
+
+};
+
+class PlaylistBuilder
+{
+//-Instance Variables------------------------------------------------------------------------------------------
+private:
+    Playlist mPlaylistBlueprint;
+
+//-Constructor-------------------------------------------------------------------------------------------------
+public:
+    PlaylistBuilder();
+
+//-Instance Functions------------------------------------------------------------------------------------------
+public:
+    PlaylistBuilder& wID(QString rawID);
+    PlaylistBuilder& wTitle(QString title);
+    PlaylistBuilder& wDescription(QString description);
+    PlaylistBuilder& wAuthor(QString author);
+
+    Playlist build();
+};
+
 class PlaylistGame
 {
     friend class PlaylistGameBuilder;
@@ -180,23 +225,17 @@ private:
     int mID;
     QUuid mPlaylistID;
     int mOrder;
-    QString mNotes;
     QUuid mGameID;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
     PlaylistGame();
 
-//-Desctructor-------------------------------------------------------------------------------------------------
-public:
-    ~PlaylistGame();
-
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
     int getID() const;
     QUuid getPlaylistID() const;
     int getOrder() const;
-    QString getNotes() const;
     QUuid getGameID() const;
 };
 
@@ -215,7 +254,6 @@ public:
     PlaylistGameBuilder& wID(QString rawID);
     PlaylistGameBuilder& wPlaylistID(QString rawPlaylistID);
     PlaylistGameBuilder& wOrder(QString rawOrder);
-    PlaylistGameBuilder& wNotes(QString notes);
     PlaylistGameBuilder& wGameID(QString rawGameID);
 
     PlaylistGame build();

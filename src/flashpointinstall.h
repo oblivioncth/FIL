@@ -6,6 +6,7 @@
 #include <QFile>
 #include <QtSql>
 #include "qx.h"
+#include "flashpoint.h"
 
 namespace FP
 {
@@ -48,7 +49,7 @@ public:
         static inline const QString GAME_LIBRARY = "arcade";
     };
 
-    class DBTable_Additonal_App
+    class DBTable_Add_App
     {
     public:
         static inline const QString NAME = "additional_app";
@@ -74,6 +75,10 @@ public:
         static inline const QString COL_ID = "id";
         static inline const QString COL_TITLE = "title";
         static inline const QString COL_DESCRIPTION = "description";
+        static inline const QString COL_AUTHOR = "author";
+        static inline const QString COL_LIBRARY = "library";
+
+        static inline const QString GAME_LIBRARY = "arcade";
 
         static inline const QStringList COLUMN_LIST = {COL_ID, COL_TITLE, COL_DESCRIPTION};
     };
@@ -119,12 +124,6 @@ public:
         int size;
     };
 
-    struct DBPlaylist
-    {
-        QString name;
-        QUuid ID;
-    };
-
 //-Class Variables-----------------------------------------------------------------------------------------------
 public:
     // Paths
@@ -139,7 +138,7 @@ public:
     // Database
     static inline const QString DATABASE_CONNECTION_NAME = "Flashpoint Database";
     static inline const QList<DBTableSpecs> DATABASE_SPECS_LIST = {{DBTable_Game::NAME, DBTable_Game::COLUMN_LIST},
-                                                                        {DBTable_Additonal_App::NAME, DBTable_Additonal_App::COLUMN_LIST},
+                                                                        {DBTable_Add_App::NAME, DBTable_Add_App::COLUMN_LIST},
                                                                         {DBTable_Playlist::NAME, DBTable_Playlist::COLUMN_LIST},
                                                                         {DBTable_Playlist_Game::NAME, DBTable_Playlist_Game::COLUMN_LIST}};
 
@@ -181,7 +180,7 @@ public:
     QSqlError initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QStringList selectedPlatforms) const;
     QSqlError initialAddAppQuery(DBQueryBuffer& resultBuffer) const;
     QSqlError initialPlaylistQuery(DBQueryBuffer& resultBuffer, QStringList selectedPlaylists) const;
-    QSqlError initialPlaylistGameQuery(QList<DBQueryBuffer>& resultBuffer, QList<DBPlaylist> knownPlaylistsToQuery) const;
+    QSqlError initialPlaylistGameQuery(QList<QPair<DBQueryBuffer, FP::Playlist>>& resultBuffer, const QList<FP::Playlist>& knownPlaylistsToQuery) const;
 
     QStringList getPlatformList() const;
     QStringList getPlaylistList() const;

@@ -33,10 +33,6 @@ Game::Game(FP::Game flashpointGame, QString fullOFLIbPath)
       mReleaseDate(flashpointGame.getReleaseDate()),
       mVersion(flashpointGame.getVersion()) {}
 
-//-Destructor------------------------------------------------------------------------------------------------
-//Public:
-Game::~Game() {}
-
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
 QUuid Game::getID() const { return mID; }
@@ -58,9 +54,10 @@ QString Game::getAppPath() const { return mAppPath; }
 QString Game::getCommandLine() const { return mCommandLine; }
 QDateTime Game::getReleaseDate() const { return mReleaseDate; }
 QString Game::getVersion() const { return mVersion; }
-QHash<QString, QString> Game::getOtherFields() const { return mOtherFields; }
+QHash<QString, QString>& Game::getOtherFields() { return mOtherFields; }
+const QHash<QString, QString>& Game::getOtherFields() const { return mOtherFields; }
 
-void Game::setOtherFields(QHash<QString, QString> otherFields) { mOtherFields = otherFields; }
+void Game::transferOtherFields(QHash<QString, QString>& otherFields) { mOtherFields = std::move(otherFields); }
 
 //===============================================================================================================
 // GAME BUILDER
@@ -134,10 +131,6 @@ AddApp::AddApp(FP::AddApp flashpointAddApp, QString fullOFLIbPath)
 
 AddApp::AddApp() {}
 
-//-Destructor------------------------------------------------------------------------------------------------
-//Public:
-AddApp::~AddApp() {}
-
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
 QUuid AddApp::getID() const { return mID; }
@@ -147,8 +140,9 @@ QString AddApp::getCommandLine() const { return mCommandLine; }
 bool AddApp::isAutorunBefore() const { return mAutorunBefore; }
 QString AddApp::getName() const { return mName; }
 bool AddApp::isWaitForExit() const { return mWaitForExit; }
-QHash<QString, QString> AddApp::getOtherFields() const { return mOtherFields; }
-void AddApp::setOtherFields(QHash<QString, QString> otherFields) { mOtherFields = otherFields; }
+QHash<QString, QString>& AddApp::getOtherFields() { return mOtherFields; }
+const QHash<QString, QString>& AddApp::getOtherFields() const { return mOtherFields; }
+void AddApp::transferOtherFields(QHash<QString, QString>& otherFields) { mOtherFields = std::move(otherFields); }
 
 //===============================================================================================================
 // ADD APP BUILDER
@@ -182,10 +176,12 @@ AddApp AddAppBuilder::build() { return mAddAppBlueprint; }
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 PlaylistHeader::PlaylistHeader() {}
+PlaylistHeader::PlaylistHeader(FP::Playlist flashpointPlaylist)
+    : mPlaylistID(flashpointPlaylist.getID()),
+      mName(flashpointPlaylist.getTitle()),
+      mNestedName(flashpointPlaylist.getTitle()),
+      mNotes(flashpointPlaylist.getDescription()) {}
 
-//-Destructor------------------------------------------------------------------------------------------------
-//Public:
-PlaylistHeader::~PlaylistHeader() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
@@ -193,8 +189,9 @@ QUuid PlaylistHeader::getPlaylistID() const { return mPlaylistID; }
 QString PlaylistHeader::getName() const { return mName; }
 QString PlaylistHeader::getNestedName() const { return mNestedName; }
 QString PlaylistHeader::getNotes() const { return mNotes; }
-QHash<QString, QString> PlaylistHeader::getOtherFields() const { return mOtherFields; }
-void PlaylistHeader::setOtherFields(QHash<QString, QString> otherFields) { mOtherFields = otherFields; }
+QHash<QString, QString>& PlaylistHeader::getOtherFields() { return mOtherFields; }
+const QHash<QString, QString>& PlaylistHeader::getOtherFields() const { return mOtherFields; }
+void PlaylistHeader::transferOtherFields(QHash<QString, QString>& otherFields) { mOtherFields = std::move(otherFields); }
 
 //===============================================================================================================
 // PLAYLIST HEADER BUILDER
@@ -226,29 +223,29 @@ PlaylistHeader PlaylistHeaderBuilder::build() { return mPlaylistHeaderBlueprint;
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-PlaylistGame::PlaylistGame(FP::PlaylistGame flashpointPlaylistGame, Qx::FreeIndexTracker<int>& inUseDBIDs,
-                                             QHash<QUuid, EntryDetails>& playlistGameDetailsMap)
+PlaylistGame::PlaylistGame(FP::PlaylistGame flashpointPlaylistGame, const QHash<QUuid, EntryDetails>& playlistGameDetailsMap)
     : mGameID(flashpointPlaylistGame.getGameID()),
-      mLBDatabaseID(!inUseDBIDs.isReserved(flashpointPlaylistGame.getID()) ? flashpointPlaylistGame.getID() : inUseDBIDs.reserveFirstFree()),
-      mGameTitle( playlistGameDetailsMap.value(mGameID).title),
+      mLBDatabaseID(-1),
+      mGameTitle(playlistGameDetailsMap.value(mGameID).title),
+      mGameFileName(playlistGameDetailsMap.value(mGameID).fileName),
       mGamePlatform(playlistGameDetailsMap.value(mGameID).platform),
       mManualOrder(flashpointPlaylistGame.getOrder()) {}
 
 PlaylistGame::PlaylistGame() {}
-
-//-Destructor------------------------------------------------------------------------------------------------
-//Public:
-PlaylistGame::~PlaylistGame() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
 QUuid PlaylistGame::getGameID() const { return mGameID; };
 int PlaylistGame::getLBDatabaseID() const { return mLBDatabaseID; }
 QString PlaylistGame::getGameTitle() const { return mGameTitle; }
+QString PlaylistGame::getGameFileName() const { return mGameFileName; }
 QString PlaylistGame::getGamePlatform() const { return mGamePlatform; }
 int PlaylistGame::getManualOrder() const { return mManualOrder; }
-QHash<QString, QString> PlaylistGame::getOtherFields() const { return mOtherFields; }
-void PlaylistGame::setOtherFields(QHash<QString, QString> otherFields) { mOtherFields = otherFields; }
+QHash<QString, QString>& PlaylistGame::getOtherFields() { return mOtherFields; }
+const QHash<QString, QString>& PlaylistGame::getOtherFields() const { return mOtherFields; }
+
+void PlaylistGame::transferOtherFields(QHash<QString, QString>& otherFields) { mOtherFields = std::move(otherFields); }
+void PlaylistGame::setLBDatabaseID(int lbDBID) { mLBDatabaseID = lbDBID; }
 
 //===============================================================================================================
 // PLAYLIST GAME BUILDER
@@ -272,6 +269,7 @@ PlaylistGameBuilder& PlaylistGameBuilder::wLBDatabaseID(QString rawLBDatabaseID)
 }
 
 PlaylistGameBuilder& PlaylistGameBuilder::wGameTitle(QString gameTitle) { mPlaylistGameBlueprint.mGameTitle = gameTitle; return *this; }
+PlaylistGameBuilder& PlaylistGameBuilder::wGameFileName(QString gameFileName) { mPlaylistGameBlueprint.mGameFileName = gameFileName; return *this; }
 PlaylistGameBuilder& PlaylistGameBuilder::wGamePlatform(QString gamePlatform) { mPlaylistGameBlueprint.mGamePlatform = gamePlatform; return *this; }
 
 PlaylistGameBuilder& PlaylistGameBuilder::wManualOrder(QString rawManualOrder)

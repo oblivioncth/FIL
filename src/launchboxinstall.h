@@ -30,13 +30,14 @@ public:
         bool removeObsolete;
     };
 
-    struct XMLHandle
+    class XMLHandle
     {
+    public:
         XMLDocType type;
         QString name;
 
-        friend inline bool operator== (const XMLHandle& lhs, const XMLHandle& rhs) noexcept;
-        friend inline uint qHash(const XMLHandle& key, uint seed) noexcept;
+        friend bool operator== (const XMLHandle& lhs, const XMLHandle& rhs) noexcept;
+        friend uint qHash(const XMLHandle& key, uint seed) noexcept;
     };
 
 //-Inner Classes-------------------------------------------------------------------------------------------------
@@ -99,6 +100,7 @@ public:
 
         static inline const QString ELEMENT_ID = "GameId";
         static inline const QString ELEMENT_GAME_TITLE = "GameTitle";
+        static inline const QString ELEMENT_GAME_FILE_NAME = "GameFileName";
         static inline const QString ELEMENT_GAME_PLATFORM = "GamePlatform";
         static inline const QString ELEMENT_MANUAL_ORDER = "ManualOrder";
         static inline const QString ELEMENT_LB_DB_ID = "LaunchBoxDbId";
@@ -125,28 +127,39 @@ public:
         std::unique_ptr<QFile> mDocumentFile;
         XMLHandle mHandleTarget;
         UpdateOptions mUpdateOptions;
+        Qx::FreeIndexTracker<int>* mPlaylistGameFreeLBDBIDTracker;
 
-        QHash<QUuid, Game> mGames;
-        QHash<QUuid, AddApp> mAddApps;
+        QHash<QUuid, Game> mGamesFinal;
+        QHash<QUuid, Game> mGamesExisting;
+        QHash<QUuid, AddApp> mAddAppsFinal;
+        QHash<QUuid, AddApp> mAddAppsExisting;
         PlaylistHeader mPlaylistHeader;
-        QHash<QUuid, PlaylistGame> mPlaylistGames;
+        QHash<QUuid, PlaylistGame> mPlaylistGamesFinal;
+        QHash<QUuid, PlaylistGame> mPlaylistGamesExisting;
+
 
     //-Constructor--------------------------------------------------------------------------------------------------------
     public:
-        explicit XMLDoc(std::unique_ptr<QFile> xmlFile, XMLHandle xmlMetaData, UpdateOptions updateOptions, const Key&);
+        explicit XMLDoc(std::unique_ptr<QFile> xmlFile, XMLHandle xmlMetaData, UpdateOptions updateOptions, Qx::FreeIndexTracker<int>* lbDBFIDT, const Key&);
 
     //-Instance Functions--------------------------------------------------------------------------------------------------
     public:
         XMLHandle getHandleTarget() const;
-        const QHash<QUuid, Game>& getGames() const;
-        const QHash<QUuid, AddApp>& getAddApps() const;
+        const QHash<QUuid, Game>& getFinalGames() const;
+        const QHash<QUuid, AddApp>& getFinalAddApps() const;
         const PlaylistHeader& getPlaylistHeader() const;
-        const QHash<QUuid, PlaylistGame>& getPlaylistGames() const;
+        const QHash<QUuid, PlaylistGame>& getFinalPlaylistGames() const;
+
+        bool containsGame(QUuid gameID) const;
+        bool containsAddApp(QUuid addAppId) const;
+        bool containsPlaylistGame(QUuid gameID) const;
 
         void addGame(Game game);
         void addAddApp(AddApp app);
         void setPlaylistHeader(PlaylistHeader header);
         void addPlaylistGame(PlaylistGame playlistGame);
+
+        void finalize();
     };
 
     class XMLReader
@@ -244,17 +257,15 @@ public:
     Install(QString installPath);
 
 //-Class Functions------------------------------------------------------------------------------------------------------
-private:
-   static QString populateErrorWithTarget(QString error, XMLHandle target);
-
 public:
    static bool pathIsValidInstall(QString installPath);
+   static QString populateErrorWithTarget(QString error, XMLHandle target);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
    Qx::IOOpReport populateExistingItems();
 
-   Qx::XmlStreamReaderError openXMLDocument(std::unique_ptr<XMLDoc>& returnBuffer, XMLHandle requestHandle, UpdateOptions updateOptions);
+   Qx::XmlStreamReaderError openXMLDocument(std::unique_ptr<XMLDoc>& returnBuffer, XMLHandle requestHandle, UpdateOptions updateOptions, Qx::FreeIndexTracker<int>* lbDBFIDT);
    bool saveXMLDocument(std::unique_ptr<XMLDoc> document);
    bool revertAllChanges();
 

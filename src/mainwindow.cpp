@@ -270,7 +270,7 @@ void MainWindow::postIOError(QString mainText, Qx::IOOpReport report)
     ioErrorMsg.exec();
 }
 
-void MainWindow::postXMLError(QString mainText, Qx::XmlStreamReaderError xmlError)
+void MainWindow::postXMLReadError(QString mainText, Qx::XmlStreamReaderError xmlError)
 {
     QMessageBox xmlErrorMsg;
     xmlErrorMsg.setIcon(QMessageBox::Critical);
@@ -279,6 +279,17 @@ void MainWindow::postXMLError(QString mainText, Qx::XmlStreamReaderError xmlErro
     xmlErrorMsg.setStandardButtons(QMessageBox::Ok);
 
     xmlErrorMsg.exec();
+}
+
+void MainWindow::postGenericError(QString mainText, QString informativeText)
+{
+    QMessageBox genericErrorMsg;
+    genericErrorMsg.setIcon(QMessageBox::Critical);
+    genericErrorMsg.setText(mainText);
+    genericErrorMsg.setInformativeText(informativeText);
+    genericErrorMsg.setStandardButtons(QMessageBox::Ok);
+
+    genericErrorMsg.exec();
 }
 
 void MainWindow::importSelectionReaction(QListWidgetItem* item, QWidget* parent)
@@ -366,14 +377,16 @@ void MainWindow::importProcess()
     QSqlError queryError;
     int totalSteps;
 
-    // Lookup caches
-    QSet<QString> targetGameIDs;
+    // Caches
+    QSet<FP::AddApp> addAppsCache;
+    QHash<QUuid, LB::PlaylistGame::EntryDetails> playlistGameDetailsCache;
+    Qx::FreeIndexTracker<int> playlistGameFreeIDTracker(0, -1, {});
 
     // Initial query buffers
     QList<FP::Install::DBQueryBuffer> gameQueries;
     FP::Install::DBQueryBuffer addAppQuery;
     FP::Install::DBQueryBuffer playlistQueries;
-    QList<FP::Install::DBQueryBuffer> playlistGameQueries;
+    QList<QPair<FP::Install::DBQueryBuffer, FP::Playlist>> playlistGameQueries;
 
     // Create progress dialog, set initial busy state and show
     QProgressDialog importProgressDialog(PD_LABEL_FP_DB_INITIAL_QUERY, PD_BUTTON_CANCEL, 0, 0);
@@ -404,13 +417,25 @@ void MainWindow::importProcess()
         return;
     }
 
-    // Build ID list for playlist game query
-    QList<FP::Install::DBPlaylist> targetKnownPlaylists;
+    // Close database connection since it's no longer needed
+    mFlashpointInstall->closeDatabaseConnection();
+
+    // Process Playlists and list for playlist game query
+    QList<FP::Playlist> targetKnownPlaylists;
     for(int i = 0; i < playlistQueries.size; i++)
     {
-        playlistQueries.result.next(); // Advance to next record
-        targetKnownPlaylists.append({playlistQueries.result.value(FP::Install::DBTable_Playlist::COL_TITLE).toString(),
-                                     QUuid(playlistQueries.result.value(FP::Install::DBTable_Playlist::COL_ID).toString())});
+        // Advance to next record
+        playlistQueries.result.next();
+
+        // Form playlist from record
+        FP::PlaylistBuilder fpPb;
+        fpPb.wID(playlistQueries.result.value(FP::Install::DBTable_Playlist::COL_ID).toString());
+        fpPb.wTitle(playlistQueries.result.value(FP::Install::DBTable_Playlist::COL_TITLE).toString());
+        fpPb.wDescription(playlistQueries.result.value(FP::Install::DBTable_Playlist::COL_DESCRIPTION).toString());
+        fpPb.wAuthor(playlistQueries.result.value(FP::Install::DBTable_Playlist::COL_AUTHOR).toString());
+
+        // Build playlist and add to list
+        targetKnownPlaylists.append(fpPb.build());
     }
 
     // Make initial playlist games query
@@ -421,65 +446,149 @@ void MainWindow::importProcess()
         return;
     }
 
-    // Determine workload
+    // Determine workload TODO: implement
     //totalSteps = gameQueries.size() +
 
-    // Process games by platform
-    for(int i = 0; i < gameQueries.size(); i++)
+    // Pre-load additional apps
+    addAppsCache.reserve(addAppQuery.size);
+    for(int i = 0; i < addAppQuery.size; i++)
     {
-        // Get current queryResult
-        FP::Install::DBQueryBuffer currentQueryResult = gameQueries.at(i);
+        // Advance to next record
+        addAppQuery.result.next();
 
+        // Form additional app from record
+        FP::AddAppBuilder fpAab;
+        fpAab.wID(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_ID).toString());
+        fpAab.wAppPath(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_APP_PATH).toString());
+        fpAab.wAutorunBefore(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_AUTORUN).toString());
+        fpAab.wLaunchCommand(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_LAUNCH_COMMNAND).toString());
+        fpAab.wName(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_NAME).toString());
+        fpAab.wWaitExit(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_WAIT_EXIT).toString());
+        fpAab.wParentID(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_PARENT_ID).toString());
+
+        // Build additional app
+        FP::AddApp additionalApp = fpAab.build();
+
+        // Add to cache
+        addAppsCache.insert(additionalApp);
+    }
+
+    // Process games and additional apps by platform
+    for(FP::Install::DBQueryBuffer& currentPlatformGameResult : gameQueries)
+    {
         // Open LB platform doc
-        LB::Install::XMLHandle docRequest = {LB::Install::Platform, currentQueryResult.source};
+        LB::Install::XMLHandle docRequest = {LB::Install::Platform, currentPlatformGameResult.source};
         std::unique_ptr<LB::Install::XMLDoc> currentPlatformXML;
-        Qx::XmlStreamReaderError platformReadError = mLaunchBoxInstall->openXMLDocument(currentPlatformXML, docRequest, updateOptions);
+        Qx::XmlStreamReaderError platformReadError = mLaunchBoxInstall->openXMLDocument(currentPlatformXML, docRequest, updateOptions, &playlistGameFreeIDTracker);
 
         // Stop import if error occured
         if(platformReadError.isValid())
         {
-            postXMLError(MSG_LB_XML_UNEXPECTED_ERROR, platformReadError);
+            postXMLReadError(MSG_LB_XML_UNEXPECTED_ERROR, platformReadError);
             return;
         }
 
         // Add/Update games
-        for(int j = 0; j < currentQueryResult.size; j++)
+        for(int i = 0; i < currentPlatformGameResult.size; i++)
         {
             // Advance to next record
-            playlistQueries.result.next();
+            currentPlatformGameResult.result.next();
 
-            // Build game from record
+            // Form game from record
             FP::GameBuilder fpGb;
-            fpGb.wID(playlistQueries.result.value(FP::Install::DBTable_Game::COL_ID).toString());
-            fpGb.wTitle(playlistQueries.result.value(FP::Install::DBTable_Game::COL_TITLE).toString());
-            fpGb.wSeries(playlistQueries.result.value(FP::Install::DBTable_Game::COL_SERIES).toString());
-            fpGb.wDeveloper(playlistQueries.result.value(FP::Install::DBTable_Game::COL_DEVELOPER).toString());
-            fpGb.wPublisher(playlistQueries.result.value(FP::Install::DBTable_Game::COL_PUBLISHER).toString());
-            fpGb.wDateAdded(playlistQueries.result.value(FP::Install::DBTable_Game::COL_DATE_ADDED).toString());
-            fpGb.wDateModified(playlistQueries.result.value(FP::Install::DBTable_Game::COL_DATE_MODIFIED).toString());
-            fpGb.wPlatform(playlistQueries.result.value(FP::Install::DBTable_Game::COL_PLATFORM).toString());
-            fpGb.wBroken(playlistQueries.result.value(FP::Install::DBTable_Game::COL_BROKEN).toString());
-            fpGb.wPlayMode(playlistQueries.result.value(FP::Install::DBTable_Game::COL_PLAY_MODE).toString());
-            fpGb.wStatus(playlistQueries.result.value(FP::Install::DBTable_Game::COL_STATUS).toString());
-            fpGb.wNotes(playlistQueries.result.value(FP::Install::DBTable_Game::COL_NOTES).toString());
-            fpGb.wSource(playlistQueries.result.value(FP::Install::DBTable_Game::COL_SOURCE).toString());
-            fpGb.wAppPath(playlistQueries.result.value(FP::Install::DBTable_Game::COL_APP_PATH).toString());
-            fpGb.wLaunchCommand(playlistQueries.result.value(FP::Install::DBTable_Game::COL_LAUNCH_COMMAND).toString());
-            fpGb.wReleaseDate(playlistQueries.result.value(FP::Install::DBTable_Game::COL_RELEASE_DATE).toString());
-            fpGb.wVersion(playlistQueries.result.value(FP::Install::DBTable_Game::COL_VERSION).toString());
-            fpGb.wOriginalDescription(playlistQueries.result.value(FP::Install::DBTable_Game::COL_ORIGINAL_DESC).toString());
-            fpGb.wLanguage(playlistQueries.result.value(FP::Install::DBTable_Game::COL_LANGUAGE).toString());
-            fpGb.wOrderTitle(playlistQueries.result.value(FP::Install::DBTable_Game::COL_ORDER_TITLE).toString());
+            fpGb.wID(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ID).toString());
+            fpGb.wTitle(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_TITLE).toString());
+            fpGb.wSeries(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_SERIES).toString());
+            fpGb.wDeveloper(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_DEVELOPER).toString());
+            fpGb.wPublisher(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_PUBLISHER).toString());
+            fpGb.wDateAdded(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_DATE_ADDED).toString());
+            fpGb.wDateModified(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_DATE_MODIFIED).toString());
+            fpGb.wPlatform(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_PLATFORM).toString());
+            fpGb.wBroken(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_BROKEN).toString());
+            fpGb.wPlayMode(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_PLAY_MODE).toString());
+            fpGb.wStatus(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_STATUS).toString());
+            fpGb.wNotes(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_NOTES).toString());
+            fpGb.wSource(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_SOURCE).toString());
+            fpGb.wAppPath(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_APP_PATH).toString());
+            fpGb.wLaunchCommand(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_LAUNCH_COMMAND).toString());
+            fpGb.wReleaseDate(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_RELEASE_DATE).toString());
+            fpGb.wVersion(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_VERSION).toString());
+            fpGb.wOriginalDescription(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ORIGINAL_DESC).toString());
+            fpGb.wLanguage(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_LANGUAGE).toString());
+            fpGb.wOrderTitle(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ORDER_TITLE).toString());
 
-            FP::Game fpGame = fpGb.build();
+            // Convert and convert FP game to LB game and add to document
+            currentPlatformXML->addGame(LB::Game(fpGb.build(), mFlashpointInstall->getOFLIbPath()));
+        }
 
-            // Convert FP game to LB game and add to document
-            currentPlatformXML->addGame(LB::Game(fpGame, mFlashpointInstall->getOFLIbPath()));
+        // Add applicable additional apps
+        QSet<FP::AddApp>::iterator i = addAppsCache.begin();
+        while (i != addAppsCache.end())
+        {
+            // If the current platform doc contains the game this add app belongs to, convert and add it, then remove it from cache
+            if (currentPlatformXML->containsGame((*i).getParentID()))
+            {
+                currentPlatformXML->addAddApp(LB::AddApp(*i, mFlashpointInstall->getOFLIbPath()));
+                i = addAppsCache.erase(i);
+            }
+            else
+                ++i;
+        }
+
+        // Finalize document
+        currentPlatformXML->finalize();
+
+        // Add final game details to Playlist Game lookup cache
+        for (QHash<QUuid, LB::Game>::const_iterator i = currentPlatformXML->getFinalGames().constBegin();
+             i != currentPlatformXML->getFinalGames().constEnd(); ++i)
+            playlistGameDetailsCache[i.key()] = {i.value().getTitle(), QFileInfo(i.value().getAppPath()).fileName(), i.value().getPlatform()};
+
+        // Forefit doucment lease and save it
+        if(!mLaunchBoxInstall->saveXMLDocument(std::move(currentPlatformXML)))
+        {
+            postGenericError(LB::Install::populateErrorWithTarget(LB::Install::XMLWriter::ERR_WRITE_FAILED, docRequest));
+            return;
         }
     }
 
+    // Process playlists
+    for(QPair<FP::Install::DBQueryBuffer, FP::Playlist>& currentPlaylistGameResult : playlistGameQueries)
+    {
 
+        // Open LB playlist doc
+        LB::Install::XMLHandle docRequest = {LB::Install::Playlist, currentPlaylistGameResult.first.source};
+        std::unique_ptr<LB::Install::XMLDoc> currentPlaylistXML;
+        Qx::XmlStreamReaderError playlistReadError = mLaunchBoxInstall->openXMLDocument(currentPlaylistXML, docRequest, updateOptions, &playlistGameFreeIDTracker);
 
+        // Stop import if error occured
+        if(playlistReadError.isValid())
+        {
+            postXMLReadError(MSG_LB_XML_UNEXPECTED_ERROR, playlistReadError);
+            return;
+        }
+
+        // Convert and set playlist header
+        currentPlaylistXML->setPlaylistHeader(LB::PlaylistHeader(currentPlaylistGameResult.second));
+
+        // Add/Update playlist games
+        for(int i = 0; i < currentPlaylistGameResult.first.size; i++)
+        {
+            // Advance to next record
+            currentPlaylistGameResult.first.result.next();
+
+            // Form game from record
+            FP::PlaylistGameBuilder fpPgb;
+            fpPgb.wID(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_ID).toString());
+            fpPgb.wPlaylistID(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_PLAYLIST_ID).toString());
+            fpPgb.wOrder(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_ORDER).toString());
+            fpPgb.wGameID(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_ID).toString());
+
+            // Build and convert FP game to LB game and add to document
+            currentPlaylistXML->addPlaylistGame(LB::PlaylistGame(fpPgb.build(), playlistGameDetailsCache));
+        }
+
+        // Finalize document?
+    }
 }
 
 //-Slots---------------------------------------------------------------------------------------------------------
@@ -496,7 +605,8 @@ void MainWindow::all_on_pushButton_clicked()
     // Determine sender and take corresponding action
     if(senderPushButton == ui->pushButton_launchBoxBrowse)
     {
-        QString selectedDir = QFileDialog::getExistingDirectory(this, CAPTION_LAUNCHBOX_BROWSE, (QFileInfo::exists(ui->lineEdit_launchBoxPath->text()) ? ui->lineEdit_launchBoxPath->text() : QDir::currentPath()));
+        QString selectedDir = QFileDialog::getExistingDirectory(this, CAPTION_LAUNCHBOX_BROWSE,
+                                                                (QFileInfo::exists(ui->lineEdit_launchBoxPath->text()) ? ui->lineEdit_launchBoxPath->text() : QDir::currentPath()));
 
         if(!selectedDir.isEmpty())
         {
@@ -506,7 +616,8 @@ void MainWindow::all_on_pushButton_clicked()
     }
     else if(senderPushButton == ui->pushButton_flashpointBrowse)
     {
-        QString selectedDir = QFileDialog::getExistingDirectory(this, CAPTION_FLASHPOINT_BROWSE, (QFileInfo::exists(ui->label_flashPointPath->text()) ? ui->label_flashPointPath->text() : QDir::currentPath()));
+        QString selectedDir = QFileDialog::getExistingDirectory(this, CAPTION_FLASHPOINT_BROWSE,
+                                                                (QFileInfo::exists(ui->label_flashPointPath->text()) ? ui->label_flashPointPath->text() : QDir::currentPath()));
 
         if(!selectedDir.isEmpty())
         {

@@ -12,7 +12,7 @@ namespace FP
 //Public:
 QString Install::OFLIb::parametersFromStandard(QString originalAppPath, QString originalAppParams)
 {
-    if(originalAppPath == DBTable_Additonal_App::ENTRY_MESSAGE)
+    if(originalAppPath == DBTable_Add_App::ENTRY_MESSAGE)
         return MSG_ARG.arg(originalAppParams);
     else
         return APP_ARG.arg(originalAppPath) + " " + PARAM_ARG.arg(originalAppParams);
@@ -236,8 +236,8 @@ QSqlError Install::initialAddAppQuery(DBQueryBuffer& resultBuffer) const
     QSqlDatabase fpDB = QSqlDatabase::database(DATABASE_CONNECTION_NAME);
 
     // Make query (TODO: Restrict the columns of this query to only those actually used)
-    QSqlQuery initialQuery("SELECT " + DBTable_Additonal_App::COLUMN_LIST.join(",") + " FROM " + DBTable_Additonal_App::NAME + " WHERE " +
-                           DBTable_Additonal_App::COL_APP_PATH + " != '" + DBTable_Additonal_App::ENTRY_EXTRAS + "'", fpDB);
+    QSqlQuery initialQuery("SELECT " + DBTable_Add_App::COLUMN_LIST.join(",") + " FROM " + DBTable_Add_App::NAME + " WHERE " +
+                           DBTable_Add_App::COL_APP_PATH + " != '" + DBTable_Add_App::ENTRY_EXTRAS + "'", fpDB);
 
     // Return if error occurs
     if(initialQuery.lastError().isValid())
@@ -252,7 +252,7 @@ QSqlError Install::initialAddAppQuery(DBQueryBuffer& resultBuffer) const
     initialQuery.seek(QSql::BeforeFirstRow);
 
     // Set buffer instance to result
-    resultBuffer.source = DBTable_Additonal_App::NAME;
+    resultBuffer.source = DBTable_Add_App::NAME;
     resultBuffer.result = initialQuery;
     resultBuffer.size = querySize;
 
@@ -272,7 +272,8 @@ QSqlError Install::initialPlaylistQuery(DBQueryBuffer& resultBuffer, QStringList
 
     // Query all selected playlists
     QSqlQuery initialQuery("SELECT " + DBTable_Playlist::COLUMN_LIST.join(",") + " FROM " + DBTable_Playlist::NAME + " WHERE " +
-                           DBTable_Playlist::COL_TITLE + " IN ('" + selectedPlaylists.join(",'") + "')", fpDB);
+                           DBTable_Playlist::COL_TITLE + " IN ('" + selectedPlaylists.join(",'") + "') AND " +
+                           DBTable_Playlist::COL_LIBRARY + " = '" + DBTable_Playlist::GAME_LIBRARY + "'", fpDB);
 
     // Return if error occurs
     if(initialQuery.lastError().isValid())
@@ -295,7 +296,7 @@ QSqlError Install::initialPlaylistQuery(DBQueryBuffer& resultBuffer, QStringList
     return QSqlError();
 }
 
-QSqlError Install::initialPlaylistGameQuery(QList<DBQueryBuffer>& resultBuffer, QList<DBPlaylist> knownPlaylistsToQuery) const
+QSqlError Install::initialPlaylistGameQuery(QList<QPair<DBQueryBuffer, FP::Playlist>>& resultBuffer, const QList<FP::Playlist>& knownPlaylistsToQuery) const
 {
     // Ensure return buffer is empty
     resultBuffer.clear();
@@ -303,11 +304,11 @@ QSqlError Install::initialPlaylistGameQuery(QList<DBQueryBuffer>& resultBuffer, 
     // Get database
     QSqlDatabase fpDB = QSqlDatabase::database(DATABASE_CONNECTION_NAME);
 
-    for(DBPlaylist playlist : knownPlaylistsToQuery)
+    for(const FP::Playlist& playlist : knownPlaylistsToQuery)
     {
         // Query all games for the current playlist (TODO: Restrict the columns of this query to only those actually used)
         QSqlQuery initialQuery("SELECT " + DBTable_Playlist_Game::COLUMN_LIST.join(",") + " FROM " + DBTable_Playlist_Game::NAME + " WHERE " +
-                               DBTable_Playlist_Game::COL_PLAYLIST_ID + " = '" + playlist.ID.toString(QUuid::WithoutBraces) + "'", fpDB);
+                               DBTable_Playlist_Game::COL_PLAYLIST_ID + " = '" + playlist.getID().toString(QUuid::WithoutBraces) + "'", fpDB);
 
         // Return if error occurs
         if(initialQuery.lastError().isValid())
@@ -322,7 +323,7 @@ QSqlError Install::initialPlaylistGameQuery(QList<DBQueryBuffer>& resultBuffer, 
         initialQuery.seek(QSql::BeforeFirstRow);
 
         // Add result to buffer
-        resultBuffer.append({playlist.name, initialQuery, querySize});
+        resultBuffer.append(qMakePair(DBQueryBuffer{playlist.getTitle(), initialQuery, querySize}, playlist));
     }
 
     // Return invalid SqlError
