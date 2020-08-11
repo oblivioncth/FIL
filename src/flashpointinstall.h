@@ -184,6 +184,8 @@ public:
 
     QStringList getPlatformList() const;
     QStringList getPlaylistList() const;
+    QDir getLogosDirectory() const;
+    QDir getScrenshootsDirectory() const;
     QString getOFLIbPath() const;
 };
 

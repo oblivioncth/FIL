@@ -331,9 +331,9 @@ QSqlError Install::initialPlaylistGameQuery(QList<QPair<DBQueryBuffer, FP::Playl
 }
 
 QStringList Install::getPlatformList() const { return mPlatformList; }
-
-QStringList Install::getPlaylistList() const { return  mPlaylistList; }
-
+QStringList Install::getPlaylistList() const { return mPlaylistList; }
+QDir Install::getLogosDirectory() const { return mLogosDirectory; }
+QDir Install::getScrenshootsDirectory() const { return mScreenshotsDirectory; }
 QString Install::getOFLIbPath() const { return mOFLIbEXEFile->fileName(); }
 
 }

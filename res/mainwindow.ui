@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>489</width>
-    <height>710</height>
+    <height>815</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -288,7 +288,7 @@
       <string>New Only</string>
      </property>
      <property name="checked">
-      <bool>true</bool>
+      <bool>false</bool>
      </property>
     </widget>
     <widget class="QRadioButton" name="radioButton_updateExisting">
@@ -301,14 +301,17 @@
       </rect>
      </property>
      <property name="text">
-      <string>New &amp;&amp; Existing</string>
+      <string>New &amp;&amp; Existing (Recommended)</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
      </property>
     </widget>
     <widget class="QLabel" name="label">
      <property name="geometry">
       <rect>
        <x>350</x>
-       <y>30</y>
+       <y>60</y>
        <width>91</width>
        <height>17</height>
       </rect>
@@ -321,7 +324,7 @@
      <property name="geometry">
       <rect>
        <x>270</x>
-       <y>30</y>
+       <y>60</y>
        <width>71</width>
        <height>17</height>
       </rect>
@@ -417,7 +420,7 @@
      <property name="geometry">
       <rect>
        <x>270</x>
-       <y>60</y>
+       <y>30</y>
        <width>71</width>
        <height>21</height>
       </rect>
@@ -435,7 +438,7 @@
     <property name="geometry">
      <rect>
       <x>400</x>
-      <y>650</y>
+      <y>750</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -448,7 +451,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>650</y>
+      <y>750</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -456,6 +459,78 @@
     <property name="text">
      <string>Exit</string>
     </property>
+   </widget>
+   <widget class="QGroupBox" name="groupBox_imageMode">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>610</y>
+      <width>471</width>
+      <height>121</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>GroupBox</string>
+    </property>
+    <widget class="QPushButton" name="pushButton_imageModeHelp">
+     <property name="geometry">
+      <rect>
+       <x>270</x>
+       <y>30</y>
+       <width>71</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Help</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../resources.qrc">
+       <normaloff>:/res/icon/Update_Mode_Info.png</normaloff>:/res/icon/Update_Mode_Info.png</iconset>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="radioButton_launchBoxCopy">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>30</y>
+       <width>151</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>LaunchBox Copy</string>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="radioButton_launchBoxLink">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>60</y>
+       <width>221</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>LaunchBox Symlink (Recommended)</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="radioButton_flashpointLink">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>90</y>
+       <width>111</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Flashpoint Symlink</string>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -467,6 +542,24 @@
      <height>20</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuTools"/>
+   <addaction name="menuHelp"/>
   </widget>
   <action name="actionExit">
    <property name="text">
@@ -747,6 +840,22 @@
     <hint type="destinationlabel">
      <x>244</x>
      <y>354</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_imageModeHelp</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>all_on_pushButton_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>315</x>
+     <y>670</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>244</x>
+     <y>407</y>
     </hint>
    </hints>
   </connection>

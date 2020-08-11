@@ -17,25 +17,42 @@ class MainWindow : public QMainWindow
     Q_OBJECT // Required for classes that use Qt elements
 
 //-Class Enums------------------------------------------------------------------------------------------------
-    enum InputStage {PATHS, IMPORTS};
+    enum InputStage {Paths, Imports};
 
 //-Class Variables--------------------------------------------------------------------------------------------
 private:
     // Messages - Help
-    static inline const QString MSG_UPDATE_MODE_HELP = "<b>New Only</b> - Only games not already present in your collection will be added, existing entries will be left completely untouched\n"
+    static inline const QString MSG_UPDATE_MODE_HELP = "<b>%1</b> - Only games not already present in your collection will be added, existing entries will be left completely untouched.\n"
                                                        "\n"
-                                                       "<b>New & Existing</b> - Games not already present in your collection will be added and existing entries will have their descriptive metadata (i.e. Title, Author, etc.) replaced by the "
-                                                       "the details present in the target Flashpoint version; however, personal metadata (i.e. Playcount, Acheivements, etc.) will be be altered\n"
+                                                       "<b>%2</b> - Games not already present in your collection will be added and existing entries will have their descriptive metadata (i.e. Title, Author, Images etc.) replaced by the "
+                                                       "the details present in the target Flashpoint version; however, personal metadata (i.e. Playcount, Acheivements, etc.) will be be altered.\n"
                                                        "\n"
-                                                       "<b>Remove Obsolete</b> - Games in your collection that no longer present in the target version of Flashpoint will be removed. You will no longer be able to play such games if this option "
+                                                       "<b>%3</b> - Games in your collection that no longer present in the target version of Flashpoint will be removed. You will no longer be able to play such games if this option "
                                                        "is unchecked, but this may be useful for archival purposes or incase you later want to revert to a previous version of Flashpoint and maintain the entries personal metadata. Note that "
                                                        "this option will still cause missing games to be removed even if you are going backwards to a previous version of FP, as implied above.";
+
+    static inline const QString MSG_IMAGE_MODE_HELP = "<b>%1</b> - All relevant images from Flashpoint will be fully copied into your LaunchBox installation. This causes zero overhead but will require additional storage space proportional to "
+                                                      "the number of games you end up importing, up to double if all platforms are selected. The images will still work in Flashpoint.\n"
+                                                      "\n"
+                                                      "<b>%2</b> - A symbolic link to each relavent image from Flashpoint will be created in your LaunchBox installation. These appear like the real files to LaunchBox, adding only a miniscle "
+                                                      "amount of overhead it loads images and require almost no extra disk space to store. The images will still work in Flashpoint.\n"
+                                                      "\n"
+                                                      "<b>%3</b> - All relavent images from Flashpoint will be moved into your LaunchBox installation and a symbolic link will be left in its place within your Flashpoint directory. Effectively "
+                                                      "the same as above except that Flashpoint inherits the insignificant overhead while reading the images and this can be useful if LaunchBox is on a different drive than Flashpoint that can "
+                                                      "more easily accommodate the large space they require. The images will still work in Flashpoint; however, once the process is finished while using this option, if the image now within your "
+                                                      "LaunchBox install is ever deleted, the only way to get it back is to redownload Flashpoint and restore it manually or re-run the import tool again.";
 
     // Messages - Input
     static inline const QString MSG_LB_INSTALL_INVALID = "The specified directory either doesn't contain a valid LaunchBox install, or it contains a version that is incompatible with this tool.";
     static inline const QString MSG_FP_INSTALL_INVALID = "The specified directory either doesn't contain a valid Flashpoint install, or it contains a version that is incompatible with this tool.";
     static inline const QString MSG_FP_VER_NOT_TARGET = "The selected Flashpoint install contains a version of Flashpoint that is different from the target version (" VER_PRODUCTVERSION_STR "), but appears to have a compatible structure. "
                                                                 "You may proceed at your own risk as the tool is not guarnteed to work correctly in this circumstance. Please use a newer version of " VER_INTERNALNAME_STR " if available.";
+
+    // Messages - General import procedure
+    static inline const QString MSG_PRE_IMPORT = "Ensure that LaunchBox is not running (if you recently closed it check the Task Manager to be certain the process has ended as it performs some clean-up in the background) and press OK when you "
+                                                 "are ready to begin the import.";
+    static inline const QString MSG_POST_IMPORT = "The Flashpoint import has completed succesfully. Next time you start LaunchBox it may take longer than usual as it will have to fill in some default fields for the imported Platforms/Playlists. "
+                                                  "If you wish to import further selections or update to a newer version of Flashpoint, simply re-run this procedure after pointing it to the desired Flashpoint installation.";
 
     // Messages - FP Database read
     static inline const QString MSG_FP_DB_CANT_CONNECT = "Failed to establish a handle to the Flashpoint database! Make sure it is not being used by another program (i.e. Flashpoint may be running).";
@@ -46,6 +63,11 @@ private:
     // Messages - LB XML read
     static inline const QString MSG_LB_XML_UNEXPECTED_ERROR = "An unexpected error occured while reading Launchbox XMLs:";
 
+    // Messages - Revert
+    static inline const QString MSG_HAVE_TO_REVERT = "Due to previous unrecoverable errors, all changes that occured during import will now be reverted (other than existing images that were replaced with newer versions). Aftewards, check to see "
+                                                     "if there is a newer version of " VER_INTERNALNAME_STR " and try again using that version. If not ask for help on the LaunchBox forums where this tool was released. If you beleive this to be due "
+                                                     "to a bug with this software, please submit an issue to its GitHub page (listed under help)";
+
     // ProgressDialog - Import Operation
     static inline const QString PD_LABEL_FP_DB_INITIAL_QUERY = "Making initial Flashpoint database queries...";
     static inline const QString PD_BUTTON_CANCEL = "Cancel";
@@ -54,6 +76,10 @@ private:
     static inline const QString CAPTION_LAUNCHBOX_BROWSE = "Select the root directory of your LaunchBox install...";
     static inline const QString CAPTION_FLASHPOINT_BROWSE = "Select the root directory of your Flashpoint install...";
     static inline const QString CAPTION_UPDATE_MODE_HELP = "Update mode options";
+    static inline const QString CAPTION_IMAGE_MODE_HELP = "Image mode options";
+    static inline const QString CAPTION_REVERT = "Reverting changes...";
+    static inline const QString CAPTION_REVERT_ERR = "Error reverting changes";
+    static inline const QString CAPTION_IMAGE_ERR = "Error importing game image(s)";
 
 //-Instance Variables--------------------------------------------------------------------------------------------
 private:
@@ -94,7 +120,10 @@ private:
     QStringList getSelectedPlatforms() const;
     QStringList getSelectedPlaylists() const;
     LB::Install::UpdateOptions getSelectedUpdateOptions() const;
+    LB::Install::ImageMode getSelectedImageOption() const;
     void importProcess();
+    bool coreImportProcess();
+    void revertAllLaunchBoxChanges();
 
 //-Slots---------------------------------------------------------------------------------------------------------
 private slots: // Start with "all" to avoid Qt calling "connectSlotsByName" on these slots (slots that start with "on_")

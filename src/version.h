@@ -8,7 +8,7 @@
 #define VER_PRODUCTVERSION_STR      "8.1"
 
 #define VER_COMPANYNAME_STR         "Obby Apps"
-#define VER_FILEDESCRIPTION_STR     "BlueMaxima's Flashpoint Importer for LaunchBox"
+#define VER_FILEDESCRIPTION_STR     "Flashpoint Importer for LaunchBox"
 #define VER_INTERNALNAME_STR        "OFILb"
 #define VER_LEGALCOPYRIGHT_STR      "Copyright © 2020 Obby Apps"
 #define VER_LEGALTRADEMARKS1_STR    "All Rights Reserved"

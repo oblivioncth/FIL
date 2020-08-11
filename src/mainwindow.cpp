@@ -35,7 +35,7 @@ MainWindow::~MainWindow() { delete ui; }
 void MainWindow::initializeForms()
 {
     mExistingItemColor = ui->label_existingItemColor->palette().color(QPalette::Window);
-    setInputStage(PATHS);
+    setInputStage(Paths);
 
     // TODO: THIS IS FOR DEBUG PURPOSES. REMOVE
     checkLaunchBoxInput("D:/LaunchBox");
@@ -46,21 +46,26 @@ void MainWindow::setInputStage(InputStage stage)
 {
     switch(stage)
     {
-        case PATHS:
+        case Paths:
             ui->groupBox_importSelection->setEnabled(false);
             mAlteringListWidget = true;
             ui->listWidget_platformChoices->clear();
             ui->listWidget_playlistChoices->clear();
             mAlteringListWidget = false;
             ui->groupBox_updateMode->setEnabled(false);
+            ui->groupBox_imageMode->setEnabled(false);
             ui->radioButton_onlyAdd->setChecked(true);
             ui->radioButton_updateExisting->setChecked(false);
             ui->checkBox_removeObsolete->setChecked(true);
+            ui->radioButton_launchBoxCopy->setChecked(false);
+            ui->radioButton_launchBoxLink->setChecked(true);
+            ui->radioButton_flashpointLink->setChecked(false);
             ui->pushButton_startImport->setEnabled(false);
         break;
 
-        case IMPORTS:
+        case Imports:
             ui->groupBox_importSelection->setEnabled(true);
+            ui->groupBox_imageMode->setEnabled(true);
         break;
     }
 }
@@ -78,7 +83,7 @@ void MainWindow::checkLaunchBoxInput(QString installPath)
     {
         ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
         mLaunchBoxInstall.reset();
-        setInputStage(PATHS);
+        setInputStage(Paths);
         QMessageBox::critical(this, QApplication::applicationName(), MSG_LB_INSTALL_INVALID);
     }
 }
@@ -105,7 +110,7 @@ void MainWindow::checkFlashpointInput(QString installPath)
     {
         ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
         mFlashpointInstall.reset();
-        setInputStage(PATHS);
+        setInputStage(Paths);
         QMessageBox::critical(this, QApplication::applicationName(), MSG_FP_INSTALL_INVALID);
     }
 }
@@ -147,7 +152,7 @@ void MainWindow::gatherInstallInfo()
             mAlteringListWidget = false;
 
             // Advance to next input stage
-            setInputStage(InputStage::IMPORTS);
+            setInputStage(InputStage::Imports);
 
         }
         else
@@ -366,7 +371,34 @@ LB::Install::UpdateOptions MainWindow::getSelectedUpdateOptions() const
     return {ui->radioButton_onlyAdd->isChecked() ? LB::Install::OnlyNew : LB::Install::NewAndExisting, ui->checkBox_removeObsolete->isChecked() };
 }
 
+LB::Install::ImageMode MainWindow::getSelectedImageOption() const
+{
+    return ui->radioButton_launchBoxCopy->isChecked() ? LB::Install::LB_Copy : ui->radioButton_launchBoxLink->isChecked() ? LB::Install::LB_Link : LB::Install::FP_Link;
+}
+
 void MainWindow::importProcess()
+{
+    // Pre-import message
+    QMessageBox::information(this, QApplication::applicationName(), MSG_PRE_IMPORT);
+
+    // Start import
+    if(coreImportProcess())
+    {
+        // Post-import message
+        QMessageBox::information(this, QApplication::applicationName(), MSG_POST_IMPORT);
+
+        // TODO: Finish me
+    }
+    else
+    {
+        // Show general next steps message
+        QMessageBox::warning(this, CAPTION_REVERT, MSG_HAVE_TO_REVERT);
+
+        revertAllLaunchBoxChanges();
+    }
+}
+
+bool MainWindow::coreImportProcess()
 {
     // Grab options
     QStringList platformsToImport = getSelectedPlatforms();
@@ -380,7 +412,6 @@ void MainWindow::importProcess()
     // Caches
     QSet<FP::AddApp> addAppsCache;
     QHash<QUuid, LB::PlaylistGame::EntryDetails> playlistGameDetailsCache;
-    Qx::FreeIndexTracker<int> playlistGameFreeIDTracker(0, -1, {});
 
     // Initial query buffers
     QList<FP::Install::DBQueryBuffer> gameQueries;
@@ -398,7 +429,7 @@ void MainWindow::importProcess()
     if(queryError.isValid())
     {
         postSqlError(MSG_FP_DB_UNEXPECTED_ERROR, queryError);
-        return;
+        return false;
     }
 
     // Make initial add apps query
@@ -406,7 +437,7 @@ void MainWindow::importProcess()
     if(queryError.isValid())
     {
         postSqlError(MSG_FP_DB_UNEXPECTED_ERROR, queryError);
-        return;
+        return false;
     }
 
     // Make initial playlists query
@@ -414,7 +445,7 @@ void MainWindow::importProcess()
     if(queryError.isValid())
     {
         postSqlError(MSG_FP_DB_UNEXPECTED_ERROR, queryError);
-        return;
+        return false;
     }
 
     // Close database connection since it's no longer needed
@@ -443,7 +474,7 @@ void MainWindow::importProcess()
     if(queryError.isValid())
     {
         postSqlError(MSG_FP_DB_UNEXPECTED_ERROR, queryError);
-        return;
+        return false;
     }
 
     // Determine workload TODO: implement
@@ -473,19 +504,26 @@ void MainWindow::importProcess()
         addAppsCache.insert(additionalApp);
     }
 
+    // Image import error message
+    QMessageBox imageErrorMsg;
+    imageErrorMsg.setWindowTitle(CAPTION_IMAGE_ERR);
+    imageErrorMsg.setInformativeText("Retry?");
+    imageErrorMsg.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+    imageErrorMsg.setDefaultButton(QMessageBox::Yes);
+
     // Process games and additional apps by platform
     for(FP::Install::DBQueryBuffer& currentPlatformGameResult : gameQueries)
-    {
+    {           
         // Open LB platform doc
         LB::Install::XMLHandle docRequest = {LB::Install::Platform, currentPlatformGameResult.source};
         std::unique_ptr<LB::Install::XMLDoc> currentPlatformXML;
-        Qx::XmlStreamReaderError platformReadError = mLaunchBoxInstall->openXMLDocument(currentPlatformXML, docRequest, updateOptions, &playlistGameFreeIDTracker);
+        Qx::XmlStreamReaderError platformReadError = mLaunchBoxInstall->openXMLDocument(currentPlatformXML, docRequest, updateOptions);
 
         // Stop import if error occured
         if(platformReadError.isValid())
         {
             postXMLReadError(MSG_LB_XML_UNEXPECTED_ERROR, platformReadError);
-            return;
+            return false;
         }
 
         // Add/Update games
@@ -518,12 +556,21 @@ void MainWindow::importProcess()
             fpGb.wOrderTitle(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ORDER_TITLE).toString());
 
             // Convert and convert FP game to LB game and add to document
-            currentPlatformXML->addGame(LB::Game(fpGb.build(), mFlashpointInstall->getOFLIbPath()));
+            LB::Game builtGame = LB::Game(fpGb.build(), mFlashpointInstall->getOFLIbPath());
+            currentPlatformXML->addGame(builtGame);
+
+            // Transfer game images
+            QString imageError;
+            while(!mLaunchBoxInstall->transferImages(imageError, getSelectedImageOption(), mFlashpointInstall->getLogosDirectory(), mFlashpointInstall->getScrenshootsDirectory(), builtGame))
+            {
+                imageErrorMsg.setText(imageError);
+                if(imageErrorMsg.exec() == QMessageBox::No)
+                    break;
+            }
         }
 
         // Add applicable additional apps
-        QSet<FP::AddApp>::iterator i = addAppsCache.begin();
-        while (i != addAppsCache.end())
+        for (QSet<FP::AddApp>::iterator i = addAppsCache.begin(); i != addAppsCache.end();)
         {
             // If the current platform doc contains the game this add app belongs to, convert and add it, then remove it from cache
             if (currentPlatformXML->containsGame((*i).getParentID()))
@@ -547,7 +594,7 @@ void MainWindow::importProcess()
         if(!mLaunchBoxInstall->saveXMLDocument(std::move(currentPlatformXML)))
         {
             postGenericError(LB::Install::populateErrorWithTarget(LB::Install::XMLWriter::ERR_WRITE_FAILED, docRequest));
-            return;
+            return false;
         }
     }
 
@@ -558,13 +605,13 @@ void MainWindow::importProcess()
         // Open LB playlist doc
         LB::Install::XMLHandle docRequest = {LB::Install::Playlist, currentPlaylistGameResult.first.source};
         std::unique_ptr<LB::Install::XMLDoc> currentPlaylistXML;
-        Qx::XmlStreamReaderError playlistReadError = mLaunchBoxInstall->openXMLDocument(currentPlaylistXML, docRequest, updateOptions, &playlistGameFreeIDTracker);
+        Qx::XmlStreamReaderError playlistReadError = mLaunchBoxInstall->openXMLDocument(currentPlaylistXML, docRequest, updateOptions);
 
         // Stop import if error occured
         if(playlistReadError.isValid())
         {
             postXMLReadError(MSG_LB_XML_UNEXPECTED_ERROR, playlistReadError);
-            return;
+            return false;
         }
 
         // Convert and set playlist header
@@ -588,7 +635,64 @@ void MainWindow::importProcess()
         }
 
         // Finalize document?
+        currentPlaylistXML->finalize();
+
+        // Forefit doucment lease and save it
+        if(!mLaunchBoxInstall->saveXMLDocument(std::move(currentPlaylistXML)))
+        {
+            postGenericError(LB::Install::populateErrorWithTarget(LB::Install::XMLWriter::ERR_WRITE_FAILED, docRequest));
+            return false;
+        }
     }
+
+    //...
+
+    // Reset install
+    mLaunchBoxInstall->softReset();
+}
+
+
+void MainWindow::revertAllLaunchBoxChanges()
+{
+    // Trackers
+    bool tempSkip = false;
+    bool alwaysSkip = false;
+    QString currentError;
+    int retryChoice;
+
+    // Revert rrror Message
+    QMessageBox revertError;
+    revertError.setWindowTitle(CAPTION_REVERT_ERR);
+    revertError.setInformativeText("Retry?");
+    revertError.setStandardButtons(QMessageBox::Yes | QMessageBox::No | QMessageBox::NoAll);
+    revertError.setDefaultButton(QMessageBox::Yes);
+
+    // Progress
+    QProgressDialog reversionProgress(CAPTION_REVERT, QString(), 0, mLaunchBoxInstall->getRevertQueueCount(), this);
+    reversionProgress.setWindowModality(Qt::WindowModal);
+
+    while(mLaunchBoxInstall->revertNextChange(currentError, alwaysSkip || tempSkip) != 0)
+    {
+        // Check for error
+        if(currentError.isNull())
+        {
+            tempSkip = false;
+            reversionProgress.setValue(reversionProgress.value() + 1);
+        }
+        else
+        {
+            revertError.setText(currentError);
+            retryChoice = revertError.exec();
+
+            if(retryChoice == QMessageBox::No)
+                tempSkip = true;
+            else if(retryChoice == QMessageBox::NoAll)
+                alwaysSkip = true;
+        }
+    }
+
+    // Reset instance
+    mLaunchBoxInstall->softReset();
 }
 
 //-Slots---------------------------------------------------------------------------------------------------------
@@ -646,7 +750,13 @@ void MainWindow::all_on_pushButton_clicked()
             ui->listWidget_playlistChoices->item(i)->setCheckState(Qt::Unchecked);
     }
     else if(senderPushButton == ui->pushButton_updateModeHelp)
-        QMessageBox::information(this, CAPTION_UPDATE_MODE_HELP, MSG_UPDATE_MODE_HELP);
+        QMessageBox::information(this, CAPTION_UPDATE_MODE_HELP, MSG_UPDATE_MODE_HELP.arg(ui->radioButton_onlyAdd->text(),
+                                                                                          ui->radioButton_updateExisting->text(),
+                                                                                          ui->checkBox_removeObsolete->text()));
+    else if(senderPushButton == ui->pushButton_imageModeHelp)
+        QMessageBox::information(this, CAPTION_IMAGE_MODE_HELP, MSG_IMAGE_MODE_HELP.arg(ui->radioButton_launchBoxCopy->text(),
+                                                                                        ui->radioButton_launchBoxLink->text(),
+                                                                                        ui->radioButton_flashpointLink->text()));
     else if(senderPushButton == ui->pushButton_startImport)
         importProcess();
     else if(senderPushButton == ui->pushButton_exit)
@@ -676,7 +786,7 @@ void MainWindow::all_on_lineEdit_editingFinished()
             else
             {
                 ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-                setInputStage(PATHS);
+                setInputStage(Paths);
             }
         }
         else
@@ -693,7 +803,7 @@ void MainWindow::all_on_lineEdit_editingFinished()
             else
             {
                 ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-                setInputStage(PATHS);
+                setInputStage(Paths);
             }
         }
         else

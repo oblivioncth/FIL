@@ -22,6 +22,8 @@ public:
 public:
     enum XMLDocType {Platform, Playlist};
     enum ImportMode {OnlyNew, NewAndExisting};
+    enum ImageMode {LB_Copy, LB_Link, FP_Link};
+
 //-Class Structs----------------------------------------------------------------------------------------------------
 public:
     struct UpdateOptions
@@ -227,15 +229,29 @@ public:
     static inline const QString PLATFORMS_PATH = "Data/Platforms";
     static inline const QString PLAYLISTS_PATH = "Data/Playlists";
     static inline const QString MAIN_EXE_PATH = "LaunchBox.exe";
+    static inline const QString PLATFORM_IMAGES_PATH = "Images/Platforms";
+    static inline const QString LOGO_PATH = "???"; //TODO: FIXME
+    static inline const QString SCREENSHOT_PATH = "???"; //TODO: FIXME
+
+    // Images
+    static inline const QString IMAGE_EXT = ".png";
+
+    // Images Errors
+    static inline const QString ERR_IMAGE_WONT_REMOVE = "Cannot remove the existing image %1";
+    static inline const QString ERR_IMAGE_WONT_COPY = "Cannot copy the image %1 to %2";
+    static inline const QString ERR_IMAGE_WONT_MOVE = "Cannot move the image %1 to %2";
+    static inline const QString ERR_IMAGE_WONT_LINK = "Cannot create a symbolic link from %1 to %2";
 
     // XML
     static inline const QString XML_EXT = ".xml";
     static inline const QString XML_ROOT_ELEMENT = "LaunchBox";
     static inline const QString MODIFIED_FILE_EXT = ".obk";
 
-    // XML Errors
-    static inline const QString ERR_CANT_REVERT_CHANGES = "Changes to one or more XML files could not be reverted. Check the platforms and playlists folder "
-                                                          "for backups with the extension (" + MODIFIED_FILE_EXT + ") and restore them manually as needed.";
+    // Reversion Errors
+    static inline const QString ERR_REVERT_CANT_REMOVE_XML = "Cannot remove the XML file %1. It may need to be deleted and have its backup restored manually.";
+    static inline const QString ERR_REVERT_CANT_RESTORE_EXML = "Cannot restore the XML backup %1. It may need to be renamed manually.";
+    static inline const QString ERR_REVERT_CANT_REMOVE_IMAGE = "Cannot remove the image file %1. It may need to be deleted manually";
+    static inline const QString ERR_REVERT_CANT_MOVE_IMAGE = "Cannot move the image file %1 to its original location. It may need to be moved manually";
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -243,20 +259,29 @@ private:
     QDir mRootDirectory;
     QDir mPlatformsDirectory;
     QDir mPlaylistsDirectory;
+    QDir mPlatformImagesDirectory;
 
     // XML Information
     QSet<QString> mExistingPlatforms;
     QSet<QString> mExistingPlaylists;
 
     // XML Interaction
-    QSet<QString> mModifiedXMLDocuments;
+    QList<QString> mModifiedXMLDocuments;
     QSet<XMLHandle> mLeasedHandles;
+
+    // Other trackers
+    QList<QString> mPurgableImages;
+    QMap<QString, QString> mLinksToReverse;
+    Qx::FreeIndexTracker<int> mLBDatabaseIDTracker = Qx::FreeIndexTracker<int>(0, -1, {});
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
     Install(QString installPath);
 
 //-Class Functions------------------------------------------------------------------------------------------------------
+private:
+    static void allowUserWriteOnXML(QString xmlPath);
+
 public:
    static bool pathIsValidInstall(QString installPath);
    static QString populateErrorWithTarget(QString error, XMLHandle target);
@@ -265,12 +290,16 @@ public:
 public:
    Qx::IOOpReport populateExistingItems();
 
-   Qx::XmlStreamReaderError openXMLDocument(std::unique_ptr<XMLDoc>& returnBuffer, XMLHandle requestHandle, UpdateOptions updateOptions, Qx::FreeIndexTracker<int>* lbDBFIDT);
+   Qx::XmlStreamReaderError openXMLDocument(std::unique_ptr<XMLDoc>& returnBuffer, XMLHandle requestHandle, UpdateOptions updateOptions);
    bool saveXMLDocument(std::unique_ptr<XMLDoc> document);
-   bool revertAllChanges();
+   bool transferImages(QString& errorMessage, ImageMode imageOption, QDir logoSourceDir, QDir screenshotSourceDir, const LB::Game& game);
+
+   int revertNextChange(QString& errorMessage, bool skipOnFail);
+   void softReset();
 
    QSet<QString> getExistingPlatforms() const;
    QSet<QString> getExistingPlaylists() const;
+   int getRevertQueueCount() const;
 
 };
 
