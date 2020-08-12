@@ -36,7 +36,7 @@ Install::Install(QString installPath)
     mScreenshotsDirectory = QDir(installPath + "/" + SCREENSHOTS_PATH);
     mDatabaseFile = std::make_unique<QFile>(installPath + "/" + DATABASE_PATH);
     mMainEXEFile = std::make_unique<QFile>(installPath + "/" + MAIN_EXE_PATH);
-    mOFLIbEXEFile = std::make_unique<QFile>(installPath + "/" + CLIFp::EXE_NAME);
+    mCLIFpEXEFile = std::make_unique<QFile>(installPath + "/" + CLIFp::EXE_NAME);
 
     // Create database connection
     QSqlDatabase fpDB = QSqlDatabase::addDatabase("QSQLITE", DATABASE_CONNECTION_NAME);
@@ -190,16 +190,31 @@ QSqlError Install::populateAvailableItems()
     return QSqlError();
 }
 
-bool Install::deployCLIFp()
+bool Install::deployCLIFp(QString& errorMessage)
 {
+    // Ensure error message is null
+    errorMessage = QString();
+
     // Delete existing if present
-    if(QFileInfo::exists(mOFLIbEXEFile->fileName()) && QFileInfo(mOFLIbEXEFile->fileName()).isFile())
-        if(!QFile::remove(mOFLIbEXEFile->fileName()))
+    if(QFileInfo::exists(mCLIFpEXEFile->fileName()) && QFileInfo(mCLIFpEXEFile->fileName()).isFile())
+    {
+        if(!mCLIFpEXEFile->remove())
+        {
+            errorMessage = mCLIFpEXEFile->errorString();
             return false;
+        }
+    }
 
     // Deploy new
-    if(!QFile::copy(":/file/CLIFp.exe", mOFLIbEXEFile->fileName()))
+    QFile internalCLIFp(":/res/file/CLIFp.exe");
+    if(!internalCLIFp.copy(mCLIFpEXEFile->fileName()))
+    {
+        errorMessage = internalCLIFp.errorString();
         return false;
+    }
+
+    // Remove default read-only state
+    mCLIFpEXEFile->setPermissions(QFile::ReadOther | QFile::WriteOther);
 
     // Return true on
     return true;
@@ -350,6 +365,6 @@ QStringList Install::getPlatformList() const { return mPlatformList; }
 QStringList Install::getPlaylistList() const { return mPlaylistList; }
 QDir Install::getLogosDirectory() const { return mLogosDirectory; }
 QDir Install::getScrenshootsDirectory() const { return mScreenshotsDirectory; }
-QString Install::getOFLIbPath() const { return mOFLIbEXEFile->fileName(); }
+QString Install::getOFLIbPath() const { return mCLIFpEXEFile->fileName(); }
 
 }

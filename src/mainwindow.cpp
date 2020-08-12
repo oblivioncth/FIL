@@ -9,11 +9,11 @@
 #include <QMessageBox>
 #include <QDesktopServices>
 #include <QUrl>
+#include <filesystem>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "version.h"
-#include <filesystem>
-
+#include "qx-windows.h"
 
 //===============================================================================================================
 // MAIN WINDOW
@@ -28,6 +28,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     setWindowTitle(VER_PRODUCTNAME_STR);
     mHasLinkPermissions = testForLinkPermissions();
     initializeForms();
+
+    // Check if Flashpoint is running
+    if(Qx::processIsRunning(QFileInfo(FP::Install::MAIN_EXE_PATH).fileName()))
+        QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_CLOSE_PROMPT);
 }
 
 //-Destructor----------------------------------------------------------------------------------------------------
@@ -51,7 +55,6 @@ bool MainWindow::testForLinkPermissions()
             if(!symlinkError)
                 return true;
         }
-
     }
 
     // Default
@@ -406,49 +409,51 @@ LB::Install::ImageMode MainWindow::getSelectedImageOption() const
 
 void MainWindow::importProcess()
 {
-    // Pre-import message
-    QMessageBox::information(this, QApplication::applicationName(), MSG_PRE_IMPORT);
+    // Only allow proceeding if LB isn't running
+    bool lbRunning;
+    while((lbRunning = Qx::processIsRunning(LB::Install::MAIN_EXE_PATH)))
+        if(QMessageBox::critical(this, QApplication::applicationName(), MSG_LB_CLOSE_PROMPT, QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Retry) == QMessageBox::Cancel)
+            break;
 
-    // Create progress dialog, set initial busy state and show
-    QProgressDialog importProgressDialog(PD_LABEL_FP_DB_INITIAL_QUERY, PD_BUTTON_CANCEL, 0, 0, this);
-    importProgressDialog.setWindowTitle(CAPTION_IMPORTING);
-    importProgressDialog.setWindowModality(Qt::WindowModal);
-    importProgressDialog.show();
-    QApplication::processEvents(); // Allow busy state to show
-
-    // Start import
-    ImportResult result = coreImportProcess(&importProgressDialog);
-    if(result == Successful)
+    if(!lbRunning)
     {
-        // Deploy CLIFp
-        while(!mFlashpointInstall->deployCLIFp())
-            if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP, QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Retry) == QMessageBox::Cancel)
-                break;
+        // Create progress dialog, set initial busy state and show
+        QProgressDialog importProgressDialog(PD_LABEL_FP_DB_INITIAL_QUERY, PD_BUTTON_CANCEL, 0, 10000, this); //Arbitrarily high maximum so initial percentage is 0
+        importProgressDialog.setWindowTitle(CAPTION_IMPORTING);
+        importProgressDialog.setWindowModality(Qt::WindowModal);
+        importProgressDialog.setAutoClose(true);
+        importProgressDialog.setMinimumDuration(0); // Always show pd
+        importProgressDialog.setValue(0); // Get pd to show
+        QApplication::processEvents(); // Allow busy state to show
 
-        // Post-import message
-        QMessageBox::information(this, QApplication::applicationName(), MSG_POST_IMPORT);
+        // Start import
+        ImportResult result = coreImportProcess(&importProgressDialog);
 
-        // Ensure progress dialog is closed
-        importProgressDialog.close();
-    }
-    else if(result == Canceled)
-    {
-        QMessageBox::critical(this, CAPTION_REVERT, MSG_USER_CANCELED);
-
-        // Ensure progress dialog is closed
+        // Close process dialog
         importProgressDialog.close();
 
-        revertAllLaunchBoxChanges();
-    }
-    else
-    {
-        // Show general next steps message
-        QMessageBox::warning(this, CAPTION_REVERT, MSG_HAVE_TO_REVERT);
+        if(result == Successful)
+        {
+            // Deploy CLIFp
+            QString deployError;
+            while(!mFlashpointInstall->deployCLIFp(deployError))
+                if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | QMessageBox::Ignore, QMessageBox::Retry) == QMessageBox::Ignore)
+                    break;
 
-        // Ensure progress dialog is closed
-        importProgressDialog.close();
-
-        revertAllLaunchBoxChanges();
+            // Post-import message
+            QMessageBox::information(this, QApplication::applicationName(), MSG_POST_IMPORT);
+        }
+        else if(result == Canceled)
+        {
+            QMessageBox::critical(this, CAPTION_REVERT, MSG_USER_CANCELED);
+            revertAllLaunchBoxChanges();
+        }
+        else
+        {
+            // Show general next steps message
+            QMessageBox::warning(this, CAPTION_REVERT, MSG_HAVE_TO_REVERT);
+            revertAllLaunchBoxChanges();
+        }
     }
 }
 
@@ -815,8 +820,9 @@ void MainWindow::standaloneCLIFpDeploy()
                 QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_VER_NOT_TARGET);
 
             // Deploy exe
-            while(!tempFlashpointInstallinstallPath.deployCLIFp())
-                if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP, QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Retry) == QMessageBox::Cancel)
+            QString deployError;
+            while(!tempFlashpointInstallinstallPath.deployCLIFp(deployError))
+                if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Retry) == QMessageBox::Cancel)
                     break;
         }
         else

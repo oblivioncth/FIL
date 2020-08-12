@@ -493,7 +493,7 @@ bool Install::XMLWriter::writeGame(const Game& game)
     mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_SORT_TITLE, game.getSortTitle());
     mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_DATE_ADDED, game.getDateAdded().toString(Qt::ISODateWithMs));
     mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_DATE_MODIFIED, game.getDateModified().toString(Qt::ISODateWithMs));
-    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_BROKEN,  QString::number(game.isBroken()));
+    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_BROKEN, game.isBroken() ? "true" : "false");
     mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_PLAYMODE, game.getPlayMode());
     mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_STATUS, game.getStatus());
     mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_REGION, game.getRegion());
@@ -533,9 +533,9 @@ bool Install::XMLWriter::writeAddApp(const AddApp& addApp)
     mStreamWriter.writeTextElement(XMLMainElement_AddApp::ELEMENT_GAME_ID, addApp.getID().toString(QUuid::WithoutBraces));
     mStreamWriter.writeTextElement(XMLMainElement_AddApp::ELEMENT_APP_PATH, addApp.getAppPath());
     mStreamWriter.writeTextElement(XMLMainElement_AddApp::ELEMENT_COMMAND_LINE, addApp.getCommandLine());
-    mStreamWriter.writeTextElement(XMLMainElement_AddApp::ELEMENT_AUTORUN_BEFORE, QString::number(addApp.isAutorunBefore()));
+    mStreamWriter.writeTextElement(XMLMainElement_AddApp::ELEMENT_AUTORUN_BEFORE, addApp.isAutorunBefore() ? "true" : "false");
     mStreamWriter.writeTextElement(XMLMainElement_AddApp::ELEMENT_NAME, addApp.getName());
-    mStreamWriter.writeTextElement(XMLMainElement_AddApp::ELEMENT_WAIT_FOR_EXIT, QString::number(addApp.isWaitForExit()));
+    mStreamWriter.writeTextElement(XMLMainElement_AddApp::ELEMENT_WAIT_FOR_EXIT, addApp.isWaitForExit() ? "true" : "false");
 
     if(mStreamWriter.hasError())
         return false;

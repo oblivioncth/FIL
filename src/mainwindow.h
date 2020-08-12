@@ -53,10 +53,12 @@ private:
                                                                 "You may proceed at your own risk as the tool is not guarnteed to work correctly in this circumstance. Please use a newer version of " VER_INTERNALNAME_STR " if available.";
 
     // Messages - General import procedure
-    static inline const QString MSG_PRE_IMPORT = "Ensure that LaunchBox is not running (if you recently closed it check the Task Manager to be certain the process has ended as it performs some clean-up in the background) and press OK when you "
-                                                 "are ready to begin the import.";
+    static inline const QString MSG_LB_CLOSE_PROMPT = "The importer has detected that LaunchBox is running. It must be closed in order to continue. If recently closed, wait a few moments before trying to proceed again as it performs significant cleanup in the background.";
     static inline const QString MSG_POST_IMPORT = "The Flashpoint import has completed succesfully. Next time you start LaunchBox it may take longer than usual as it will have to fill in some default fields for the imported Platforms/Playlists. "
                                                   "If you wish to import further selections or update to a newer version of Flashpoint, simply re-run this procedure after pointing it to the desired Flashpoint installation.";
+
+    // Messages - FP General
+    static inline const QString MSG_FP_CLOSE_PROMPT = "It is strongly recommended to close Flashpoint before proceeding as it can severly slow or interfer with the import process";
 
     // Messages - FP Database read
     static inline const QString MSG_FP_DB_CANT_CONNECT = "Failed to establish a handle to the Flashpoint database! Make sure it is not being used by another program (i.e. Flashpoint may be running).";
@@ -65,8 +67,11 @@ private:
     static inline const QString MSG_FP_DB_TABLE_MISSING_COLUMN = "The Flashpoint database tables are missing columns critical to the import process.";
 
     // Messages - FP CLIFp
-    static inline const QString MSG_FP_CANT_DEPLOY_CLIFP = "Failed to deploy CLIFp.exe to the selected Flashpoint install. Make sure you have permission to write to the directory and that CLIFp is not running if an older version exists. If you "
-                                                           "choose to cancel you will have to place CLIFp in your Flashpoint install directory manually.";
+    static inline const QString MSG_FP_CANT_DEPLOY_CLIFP = "Failed to deploy CLIFp.exe to the selected Flashpoint install.\n"
+                                                           "\n"
+                                                           "%1\n"
+                                                           "\n"
+                                                           "If you choose to ignore this you will have to place CLIFp in your Flashpoint install directory manually.";
 
     // Messages - LB XML read
     static inline const QString MSG_LB_XML_UNEXPECTED_ERROR = "An unexpected error occured while reading Launchbox XMLs:";

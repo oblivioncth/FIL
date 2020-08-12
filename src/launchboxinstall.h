@@ -73,7 +73,7 @@ public:
     class XMLMainElement_AddApp
     {
     public:
-        static inline const QString NAME = "AddApplication";
+        static inline const QString NAME = "AdditionalApplication";
 
         static inline const QString ELEMENT_ID = "Id";
         static inline const QString ELEMENT_GAME_ID = "GameID";

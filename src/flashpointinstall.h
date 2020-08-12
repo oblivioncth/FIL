@@ -150,7 +150,7 @@ private:
     QDir mScreenshotsDirectory;
     std::unique_ptr<QFile> mDatabaseFile;
     std::unique_ptr<QFile> mMainEXEFile;
-    std::unique_ptr<QFile> mOFLIbEXEFile;
+    std::unique_ptr<QFile> mCLIFpEXEFile;
 
     // Database information
     QStringList mPlatformList;
@@ -176,7 +176,7 @@ public:
     QSqlError checkDatabaseForRequiredTables(QSet<QString>& missingTablesBuffer) const;
     QSqlError checkDatabaseForRequiredColumns(QSet<QString>& missingColumsBuffer) const;
     QSqlError populateAvailableItems();
-    bool deployCLIFp();
+    bool deployCLIFp(QString &errorMessage);
 
     QSqlError initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QStringList selectedPlatforms) const;
     QSqlError initialAddAppQuery(DBQueryBuffer& resultBuffer) const;
