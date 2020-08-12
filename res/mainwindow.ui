@@ -307,7 +307,7 @@
       <bool>true</bool>
      </property>
     </widget>
-    <widget class="QLabel" name="label">
+    <widget class="QLabel" name="label_existingItem">
      <property name="geometry">
       <rect>
        <x>350</x>
@@ -546,24 +546,69 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="action_exit"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
      <string>Tools</string>
     </property>
+    <addaction name="action_deployCLIFp"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>Help</string>
     </property>
+    <addaction name="action_goToOFLIbGitHub"/>
+    <addaction name="action_goToCLIFpGitHub"/>
+    <addaction name="action_goToLBForums"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuTools"/>
    <addaction name="menuHelp"/>
   </widget>
-  <action name="actionExit">
+  <action name="action_exit">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/res/icon/Exit.png</normaloff>:/res/icon/Exit.png</iconset>
+   </property>
    <property name="text">
     <string>Exit</string>
+   </property>
+  </action>
+  <action name="action_goToOFLIbGitHub">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/res/icon/GitHub.png</normaloff>:/res/icon/GitHub.png</iconset>
+   </property>
+   <property name="text">
+    <string>OFLIb (This Importer) GitHub</string>
+   </property>
+  </action>
+  <action name="action_goToCLIFpGitHub">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/res/icon/GitHub.png</normaloff>:/res/icon/GitHub.png</iconset>
+   </property>
+   <property name="text">
+    <string>CLIFp (CLI) GitHub</string>
+   </property>
+  </action>
+  <action name="action_goToLBForums">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/res/icon/LaunchBox.png</normaloff>:/res/icon/LaunchBox.png</iconset>
+   </property>
+   <property name="text">
+    <string>LaunchBox Forums Release Page</string>
+   </property>
+  </action>
+  <action name="action_deployCLIFp">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/res/icon/CLIFp.png</normaloff>:/res/icon/CLIFp.png</iconset>
+   </property>
+   <property name="text">
+    <string>Deploy CLIFp</string>
    </property>
   </action>
  </widget>
@@ -859,6 +904,86 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>action_exit</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>all_on_action_triggered()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>244</x>
+     <y>407</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>action_deployCLIFp</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>all_on_action_triggered()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>244</x>
+     <y>407</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>action_goToCLIFpGitHub</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>all_on_action_triggered()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>244</x>
+     <y>407</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>action_goToOFLIbGitHub</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>all_on_action_triggered()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>244</x>
+     <y>407</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>action_goToLBForums</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>all_on_action_triggered()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>244</x>
+     <y>407</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>all_on_pushButton_clicked()</slot>
@@ -866,5 +991,6 @@
   <slot>all_on_lineEdit_textEdited()</slot>
   <slot>all_on_lineEdit_returnPressed()</slot>
   <slot>all_on_listWidget_itemChanged(QListWidgetItem*)</slot>
+  <slot>all_on_action_triggered()</slot>
  </slots>
 </ui>

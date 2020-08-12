@@ -10,7 +10,7 @@ namespace FP
 
 //-Class Functions--------------------------------------------------------------------------------------------
 //Public:
-QString Install::OFLIb::parametersFromStandard(QString originalAppPath, QString originalAppParams)
+QString Install::CLIFp::parametersFromStandard(QString originalAppPath, QString originalAppParams)
 {
     if(originalAppPath == DBTable_Add_App::ENTRY_MESSAGE)
         return MSG_ARG.arg(originalAppParams);
@@ -36,7 +36,7 @@ Install::Install(QString installPath)
     mScreenshotsDirectory = QDir(installPath + "/" + SCREENSHOTS_PATH);
     mDatabaseFile = std::make_unique<QFile>(installPath + "/" + DATABASE_PATH);
     mMainEXEFile = std::make_unique<QFile>(installPath + "/" + MAIN_EXE_PATH);
-    mOFLIbEXEFile = std::make_unique<QFile>(installPath + "/" + OFLIb::EXE_NAME);
+    mOFLIbEXEFile = std::make_unique<QFile>(installPath + "/" + CLIFp::EXE_NAME);
 
     // Create database connection
     QSqlDatabase fpDB = QSqlDatabase::addDatabase("QSQLITE", DATABASE_CONNECTION_NAME);
@@ -188,6 +188,22 @@ QSqlError Install::populateAvailableItems()
 
     // Return invalid SqlError
     return QSqlError();
+}
+
+bool Install::deployCLIFp()
+{
+    // Delete existing if present
+    if(QFileInfo::exists(mOFLIbEXEFile->fileName()) && QFileInfo(mOFLIbEXEFile->fileName()).isFile())
+        if(!QFile::remove(mOFLIbEXEFile->fileName()))
+            return false;
+
+    // Deploy new
+    if(!QFile::copy(":/file/CLIFp.exe", mOFLIbEXEFile->fileName()))
+        return false;
+
+    // Return true on
+    return true;
+
 }
 
 QSqlError Install::initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QStringList selectedPlatforms) const

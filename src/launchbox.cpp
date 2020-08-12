@@ -29,7 +29,7 @@ Game::Game(FP::Game flashpointGame, QString fullOFLIbPath)
       mNotes(flashpointGame.getNotes()),
       mSource(flashpointGame.getSource()),
       mAppPath(fullOFLIbPath),
-      mCommandLine(FP::Install::OFLIb::parametersFromStandard(flashpointGame.getAppPath(), flashpointGame.getLaunchCommand())),
+      mCommandLine(FP::Install::CLIFp::parametersFromStandard(flashpointGame.getAppPath(), flashpointGame.getLaunchCommand())),
       mReleaseDate(flashpointGame.getReleaseDate()),
       mVersion(flashpointGame.getVersion()) {}
 
@@ -124,7 +124,7 @@ AddApp::AddApp(FP::AddApp flashpointAddApp, QString fullOFLIbPath)
     : mID(flashpointAddApp.getID()),
       mGameID(flashpointAddApp.getParentID()),
       mAppPath(fullOFLIbPath),
-      mCommandLine(FP::Install::OFLIb::parametersFromStandard(flashpointAddApp.getAppPath(), flashpointAddApp.getLaunchCommand())),
+      mCommandLine(FP::Install::CLIFp::parametersFromStandard(flashpointAddApp.getAppPath(), flashpointAddApp.getLaunchCommand())),
       mAutorunBefore(flashpointAddApp.isAutorunBefore()),
       mName(flashpointAddApp.getName()),
       mWaitForExit(flashpointAddApp.isWaitExit()) {}

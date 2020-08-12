@@ -96,11 +96,11 @@ public:
         static inline const QStringList COLUMN_LIST = {COL_ID, COL_PLAYLIST_ID, COL_ORDER, COL_GAME_ID};
     };
 
-    class OFLIb
+    class CLIFp
     {
     // Class members
     public:
-        static inline const QString EXE_NAME = "OFLIb.exe";
+        static inline const QString EXE_NAME = "CLIFp.exe";
         static inline const QString APP_ARG = R"(--app="%1"")";
         static inline const QString PARAM_ARG = R"(--param="%1"")";
         static inline const QString MSG_ARG = R"(--msg="%1"")";
@@ -176,6 +176,7 @@ public:
     QSqlError checkDatabaseForRequiredTables(QSet<QString>& missingTablesBuffer) const;
     QSqlError checkDatabaseForRequiredColumns(QSet<QString>& missingColumsBuffer) const;
     QSqlError populateAvailableItems();
+    bool deployCLIFp();
 
     QSqlError initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QStringList selectedPlatforms) const;
     QSqlError initialAddAppQuery(DBQueryBuffer& resultBuffer) const;
