@@ -65,12 +65,14 @@ void MainWindow::initializeForms()
 
     ui->radioButton_launchBoxLink->setEnabled(mHasLinkPermissions);
     ui->radioButton_flashpointLink->setEnabled(mHasLinkPermissions);
+    ui->radioButton_launchBoxLink->setChecked(mHasLinkPermissions);
+    ui->radioButton_launchBoxCopy->setChecked(!mHasLinkPermissions);
 
     setInputStage(Paths);
 
     // TODO: THIS IS FOR DEBUG PURPOSES. REMOVE
     checkLaunchBoxInput("D:/LaunchBox");
-    checkFlashpointInput("C:/Users/Player/Desktop/FP");
+    checkFlashpointInput("E:/Downloads/qBittorrent/Flashpoint 8.1 Ultimate/Flashpoint");
 }
 
 void MainWindow::setInputStage(InputStage stage)
@@ -85,28 +87,13 @@ void MainWindow::setInputStage(InputStage stage)
             mAlteringListWidget = false;
             ui->groupBox_updateMode->setEnabled(false);
             ui->groupBox_imageMode->setEnabled(false);
-            ui->radioButton_onlyAdd->setChecked(true);
-            ui->radioButton_updateExisting->setChecked(false);
-            ui->checkBox_removeObsolete->setChecked(true);
-
-            if(mHasLinkPermissions)
-            {
-                ui->radioButton_launchBoxLink->setChecked(true);
-                ui->radioButton_launchBoxCopy->setChecked(false);
-            }
-            else
-            {
-                ui->radioButton_launchBoxCopy->setChecked(true);
-                ui->radioButton_launchBoxLink->setChecked(false);
-            }
-
-            ui->radioButton_flashpointLink->setChecked(false);
             ui->pushButton_startImport->setEnabled(false);
         break;
 
         case Imports:
             ui->groupBox_importSelection->setEnabled(true);
             ui->groupBox_imageMode->setEnabled(true);
+            ui->radioButton_onlyAdd->setChecked(true);
         break;
     }
 }
@@ -427,6 +414,7 @@ void MainWindow::importProcess()
     importProgressDialog.setWindowTitle(CAPTION_IMPORTING);
     importProgressDialog.setWindowModality(Qt::WindowModal);
     importProgressDialog.show();
+    QApplication::processEvents(); // Allow busy state to show
 
     // Start import
     ImportResult result = coreImportProcess(&importProgressDialog);
@@ -508,9 +496,6 @@ MainWindow::ImportResult MainWindow::coreImportProcess(QProgressDialog* pd)
         return Failed;
     }
 
-    // Close database connection since it's no longer needed
-    mFlashpointInstall->closeDatabaseConnection();
-
     // Process Playlists and list for playlist game query
     QList<FP::Playlist> targetKnownPlaylists;
     for(int i = 0; i < playlistQueries.size; i++)
@@ -536,6 +521,9 @@ MainWindow::ImportResult MainWindow::coreImportProcess(QProgressDialog* pd)
         postSqlError(MSG_FP_DB_UNEXPECTED_ERROR, queryError);
         return Failed;
     }
+
+    // Close database connection since it's no longer needed
+    mFlashpointInstall->closeDatabaseConnection();
 
     // Determine workload
     int maximumSteps = addAppQuery.size; // Additional App pre-load
@@ -604,6 +592,15 @@ MainWindow::ImportResult MainWindow::coreImportProcess(QProgressDialog* pd)
             return Failed;
         }
 
+        // Ensure image sub-directories exist
+        QString imageDirError;
+        while(!mLaunchBoxInstall->ensureImageDirectories(imageDirError, currentPlatformGameResult.source))
+        {
+            imageErrorMsg.setText(imageDirError);
+            if(imageErrorMsg.exec() == QMessageBox::No)
+                break;
+        }
+
         // Add/Update games
         for(int i = 0; i < currentPlatformGameResult.size; i++)
         {
@@ -638,10 +635,10 @@ MainWindow::ImportResult MainWindow::coreImportProcess(QProgressDialog* pd)
             currentPlatformXML->addGame(builtGame);
 
             // Transfer game images
-            QString imageError;
-            while(!mLaunchBoxInstall->transferImages(imageError, getSelectedImageOption(), mFlashpointInstall->getLogosDirectory(), mFlashpointInstall->getScrenshootsDirectory(), builtGame))
+            QString imageTransferError;
+            while(!mLaunchBoxInstall->transferImages(imageTransferError, getSelectedImageOption(), mFlashpointInstall->getLogosDirectory(), mFlashpointInstall->getScrenshootsDirectory(), builtGame))
             {
-                imageErrorMsg.setText(imageError);
+                imageErrorMsg.setText(imageTransferError);
                 if(imageErrorMsg.exec() == QMessageBox::No)
                     break;
             }

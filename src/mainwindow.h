@@ -24,27 +24,27 @@ class MainWindow : public QMainWindow
 //-Class Variables--------------------------------------------------------------------------------------------
 private:
     // Messages - Help
-    static inline const QString MSG_UPDATE_MODE_HELP = "<b>%1</b> - Only games not already present in your collection will be added, existing entries will be left completely untouched.\n"
-                                                       "\n"
+    static inline const QString MSG_UPDATE_MODE_HELP = "<b>%1</b> - Only games not already present in your collection will be added, existing entries will be left completely untouched.<br>"
+                                                       "<br>"
                                                        "<b>%2</b> - Games not already present in your collection will be added and existing entries will have their descriptive metadata (i.e. Title, Author, Images etc.) replaced by the "
-                                                       "the details present in the target Flashpoint version; however, personal metadata (i.e. Playcount, Acheivements, etc.) will be be altered.\n"
-                                                       "\n"
+                                                       "the details present in the target Flashpoint version; however, personal metadata (i.e. Playcount, Acheivements, etc.) will be be altered.<br>"
+                                                       "<br>"
                                                        "<b>%3</b> - Games in your collection that no longer present in the target version of Flashpoint will be removed. You will no longer be able to play such games if this option "
                                                        "is unchecked, but this may be useful for archival purposes or incase you later want to revert to a previous version of Flashpoint and maintain the entries personal metadata. Note that "
                                                        "this option will still cause missing games to be removed even if you are going backwards to a previous version of FP, as implied above.";
 
     static inline const QString MSG_IMAGE_MODE_HELP = "<b>%1</b> - All relevant images from Flashpoint will be fully copied into your LaunchBox installation. This causes zero overhead but will require additional storage space proportional to "
-                                                      "the number of games you end up importing, up to double if all platforms are selected. The images will still work in Flashpoint.\n"
-                                                      "\n"
+                                                      "the number of games you end up importing, up to double if all platforms are selected. The images will still work in Flashpoint.<br>"
+                                                      "<br>"
                                                       "<b>%2</b>* - A symbolic link to each relavent image from Flashpoint will be created in your LaunchBox installation. These appear like the real files to LaunchBox, adding only a miniscle "
-                                                      "amount of overhead it loads images and require almost no extra disk space to store. The images will still work in Flashpoint.\n"
-                                                      "\n"
+                                                      "amount of overhead it loads images and require almost no extra disk space to store. The images will still work in Flashpoint.<br>"
+                                                      "<br>"
                                                       "<b>%3</b>* - All relavent images from Flashpoint will be moved into your LaunchBox installation and a symbolic link will be left in its place within your Flashpoint directory. Effectively "
                                                       "the same as above except that Flashpoint inherits the insignificant overhead while reading the images and this can be useful if LaunchBox is on a different drive than Flashpoint that can "
                                                       "more easily accommodate the large space they require. The images will still work in Flashpoint; however, once the process is finished while using this option, if the image now within your "
-                                                      "LaunchBox install is ever deleted, the only way to get it back is to redownload Flashpoint and restore it manually or re-run the import tool again.\n"
-                                                      "\n"
-                                                      "* Requires running this tool as an administrator or enabling Windows's developer mode.";
+                                                      "LaunchBox install is ever deleted, the only way to get it back is to redownload Flashpoint and restore it manually or re-run the import tool again.<br>"
+                                                      "<br>"
+                                                      "<b>*</b> Requires running this tool as an administrator or enabling Windows's developer mode.";
 
     // Messages - Input
     static inline const QString MSG_LB_INSTALL_INVALID = "The specified directory either doesn't contain a valid LaunchBox install, or it contains a version that is incompatible with this tool.";
@@ -94,11 +94,11 @@ private:
     static inline const QString CAPTION_REVERT_ERR = "Error reverting changes";
     static inline const QString CAPTION_IMAGE_ERR = "Error importing game image(s)";
     static inline const QString CAPTION_CLIFP_ERR = "Error deploying CLIFp";
-    static inline const QString CAPTION_IMPORTING = "Importing Flashpoint...";
+    static inline const QString CAPTION_IMPORTING = "FP Import";
 
     // URLs
     static inline const QUrl URL_CLIFP_GITHUB = QUrl("https://github.com/oblivioncth/CLIFp");
-    static inline const QUrl URL_OFLIB_GITHUB =  QUrl("https://github.com/oblivioncth/OFLIb");
+    static inline const QUrl URL_OFLIB_GITHUB =  QUrl("https://github.com/oblivioncth/OFILb");
     static inline const QUrl URL_LB_FORUMS =  QUrl("???"); //TODO: ADD ME
 
 //-Instance Variables--------------------------------------------------------------------------------------------

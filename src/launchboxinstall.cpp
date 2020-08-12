@@ -730,7 +730,7 @@ Qx::XmlStreamReaderError Install::openXMLDocument(std::unique_ptr<XMLDoc>& retur
     else
     {
         // Get full path to target file
-        QString targetPath = (requestHandle.type == Platform ? mPlatformsDirectory : mPlaylistsDirectory).absolutePath() + '/' + requestHandle.name;
+        QString targetPath = (requestHandle.type == Platform ? mPlatformsDirectory : mPlaylistsDirectory).absolutePath() + '/' + requestHandle.name + XML_EXT;
 
         // Create unique reference to the target file for the new handle
         std::unique_ptr<QFile> xmlFile = std::make_unique<QFile>(targetPath);
@@ -805,6 +805,30 @@ bool Install::saveXMLDocument(std::unique_ptr<XMLDoc> document)
 
     // Return write status and let document ptr auto delete
     return successfulWrite;
+}
+
+bool Install::ensureImageDirectories(QString& errorMessage,QString platform)
+{
+    // Ensure error message is null
+    errorMessage = QString();
+
+    QDir logoDir(mPlatformImagesDirectory.absolutePath() + '/' + platform + '/' + LOGO_PATH);
+    QDir screenshotDir(mPlatformImagesDirectory.absolutePath() + '/' + platform + '/' + SCREENSHOT_PATH);
+
+    if(!logoDir.mkpath(".")) // "." -> Make directory at its current path (no extra sub-folders)
+    {
+        errorMessage = ERR_CANT_MAKE_DIR.arg(logoDir.absolutePath());
+        return false;
+    }
+
+    if(!screenshotDir.mkpath("."))
+    {
+        errorMessage =ERR_CANT_MAKE_DIR.arg(screenshotDir.absolutePath());
+        return false;
+    }
+
+    // Directories are present
+    return true;
 }
 
 bool Install::transferImages(QString& errorMessage, ImageMode imageOption, QDir logoSourceDir, QDir screenshotSourceDir, const LB::Game& game)
@@ -1043,7 +1067,7 @@ void Install::softReset()
     mModifiedXMLDocuments.clear();
     mPurgableImages.clear();
     mLinksToReverse.clear();
-    mLBDatabaseIDTracker = Qx::FreeIndexTracker<int>(0, -1, {});
+    mLBDatabaseIDTracker = Qx::FreeIndexTracker<int>(0, -1);
 }
 
 QSet<QString> Install::getExistingPlatforms() const { return mExistingPlatforms; }

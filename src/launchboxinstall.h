@@ -229,9 +229,9 @@ public:
     static inline const QString PLATFORMS_PATH = "Data/Platforms";
     static inline const QString PLAYLISTS_PATH = "Data/Playlists";
     static inline const QString MAIN_EXE_PATH = "LaunchBox.exe";
-    static inline const QString PLATFORM_IMAGES_PATH = "Images/Platforms";
-    static inline const QString LOGO_PATH = "???"; //TODO: FIXME
-    static inline const QString SCREENSHOT_PATH = "???"; //TODO: FIXME
+    static inline const QString PLATFORM_IMAGES_PATH = "Images";
+    static inline const QString LOGO_PATH = "Box - Front";
+    static inline const QString SCREENSHOT_PATH = "Screenshot - Gameplay";
 
     // Images
     static inline const QString IMAGE_EXT = ".png";
@@ -241,6 +241,7 @@ public:
     static inline const QString ERR_IMAGE_WONT_COPY = "Cannot copy the image %1 to %2";
     static inline const QString ERR_IMAGE_WONT_MOVE = "Cannot move the image %1 to %2";
     static inline const QString ERR_IMAGE_WONT_LINK = "Cannot create a symbolic link from %1 to %2";
+    static inline const QString ERR_CANT_MAKE_DIR = "Could not create the image directory %1. Make sure you have write permissions at that location.";
 
     // XML
     static inline const QString XML_EXT = ".xml";
@@ -292,6 +293,7 @@ public:
 
    Qx::XmlStreamReaderError openXMLDocument(std::unique_ptr<XMLDoc>& returnBuffer, XMLHandle requestHandle, UpdateOptions updateOptions);
    bool saveXMLDocument(std::unique_ptr<XMLDoc> document);
+   bool ensureImageDirectories(QString& errorMessage, QString platform);
    bool transferImages(QString& errorMessage, ImageMode imageOption, QDir logoSourceDir, QDir screenshotSourceDir, const LB::Game& game);
 
    int revertNextChange(QString& errorMessage, bool skipOnFail);
