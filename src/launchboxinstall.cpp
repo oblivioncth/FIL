@@ -156,6 +156,8 @@ void Install::XMLDoc::addPlaylistGame(PlaylistGame playlistGame)
     }
 }
 
+void Install::XMLDoc::clearFile() { mDocumentFile->resize(0); }
+
 void Install::XMLDoc::finalize()
 {
     // Copy items to final list if obsolete entries are to be kept
@@ -491,8 +493,13 @@ bool Install::XMLWriter::writeGame(const Game& game)
     mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_PUBLISHER, game.getPublisher());
     mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_PLATFORM, game.getPlatform());
     mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_SORT_TITLE, game.getSortTitle());
-    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_DATE_ADDED, game.getDateAdded().toString(Qt::ISODateWithMs));
-    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_DATE_MODIFIED, game.getDateModified().toString(Qt::ISODateWithMs));
+
+    if(game.getDateAdded().isValid()) // LB is picky with dates
+        mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_DATE_ADDED, game.getDateAdded().toString(Qt::ISODateWithMs));
+
+    if(game.getDateModified().isValid())// LB is picky with dates
+        mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_DATE_MODIFIED, game.getDateModified().toString(Qt::ISODateWithMs));
+
     mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_BROKEN, game.isBroken() ? "true" : "false");
     mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_PLAYMODE, game.getPlayMode());
     mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_STATUS, game.getStatus());
@@ -501,7 +508,10 @@ bool Install::XMLWriter::writeGame(const Game& game)
     mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_SOURCE, game.getSource());
     mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_APP_PATH, game.getAppPath());
     mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_COMMAND_LINE, game.getCommandLine());
-    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_RELEASE_DATE, game.getReleaseDate().toString(Qt::ISODateWithMs));
+
+    if(game.getReleaseDate().isValid()) // LB is picky with dates
+        mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_RELEASE_DATE, game.getReleaseDate().toString(Qt::ISODateWithMs));
+
     mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_VERSION, game.getVersion());
 
     if(mStreamWriter.hasError())
@@ -698,16 +708,16 @@ Qx::IOOpReport Install::populateExistingItems()
     QStringList existingPlatformsList;
     QStringList existingPlaylistsList;
 
-    Qx::IOOpReport existingCheck = Qx::getDirFileList(existingPlatformsList, mPlatformsDirectory, false, {XML_EXT});
+    Qx::IOOpReport existingCheck = Qx::getDirFileList(existingPlatformsList, mPlatformsDirectory, QDirIterator::Subdirectories, {XML_EXT}, false);
 
     if(existingCheck.wasSuccessful())
-        existingCheck = Qx::getDirFileList(existingPlaylistsList, mPlaylistsDirectory, false, {XML_EXT});
+        existingCheck = Qx::getDirFileList(existingPlaylistsList, mPlaylistsDirectory, QDirIterator::Subdirectories, {XML_EXT}, false);
 
     // Convert lists to set and drop XML extension
     for(QString platform : existingPlatformsList)
-        mExistingPlatforms.insert(platform.remove(XML_EXT));
+        mExistingPlatforms.insert(QFileInfo(platform).baseName());
     for(QString playlist : existingPlaylistsList)
-        mExistingPlaylists.insert(playlist.remove(XML_EXT));
+        mExistingPlaylists.insert(QFileInfo(playlist).baseName());
 
     return existingCheck;
 }
@@ -740,9 +750,9 @@ Qx::XmlStreamReaderError Install::openXMLDocument(std::unique_ptr<XMLDoc>& retur
 
         if(targetInfo.exists() && targetInfo.isFile())
         {
-            QString backupPath = targetInfo.absolutePath() + targetInfo.baseName() + MODIFIED_FILE_EXT;
+            QString backupPath = targetInfo.absolutePath() + '/' + targetInfo.baseName() + MODIFIED_FILE_EXT;
 
-            if(QFileInfo::exists(backupPath) && QFileInfo(backupPath).isFile())
+            if(QFile::exists(backupPath) && QFileInfo(backupPath).isFile())
             {
                 if(!QFile::remove(backupPath))
                     return Qx::XmlStreamReaderError(populateErrorWithTarget(XMLReader::ERR_BAK_WONT_DEL, requestHandle));
@@ -767,6 +777,9 @@ Qx::XmlStreamReaderError Install::openXMLDocument(std::unique_ptr<XMLDoc>& retur
             {
                 XMLReader docReader(returnBuffer.get());
                 openReadError = docReader.readInto();
+
+                // Clear file to prepare for writing
+                returnBuffer->clearFile();
             }
 
             // Add handle to lease set if no error occured while readding
@@ -1000,7 +1013,7 @@ int Install::revertNextChange(QString& errorMessage, bool skipOnFail)
         QString currentDoc = mModifiedXMLDocuments.front();
 
         QFileInfo currentDocInfo(currentDoc);
-        QString backupPath = currentDocInfo.absolutePath() + currentDocInfo.baseName() + MODIFIED_FILE_EXT;
+        QString backupPath = currentDocInfo.absolutePath() + '/' + currentDocInfo.baseName() + MODIFIED_FILE_EXT;
 
         if(currentDocInfo.exists() && !QFile::remove(currentDoc) && !skipOnFail)
         {
@@ -1008,7 +1021,7 @@ int Install::revertNextChange(QString& errorMessage, bool skipOnFail)
             return operationsLeft;
         }
 
-        if(!currentDocInfo.exists() && QFileInfo::exists(backupPath) && !QFile::rename(backupPath, currentDoc) & !skipOnFail)
+        if(!QFile::exists(currentDoc) && QFile::exists(backupPath) && !QFile::rename(backupPath, currentDoc) && !skipOnFail)
         {
             errorMessage = ERR_REVERT_CANT_RESTORE_EXML.arg(backupPath);
             return operationsLeft;
@@ -1041,13 +1054,13 @@ int Install::revertNextChange(QString& errorMessage, bool skipOnFail)
         QString currentLink = mLinksToReverse.firstKey();
         QString curerntOriginal = mLinksToReverse.first();
 
-        if(QFileInfo::exists(currentLink) && !QFile::remove(currentLink) && !skipOnFail)
+        if(QFile::exists(currentLink) && !QFile::remove(currentLink) && !skipOnFail)
         {
             errorMessage = ERR_REVERT_CANT_REMOVE_IMAGE.arg(currentLink);
             return operationsLeft;
         }
 
-        if(!QFileInfo::exists(currentLink) && !QFile::rename(curerntOriginal, currentLink) && !skipOnFail)
+        if(!QFile::exists(currentLink) && !QFile::rename(curerntOriginal, currentLink) && !skipOnFail)
         {
             errorMessage = ERR_REVERT_CANT_MOVE_IMAGE.arg(curerntOriginal);
             return operationsLeft;
@@ -1070,6 +1083,7 @@ void Install::softReset()
     mLBDatabaseIDTracker = Qx::FreeIndexTracker<int>(0, -1);
 }
 
+QString Install::getPath() const { return mRootDirectory.absolutePath(); }
 QSet<QString> Install::getExistingPlatforms() const { return mExistingPlatforms; }
 QSet<QString> Install::getExistingPlaylists() const { return mExistingPlaylists; }
 int Install::getRevertQueueCount() const { return mModifiedXMLDocuments.size() + mPurgableImages.size() + mLinksToReverse.size(); }

@@ -101,9 +101,9 @@ public:
     // Class members
     public:
         static inline const QString EXE_NAME = "CLIFp.exe";
-        static inline const QString APP_ARG = R"(--app="%1"")";
-        static inline const QString PARAM_ARG = R"(--param="%1"")";
-        static inline const QString MSG_ARG = R"(--msg="%1"")";
+        static inline const QString APP_ARG = R"(--app="%1")";
+        static inline const QString PARAM_ARG = R"(--param="%1")";
+        static inline const QString MSG_ARG = R"(--msg="%1")";
 
     // Class functions
     public:
@@ -183,6 +183,7 @@ public:
     QSqlError initialPlaylistQuery(DBQueryBuffer& resultBuffer, QStringList selectedPlaylists) const;
     QSqlError initialPlaylistGameQuery(QList<QPair<DBQueryBuffer, FP::Playlist>>& resultBuffer, const QList<FP::Playlist>& knownPlaylistsToQuery) const;
 
+    QString getPath() const;
     QStringList getPlatformList() const;
     QStringList getPlaylistList() const;
     QDir getLogosDirectory() const;

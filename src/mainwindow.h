@@ -52,9 +52,12 @@ private:
     static inline const QString MSG_FP_VER_NOT_TARGET = "The selected Flashpoint install contains a version of Flashpoint that is different from the target version (" VER_PRODUCTVERSION_STR "), but appears to have a compatible structure. "
                                                                 "You may proceed at your own risk as the tool is not guarnteed to work correctly in this circumstance. Please use a newer version of " VER_INTERNALNAME_STR " if available.";
 
+    static inline const QString MSG_INSTALL_CONTENTS_CHANGED = "The contents of your installs have been changed since the initial scan and therefore must be re-evaluated. You will need to make your selections again.";
+
     // Messages - General import procedure
     static inline const QString MSG_LB_CLOSE_PROMPT = "The importer has detected that LaunchBox is running. It must be closed in order to continue. If recently closed, wait a few moments before trying to proceed again as it performs significant cleanup in the background.";
-    static inline const QString MSG_POST_IMPORT = "The Flashpoint import has completed succesfully. Next time you start LaunchBox it may take longer than usual as it will have to fill in some default fields for the imported Platforms/Playlists. "
+    static inline const QString MSG_POST_IMPORT = "The Flashpoint import has completed succesfully. Next time you start LaunchBox it may take longer than usual as it will have to fill in some default fields for the imported Platforms/Playlists.\n"
+                                                  "\n"
                                                   "If you wish to import further selections or update to a newer version of Flashpoint, simply re-run this procedure after pointing it to the desired Flashpoint installation.";
 
     // Messages - FP General
@@ -74,12 +77,15 @@ private:
                                                            "If you choose to ignore this you will have to place CLIFp in your Flashpoint install directory manually.";
 
     // Messages - LB XML read
-    static inline const QString MSG_LB_XML_UNEXPECTED_ERROR = "An unexpected error occured while reading Launchbox XMLs:";
+    static inline const QString MSG_LB_XML_UNEXPECTED_ERROR = "An unexpected error occured while reading Launchbox XML (%1 | %2):";
 
     // Messages - Revert
-    static inline const QString MSG_HAVE_TO_REVERT = "Due to previous unrecoverable errors, all changes that occured during import will now be reverted (other than existing images that were replaced with newer versions). Aftewards, check to see "
-                                                     "if there is a newer version of " VER_INTERNALNAME_STR " and try again using that version. If not ask for help on the LaunchBox forums where this tool was released. If you beleive this to be due "
-                                                     "to a bug with this software, please submit an issue to its GitHub page (listed under help)";
+    static inline const QString MSG_HAVE_TO_REVERT = "Due to previous unrecoverable errors, all changes that occured during import will now be reverted (other than existing images that were replaced with newer versions).\n"
+                                                     "\n"
+                                                     "Aftewards, check to see if there is a newer version of " VER_INTERNALNAME_STR " and try again using that version. If not ask for help on the LaunchBox forums where this tool was released (see Tools).\n"
+                                                     "\n"
+                                                     "If you beleive this to be due to a bug with this software, please submit an issue to its GitHub page (listed under help)";
+
     static inline const QString MSG_USER_CANCELED = "Import canceled by user, all changes that occured during import will now be reverted (other than existing images that were replaced with newer versions).";
 
     // ProgressDialog - Import Operation
@@ -136,13 +142,18 @@ private:
     void checkLaunchBoxInput(QString installPath);
     void checkFlashpointInput(QString installPath);
     void gatherInstallInfo();
+    void populateImportSelectionBoxes();
     bool parseLaunchBoxData();
     bool parseFlashpointData();
+    bool installsHaveChanged();
+    void redoInputChecks();
+
     void postSqlError(QString mainText, QSqlError sqlError);
     void postListError(QString mainText, QStringList detailedItems);
     void postIOError(QString mainText, Qx::IOOpReport report);
     void postXMLReadError(QString mainText, Qx::XmlStreamReaderError xmlError);
     void postGenericError(QString mainText, QString informativeText = QString());
+
     void importSelectionReaction(QListWidgetItem* item, QWidget* parent);
     QStringList getSelectedPlatforms() const;
     QStringList getSelectedPlaylists() const;

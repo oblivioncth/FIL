@@ -196,7 +196,7 @@ bool Install::deployCLIFp(QString& errorMessage)
     errorMessage = QString();
 
     // Delete existing if present
-    if(QFileInfo::exists(mCLIFpEXEFile->fileName()) && QFileInfo(mCLIFpEXEFile->fileName()).isFile())
+    if(QFile::exists(mCLIFpEXEFile->fileName()) && QFileInfo(mCLIFpEXEFile->fileName()).isFile())
     {
         if(!mCLIFpEXEFile->remove())
         {
@@ -361,6 +361,7 @@ QSqlError Install::initialPlaylistGameQuery(QList<QPair<DBQueryBuffer, FP::Playl
     return QSqlError();
 }
 
+QString Install::getPath() const { return mRootDirectory.absolutePath(); }
 QStringList Install::getPlatformList() const { return mPlatformList; }
 QStringList Install::getPlaylistList() const { return mPlaylistList; }
 QDir Install::getLogosDirectory() const { return mLogosDirectory; }

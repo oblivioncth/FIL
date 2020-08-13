@@ -161,6 +161,7 @@ public:
         void setPlaylistHeader(PlaylistHeader header);
         void addPlaylistGame(PlaylistGame playlistGame);
 
+        void clearFile();
         void finalize();
     };
 
@@ -299,6 +300,7 @@ public:
    int revertNextChange(QString& errorMessage, bool skipOnFail);
    void softReset();
 
+   QString getPath() const;
    QSet<QString> getExistingPlatforms() const;
    QSet<QString> getExistingPlaylists() const;
    int getRevertQueueCount() const;
