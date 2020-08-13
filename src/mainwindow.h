@@ -29,9 +29,9 @@ private:
                                                        "<b>%2</b> - Games not already present in your collection will be added and existing entries will have their descriptive metadata (i.e. Title, Author, Images etc.) replaced by the "
                                                        "the details present in the target Flashpoint version; however, personal metadata (i.e. Playcount, Acheivements, etc.) will be be altered.<br>"
                                                        "<br>"
-                                                       "<b>%3</b> - Games in your collection that no longer present in the target version of Flashpoint will be removed. You will no longer be able to play such games if this option "
-                                                       "is unchecked, but this may be useful for archival purposes or incase you later want to revert to a previous version of Flashpoint and maintain the entries personal metadata. Note that "
-                                                       "this option will still cause missing games to be removed even if you are going backwards to a previous version of FP, as implied above.";
+                                                       "<b>%3</b> - Games in your collection that are not present in the target version of Flashpoint will be removed (only for selected platforms). You will no longer be able to play such "
+                                                       "games if this option is unchecked, but this may be useful for archival purposes or incase you later want to revert to a previous version of Flashpoint and maintain the entries personal "
+                                                       "metadata. Note that this option will still cause missing games to be removed even if you are going backwards to a previous version of FP, as implied above.";
 
     static inline const QString MSG_IMAGE_MODE_HELP = "<b>%1</b> - All relevant images from Flashpoint will be fully copied into your LaunchBox installation. This causes zero overhead but will require additional storage space proportional to "
                                                       "the number of games you end up importing, up to double if all platforms are selected. The images will still work in Flashpoint.<br>"
