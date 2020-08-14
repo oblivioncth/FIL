@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>827</width>
-    <height>1050</height>
+    <width>648</width>
+    <height>881</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -700,7 +700,7 @@
        </sizepolicy>
       </property>
       <property name="title">
-       <string>GroupBox</string>
+       <string>Image Mode</string>
       </property>
       <layout class="QGridLayout" name="gridLayout_5" rowstretch="1,1,1" columnstretch="6,1,2">
        <item row="0" column="0">
@@ -791,19 +791,6 @@
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="pushButton_exit">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
-        <horstretch>0</horstretch>
-        <verstretch>1</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="text">
-       <string>Exit</string>
-      </property>
-     </widget>
-    </item>
-    <item>
      <widget class="QPushButton" name="pushButton_startImport">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
@@ -816,6 +803,19 @@
       </property>
      </widget>
     </item>
+    <item>
+     <widget class="QPushButton" name="pushButton_exit">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
+        <horstretch>0</horstretch>
+        <verstretch>1</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>Exit</string>
+      </property>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -823,7 +823,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>827</width>
+     <width>648</width>
      <height>20</height>
     </rect>
    </property>
@@ -837,6 +837,9 @@
     <property name="title">
      <string>Tools</string>
     </property>
+    <addaction name="separator"/>
+    <addaction name="action_includeExtreme"/>
+    <addaction name="separator"/>
     <addaction name="action_deployCLIFp"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -894,6 +897,18 @@
    </property>
    <property name="text">
     <string>Deploy CLIFp</string>
+   </property>
+  </action>
+  <action name="action_includeExtreme">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/res/icon/Extreme_game.png</normaloff>:/res/icon/Extreme_game.png</iconset>
+   </property>
+   <property name="text">
+    <string>Include Extreme/Adult Games</string>
    </property>
   </action>
  </widget>

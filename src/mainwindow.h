@@ -157,6 +157,7 @@ private:
     void importSelectionReaction(QListWidgetItem* item, QWidget* parent);
     QStringList getSelectedPlatforms() const;
     QStringList getSelectedPlaylists() const;
+    LB::Install::GeneralOptions getSelectedGeneralOptions() const;
     LB::Install::UpdateOptions getSelectedUpdateOptions() const;
     LB::Install::ImageMode getSelectedImageOption() const;
     void importProcess();

@@ -32,6 +32,11 @@ public:
         bool removeObsolete;
     };
 
+    struct GeneralOptions
+    {
+        bool includeExtreme;
+    };
+
     class XMLHandle
     {
     public:

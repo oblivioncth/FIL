@@ -10,5 +10,6 @@
         <file>res/icon/GitHub.png</file>
         <file>res/icon/LaunchBox.png</file>
         <file>res/file/CLIFp.exe</file>
+        <file>res/icon/Extreme_game.png</file>
     </qresource>
 </RCC>

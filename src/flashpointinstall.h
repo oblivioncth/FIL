@@ -29,6 +29,7 @@ public:
         static inline const QString COL_DATE_MODIFIED = "dateModified";
         static inline const QString COL_PLATFORM = "platform";
         static inline const QString COL_BROKEN = "broken";
+        static inline const QString COL_EXTREME = "extreme";
         static inline const QString COL_PLAY_MODE = "playMode";
         static inline const QString COL_STATUS = "status";
         static inline const QString COL_NOTES = "notes";

@@ -445,6 +445,11 @@ QStringList MainWindow::getSelectedPlaylists() const
     return selectedPlaylists;
 }
 
+LB::Install::GeneralOptions MainWindow::getSelectedGeneralOptions() const
+{
+    return {ui->action_includeExtreme->isChecked()};
+}
+
 LB::Install::UpdateOptions MainWindow::getSelectedUpdateOptions() const
 {
     return {ui->radioButton_onlyAdd->isChecked() ? LB::Install::OnlyNew : LB::Install::NewAndExisting, ui->checkBox_removeObsolete->isChecked() };
@@ -524,6 +529,8 @@ MainWindow::ImportResult MainWindow::coreImportProcess(QProgressDialog* pd)
     QStringList platformsToImport = getSelectedPlatforms();
     QStringList playlistsToImport = getSelectedPlaylists();
     LB::Install::UpdateOptions updateOptions = getSelectedUpdateOptions();
+    LB::Install::ImageMode imageOption = getSelectedImageOption();
+    LB::Install::GeneralOptions generalOptions = getSelectedGeneralOptions();
 
     // Process query status
     QSqlError queryError;
@@ -672,40 +679,44 @@ MainWindow::ImportResult MainWindow::coreImportProcess(QProgressDialog* pd)
             // Advance to next record
             currentPlatformGameResult.result.next();
 
-            // Form game from record
-            FP::GameBuilder fpGb;
-            fpGb.wID(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ID).toString());
-            fpGb.wTitle(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_TITLE).toString());
-            fpGb.wSeries(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_SERIES).toString());
-            fpGb.wDeveloper(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_DEVELOPER).toString());
-            fpGb.wPublisher(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_PUBLISHER).toString());
-            fpGb.wDateAdded(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_DATE_ADDED).toString());
-            fpGb.wDateModified(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_DATE_MODIFIED).toString());
-            fpGb.wPlatform(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_PLATFORM).toString());
-            fpGb.wBroken(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_BROKEN).toString());
-            fpGb.wPlayMode(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_PLAY_MODE).toString());
-            fpGb.wStatus(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_STATUS).toString());
-            fpGb.wNotes(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_NOTES).toString());
-            fpGb.wSource(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_SOURCE).toString());
-            fpGb.wAppPath(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_APP_PATH).toString());
-            fpGb.wLaunchCommand(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_LAUNCH_COMMAND).toString());
-            fpGb.wReleaseDate(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_RELEASE_DATE).toString());
-            fpGb.wVersion(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_VERSION).toString());
-            fpGb.wOriginalDescription(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ORIGINAL_DESC).toString());
-            fpGb.wLanguage(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_LANGUAGE).toString());
-            fpGb.wOrderTitle(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ORDER_TITLE).toString());
-
-            // Convert and convert FP game to LB game and add to document
-            LB::Game builtGame = LB::Game(fpGb.build(), mFlashpointInstall->getOFLIbPath());
-            currentPlatformXML->addGame(builtGame);
-
-            // Transfer game images
-            QString imageTransferError;
-            while(!mLaunchBoxInstall->transferImages(imageTransferError, getSelectedImageOption(), mFlashpointInstall->getLogosDirectory(), mFlashpointInstall->getScrenshootsDirectory(), builtGame))
+            // Check if game is extreme and only include if user ticked the option
+            if(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_EXTREME).toString() == "0" || generalOptions.includeExtreme)
             {
-                imageErrorMsg.setText(imageTransferError);
-                if(imageErrorMsg.exec() == QMessageBox::No)
-                    break;
+                // Form game from record
+                FP::GameBuilder fpGb;
+                fpGb.wID(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ID).toString());
+                fpGb.wTitle(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_TITLE).toString());
+                fpGb.wSeries(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_SERIES).toString());
+                fpGb.wDeveloper(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_DEVELOPER).toString());
+                fpGb.wPublisher(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_PUBLISHER).toString());
+                fpGb.wDateAdded(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_DATE_ADDED).toString());
+                fpGb.wDateModified(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_DATE_MODIFIED).toString());
+                fpGb.wPlatform(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_PLATFORM).toString());
+                fpGb.wBroken(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_BROKEN).toString());
+                fpGb.wPlayMode(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_PLAY_MODE).toString());
+                fpGb.wStatus(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_STATUS).toString());
+                fpGb.wNotes(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_NOTES).toString());
+                fpGb.wSource(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_SOURCE).toString());
+                fpGb.wAppPath(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_APP_PATH).toString());
+                fpGb.wLaunchCommand(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_LAUNCH_COMMAND).toString());
+                fpGb.wReleaseDate(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_RELEASE_DATE).toString());
+                fpGb.wVersion(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_VERSION).toString());
+                fpGb.wOriginalDescription(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ORIGINAL_DESC).toString());
+                fpGb.wLanguage(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_LANGUAGE).toString());
+                fpGb.wOrderTitle(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ORDER_TITLE).toString());
+
+                // Convert and convert FP game to LB game and add to document
+                LB::Game builtGame = LB::Game(fpGb.build(), mFlashpointInstall->getOFLIbPath());
+                currentPlatformXML->addGame(builtGame);
+
+                // Transfer game images
+                QString imageTransferError;
+                while(!mLaunchBoxInstall->transferImages(imageTransferError, imageOption, mFlashpointInstall->getLogosDirectory(), mFlashpointInstall->getScrenshootsDirectory(), builtGame))
+                {
+                    imageErrorMsg.setText(imageTransferError);
+                    if(imageErrorMsg.exec() == QMessageBox::No)
+                        break;
+                }
             }
 
             // Update progress dialog value
