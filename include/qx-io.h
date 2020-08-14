@@ -106,6 +106,7 @@ static inline QString ENDL = "\r\n"; //NOTE: Currently this is windows only
 // General:
     bool fileIsEmpty(QFile& file);
     bool fileIsEmpty(QFile& file, IOOpReport& reportBuffer);
+    QString kosherizeFileName(QString fileName);
 // Text Based:
     IOOpReport getLineCountOfFile(long long& returnBuffer, QFile& textFile);
     IOOpReport findStringInFile(TextPos& returnBuffer, QFile& textFile, const QString& query, int hitsToSkip = 0, Qt::CaseSensitivity caseSensitivity = Qt::CaseSensitive);

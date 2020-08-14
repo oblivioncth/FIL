@@ -160,12 +160,14 @@ void MainWindow::gatherInstallInfo()
         }
         else
         {
+            mLaunchBoxInstall.reset();
             ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
             setInputStage(Paths);
         }
     }
     else
     {
+        mFlashpointInstall.reset();
         ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
         setInputStage(Paths);
     }
@@ -186,9 +188,10 @@ void MainWindow::populateImportSelectionBoxes()
     for(int i = 0; i < ui->listWidget_platformChoices->count(); i++)
     {
         currentItem = ui->listWidget_platformChoices->item(i);
+        currentItem->setFlags(currentItem->flags() | Qt::ItemIsUserCheckable);
         currentItem->setCheckState(Qt::Unchecked);
 
-        if(mLaunchBoxInstall->getExistingPlatforms().contains(currentItem->text()))
+        if(mLaunchBoxInstall->getExistingPlatforms().contains(LB::Install::XMLDoc::makeFileNameLBKosher(currentItem->text())))
             currentItem->setBackground(QBrush(mExistingItemColor));
     }
 
@@ -198,7 +201,7 @@ void MainWindow::populateImportSelectionBoxes()
         currentItem->setFlags(currentItem->flags() | Qt::ItemIsUserCheckable);
         currentItem->setCheckState(Qt::Unchecked);
 
-        if(mLaunchBoxInstall->getExistingPlaylists().contains(currentItem->text()))
+        if(mLaunchBoxInstall->getExistingPlaylists().contains(LB::Install::XMLDoc::makeFileNameLBKosher(currentItem->text())))
             currentItem->setBackground(QBrush(mExistingItemColor));
     }
 
@@ -378,11 +381,14 @@ void MainWindow::postGenericError(QString mainText, QString informativeText)
 
 void MainWindow::importSelectionReaction(QListWidgetItem* item, QWidget* parent)
 {
+    // TODO: Some code here is leftover from when playlist selection could trigger this function. Possibly no longer needed
     if(item->checkState() == Qt::Checked)
     {
         ui->pushButton_startImport->setEnabled(true);
-        ui->groupBox_updateMode->setEnabled((parent == ui->listWidget_platformChoices && mLaunchBoxInstall->getExistingPlatforms().contains(item->text())) ||
-                                            (parent == ui->listWidget_playlistChoices && mLaunchBoxInstall->getExistingPlaylists().contains(item->text())));
+        ui->groupBox_updateMode->setEnabled(parent == ui->listWidget_platformChoices &&
+                                            mLaunchBoxInstall->getExistingPlatforms().contains(LB::Install::XMLDoc::makeFileNameLBKosher(item->text())));
+//        ui->groupBox_updateMode->setEnabled((parent == ui->listWidget_platformChoices && mLaunchBoxInstall->getExistingPlatforms().contains(item->text())) ||
+//                                            (parent == ui->listWidget_playlistChoices && mLaunchBoxInstall->getExistingPlaylists().contains(item->text())));
     }
     else
     {
@@ -396,25 +402,25 @@ void MainWindow::importSelectionReaction(QListWidgetItem* item, QWidget* parent)
             {
                 keepStartButtonEnabled = true;
 
-                if(mLaunchBoxInstall->getExistingPlatforms().contains(ui->listWidget_platformChoices->item(i)->text()))
+                if(mLaunchBoxInstall->getExistingPlatforms().contains(LB::Install::XMLDoc::makeFileNameLBKosher(ui->listWidget_platformChoices->item(i)->text())))
                     keepUpdateGroupEnabled = true;
             }
         }
 
-        // Check playlist choices if needed
-        if(!keepUpdateGroupEnabled || !keepStartButtonEnabled)
-        {
-            for(int i = 0; i < ui->listWidget_playlistChoices->count(); i++)
-            {
-                if(ui->listWidget_playlistChoices->item(i)->checkState() == Qt::Checked)
-                {
-                    keepStartButtonEnabled = true;
+//        // Check playlist choices if needed
+//        if(!keepUpdateGroupEnabled || !keepStartButtonEnabled)
+//        {
+//            for(int i = 0; i < ui->listWidget_playlistChoices->count(); i++)
+//            {
+//                if(ui->listWidget_playlistChoices->item(i)->checkState() == Qt::Checked)
+//                {
+//                    keepStartButtonEnabled = true;
 
-                    if(mLaunchBoxInstall->getExistingPlaylists().contains(ui->listWidget_playlistChoices->item(i)->text()))
-                        keepUpdateGroupEnabled = true;
-                }
-            }
-        }
+//                    if(mLaunchBoxInstall->getExistingPlaylists().contains(ui->listWidget_playlistChoices->item(i)->text()))
+//                        keepUpdateGroupEnabled = true;
+//                }
+//            }
+//        }
 
         // Apply state changes
         ui->groupBox_updateMode->setEnabled(keepUpdateGroupEnabled);
@@ -423,24 +429,26 @@ void MainWindow::importSelectionReaction(QListWidgetItem* item, QWidget* parent)
 
 }
 
-QStringList MainWindow::getSelectedPlatforms() const
+QSet<QString> MainWindow::getSelectedPlatforms(bool fileNameLegal) const
 {
-    QStringList selectedPlatforms;
+    QSet<QString> selectedPlatforms;
 
     for(int i = 0; i < ui->listWidget_platformChoices->count(); i++)
         if(ui->listWidget_platformChoices->item(i)->checkState() == Qt::Checked)
-            selectedPlatforms.append(ui->listWidget_platformChoices->item(i)->text());
+            selectedPlatforms.insert(fileNameLegal ? LB::Install::XMLDoc::makeFileNameLBKosher(ui->listWidget_platformChoices->item(i)->text()) :
+                                                     ui->listWidget_platformChoices->item(i)->text());
 
     return selectedPlatforms;
 }
 
-QStringList MainWindow::getSelectedPlaylists() const
+QSet<QString> MainWindow::getSelectedPlaylists(bool fileNameLegal) const
 {
-    QStringList selectedPlaylists;
+    QSet<QString> selectedPlaylists;
 
     for(int i = 0; i < ui->listWidget_playlistChoices->count(); i++)
         if(ui->listWidget_playlistChoices->item(i)->checkState() == Qt::Checked)
-            selectedPlaylists.append(ui->listWidget_playlistChoices->item(i)->text());
+            selectedPlaylists.insert(fileNameLegal ? LB::Install::XMLDoc::makeFileNameLBKosher(ui->listWidget_playlistChoices->item(i)->text()) :
+                                                     ui->listWidget_playlistChoices->item(i)->text());
 
     return selectedPlaylists;
 }
@@ -469,6 +477,16 @@ void MainWindow::importProcess()
         redoInputChecks();
         return;
     }
+
+    // Warn user if they are changing existing files
+    if(mLaunchBoxInstall->getExistingPlatforms().intersects(getSelectedPlatforms(true)) || mLaunchBoxInstall->getExistingPlaylists().intersects(getSelectedPlaylists(true)))
+        if(QMessageBox::warning(this, QApplication::applicationName(), MSG_PRE_EXISTING_IMPORT, QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel) == QMessageBox::Cancel)
+            return;
+
+    // Warn user if Flashpoint is running
+    // Check if Flashpoint is running
+    if(Qx::processIsRunning(QFileInfo(FP::Install::MAIN_EXE_PATH).fileName()))
+        QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_CLOSE_PROMPT);
 
     // Only allow proceeding if LB isn't running
     bool lbRunning;
@@ -506,8 +524,7 @@ void MainWindow::importProcess()
             QMessageBox::information(this, QApplication::applicationName(), MSG_POST_IMPORT);
 
             // Update selection lists to reflect newly existing platforms
-            populateImportSelectionBoxes();
-
+            gatherInstallInfo();
         }
         else if(result == Canceled)
         {
@@ -526,8 +543,8 @@ void MainWindow::importProcess()
 MainWindow::ImportResult MainWindow::coreImportProcess(QProgressDialog* pd)
 {
     // Grab options
-    QStringList platformsToImport = getSelectedPlatforms();
-    QStringList playlistsToImport = getSelectedPlaylists();
+    QSet<QString> platformsToImport = getSelectedPlatforms();
+    QSet<QString> playlistsToImport = getSelectedPlaylists();
     LB::Install::UpdateOptions updateOptions = getSelectedUpdateOptions();
     LB::Install::ImageMode imageOption = getSelectedImageOption();
     LB::Install::GeneralOptions generalOptions = getSelectedGeneralOptions();
@@ -606,6 +623,7 @@ MainWindow::ImportResult MainWindow::coreImportProcess(QProgressDialog* pd)
     // Re-prep progress dialog
     pd->setMaximum(maximumSteps);
     pd->setLabelText(PD_LABEL_ADD_APP_PRELOAD);
+    QApplication::processEvents(); // Force title change to show
 
     // Pre-load additional apps
     addAppsCache.reserve(addAppQuery.size);
@@ -641,16 +659,21 @@ MainWindow::ImportResult MainWindow::coreImportProcess(QProgressDialog* pd)
     QMessageBox imageErrorMsg;
     imageErrorMsg.setWindowTitle(CAPTION_IMAGE_ERR);
     imageErrorMsg.setInformativeText("Retry?");
-    imageErrorMsg.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+    imageErrorMsg.setStandardButtons(QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
     imageErrorMsg.setDefaultButton(QMessageBox::Yes);
+
+    // Skip all images tracker
+    bool skipAllImages = false;
 
     // Process games and additional apps by platform
     for(int i = 0; i < gameQueries.size(); i++)
     {
         // Get current result
         FP::Install::DBQueryBuffer currentPlatformGameResult = gameQueries[i];
+
         // Update progress dialog label
         pd->setLabelText(PD_LABEL_IMPORTING_PLATFORM_GAMES.arg(currentPlatformGameResult.source));
+        QApplication::processEvents(); // Force title change to show
 
         // Open LB platform doc
         LB::Install::XMLHandle docRequest = {LB::Install::Platform, currentPlatformGameResult.source};
@@ -711,11 +734,24 @@ MainWindow::ImportResult MainWindow::coreImportProcess(QProgressDialog* pd)
 
                 // Transfer game images
                 QString imageTransferError;
-                while(!mLaunchBoxInstall->transferImages(imageTransferError, imageOption, mFlashpointInstall->getLogosDirectory(), mFlashpointInstall->getScrenshootsDirectory(), builtGame))
+                while(!skipAllImages && !mLaunchBoxInstall->transferLogo(imageTransferError, imageOption, mFlashpointInstall->getLogosDirectory(), builtGame))
                 {
                     imageErrorMsg.setText(imageTransferError);
-                    if(imageErrorMsg.exec() == QMessageBox::No)
+                    int choice = imageErrorMsg.exec();
+                    if(choice == QMessageBox::No)
                         break;
+                    else if(choice == QMessageBox::NoToAll)
+                        skipAllImages = true;
+                }
+
+                while(!skipAllImages && !mLaunchBoxInstall->transferScreenshot(imageTransferError, imageOption, mFlashpointInstall->getScrenshootsDirectory(), builtGame))
+                {
+                    imageErrorMsg.setText(imageTransferError);
+                    int choice = imageErrorMsg.exec();
+                    if(choice == QMessageBox::No)
+                        break;
+                    else if(choice == QMessageBox::NoToAll)
+                        skipAllImages = true;
                 }
             }
 
@@ -728,6 +764,7 @@ MainWindow::ImportResult MainWindow::coreImportProcess(QProgressDialog* pd)
 
         // Update progress dialog label
         pd->setLabelText(PD_LABEL_IMPORTING_PLATFORM_ADD_APPS.arg(currentPlatformGameResult.source));
+        QApplication::processEvents(); // Force title change to show
 
         // Add applicable additional apps
         for (QSet<FP::AddApp>::iterator j = addAppsCache.begin(); j != addAppsCache.end();)
@@ -760,9 +797,10 @@ MainWindow::ImportResult MainWindow::coreImportProcess(QProgressDialog* pd)
             playlistGameDetailsCache[i.key()] = {i.value().getTitle(), QFileInfo(i.value().getAppPath()).fileName(), i.value().getPlatform()};
 
         // Forefit doucment lease and save it
-        if(!mLaunchBoxInstall->saveXMLDocument(std::move(currentPlatformXML)))
+        QString saveError;
+        if(!mLaunchBoxInstall->saveXMLDocument(saveError, std::move(currentPlatformXML)))
         {
-            postGenericError(LB::Install::populateErrorWithTarget(LB::Install::XMLWriter::ERR_WRITE_FAILED, docRequest));
+            postGenericError(LB::Install::populateErrorWithTarget(LB::Install::XMLWriter::ERR_WRITE_FAILED, docRequest), saveError);
             return Failed;
         }
     }
@@ -772,6 +810,7 @@ MainWindow::ImportResult MainWindow::coreImportProcess(QProgressDialog* pd)
     {
         // Update progress dialog label
         pd->setLabelText(PD_LABEL_IMPORTING_PLAYLIST_GAMES.arg(currentPlaylistGameResult.first.source));
+        QApplication::processEvents(); // Force title change to show
 
         // Open LB playlist doc
         LB::Install::XMLHandle docRequest = {LB::Install::Playlist, currentPlaylistGameResult.first.source};
@@ -794,19 +833,19 @@ MainWindow::ImportResult MainWindow::coreImportProcess(QProgressDialog* pd)
             // Advance to next record
             currentPlaylistGameResult.first.result.next();
 
-            // Form game from record
-            FP::PlaylistGameBuilder fpPgb;
-            fpPgb.wID(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_ID).toString());
-            fpPgb.wPlaylistID(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_PLAYLIST_ID).toString());
-            fpPgb.wOrder(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_ORDER).toString());
-            fpPgb.wGameID(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_ID).toString());
+            // Only process the playlist game if it was included in import (TODO: Possibly implement checking all other Platform xmls for presence of this game)
+            if(playlistGameDetailsCache.contains(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_ID).toString()))
+            {
+                // Form game from record
+                FP::PlaylistGameBuilder fpPgb;
+                fpPgb.wID(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_ID).toString());
+                fpPgb.wPlaylistID(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_PLAYLIST_ID).toString());
+                fpPgb.wOrder(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_ORDER).toString());
+                fpPgb.wGameID(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_ID).toString());
 
-            // Build FP playlist game to LB game and add to document
-            LB::PlaylistGame lbPlaylistGame(fpPgb.build(), playlistGameDetailsCache);
-
-            // Add playlist game only if the LB install contains it
-            if(playlistGameDetailsCache.contains(lbPlaylistGame.getGameID()))
-                currentPlaylistXML->addPlaylistGame(lbPlaylistGame);
+                // Build FP playlist game, convert to LB and add
+                currentPlaylistXML->addPlaylistGame(LB::PlaylistGame(fpPgb.build(), playlistGameDetailsCache));
+            }
 
             // Update progress dialog value
             if(pd->wasCanceled())
@@ -819,9 +858,10 @@ MainWindow::ImportResult MainWindow::coreImportProcess(QProgressDialog* pd)
         currentPlaylistXML->finalize();
 
         // Forefit doucment lease and save it
-        if(!mLaunchBoxInstall->saveXMLDocument(std::move(currentPlaylistXML)))
+        QString saveError;
+        if(!mLaunchBoxInstall->saveXMLDocument(saveError, std::move(currentPlaylistXML)))
         {
-            postGenericError(LB::Install::populateErrorWithTarget(LB::Install::XMLWriter::ERR_WRITE_FAILED, docRequest));
+            postGenericError(LB::Install::populateErrorWithTarget(LB::Install::XMLWriter::ERR_WRITE_FAILED, docRequest), saveError);
             return Failed;
         }
     }
@@ -849,7 +889,7 @@ void MainWindow::revertAllLaunchBoxChanges()
     QMessageBox revertError;
     revertError.setWindowTitle(CAPTION_REVERT_ERR);
     revertError.setInformativeText("Retry?");
-    revertError.setStandardButtons(QMessageBox::Yes | QMessageBox::No | QMessageBox::NoAll);
+    revertError.setStandardButtons(QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
     revertError.setDefaultButton(QMessageBox::Yes);
 
     // Progress
@@ -872,7 +912,7 @@ void MainWindow::revertAllLaunchBoxChanges()
 
             if(retryChoice == QMessageBox::No)
                 tempSkip = true;
-            else if(retryChoice == QMessageBox::NoAll)
+            else if(retryChoice == QMessageBox::NoToAll)
                 alwaysSkip = true;
         }        
     }
@@ -1099,8 +1139,8 @@ void MainWindow::all_on_listWidget_itemChanged(QListWidgetItem* item) // Proxy f
 
     if(senderListWidget == ui->listWidget_platformChoices && !mAlteringListWidget)
         importSelectionReaction(item, ui->listWidget_platformChoices);
-    else if(senderListWidget == ui->listWidget_playlistChoices && !mAlteringListWidget)
-        importSelectionReaction(item, ui->listWidget_playlistChoices);
+//    else if(senderListWidget == ui->listWidget_playlistChoices && !mAlteringListWidget) TODO: Playlists currently only get games from selected platforms,
+//        importSelectionReaction(item, ui->listWidget_playlistChoices);                        so triggering this here is no longer required. Possibly remove
     else
         assert("Unhandled use of all_on_listWidget_itemChanged() slot");
 }

@@ -46,7 +46,7 @@
          </property>
          <property name="font">
           <font>
-           <pointsize>8</pointsize>
+           <pointsize>9</pointsize>
           </font>
          </property>
         </widget>
@@ -170,6 +170,11 @@
            <width>200</width>
            <height>22</height>
           </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>9</pointsize>
+          </font>
          </property>
         </widget>
        </item>

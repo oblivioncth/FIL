@@ -165,6 +165,10 @@ QSqlError Install::populateAvailableItems()
     if(platformQuery.lastError().isValid())
         return platformQuery.lastError();
 
+    // Ensure lists are reset
+    mPlatformList.clear();
+    mPlaylistList.clear();
+
     // Parse query
     while(platformQuery.next())
         mPlatformList.append(platformQuery.value(DBTable_Game::COL_PLATFORM).toString());
@@ -221,7 +225,7 @@ bool Install::deployCLIFp(QString& errorMessage)
 
 }
 
-QSqlError Install::initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QStringList selectedPlatforms) const
+QSqlError Install::initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QSet<QString> selectedPlatforms) const
 {
     // Ensure return buffer is reset
     resultBuffer.clear();
@@ -241,8 +245,6 @@ QSqlError Install::initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QStringL
         QSqlQuery initialQuery(fpDB);
         initialQuery.prepare(queryCommand);
         initialQuery.bindValue(placeholder, platform);
-
-        qDebug() << initialQuery.lastQuery();
 
         // Execute query and return if error occurs
         if(!initialQuery.exec())
@@ -278,8 +280,6 @@ QSqlError Install::initialAddAppQuery(DBQueryBuffer& resultBuffer) const
     QSqlQuery initialQuery("SELECT `" + DBTable_Add_App::COLUMN_LIST.join("`,`") + "` FROM " + DBTable_Add_App::NAME + " WHERE " +
                            DBTable_Add_App::COL_APP_PATH + " != '" + DBTable_Add_App::ENTRY_EXTRAS + "'", fpDB);
 
-    qDebug() << initialQuery.lastQuery();
-
     // Return if error occurs
     if(initialQuery.lastError().isValid())
         return initialQuery.lastError();
@@ -301,7 +301,7 @@ QSqlError Install::initialAddAppQuery(DBQueryBuffer& resultBuffer) const
     return QSqlError();
 }
 
-QSqlError Install::initialPlaylistQuery(DBQueryBuffer& resultBuffer, QStringList selectedPlaylists) const
+QSqlError Install::initialPlaylistQuery(DBQueryBuffer& resultBuffer, QSet<QString> selectedPlaylists) const
 {
     // Ensure return buffer is effectively null
     resultBuffer.source = QString();
@@ -313,7 +313,7 @@ QSqlError Install::initialPlaylistQuery(DBQueryBuffer& resultBuffer, QStringList
 
     // Create selected playlists query string
     QString placeHolders = QString("?,").repeated(selectedPlaylists.size());
-    placeHolders.remove(placeHolders.size() - 1, 1);
+    placeHolders.chop(1); // Remove trailing ?
     QString queryCommand = "SELECT `" + DBTable_Playlist::COLUMN_LIST.join("`,`") + "` FROM " + DBTable_Playlist::NAME + " WHERE " +
             DBTable_Playlist::COL_TITLE + " IN (" + placeHolders + ") AND " +
             DBTable_Playlist::COL_LIBRARY + " = '" + DBTable_Playlist::GAME_LIBRARY + "'";
@@ -323,8 +323,6 @@ QSqlError Install::initialPlaylistQuery(DBQueryBuffer& resultBuffer, QStringList
     initialQuery.prepare(queryCommand);
     for(const QString& playlist : selectedPlaylists)
         initialQuery.addBindValue(playlist);
-
-    qDebug() << initialQuery.lastQuery();
 
     // Execute query and return if error occurs
     if(!initialQuery.exec())
@@ -360,7 +358,6 @@ QSqlError Install::initialPlaylistGameQuery(QList<QPair<DBQueryBuffer, FP::Playl
         // Query all games for the current playlist (TODO: Restrict the columns of this query to only those actually used)
         QSqlQuery initialQuery("SELECT `" + DBTable_Playlist_Game::COLUMN_LIST.join("`,`") + "` FROM " + DBTable_Playlist_Game::NAME + " WHERE " +
                                DBTable_Playlist_Game::COL_PLAYLIST_ID + " = '" + playlist.getID().toString(QUuid::WithoutBraces) + "'", fpDB);
-        qDebug() << initialQuery.lastQuery();
 
         // Return if error occurs
         if(initialQuery.lastError().isValid())

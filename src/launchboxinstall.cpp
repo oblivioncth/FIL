@@ -42,6 +42,19 @@ uint qHash(const Install::XMLHandle& key, uint seed) noexcept
 Install::XMLDoc::XMLDoc(std::unique_ptr<QFile> xmlFile, XMLHandle xmlMetaData, UpdateOptions updateOptions, Qx::FreeIndexTracker<int>* lbDBFIDT, const Key&)
     : mDocumentFile(std::move(xmlFile)), mHandleTarget(xmlMetaData), mUpdateOptions(updateOptions), mPlaylistGameFreeLBDBIDTracker(lbDBFIDT) {}
 
+//-Class Functions-----------------------------------------------------------------------------------------------------
+QString Install::XMLDoc::makeFileNameLBKosher(QString fileName)
+{
+    // Perform general kosherization
+    fileName = Qx::kosherizeFileName(fileName);
+
+    // LB specific changes
+    fileName.replace('#','_');
+    fileName.replace('\'','_');
+
+    return fileName;
+}
+
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
 Install::XMLHandle Install::XMLDoc::getHandleTarget() const { return mHandleTarget; }
@@ -414,7 +427,7 @@ Install::XMLWriter::XMLWriter(XMLDoc* sourceDoc)
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Public:
-bool Install::XMLWriter::writeOutOf()
+QString Install::XMLWriter::writeOutOf()
 {
     // Hook writer to document handle
     mStreamWriter.setDevice(mSourceDocument->mDocumentFile.get());
@@ -430,7 +443,7 @@ bool Install::XMLWriter::writeOutOf()
 
     // Write main body
     if(!writeLaunchBoxDocument())
-        return false;
+        return mStreamWriter.device()->errorString();
 
     // Close main LaunchBox tag
     mStreamWriter.writeEndElement();
@@ -438,8 +451,8 @@ bool Install::XMLWriter::writeOutOf()
     // Finish document
     mStreamWriter.writeEndDocument();
 
-    // Return true on success
-    return true;
+    // Return null string on success
+    return QString();
 }
 
 //Private:
@@ -692,6 +705,89 @@ bool Install::pathIsValidInstall(QString installPath)
 }
 
 //-Instance Functions----------------------------------------------------------------------------------------------
+//Private:
+QString Install::transferImage(ImageMode imageOption, QDir sourceDir, QString destinationSubPath, const LB::Game& game)
+{
+    // Parse to paths
+    QString gameIDString = game.getID().toString(QUuid::WithoutBraces);
+    QString sourcePath = sourceDir.absolutePath() + '/' + gameIDString.left(2) + '/' + gameIDString.mid(2, 2) + '/' + gameIDString + IMAGE_EXT;
+    QString destinationPath = mPlatformImagesDirectory.absolutePath() + '/' + game.getPlatform() + '/' + destinationSubPath + '/' + gameIDString + IMAGE_EXT;
+
+    // Image Info
+    QFileInfo sourceInfo(sourcePath);
+    QFileInfo destinationInfo(destinationPath);
+    bool sourceAvailable = sourceInfo.exists() && !sourceInfo.isSymLink();
+    bool destinationOccupied = destinationInfo.exists() && (destinationInfo.isFile() || destinationInfo.isSymLink());
+
+    // Determine backup path
+    QString backupPath = destinationInfo.absolutePath() + '/' + destinationInfo.baseName() + MODIFIED_FILE_EXT;
+
+    // Temporarily backup image if it already exists
+    if(destinationOccupied && sourceAvailable)
+        if(!QFile::rename(destinationPath, backupPath)) // Temp backup
+            return ERR_IMAGE_WONT_BACKUP.arg(destinationPath);
+
+    // Linking error tracker
+    std::error_code linkError;
+
+    // Handle transfer if source is available
+    if(sourceAvailable)
+    {
+        switch(imageOption)
+        {
+            case LB_Copy:
+                if(!QFile::copy(sourcePath, destinationPath))
+                {
+                    QFile::rename(backupPath, destinationPath); // Restore Backup
+                    return ERR_IMAGE_WONT_COPY.arg(sourcePath, destinationPath);
+                }
+                else if(QFile::exists(backupPath))
+                    QFile::remove(backupPath);
+                else
+                    mPurgableImages.append(destinationPath); // Only queue image to be removed on failure if its new, so existing images arent deleted on revert
+                break;
+
+            case LB_Link:
+                std::filesystem::create_symlink(sourcePath.toStdString(), destinationPath.toStdString(), linkError);
+                if(linkError)
+                {
+                    QFile::rename(backupPath, destinationPath); // Restore Backup
+                    return ERR_IMAGE_WONT_LINK.arg(sourcePath, destinationPath);
+                }
+                else if(QFile::exists(backupPath))
+                    QFile::remove(backupPath);
+                else
+                    mPurgableImages.append(destinationPath); // Only queue image to be removed on failure if its new, so existing images arent deleted on revert
+                break;
+
+            case FP_Link:
+                if(!QFile::rename(sourcePath, destinationPath))
+                {
+                    QFile::rename(backupPath, destinationPath); // Restore Backup
+                    return ERR_IMAGE_WONT_MOVE.arg(sourcePath, destinationPath);
+                }
+                else
+                {
+                    std::filesystem::create_symlink(destinationPath.toStdString(), sourcePath.toStdString(), linkError);
+                    if(linkError)
+                    {
+                        QFile::rename(destinationPath, sourcePath); // Revert move
+                        QFile::rename(backupPath, destinationPath); // Restore Backup
+                        return ERR_IMAGE_WONT_LINK.arg(destinationPath, sourcePath);
+                    }
+                    else if(QFile::exists(backupPath))
+                        QFile::remove(backupPath);
+                    else
+                        mLinksToReverse[sourcePath] = destinationPath; // Only queue image to be removed on failure if its new, so existing images arent deleted on revert
+                }
+                break;
+        }
+    }
+
+    // Return null string on success
+    return QString();
+}
+
 //Public:
 QString Install::populateErrorWithTarget(QString error, XMLHandle target)
 {
@@ -740,7 +836,8 @@ Qx::XmlStreamReaderError Install::openXMLDocument(std::unique_ptr<XMLDoc>& retur
     else
     {
         // Get full path to target file
-        QString targetPath = (requestHandle.type == Platform ? mPlatformsDirectory : mPlaylistsDirectory).absolutePath() + '/' + requestHandle.name + XML_EXT;
+        QString targetPath = (requestHandle.type == Platform ? mPlatformsDirectory : mPlaylistsDirectory).absolutePath() + '/' +
+                              XMLDoc::makeFileNameLBKosher(requestHandle.name) + XML_EXT;
 
         // Create unique reference to the target file for the new handle
         std::unique_ptr<QFile> xmlFile = std::make_unique<QFile>(targetPath);
@@ -789,20 +886,20 @@ Qx::XmlStreamReaderError Install::openXMLDocument(std::unique_ptr<XMLDoc>& retur
                 mLeasedHandles.insert(requestHandle);
         }
         else
-            openReadError = Qx::XmlStreamReaderError(populateErrorWithTarget(XMLReader::ERR_DOC_IN_USE, requestHandle));
+            openReadError = Qx::XmlStreamReaderError(populateErrorWithTarget(XMLReader::ERR_DOC_CANT_OPEN, requestHandle).arg(xmlFile->errorString()));
     }
 
     // Return new handle
     return openReadError;
 }
 
-bool Install::saveXMLDocument(std::unique_ptr<XMLDoc> document)
+bool Install::saveXMLDocument(QString& errorMessage, std::unique_ptr<XMLDoc> document)
 {
     // Prepare writer
     XMLWriter docWriter(document.get());
 
     // Write to file
-    bool successfulWrite = docWriter.writeOutOf();
+    errorMessage = docWriter.writeOutOf();
 
     // Close document file
     document->mDocumentFile->close();
@@ -817,7 +914,7 @@ bool Install::saveXMLDocument(std::unique_ptr<XMLDoc> document)
     document.reset();
 
     // Return write status and let document ptr auto delete
-    return successfulWrite;
+    return errorMessage.isNull();
 }
 
 bool Install::ensureImageDirectories(QString& errorMessage,QString platform)
@@ -836,7 +933,7 @@ bool Install::ensureImageDirectories(QString& errorMessage,QString platform)
 
     if(!screenshotDir.mkpath("."))
     {
-        errorMessage =ERR_CANT_MAKE_DIR.arg(screenshotDir.absolutePath());
+        errorMessage = ERR_CANT_MAKE_DIR.arg(screenshotDir.absolutePath());
         return false;
     }
 
@@ -844,159 +941,16 @@ bool Install::ensureImageDirectories(QString& errorMessage,QString platform)
     return true;
 }
 
-bool Install::transferImages(QString& errorMessage, ImageMode imageOption, QDir logoSourceDir, QDir screenshotSourceDir, const LB::Game& game)
+bool Install::transferLogo(QString& errorMessage, ImageMode imageOption, QDir logoSourceDir, const LB::Game& game)
 {
-    // Ensure error message is null
-    errorMessage = QString();
+    errorMessage = transferImage(imageOption, logoSourceDir, LOGO_PATH, game);
+    return errorMessage.isNull();
+}
 
-    // Parse to paths
-    QString gameIDString = game.getID().toString(QUuid::WithoutBraces);
-    QString partialPath = gameIDString.left(2) + '/' + gameIDString.mid(2, 2) + '/' + gameIDString + IMAGE_EXT;
-
-    QString sourceLogo = logoSourceDir.absolutePath() + '/' + partialPath;
-    QString sourceScreenshot = screenshotSourceDir.absolutePath() + '/' + partialPath;
-
-    QString destinationLogo = mPlatformImagesDirectory.absolutePath() + '/' + game.getPlatform() + '/' + LOGO_PATH + '/' + gameIDString + IMAGE_EXT;
-    QString destinationScreenshot = mPlatformImagesDirectory.absolutePath() + '/' + game.getPlatform() + '/' + SCREENSHOT_PATH + '/' + gameIDString + IMAGE_EXT;
-
-    // Retry tracking
-    bool logoHandled = mPurgableImages.contains(destinationLogo) || mLinksToReverse.contains(destinationLogo);
-
-    // Image Info
-    QFileInfo sourceLogoInfo(sourceLogo);
-    QFileInfo sourceScreenshotInfo(sourceScreenshot);
-    bool logoSourceAvailable = sourceLogoInfo.exists() && !sourceLogoInfo.isSymLink();
-    bool screenshotSourceAvailable = sourceScreenshotInfo.exists() && !sourceScreenshotInfo.isSymLink();
-    QFileInfo destinationLogoInfo(destinationLogo);
-    QFileInfo destinationScreenshotInfo(destinationScreenshot);
-    bool logoDestinationIsOccupied = destinationLogoInfo.exists() && (destinationLogoInfo.isFile() || destinationLogoInfo.isSymLink());
-    bool screenshotDestinationIsOccupied = destinationScreenshotInfo.exists() && (destinationScreenshotInfo.isFile() || destinationScreenshotInfo.isSymLink());
-
-    // Check if destinations already exists
-    if(!logoHandled && logoDestinationIsOccupied && logoSourceAvailable)
-    {
-        if(!QFile::remove(destinationLogo))
-        {
-            errorMessage = ERR_IMAGE_WONT_REMOVE.arg(destinationLogo);
-            return false;
-        }
-    }
-
-    if(screenshotDestinationIsOccupied && screenshotSourceAvailable)
-    {
-        if(!QFile::remove(destinationScreenshot))
-        {
-            errorMessage = ERR_IMAGE_WONT_REMOVE.arg(destinationScreenshot);
-            return false;
-        }
-    }
-
-    // Handle transfer
-    std::error_code linkError;
-    switch(imageOption)
-    {
-        case LB_Copy:
-            if(!logoHandled && logoSourceAvailable)
-            {
-                if(!QFile::copy(sourceLogo, destinationLogo))
-                {
-                    errorMessage = ERR_IMAGE_WONT_COPY.arg(sourceLogo, destinationLogo);
-                    return false;
-                }
-                else
-                    mPurgableImages.append(destinationLogo);
-            }
-
-            if(screenshotSourceAvailable)
-            {
-                if(!QFile::copy(sourceScreenshot, destinationScreenshot))
-                {
-                    errorMessage = ERR_IMAGE_WONT_COPY.arg(sourceScreenshot, destinationScreenshot);
-                    return false;
-                }
-                else
-                    mPurgableImages.append(destinationScreenshot);
-            }
-
-            break;
-
-        case LB_Link:
-            if(!logoHandled && logoSourceAvailable)
-            {
-                std::filesystem::create_symlink(sourceLogo.toStdString(), destinationLogo.toStdString(), linkError);
-                if(linkError)
-                {
-                    errorMessage = ERR_IMAGE_WONT_LINK.arg(sourceLogo, destinationLogo);
-                    return false;
-                }
-                else
-                    mPurgableImages.append(destinationLogo);
-            }
-
-            if(screenshotSourceAvailable)
-            {
-                std::filesystem::create_symlink(sourceScreenshot.toStdString(), destinationScreenshot.toStdString(), linkError);
-                if(linkError)
-                {
-                    errorMessage = ERR_IMAGE_WONT_LINK.arg(sourceScreenshot, destinationScreenshot);
-                    return false;
-                }
-                else
-                    mPurgableImages.append(destinationScreenshot);
-            }
-
-            break;
-
-        case FP_Link:
-            if(!logoHandled && logoSourceAvailable)
-            {
-                if(!QFile::rename(sourceLogo, destinationLogo))
-                {
-                    errorMessage = ERR_IMAGE_WONT_MOVE.arg(sourceLogo, sourceScreenshot);
-                    return false;
-                }
-                else
-                {
-                    std::filesystem::create_symlink(destinationLogo.toStdString(), sourceLogo.toStdString(), linkError);
-
-                    if(linkError)
-                    {
-                        QFile::rename(destinationLogo, sourceLogo); // Revert move
-                        errorMessage = ERR_IMAGE_WONT_LINK.arg(destinationLogo, sourceLogo);
-                        return false;
-                    }
-                    else
-                        mLinksToReverse[sourceLogo] = destinationLogo;
-                }
-            }
-
-            if(screenshotSourceAvailable)
-            {
-                if(!QFile::rename(sourceScreenshot, destinationScreenshot))
-                {
-                    errorMessage = ERR_IMAGE_WONT_MOVE.arg(sourceScreenshot, destinationScreenshot);
-                    return false;
-                }
-                else
-                {
-                    std::filesystem::create_symlink(destinationScreenshot.toStdString(), sourceScreenshot.toStdString(), linkError);
-
-                    if(linkError)
-                    {
-                        QFile::rename(destinationScreenshot, sourceScreenshot); // Revert move
-                        errorMessage = ERR_IMAGE_WONT_LINK.arg(destinationScreenshot, sourceScreenshot);
-                        return false;
-                    }
-                    else
-                        mLinksToReverse[sourceScreenshot] = destinationScreenshot;
-                }
-            }
-
-            break;
-    }
-
-    // Return true on success
-    return true;
+bool Install::transferScreenshot(QString& errorMessage, ImageMode imageOption, QDir screenshotSourceDir, const LB::Game& game)
+{
+    errorMessage = transferImage(imageOption, screenshotSourceDir, SCREENSHOT_PATH, game);
+    return errorMessage.isNull();
 }
 
 int Install::revertNextChange(QString& errorMessage, bool skipOnFail)

@@ -56,13 +56,15 @@ private:
     static inline const QString MSG_INSTALL_CONTENTS_CHANGED = "The contents of your installs have been changed since the initial scan and therefore must be re-evaluated. You will need to make your selections again.";
 
     // Messages - General import procedure
+    static inline const QString MSG_PRE_EXISTING_IMPORT = "You have selected one or more Platform(s)/Playlist(s) that already exist in your collection. These will be altered even if they did not orignate from this program (i.e. if you "
+                                                          "already happened to have a Platform/Playlist with the same name as one present in Flashpoint). Are you sure you want to proceed?";
     static inline const QString MSG_LB_CLOSE_PROMPT = "The importer has detected that LaunchBox is running. It must be closed in order to continue. If recently closed, wait a few moments before trying to proceed again as it performs significant cleanup in the background.";
     static inline const QString MSG_POST_IMPORT = "The Flashpoint import has completed succesfully. Next time you start LaunchBox it may take longer than usual as it will have to fill in some default fields for the imported Platforms/Playlists.\n"
                                                   "\n"
                                                   "If you wish to import further selections or update to a newer version of Flashpoint, simply re-run this procedure after pointing it to the desired Flashpoint installation.";
 
     // Messages - FP General
-    static inline const QString MSG_FP_CLOSE_PROMPT = "It is strongly recommended to close Flashpoint before proceeding as it can severly slow or interfer with the import process";
+    static inline const QString MSG_FP_CLOSE_PROMPT = "It is strongly recommended to close Flashpoint before proceeding as it can severely slow or interfer with the import process";
 
     // Messages - FP Database read
     static inline const QString MSG_FP_DB_CANT_CONNECT = "Failed to establish a handle to the Flashpoint database! Make sure it is not being used by another program (i.e. Flashpoint may be running).";
@@ -156,8 +158,8 @@ private:
     void postGenericError(QString mainText, QString informativeText = QString());
 
     void importSelectionReaction(QListWidgetItem* item, QWidget* parent);
-    QStringList getSelectedPlatforms() const;
-    QStringList getSelectedPlaylists() const;
+    QSet<QString> getSelectedPlatforms(bool fileNameLegal = false) const;
+    QSet<QString> getSelectedPlaylists(bool fileNameLegal = false) const;
     LB::Install::GeneralOptions getSelectedGeneralOptions() const;
     LB::Install::UpdateOptions getSelectedUpdateOptions() const;
     LB::Install::ImageMode getSelectedImageOption() const;

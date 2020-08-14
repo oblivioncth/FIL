@@ -179,9 +179,9 @@ public:
     QSqlError populateAvailableItems();
     bool deployCLIFp(QString &errorMessage);
 
-    QSqlError initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QStringList selectedPlatforms) const;
+    QSqlError initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QSet<QString> selectedPlatforms) const;
     QSqlError initialAddAppQuery(DBQueryBuffer& resultBuffer) const;
-    QSqlError initialPlaylistQuery(DBQueryBuffer& resultBuffer, QStringList selectedPlaylists) const;
+    QSqlError initialPlaylistQuery(DBQueryBuffer& resultBuffer, QSet<QString> selectedPlaylists) const;
     QSqlError initialPlaylistGameQuery(QList<QPair<DBQueryBuffer, FP::Playlist>>& resultBuffer, const QList<FP::Playlist>& knownPlaylistsToQuery) const;
 
     QString getPath() const;

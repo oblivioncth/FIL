@@ -149,6 +149,9 @@ public:
     public:
         explicit XMLDoc(std::unique_ptr<QFile> xmlFile, XMLHandle xmlMetaData, UpdateOptions updateOptions, Qx::FreeIndexTracker<int>* lbDBFIDT, const Key&);
 
+    //-Class Functions-----------------------------------------------------------------------------------------------------
+        static QString makeFileNameLBKosher(QString fileName);
+
     //-Instance Functions--------------------------------------------------------------------------------------------------
     public:
         XMLHandle getHandleTarget() const;
@@ -175,7 +178,7 @@ public:
     //-Class variables-----------------------------------------------------------------------------------------------------
     public:
         static inline const QString ERR_DOC_ALREADY_OPEN = "The target XML file (%1 | %2) is already open";
-        static inline const QString ERR_DOC_IN_USE = "The target XML file (%1 | %2) is in use by another program";
+        static inline const QString ERR_DOC_CANT_OPEN = "The target XML file (%1 | %2) cannot be opened; %3";
         static inline const QString ERR_NOT_LB_DOC = "The target XML file (%1 | %2) is not a LaunchBox document.";
         static inline const QString ERR_BAK_WONT_DEL = "The existing backup of the target XML file (%1 | %2) could not be removed.";
         static inline const QString ERR_CANT_MAKE_BAK = "Could not create a backup of the target XML file (%1 | %2).";
@@ -219,7 +222,7 @@ public:
 
         //-Instance Functions-------------------------------------------------------------------------------------------------
         public:
-            bool writeOutOf();
+            QString writeOutOf();
 
         private:
             bool writeLaunchBoxDocument();
@@ -243,11 +246,11 @@ public:
     static inline const QString IMAGE_EXT = ".png";
 
     // Images Errors
-    static inline const QString ERR_IMAGE_WONT_REMOVE = "Cannot remove the existing image %1";
-    static inline const QString ERR_IMAGE_WONT_COPY = "Cannot copy the image %1 to %2";
-    static inline const QString ERR_IMAGE_WONT_MOVE = "Cannot move the image %1 to %2";
-    static inline const QString ERR_IMAGE_WONT_LINK = "Cannot create a symbolic link from %1 to %2";
-    static inline const QString ERR_CANT_MAKE_DIR = "Could not create the image directory %1. Make sure you have write permissions at that location.";
+    static inline const QString ERR_IMAGE_WONT_BACKUP = R"(Cannot rename the existing image "%1" for backup.)";
+    static inline const QString ERR_IMAGE_WONT_COPY = R"(Cannot copy the image "%1" to "%2".)";
+    static inline const QString ERR_IMAGE_WONT_MOVE = R"(Cannot move the image "%1" to "%2".)";
+    static inline const QString ERR_IMAGE_WONT_LINK = R"(Cannot create a symbolic link from "%1" to "%2".)";
+    static inline const QString ERR_CANT_MAKE_DIR = R"(Could not create the image directory "%1". Make sure you have write permissions at that location.)";
 
     // XML
     static inline const QString XML_EXT = ".xml";
@@ -255,10 +258,10 @@ public:
     static inline const QString MODIFIED_FILE_EXT = ".obk";
 
     // Reversion Errors
-    static inline const QString ERR_REVERT_CANT_REMOVE_XML = "Cannot remove the XML file %1. It may need to be deleted and have its backup restored manually.";
-    static inline const QString ERR_REVERT_CANT_RESTORE_EXML = "Cannot restore the XML backup %1. It may need to be renamed manually.";
-    static inline const QString ERR_REVERT_CANT_REMOVE_IMAGE = "Cannot remove the image file %1. It may need to be deleted manually";
-    static inline const QString ERR_REVERT_CANT_MOVE_IMAGE = "Cannot move the image file %1 to its original location. It may need to be moved manually";
+    static inline const QString ERR_REVERT_CANT_REMOVE_XML = R"(Cannot remove the XML file "%1". It may need to be deleted and have its backup restored manually.)";
+    static inline const QString ERR_REVERT_CANT_RESTORE_EXML = R"(Cannot restore the XML backup "%1". It may need to be renamed manually.)";
+    static inline const QString ERR_REVERT_CANT_REMOVE_IMAGE = R"(Cannot remove the image file "%1". It may need to be deleted manually.)";
+    static inline const QString ERR_REVERT_CANT_MOVE_IMAGE = R"(Cannot move the image file "%1" to its original location. It may need to be moved manually.)";
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -294,13 +297,17 @@ public:
    static QString populateErrorWithTarget(QString error, XMLHandle target);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
+private:
+   QString transferImage(ImageMode imageOption, QDir sourceDir, QString destinationSubPath, const LB::Game& game);
+
 public:
    Qx::IOOpReport populateExistingItems();
 
    Qx::XmlStreamReaderError openXMLDocument(std::unique_ptr<XMLDoc>& returnBuffer, XMLHandle requestHandle, UpdateOptions updateOptions);
-   bool saveXMLDocument(std::unique_ptr<XMLDoc> document);
+   bool saveXMLDocument(QString& errorMessage, std::unique_ptr<XMLDoc> document);
    bool ensureImageDirectories(QString& errorMessage, QString platform);
-   bool transferImages(QString& errorMessage, ImageMode imageOption, QDir logoSourceDir, QDir screenshotSourceDir, const LB::Game& game);
+   bool transferLogo(QString& errorMessage, ImageMode imageOption, QDir logoSourceDir, const LB::Game& game);
+   bool transferScreenshot(QString& errorMessage, ImageMode imageOption, QDir screenshotSourceDir, const LB::Game& game);
 
    int revertNextChange(QString& errorMessage, bool skipOnFail);
    void softReset();
