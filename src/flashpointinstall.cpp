@@ -229,16 +229,24 @@ QSqlError Install::initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QStringL
     // Get database
     QSqlDatabase fpDB = QSqlDatabase::database(DATABASE_CONNECTION_NAME);
 
-    for(QString platform : selectedPlatforms)
+    for(const QString& platform : selectedPlatforms)
     {
-        // Query all games for the current platform
-        QSqlQuery initialQuery("SELECT " + DBTable_Game::COLUMN_LIST.join(",") + " FROM " + DBTable_Game::NAME + " WHERE " +
-                               DBTable_Game::COL_PLATFORM + " = '" + platform + "' AND " +
-                               DBTable_Game::COL_LIBRARY + " = '" + DBTable_Game::GAME_LIBRARY + "'", fpDB);
+        // Create platform query string
+        QString placeholder = ":platform";
+        QString queryCommand = "SELECT `" + DBTable_Game::COLUMN_LIST.join("`,`") + "` FROM " + DBTable_Game::NAME + " WHERE " +
+                DBTable_Game::COL_PLATFORM + " = " + placeholder + " AND " +
+                DBTable_Game::COL_LIBRARY + " = '" + DBTable_Game::GAME_LIBRARY + "'";
 
-        // Return if error occurs
-        if(initialQuery.lastError().isValid())
-           return initialQuery.lastError();
+        // Create query and bind current platform
+        QSqlQuery initialQuery(fpDB);
+        initialQuery.prepare(queryCommand);
+        initialQuery.bindValue(placeholder, platform);
+
+        qDebug() << initialQuery.lastQuery();
+
+        // Execute query and return if error occurs
+        if(!initialQuery.exec())
+            return initialQuery.lastError();
 
         // Get size of the query result
         int querySize = 0;
@@ -267,8 +275,10 @@ QSqlError Install::initialAddAppQuery(DBQueryBuffer& resultBuffer) const
     QSqlDatabase fpDB = QSqlDatabase::database(DATABASE_CONNECTION_NAME);
 
     // Make query (TODO: Restrict the columns of this query to only those actually used)
-    QSqlQuery initialQuery("SELECT " + DBTable_Add_App::COLUMN_LIST.join(",") + " FROM " + DBTable_Add_App::NAME + " WHERE " +
+    QSqlQuery initialQuery("SELECT `" + DBTable_Add_App::COLUMN_LIST.join("`,`") + "` FROM " + DBTable_Add_App::NAME + " WHERE " +
                            DBTable_Add_App::COL_APP_PATH + " != '" + DBTable_Add_App::ENTRY_EXTRAS + "'", fpDB);
+
+    qDebug() << initialQuery.lastQuery();
 
     // Return if error occurs
     if(initialQuery.lastError().isValid())
@@ -301,13 +311,23 @@ QSqlError Install::initialPlaylistQuery(DBQueryBuffer& resultBuffer, QStringList
     // Get database
     QSqlDatabase fpDB = QSqlDatabase::database(DATABASE_CONNECTION_NAME);
 
-    // Query all selected playlists
-    QSqlQuery initialQuery("SELECT " + DBTable_Playlist::COLUMN_LIST.join(",") + " FROM " + DBTable_Playlist::NAME + " WHERE " +
-                           DBTable_Playlist::COL_TITLE + " IN ('" + selectedPlaylists.join(",'") + "') AND " +
-                           DBTable_Playlist::COL_LIBRARY + " = '" + DBTable_Playlist::GAME_LIBRARY + "'", fpDB);
+    // Create selected playlists query string
+    QString placeHolders = QString("?,").repeated(selectedPlaylists.size());
+    placeHolders.remove(placeHolders.size() - 1, 1);
+    QString queryCommand = "SELECT `" + DBTable_Playlist::COLUMN_LIST.join("`,`") + "` FROM " + DBTable_Playlist::NAME + " WHERE " +
+            DBTable_Playlist::COL_TITLE + " IN (" + placeHolders + ") AND " +
+            DBTable_Playlist::COL_LIBRARY + " = '" + DBTable_Playlist::GAME_LIBRARY + "'";
 
-    // Return if error occurs
-    if(initialQuery.lastError().isValid())
+    // Create query and bind selected playlists
+    QSqlQuery initialQuery(fpDB);
+    initialQuery.prepare(queryCommand);
+    for(const QString& playlist : selectedPlaylists)
+        initialQuery.addBindValue(playlist);
+
+    qDebug() << initialQuery.lastQuery();
+
+    // Execute query and return if error occurs
+    if(!initialQuery.exec())
         return initialQuery.lastError();
 
     // Get size of the query result
@@ -338,8 +358,9 @@ QSqlError Install::initialPlaylistGameQuery(QList<QPair<DBQueryBuffer, FP::Playl
     for(const FP::Playlist& playlist : knownPlaylistsToQuery)
     {
         // Query all games for the current playlist (TODO: Restrict the columns of this query to only those actually used)
-        QSqlQuery initialQuery("SELECT " + DBTable_Playlist_Game::COLUMN_LIST.join(",") + " FROM " + DBTable_Playlist_Game::NAME + " WHERE " +
+        QSqlQuery initialQuery("SELECT `" + DBTable_Playlist_Game::COLUMN_LIST.join("`,`") + "` FROM " + DBTable_Playlist_Game::NAME + " WHERE " +
                                DBTable_Playlist_Game::COL_PLAYLIST_ID + " = '" + playlist.getID().toString(QUuid::WithoutBraces) + "'", fpDB);
+        qDebug() << initialQuery.lastQuery();
 
         // Return if error occurs
         if(initialQuery.lastError().isValid())

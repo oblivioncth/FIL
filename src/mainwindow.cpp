@@ -452,7 +452,7 @@ LB::Install::GeneralOptions MainWindow::getSelectedGeneralOptions() const
 
 LB::Install::UpdateOptions MainWindow::getSelectedUpdateOptions() const
 {
-    return {ui->radioButton_onlyAdd->isChecked() ? LB::Install::OnlyNew : LB::Install::NewAndExisting, ui->checkBox_removeObsolete->isChecked() };
+    return {ui->radioButton_onlyAdd->isChecked() ? LB::Install::OnlyNew : LB::Install::NewAndExisting, ui->checkBox_removeMissing->isChecked() };
 }
 
 LB::Install::ImageMode MainWindow::getSelectedImageOption() const
@@ -990,7 +990,8 @@ void MainWindow::all_on_pushButton_clicked()
     else if(senderPushButton == ui->pushButton_updateModeHelp)
         QMessageBox::information(this, CAPTION_UPDATE_MODE_HELP, MSG_UPDATE_MODE_HELP.arg(ui->radioButton_onlyAdd->text(),
                                                                                           ui->radioButton_updateExisting->text(),
-                                                                                          ui->checkBox_removeObsolete->text()));
+                                                                                          ui->checkBox_removeMissing->text(),
+                                                                                          ui->action_includeExtreme->text()));
     else if(senderPushButton == ui->pushButton_imageModeHelp)
         QMessageBox::information(this, CAPTION_IMAGE_MODE_HELP, MSG_IMAGE_MODE_HELP.arg(ui->radioButton_launchBoxCopy->text(),
                                                                                         ui->radioButton_launchBoxLink->text(),

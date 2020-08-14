@@ -31,7 +31,8 @@ private:
                                                        "<br>"
                                                        "<b>%3</b> - Games in your collection that are not present in the target version of Flashpoint will be removed (only for selected platforms). You will no longer be able to play such "
                                                        "games if this option is unchecked, but this may be useful for archival purposes or incase you later want to revert to a previous version of Flashpoint and maintain the entries personal "
-                                                       "metadata. Note that this option will still cause missing games to be removed even if you are going backwards to a previous version of FP, as implied above.";
+                                                       "metadata. Note that this option will still cause missing games to be removed even if you are going backwards to a previous version of FP, as implied above. Additionally, this option will "
+                                                       "remove any existing Extreme games in your collection, for the select platforms, if you have the <b>%4</b> option unselected.";
 
     static inline const QString MSG_IMAGE_MODE_HELP = "<b>%1</b> - All relevant images from Flashpoint will be fully copied into your LaunchBox installation. This causes zero overhead but will require additional storage space proportional to "
                                                       "the number of games you end up importing, up to double if all platforms are selected. The images will still work in Flashpoint.<br>"

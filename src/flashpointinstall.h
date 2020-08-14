@@ -44,8 +44,8 @@ public:
         static inline const QString COL_ORDER_TITLE = "orderTitle";
 
         static inline const QStringList COLUMN_LIST = {COL_ID, COL_TITLE, COL_SERIES, COL_DEVELOPER, COL_PUBLISHER, COL_DATE_ADDED, COL_DATE_MODIFIED, COL_PLATFORM,
-                                               COL_BROKEN, COL_PLAY_MODE, COL_STATUS, COL_NOTES, COL_SOURCE, COL_APP_PATH, COL_LAUNCH_COMMAND, COL_RELEASE_DATE,
-                                               COL_VERSION, COL_ORIGINAL_DESC, COL_LANGUAGE, COL_ORDER_TITLE, COL_LIBRARY};
+                                               COL_BROKEN, COL_EXTREME, COL_PLAY_MODE, COL_STATUS, COL_NOTES, COL_SOURCE, COL_APP_PATH, COL_LAUNCH_COMMAND, COL_RELEASE_DATE,
+                                               COL_VERSION, COL_ORIGINAL_DESC, COL_LANGUAGE, COL_LIBRARY, COL_ORDER_TITLE};
 
         static inline const QString GAME_LIBRARY = "arcade";
     };
@@ -81,7 +81,7 @@ public:
 
         static inline const QString GAME_LIBRARY = "arcade";
 
-        static inline const QStringList COLUMN_LIST = {COL_ID, COL_TITLE, COL_DESCRIPTION};
+        static inline const QStringList COLUMN_LIST = {COL_ID, COL_TITLE, COL_DESCRIPTION, COL_AUTHOR, COL_LIBRARY};
     };
 
     class DBTable_Playlist_Game
