@@ -142,6 +142,7 @@ public:
                                                                         {DBTable_Add_App::NAME, DBTable_Add_App::COLUMN_LIST},
                                                                         {DBTable_Playlist::NAME, DBTable_Playlist::COLUMN_LIST},
                                                                         {DBTable_Playlist_Game::NAME, DBTable_Playlist_Game::COLUMN_LIST}};
+    static inline const QString GENERAL_QUERY_SIZE_COMMAND = "COUNT(1)";
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:

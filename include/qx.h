@@ -401,6 +401,29 @@ public:
 
 };
 
+class GenericError
+{
+//-Instance Members----------------------------------------------------------------------------------------------
+private:
+    QString mCaption;
+    QString mPrimaryInfo;
+    QString mSecondaryInfo;
+    QString mDetailedInfo;
+
+//-Constructor----------------------------------------------------------------------------------------------
+public:
+    GenericError(QString caption = QString(), QString primaryInfo = QString(),
+                 QString secondaryInfo = QString(), QString detailedInfo = QString());
+
+//-Instance Functions----------------------------------------------------------------------------------------------
+public:
+    bool isValid();
+    QString getCaption();
+    QString getPrimaryInfo();
+    QString getSecondaryInfo();
+    QString getDetailedInfo();
+};
+
 class Integrity
 {
 //-Class Functions---------------------------------------------------------------------------------------------

@@ -10,9 +10,9 @@
 #define VER_COMPANYNAME_STR         "Obby Apps"
 #define VER_FILEDESCRIPTION_STR     "Flashpoint Importer for LaunchBox"
 #define VER_INTERNALNAME_STR        "OFILb"
-#define VER_LEGALCOPYRIGHT_STR      "Copyright © 2020 Obby Apps"
+#define VER_LEGALCOPYRIGHT_STR      "Open Source © 2020 Obby Apps"
 #define VER_LEGALTRADEMARKS1_STR    "All Rights Reserved"
-#define VER_LEGALTRADEMARKS2_STR    "GNU GPL V3"
+#define VER_LEGALTRADEMARKS2_STR    "GNU AGPL V3"
 #define VER_ORIGINALFILENAME_STR    "OFILb.exe"
 #define VER_PRODUCTNAME_STR         "Obby's Flashpoint Importer for LaunchBox"
 

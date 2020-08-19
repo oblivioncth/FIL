@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QListWidgetItem>
 #include <QProgressDialog>
+#include <QMessageBox>
 #include "version.h"
 #include "launchboxinstall.h"
 #include "flashpointinstall.h"
@@ -18,8 +19,8 @@ class MainWindow : public QMainWindow
     Q_OBJECT // Required for classes that use Qt elements
 
 //-Class Enums------------------------------------------------------------------------------------------------
+private:
     enum InputStage {Paths, Imports};
-    enum ImportResult {Failed, Canceled, Successful};
 
 //-Class Variables--------------------------------------------------------------------------------------------
 private:
@@ -68,7 +69,6 @@ private:
 
     // Messages - FP Database read
     static inline const QString MSG_FP_DB_CANT_CONNECT = "Failed to establish a handle to the Flashpoint database! Make sure it is not being used by another program (i.e. Flashpoint may be running).";
-    static inline const QString MSG_FP_DB_UNEXPECTED_ERROR = "An unexpected SQL error occured while reading the Flashpoint database:";
     static inline const QString MSG_FP_DB_MISSING_TABLE = "The Flashpoint database is missing tables critical to the import process.";
     static inline const QString MSG_FP_DB_TABLE_MISSING_COLUMN = "The Flashpoint database tables are missing columns critical to the import process.";
 
@@ -91,14 +91,6 @@ private:
 
     static inline const QString MSG_USER_CANCELED = "Import canceled by user, all changes that occured during import will now be reverted (other than existing images that were replaced with newer versions).";
 
-    // ProgressDialog - Import Operation
-    static inline const QString PD_LABEL_FP_DB_INITIAL_QUERY = "Making initial Flashpoint database queries...";
-    static inline const QString PD_LABEL_ADD_APP_PRELOAD = "Pre-loading Additional Apps...";
-    static inline const QString PD_LABEL_IMPORTING_PLATFORM_GAMES = "Importing games for platform %1...";
-    static inline const QString PD_LABEL_IMPORTING_PLATFORM_ADD_APPS = "Importing additional apps for platform %1...";
-    static inline const QString PD_LABEL_IMPORTING_PLAYLIST_GAMES = "Importing playlist %1...";
-    static inline const QString PD_BUTTON_CANCEL = "Cancel";
-
     // Dialog captions
     static inline const QString CAPTION_LAUNCHBOX_BROWSE = "Select the root directory of your LaunchBox install...";
     static inline const QString CAPTION_FLASHPOINT_BROWSE = "Select the root directory of your Flashpoint install...";
@@ -106,7 +98,6 @@ private:
     static inline const QString CAPTION_IMAGE_MODE_HELP = "Image mode options";
     static inline const QString CAPTION_REVERT = "Reverting changes...";
     static inline const QString CAPTION_REVERT_ERR = "Error reverting changes";
-    static inline const QString CAPTION_IMAGE_ERR = "Error importing game image(s)";
     static inline const QString CAPTION_CLIFP_ERR = "Error deploying CLIFp";
     static inline const QString CAPTION_IMPORTING = "FP Import";
 
@@ -163,18 +154,24 @@ private:
     LB::Install::GeneralOptions getSelectedGeneralOptions() const;
     LB::Install::UpdateOptions getSelectedUpdateOptions() const;
     LB::Install::ImageMode getSelectedImageOption() const;
-    void importProcess();
+    void prepareImport();
     ImportResult coreImportProcess(QProgressDialog* pd);
     void revertAllLaunchBoxChanges();
     void standaloneCLIFpDeploy();
 
+        void handleImportResult();// TODO: Make slot I think
+
 //-Slots---------------------------------------------------------------------------------------------------------
-private slots: // Start with "all" to avoid Qt calling "connectSlotsByName" on these slots (slots that start with "on_")
+private slots:
+    // Direct UI, start with "all" to avoid Qt calling "connectSlotsByName" on these slots (slots that start with "on_")
     void all_on_action_triggered();
     void all_on_lineEdit_editingFinished();
     void all_on_lineEdit_textEdited();
     void all_on_lineEdit_returnPressed();
     void all_on_pushButton_clicked();
     void all_on_listWidget_itemChanged(QListWidgetItem* item);
+
+    // Import Error Handling
+    void handleBlockingError(int* response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices);
 };
 #endif // MAINWINDOW_H

@@ -237,26 +237,35 @@ QSqlError Install::initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QSet<QSt
     {
         // Create platform query string
         QString placeholder = ":platform";
-        QString queryCommand = "SELECT `" + DBTable_Game::COLUMN_LIST.join("`,`") + "` FROM " + DBTable_Game::NAME + " WHERE " +
+        QString baseQueryCommand = "SELECT %1 FROM " + DBTable_Game::NAME + " WHERE " +
                 DBTable_Game::COL_PLATFORM + " = " + placeholder + " AND " +
                 DBTable_Game::COL_LIBRARY + " = '" + DBTable_Game::GAME_LIBRARY + "'";
 
-        // Create query and bind current platform
+        QString mainQueryCommand = baseQueryCommand.arg("`" + DBTable_Game::COLUMN_LIST.join("`,`") + "`");
+        QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
+
+        // Create main query and bind current platform
         QSqlQuery initialQuery(fpDB);
-        initialQuery.prepare(queryCommand);
+        initialQuery.setForwardOnly(true);
+        initialQuery.prepare(mainQueryCommand);
         initialQuery.bindValue(placeholder, platform);
 
         // Execute query and return if error occurs
         if(!initialQuery.exec())
             return initialQuery.lastError();
 
-        // Get size of the query result
-        int querySize = 0;
-        while(initialQuery.next())
-            querySize++;
+        // Create size query and bind current platform
+        QSqlQuery sizeQuery(fpDB);
+        sizeQuery.prepare(sizeQueryCommand);
+        sizeQuery.bindValue(placeholder, platform);
 
-        // Reset query pointer
-        initialQuery.seek(QSql::BeforeFirstRow);
+        // Execute query and return if error occurs
+        if(!sizeQuery.exec())
+            return sizeQuery.lastError();
+
+        // Get query size
+        sizeQuery.next();
+        int querySize = sizeQuery.value(0).toInt();
 
         // Add result to buffer
         resultBuffer.append({platform, initialQuery, querySize});
@@ -277,24 +286,36 @@ QSqlError Install::initialAddAppQuery(DBQueryBuffer& resultBuffer) const
     QSqlDatabase fpDB = QSqlDatabase::database(DATABASE_CONNECTION_NAME);
 
     // Make query (TODO: Restrict the columns of this query to only those actually used)
-    QSqlQuery initialQuery("SELECT `" + DBTable_Add_App::COLUMN_LIST.join("`,`") + "` FROM " + DBTable_Add_App::NAME + " WHERE " +
-                           DBTable_Add_App::COL_APP_PATH + " != '" + DBTable_Add_App::ENTRY_EXTRAS + "'", fpDB);
+    QString baseQueryCommand = "SELECT %1 FROM " + DBTable_Add_App::NAME + " WHERE " +
+            DBTable_Add_App::COL_APP_PATH + " != '" + DBTable_Add_App::ENTRY_EXTRAS + "'";
+    QString mainQueryCommand = baseQueryCommand.arg("`" + DBTable_Add_App::COLUMN_LIST.join("`,`") + "`");
+    QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
 
-    // Return if error occurs
-    if(initialQuery.lastError().isValid())
-        return initialQuery.lastError();
+    // Create main query
+    QSqlQuery mainQuery(fpDB);
+    mainQuery.setForwardOnly(true);
+    mainQuery.prepare(mainQueryCommand);
 
-    // Get size of the query result
-    int querySize = 0;
-    while(initialQuery.next())
-        querySize++;
+    // Execute query and return if error occurs
+    if(!mainQuery.exec())
+        return mainQuery.lastError();
 
-    // Reset query pointer
-    initialQuery.seek(QSql::BeforeFirstRow);
+    // Create size query
+    QSqlQuery sizeQuery(fpDB);
+    sizeQuery.setForwardOnly(true);
+    sizeQuery.prepare(sizeQueryCommand);
+
+    // Execute query and return if error occurs
+    if(!sizeQuery.exec())
+        return sizeQuery.lastError();
+
+    // Get query size
+    sizeQuery.next();
+    int querySize = sizeQuery.value(0).toInt();
 
     // Set buffer instance to result
     resultBuffer.source = DBTable_Add_App::NAME;
-    resultBuffer.result = initialQuery;
+    resultBuffer.result = mainQuery;
     resultBuffer.size = querySize;
 
     // Return invalid SqlError
@@ -314,31 +335,35 @@ QSqlError Install::initialPlaylistQuery(DBQueryBuffer& resultBuffer, QSet<QStrin
     // Create selected playlists query string
     QString placeHolders = QString("?,").repeated(selectedPlaylists.size());
     placeHolders.chop(1); // Remove trailing ?
-    QString queryCommand = "SELECT `" + DBTable_Playlist::COLUMN_LIST.join("`,`") + "` FROM " + DBTable_Playlist::NAME + " WHERE " +
+    QString baseQueryCommand = "SELECT %1 FROM " + DBTable_Playlist::NAME + " WHERE " +
             DBTable_Playlist::COL_TITLE + " IN (" + placeHolders + ") AND " +
             DBTable_Playlist::COL_LIBRARY + " = '" + DBTable_Playlist::GAME_LIBRARY + "'";
+    QString mainQueryCommand = baseQueryCommand.arg("`" + DBTable_Playlist::COLUMN_LIST.join("`,`") + "`");
+    QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
 
-    // Create query and bind selected playlists
-    QSqlQuery initialQuery(fpDB);
-    initialQuery.prepare(queryCommand);
+    // Create main query and bind selected playlists
+    QSqlQuery mainQuery(fpDB);
+    mainQuery.setForwardOnly(true);
+    mainQuery.prepare(mainQueryCommand);
     for(const QString& playlist : selectedPlaylists)
-        initialQuery.addBindValue(playlist);
+        mainQuery.addBindValue(playlist);
 
     // Execute query and return if error occurs
-    if(!initialQuery.exec())
-        return initialQuery.lastError();
+    if(!mainQuery.exec())
+        return mainQuery.lastError();
 
-    // Get size of the query result
-    int querySize = 0;
-    while(initialQuery.next())
-        querySize++;
+    // Create size query
+    QSqlQuery sizeQuery(fpDB);
+    sizeQuery.setForwardOnly(true);
+    sizeQuery.prepare(sizeQueryCommand);
 
-    // Reset query pointer
-    initialQuery.seek(QSql::BeforeFirstRow);
+    // Get query size
+    sizeQuery.next();
+    int querySize = sizeQuery.value(0).toInt();
 
     // Set buffer instance to result
     resultBuffer.source = DBTable_Playlist::NAME;
-    resultBuffer.result = initialQuery;
+    resultBuffer.result = mainQuery;
     resultBuffer.size = querySize;
 
     // Return invalid SqlError
@@ -356,23 +381,35 @@ QSqlError Install::initialPlaylistGameQuery(QList<QPair<DBQueryBuffer, FP::Playl
     for(const FP::Playlist& playlist : knownPlaylistsToQuery)
     {
         // Query all games for the current playlist (TODO: Restrict the columns of this query to only those actually used)
-        QSqlQuery initialQuery("SELECT `" + DBTable_Playlist_Game::COLUMN_LIST.join("`,`") + "` FROM " + DBTable_Playlist_Game::NAME + " WHERE " +
-                               DBTable_Playlist_Game::COL_PLAYLIST_ID + " = '" + playlist.getID().toString(QUuid::WithoutBraces) + "'", fpDB);
+        QString baseQueryCommand = "SELECT `" + DBTable_Playlist_Game::COLUMN_LIST.join("`,`") + "` FROM " + DBTable_Playlist_Game::NAME + " WHERE " +
+                DBTable_Playlist_Game::COL_PLAYLIST_ID + " = '" + playlist.getID().toString(QUuid::WithoutBraces) + "'";
+        QString mainQueryCommand = baseQueryCommand.arg("`" + DBTable_Playlist_Game::COLUMN_LIST.join("`,`") + "`");
+        QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
 
-        // Return if error occurs
-        if(initialQuery.lastError().isValid())
-            return initialQuery.lastError();
+        // Create main query
+        QSqlQuery mainQuery(fpDB);
+        mainQuery.setForwardOnly(true);
+        mainQuery.prepare(mainQueryCommand);
 
-        // Get size of the query result
-        int querySize = 0;
-        while(initialQuery.next())
-            querySize++;
+        // Execute query and return if error occurs
+        if(!mainQuery.exec())
+            return mainQuery.lastError();
 
-        // Reset query pointer
-        initialQuery.seek(QSql::BeforeFirstRow);
+        // Create size query
+        QSqlQuery sizeQuery(fpDB);
+        sizeQuery.setForwardOnly(true);
+        sizeQuery.prepare(sizeQueryCommand);
+
+        // Execute query and return if error occurs
+        if(!sizeQuery.exec())
+            return sizeQuery.lastError();
+
+        // Get query size
+        sizeQuery.next();
+        int querySize = sizeQuery.value(0).toInt();
 
         // Add result to buffer
-        resultBuffer.append(qMakePair(DBQueryBuffer{playlist.getTitle(), initialQuery, querySize}, playlist));
+        resultBuffer.append(qMakePair(DBQueryBuffer{playlist.getTitle(), mainQuery, querySize}, playlist));
     }
 
     // Return invalid SqlError

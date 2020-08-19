@@ -74,8 +74,8 @@ void MainWindow::initializeForms()
     setInputStage(Paths);
 
     // TODO: THIS IS FOR DEBUG PURPOSES. REMOVE
-    checkLaunchBoxInput("D:/LaunchBox");
-    checkFlashpointInput("E:/Downloads/qBittorrent/Flashpoint 8.1 Ultimate/Flashpoint");
+    checkLaunchBoxInput("C:/Users/Player/Desktop/LBTest/LaunchBox");
+    checkFlashpointInput("D:/FP/Flashpoint 8.1 Ultimate");
 }
 
 void MainWindow::setInputStage(InputStage stage)
@@ -468,7 +468,7 @@ LB::Install::ImageMode MainWindow::getSelectedImageOption() const
     return ui->radioButton_launchBoxCopy->isChecked() ? LB::Install::LB_Copy : ui->radioButton_launchBoxLink->isChecked() ? LB::Install::LB_Link : LB::Install::FP_Link;
 }
 
-void MainWindow::importProcess()
+void MainWindow::prepareImport()
 {
     // Check that install contents haven't been altered
     if(installsHaveChanged())
@@ -497,7 +497,7 @@ void MainWindow::importProcess()
     if(!lbRunning)
     {
         // Create progress dialog, set initial busy state and show
-        QProgressDialog importProgressDialog(PD_LABEL_FP_DB_INITIAL_QUERY, PD_BUTTON_CANCEL, 0, 10000, this); //Arbitrarily high maximum so initial percentage is 0
+        QProgressDialog importProgressDialog(STEP_FP_DB_INITIAL_QUERY, PD_BUTTON_CANCEL, 0, 10000, this); //Arbitrarily high maximum so initial percentage is 0
         importProgressDialog.setWindowTitle(CAPTION_IMPORTING);
         importProgressDialog.setWindowModality(Qt::WindowModal);
         importProgressDialog.setAutoReset(false);
@@ -540,14 +540,22 @@ void MainWindow::importProcess()
     }
 }
 
+MainWindow::handleImportResult()
+{
+
+}
+
 MainWindow::ImportResult MainWindow::coreImportProcess(QProgressDialog* pd)
 {
-    // Grab options
+     // Grab options
     QSet<QString> platformsToImport = getSelectedPlatforms();
     QSet<QString> playlistsToImport = getSelectedPlaylists();
     LB::Install::UpdateOptions updateOptions = getSelectedUpdateOptions();
     LB::Install::ImageMode imageOption = getSelectedImageOption();
     LB::Install::GeneralOptions generalOptions = getSelectedGeneralOptions();
+
+    std::variant<QSqlQuery, int> test;
+    test.
 
     // Process query status
     QSqlError queryError;
@@ -622,7 +630,7 @@ MainWindow::ImportResult MainWindow::coreImportProcess(QProgressDialog* pd)
 
     // Re-prep progress dialog
     pd->setMaximum(maximumSteps);
-    pd->setLabelText(PD_LABEL_ADD_APP_PRELOAD);
+    pd->setLabelText(STEP_ADD_APP_PRELOAD);
     QApplication::processEvents(); // Force title change to show
 
     // Pre-load additional apps
@@ -672,7 +680,7 @@ MainWindow::ImportResult MainWindow::coreImportProcess(QProgressDialog* pd)
         FP::Install::DBQueryBuffer currentPlatformGameResult = gameQueries[i];
 
         // Update progress dialog label
-        pd->setLabelText(PD_LABEL_IMPORTING_PLATFORM_GAMES.arg(currentPlatformGameResult.source));
+        pd->setLabelText(STEP_IMPORTING_PLATFORM_GAMES.arg(currentPlatformGameResult.source));
         QApplication::processEvents(); // Force title change to show
 
         // Open LB platform doc
@@ -763,7 +771,7 @@ MainWindow::ImportResult MainWindow::coreImportProcess(QProgressDialog* pd)
         }
 
         // Update progress dialog label
-        pd->setLabelText(PD_LABEL_IMPORTING_PLATFORM_ADD_APPS.arg(currentPlatformGameResult.source));
+        pd->setLabelText(STEP_IMPORTING_PLATFORM_ADD_APPS.arg(currentPlatformGameResult.source));
         QApplication::processEvents(); // Force title change to show
 
         // Add applicable additional apps
@@ -809,7 +817,7 @@ MainWindow::ImportResult MainWindow::coreImportProcess(QProgressDialog* pd)
     for(QPair<FP::Install::DBQueryBuffer, FP::Playlist>& currentPlaylistGameResult : playlistGameQueries)
     {
         // Update progress dialog label
-        pd->setLabelText(PD_LABEL_IMPORTING_PLAYLIST_GAMES.arg(currentPlaylistGameResult.first.source));
+        pd->setLabelText(STEP_IMPORTING_PLAYLIST_GAMES.arg(currentPlaylistGameResult.first.source));
         QApplication::processEvents(); // Force title change to show
 
         // Open LB playlist doc
@@ -1037,7 +1045,7 @@ void MainWindow::all_on_pushButton_clicked()
                                                                                         ui->radioButton_launchBoxLink->text(),
                                                                                         ui->radioButton_flashpointLink->text()));
     else if(senderPushButton == ui->pushButton_startImport)
-        importProcess();
+        prepareImport();
     else if(senderPushButton == ui->pushButton_exit)
         QApplication::quit();
     else
@@ -1143,4 +1151,18 @@ void MainWindow::all_on_listWidget_itemChanged(QListWidgetItem* item) // Proxy f
 //        importSelectionReaction(item, ui->listWidget_playlistChoices);                        so triggering this here is no longer required. Possibly remove
     else
         assert("Unhandled use of all_on_listWidget_itemChanged() slot");
+}
+
+void MainWindow::handleBlockingError(int* response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices)
+{
+    // Prepare dialog
+    QMessageBox blockingErrorMessage;
+    blockingErrorMessage.setWindowTitle(blockingError.getCaption());
+    blockingErrorMessage.setText(blockingError.getPrimaryInfo());
+    blockingErrorMessage.setInformativeText(blockingError.getSecondaryInfo());
+    blockingErrorMessage.setDetailedText(blockingError.getDetailedInfo());
+    blockingErrorMessage.setStandardButtons(choices);
+
+    // Get response
+    *response = blockingErrorMessage.exec();
 }
