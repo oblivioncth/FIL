@@ -42,8 +42,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 //-Destructor----------------------------------------------------------------------------------------------------
 MainWindow::~MainWindow()
 {
-    mImportProcessThread.quit();
-    mImportProcessThread.wait();
     delete ui;
 }
 
@@ -516,29 +514,21 @@ void MainWindow::prepareImport()
         QApplication::processEvents(); // Force show immediately
 
         // Setup import worker
-        ImportWorker* importWorker = new ImportWorker(mFlashpointInstall, mLaunchBoxInstall,
-                                                      {getSelectedPlatforms(), getSelectedPlaylists()},
-                                                      {getSelectedUpdateOptions(), getSelectedImageOption(), getSelectedGeneralOptions()});
-
-        // Move import worker to import thread
-        importWorker->moveToThread(&mImportProcessThread);
-
-        // Create thread communication/maintenance connections
-        connect(importWorker, &ImportWorker::importCompleted, importWorker, &QObject::deleteLater); // Cleans-up worker when it is finished
-        connect(&mImportProcessThread, &QThread::started, importWorker, &ImportWorker::doImport); // For starting import with stopped thread
-        connect(importWorker, &ImportWorker::blockingErrorOccured, this, &MainWindow::handleBlockingError, Qt::BlockingQueuedConnection); // Blocks worker thread error is handled
-        connect(importWorker, &ImportWorker::importCompleted, this, &MainWindow::handleImportResult);
-        connect(mImportProgressDialog.get(), &QProgressDialog::canceled, &mImportProcessThread, &QThread::requestInterruption);
+        ImportWorker importWorker(mFlashpointInstall, mLaunchBoxInstall,
+                                  {getSelectedPlatforms(), getSelectedPlaylists()},
+                                  {getSelectedUpdateOptions(), getSelectedImageOption(), getSelectedGeneralOptions()});
 
         // Create process update connections
-        connect(importWorker, &ImportWorker::progressStepChanged, mImportProgressDialog.get(), &QProgressDialog::setLabelText);
-        connect(importWorker, &ImportWorker::progressMaximumChanged, mImportProgressDialog.get(), &QProgressDialog::setMaximum);
+        connect(&importWorker, &ImportWorker::progressStepChanged, mImportProgressDialog.get(), &QProgressDialog::setLabelText);
+        connect(&importWorker, &ImportWorker::progressMaximumChanged, mImportProgressDialog.get(), &QProgressDialog::setMaximum);
+        connect(&importWorker, &ImportWorker::progressValueChanged, mImportProgressDialog.get(), &QProgressDialog::setValue);
+        connect(mImportProgressDialog.get(), &QProgressDialog::canceled, &importWorker, &ImportWorker::notifyCanceled);
 
-        //TODO: Temporarily must be blocking due to not being able to stop setValue() from calling QApplication::processEvents(). Contribute to source to aleviate this long term
-        connect(importWorker, &ImportWorker::progressValueChanged, mImportProgressDialog.get(), &QProgressDialog::setValue, Qt::BlockingQueuedConnection);
+        // Import error tracker
+        Qx::GenericError importError;
 
-        // Start working thread
-        mImportProcessThread.start(); // Import will start when thread begins running
+        // Start import and forward result to handler
+        handleImportResult(importWorker.doImport(importError), importError);
     }
 }
 
@@ -824,9 +814,6 @@ void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx:
 {
     // Close progress dialog
     mImportProgressDialog->close();
-
-    // Terminate work thread
-    mImportProcessThread.quit();
 
     // Post error report if present
     if(errorReport.isValid())

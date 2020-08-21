@@ -51,6 +51,7 @@ private:
     std::shared_ptr<LB::Install> mLaunchBoxInstall;
     ImportSelections mImportSelections;
     OptionSet mOptionSet;
+    bool mCanceled = false;
 
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
@@ -59,9 +60,13 @@ public:
                  ImportSelections importSelections,
                  OptionSet optionSet);
 
-//-Slots---------------------------------------------------------------------------------------------------------
+//-Instance Functions---------------------------------------------------------------------------------------------------------
+public:
+    ImportResult doImport(Qx::GenericError& errorReport);
+
+//-Slots----------------------------------------------------------------------------------------------------------
 public slots:
-    void doImport();
+    void notifyCanceled();
 
 //-Signals---------------------------------------------------------------------------------------------------------
 signals:

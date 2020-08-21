@@ -119,8 +119,6 @@ private:
     Ui::MainWindow *ui;
     QColor mExistingItemColor;
 
-    QThread mImportProcessThread;
-
     std::shared_ptr<LB::Install> mLaunchBoxInstall;
     std::shared_ptr<FP::Install> mFlashpointInstall;
 
