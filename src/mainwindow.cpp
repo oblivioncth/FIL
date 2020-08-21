@@ -22,6 +22,11 @@
 //-Constructor---------------------------------------------------------------------------------------------------
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
+    // Register metatypes
+    qRegisterMetaType<ImportWorker::ImportResult>("ImportResult");
+    qRegisterMetaType<Qx::GenericError>("GenericError)");
+    qRegisterMetaType<std::shared_ptr<int>>("shared_ptr<int>");
+
     // Setup
     ui->setupUi(this);
     QApplication::setApplicationName(VER_PRODUCTNAME_STR);
@@ -35,7 +40,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 }
 
 //-Destructor----------------------------------------------------------------------------------------------------
-MainWindow::~MainWindow() { delete ui; }
+MainWindow::~MainWindow()
+{
+    mImportProcessThread.quit();
+    mImportProcessThread.wait();
+    delete ui;
+}
 
 //-Instance Functions--------------------------------------------------------------------------------------------
 //Private:
@@ -64,18 +74,19 @@ bool MainWindow::testForLinkPermissions()
 
 void MainWindow::initializeForms()
 {
+    // Capture existing item color from label for use in platform/playlist selection lists
     mExistingItemColor = ui->label_existingItemColor->palette().color(QPalette::Window);
 
+    // Setup main forms
     ui->radioButton_launchBoxLink->setEnabled(mHasLinkPermissions);
     ui->radioButton_flashpointLink->setEnabled(mHasLinkPermissions);
     ui->radioButton_launchBoxLink->setChecked(mHasLinkPermissions);
     ui->radioButton_launchBoxCopy->setChecked(!mHasLinkPermissions);
-
     setInputStage(Paths);
 
     // TODO: THIS IS FOR DEBUG PURPOSES. REMOVE
-    checkLaunchBoxInput("C:/Users/Player/Desktop/LBTest/LaunchBox");
-    checkFlashpointInput("D:/FP/Flashpoint 8.1 Ultimate");
+    checkLaunchBoxInput("D:/LaunchBox");
+    checkFlashpointInput("E:/Downloads/qBittorrent/Flashpoint 8.1 Ultimate/Flashpoint");
 }
 
 void MainWindow::setInputStage(InputStage stage)
@@ -104,7 +115,7 @@ void MainWindow::checkLaunchBoxInput(QString installPath)
 {
     if(LB::Install::pathIsValidInstall(installPath))
     {
-        mLaunchBoxInstall = std::make_unique<LB::Install>(installPath);
+        mLaunchBoxInstall = std::make_shared<LB::Install>(installPath);
         ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
         if(mFlashpointInstall)
             gatherInstallInfo();
@@ -122,7 +133,7 @@ void MainWindow::checkFlashpointInput(QString installPath)
 {
     if(FP::Install::pathIsValidtInstall(installPath))
     {
-        mFlashpointInstall = std::make_unique<FP::Install>(installPath);
+        mFlashpointInstall = std::make_shared<FP::Install>(installPath);
 
         if(mFlashpointInstall->matchesTargetVersion())
             ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
@@ -233,16 +244,18 @@ bool MainWindow::parseFlashpointData()
     // Get and open connection to Flashpoint SQLite database, check that it is valid and allow for retries
     QSqlDatabase fpDB;
 
-    // Check that the connection is valid to allow for retries
-    while(!(fpDB = mFlashpointInstall->openDatabaseConnection()).isValid() &&
-          QMessageBox::critical(this, QApplication::applicationName(), MSG_FP_DB_CANT_CONNECT, QMessageBox::Retry | QMessageBox::Abort, QMessageBox::Retry) == QMessageBox::Retry);
-
-    // Check if the connection finally became valid
-    if(!fpDB.isValid())
-        return false;
-
-
+    // General error holder
     QSqlError errorCheck;
+
+    // Check that the connection is/can be opened and allow for retries
+    if(!mFlashpointInstall->databaseConnectionOpenInThisThread())
+    {
+        while((errorCheck = mFlashpointInstall->openThreadDatabaseConnection()).isValid())
+            if(QMessageBox::critical(this, QApplication::applicationName(), MSG_FP_DB_CANT_CONNECT.arg(errorCheck.text()),
+                                     QMessageBox::Retry | QMessageBox::Abort, QMessageBox::Retry) == QMessageBox::Abort)
+                return false;
+    }
+
 
     // Ensure the database contains the required tables
     QSet<QString> missingTables;
@@ -357,26 +370,22 @@ void MainWindow::postIOError(QString mainText, Qx::IOOpReport report)
     ioErrorMsg.exec();
 }
 
-void MainWindow::postXMLReadError(QString mainText, Qx::XmlStreamReaderError xmlError)
+int MainWindow::postGenericError(Qx::GenericError error, QMessageBox::StandardButtons choices)
 {
-    QMessageBox xmlErrorMsg;
-    xmlErrorMsg.setIcon(QMessageBox::Critical);
-    xmlErrorMsg.setText(mainText);
-    xmlErrorMsg.setInformativeText(xmlError.getText());
-    xmlErrorMsg.setStandardButtons(QMessageBox::Ok);
+    // Prepare dialog
+    QMessageBox genericErrorMessage;
+    if(!error.getCaption().isEmpty())
+        genericErrorMessage.setWindowTitle(error.getCaption());
+    if(!error.getPrimaryInfo().isEmpty())
+        genericErrorMessage.setText(error.getPrimaryInfo());
+    if(!error.getSecondaryInfo().isEmpty())
+        genericErrorMessage.setInformativeText(error.getSecondaryInfo());
+    if(!error.getDetailedInfo().isEmpty())
+        genericErrorMessage.setDetailedText(error.getDetailedInfo());
+    genericErrorMessage.setStandardButtons(choices);
+    genericErrorMessage.setIcon(QMessageBox::Critical);
 
-    xmlErrorMsg.exec();
-}
-
-void MainWindow::postGenericError(QString mainText, QString informativeText)
-{
-    QMessageBox genericErrorMsg;
-    genericErrorMsg.setIcon(QMessageBox::Critical);
-    genericErrorMsg.setText(mainText);
-    genericErrorMsg.setInformativeText(informativeText);
-    genericErrorMsg.setStandardButtons(QMessageBox::Ok);
-
-    genericErrorMsg.exec();
+    return genericErrorMessage.exec();
 }
 
 void MainWindow::importSelectionReaction(QListWidgetItem* item, QWidget* parent)
@@ -497,393 +506,41 @@ void MainWindow::prepareImport()
     if(!lbRunning)
     {
         // Create progress dialog, set initial busy state and show
-        QProgressDialog importProgressDialog(STEP_FP_DB_INITIAL_QUERY, PD_BUTTON_CANCEL, 0, 10000, this); //Arbitrarily high maximum so initial percentage is 0
-        importProgressDialog.setWindowTitle(CAPTION_IMPORTING);
-        importProgressDialog.setWindowModality(Qt::WindowModal);
-        importProgressDialog.setAutoReset(false);
-        importProgressDialog.setAutoClose(false);
-        importProgressDialog.setMinimumDuration(0); // Always show pd
-        importProgressDialog.setValue(0); // Get pd to show
-        QApplication::processEvents(); // Allow busy state to show
+        mImportProgressDialog = std::make_unique<QProgressDialog>(STEP_FP_DB_INITIAL_QUERY, "Cancel", 0, 10000, this); //Arbitrarily high maximum so initial percentage is 0
+        mImportProgressDialog->setWindowTitle(CAPTION_IMPORTING);
+        mImportProgressDialog->setWindowModality(Qt::WindowModal);
+        mImportProgressDialog->setAutoReset(false);
+        mImportProgressDialog->setAutoClose(false);
+        mImportProgressDialog->setMinimumDuration(0); // Always show pd
+        mImportProgressDialog->setValue(0); // Get pd to show
+        QApplication::processEvents(); // Force show immediately
 
-        // Start import
-        ImportResult result = coreImportProcess(&importProgressDialog);
+        // Setup import worker
+        ImportWorker* importWorker = new ImportWorker(mFlashpointInstall, mLaunchBoxInstall,
+                                                      {getSelectedPlatforms(), getSelectedPlaylists()},
+                                                      {getSelectedUpdateOptions(), getSelectedImageOption(), getSelectedGeneralOptions()});
 
-        // Close process dialog
-        importProgressDialog.close();
+        // Move import worker to import thread
+        importWorker->moveToThread(&mImportProcessThread);
 
-        if(result == Successful)
-        {
-            // Deploy CLIFp
-            QString deployError;
-            while(!mFlashpointInstall->deployCLIFp(deployError))
-                if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | QMessageBox::Ignore, QMessageBox::Retry) == QMessageBox::Ignore)
-                    break;
+        // Create thread communication/maintenance connections
+        connect(importWorker, &ImportWorker::importCompleted, importWorker, &QObject::deleteLater); // Cleans-up worker when it is finished
+        connect(&mImportProcessThread, &QThread::started, importWorker, &ImportWorker::doImport); // For starting import with stopped thread
+        connect(importWorker, &ImportWorker::blockingErrorOccured, this, &MainWindow::handleBlockingError, Qt::BlockingQueuedConnection); // Blocks worker thread error is handled
+        connect(importWorker, &ImportWorker::importCompleted, this, &MainWindow::handleImportResult);
+        connect(mImportProgressDialog.get(), &QProgressDialog::canceled, &mImportProcessThread, &QThread::requestInterruption);
 
-            // Post-import message
-            QMessageBox::information(this, QApplication::applicationName(), MSG_POST_IMPORT);
+        // Create process update connections
+        connect(importWorker, &ImportWorker::progressStepChanged, mImportProgressDialog.get(), &QProgressDialog::setLabelText);
+        connect(importWorker, &ImportWorker::progressMaximumChanged, mImportProgressDialog.get(), &QProgressDialog::setMaximum);
 
-            // Update selection lists to reflect newly existing platforms
-            gatherInstallInfo();
-        }
-        else if(result == Canceled)
-        {
-            QMessageBox::critical(this, CAPTION_REVERT, MSG_USER_CANCELED);
-            revertAllLaunchBoxChanges();
-        }
-        else
-        {
-            // Show general next steps message
-            QMessageBox::warning(this, CAPTION_REVERT, MSG_HAVE_TO_REVERT);
-            revertAllLaunchBoxChanges();
-        }
+        //TODO: Temporarily must be blocking due to not being able to stop setValue() from calling QApplication::processEvents(). Contribute to source to aleviate this long term
+        connect(importWorker, &ImportWorker::progressValueChanged, mImportProgressDialog.get(), &QProgressDialog::setValue, Qt::BlockingQueuedConnection);
+
+        // Start working thread
+        mImportProcessThread.start(); // Import will start when thread begins running
     }
 }
-
-MainWindow::handleImportResult()
-{
-
-}
-
-MainWindow::ImportResult MainWindow::coreImportProcess(QProgressDialog* pd)
-{
-     // Grab options
-    QSet<QString> platformsToImport = getSelectedPlatforms();
-    QSet<QString> playlistsToImport = getSelectedPlaylists();
-    LB::Install::UpdateOptions updateOptions = getSelectedUpdateOptions();
-    LB::Install::ImageMode imageOption = getSelectedImageOption();
-    LB::Install::GeneralOptions generalOptions = getSelectedGeneralOptions();
-
-    std::variant<QSqlQuery, int> test;
-    test.
-
-    // Process query status
-    QSqlError queryError;
-
-    // Caches
-    QSet<FP::AddApp> addAppsCache;
-    QHash<QUuid, LB::PlaylistGame::EntryDetails> playlistGameDetailsCache;
-
-    // Initial query buffers
-    QList<FP::Install::DBQueryBuffer> gameQueries;
-    FP::Install::DBQueryBuffer addAppQuery;
-    FP::Install::DBQueryBuffer playlistQueries;
-    QList<QPair<FP::Install::DBQueryBuffer, FP::Playlist>> playlistGameQueries;
-
-    // Make initial game query
-    queryError = mFlashpointInstall->initialGameQuery(gameQueries, platformsToImport);
-    if(queryError.isValid())
-    {
-        postSqlError(MSG_FP_DB_UNEXPECTED_ERROR, queryError);
-        return Failed;
-    }
-
-    // Make initial add apps query
-    queryError = mFlashpointInstall->initialAddAppQuery(addAppQuery);
-    if(queryError.isValid())
-    {
-        postSqlError(MSG_FP_DB_UNEXPECTED_ERROR, queryError);
-        return Failed;
-    }
-
-    // Make initial playlists query
-    queryError = mFlashpointInstall->initialPlaylistQuery(playlistQueries, playlistsToImport);
-    if(queryError.isValid())
-    {
-        postSqlError(MSG_FP_DB_UNEXPECTED_ERROR, queryError);
-        return Failed;
-    }
-
-    // Process Playlists and list for playlist game query
-    QList<FP::Playlist> targetKnownPlaylists;
-    for(int i = 0; i < playlistQueries.size; i++)
-    {
-        // Advance to next record
-        playlistQueries.result.next();
-
-        // Form playlist from record
-        FP::PlaylistBuilder fpPb;
-        fpPb.wID(playlistQueries.result.value(FP::Install::DBTable_Playlist::COL_ID).toString());
-        fpPb.wTitle(playlistQueries.result.value(FP::Install::DBTable_Playlist::COL_TITLE).toString());
-        fpPb.wDescription(playlistQueries.result.value(FP::Install::DBTable_Playlist::COL_DESCRIPTION).toString());
-        fpPb.wAuthor(playlistQueries.result.value(FP::Install::DBTable_Playlist::COL_AUTHOR).toString());
-
-        // Build playlist and add to list
-        targetKnownPlaylists.append(fpPb.build());
-    }
-
-    // Make initial playlist games query
-    queryError = mFlashpointInstall->initialPlaylistGameQuery(playlistGameQueries, targetKnownPlaylists);
-    if(queryError.isValid())
-    {
-        postSqlError(MSG_FP_DB_UNEXPECTED_ERROR, queryError);
-        return Failed;
-    }
-
-    // Determine workload
-    int maximumSteps = addAppQuery.size; // Additional App pre-load
-    for(FP::Install::DBQueryBuffer& query : gameQueries) // All games
-        maximumSteps += query.size;
-    for(QPair<FP::Install::DBQueryBuffer, FP::Playlist>& query : playlistGameQueries) // All playlist games
-        maximumSteps += query.first.size;
-    maximumSteps += addAppQuery.size * gameQueries.size(); // All checks of Additional Apps
-
-    // Re-prep progress dialog
-    pd->setMaximum(maximumSteps);
-    pd->setLabelText(STEP_ADD_APP_PRELOAD);
-    QApplication::processEvents(); // Force title change to show
-
-    // Pre-load additional apps
-    addAppsCache.reserve(addAppQuery.size);
-    for(int i = 0; i < addAppQuery.size; i++)
-    {
-        // Advance to next record
-        addAppQuery.result.next();
-
-        // Form additional app from record
-        FP::AddAppBuilder fpAab;
-        fpAab.wID(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_ID).toString());
-        fpAab.wAppPath(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_APP_PATH).toString());
-        fpAab.wAutorunBefore(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_AUTORUN).toString());
-        fpAab.wLaunchCommand(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_LAUNCH_COMMNAND).toString());
-        fpAab.wName(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_NAME).toString());
-        fpAab.wWaitExit(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_WAIT_EXIT).toString());
-        fpAab.wParentID(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_PARENT_ID).toString());
-
-        // Build additional app
-        FP::AddApp additionalApp = fpAab.build();
-
-        // Add to cache
-        addAppsCache.insert(additionalApp);
-
-        // Update progress dialog value
-        if(pd->wasCanceled())
-            return Canceled;
-        else
-            pd->setValue(pd->value() + 1);
-    }
-
-    // Image import error message
-    QMessageBox imageErrorMsg;
-    imageErrorMsg.setWindowTitle(CAPTION_IMAGE_ERR);
-    imageErrorMsg.setInformativeText("Retry?");
-    imageErrorMsg.setStandardButtons(QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
-    imageErrorMsg.setDefaultButton(QMessageBox::Yes);
-
-    // Skip all images tracker
-    bool skipAllImages = false;
-
-    // Process games and additional apps by platform
-    for(int i = 0; i < gameQueries.size(); i++)
-    {
-        // Get current result
-        FP::Install::DBQueryBuffer currentPlatformGameResult = gameQueries[i];
-
-        // Update progress dialog label
-        pd->setLabelText(STEP_IMPORTING_PLATFORM_GAMES.arg(currentPlatformGameResult.source));
-        QApplication::processEvents(); // Force title change to show
-
-        // Open LB platform doc
-        LB::Install::XMLHandle docRequest = {LB::Install::Platform, currentPlatformGameResult.source};
-        std::unique_ptr<LB::Install::XMLDoc> currentPlatformXML;
-        Qx::XmlStreamReaderError platformReadError = mLaunchBoxInstall->openXMLDocument(currentPlatformXML, docRequest, updateOptions);
-
-        // Stop import if error occured
-        if(platformReadError.isValid())
-        {
-            postXMLReadError(LB::Install::populateErrorWithTarget(MSG_LB_XML_UNEXPECTED_ERROR, docRequest), platformReadError);
-            return Failed;
-        }
-
-        // Ensure image sub-directories exist
-        QString imageDirError;
-        while(!mLaunchBoxInstall->ensureImageDirectories(imageDirError, currentPlatformGameResult.source))
-        {
-            imageErrorMsg.setText(imageDirError);
-            if(imageErrorMsg.exec() == QMessageBox::No)
-                break;
-        }
-
-        // Add/Update games
-        for(int j = 0; j < currentPlatformGameResult.size; j++)
-        {
-            // Advance to next record
-            currentPlatformGameResult.result.next();
-
-            // Check if game is extreme and only include if user ticked the option
-            if(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_EXTREME).toString() == "0" || generalOptions.includeExtreme)
-            {
-                // Form game from record
-                FP::GameBuilder fpGb;
-                fpGb.wID(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ID).toString());
-                fpGb.wTitle(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_TITLE).toString());
-                fpGb.wSeries(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_SERIES).toString());
-                fpGb.wDeveloper(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_DEVELOPER).toString());
-                fpGb.wPublisher(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_PUBLISHER).toString());
-                fpGb.wDateAdded(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_DATE_ADDED).toString());
-                fpGb.wDateModified(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_DATE_MODIFIED).toString());
-                fpGb.wPlatform(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_PLATFORM).toString());
-                fpGb.wBroken(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_BROKEN).toString());
-                fpGb.wPlayMode(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_PLAY_MODE).toString());
-                fpGb.wStatus(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_STATUS).toString());
-                fpGb.wNotes(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_NOTES).toString());
-                fpGb.wSource(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_SOURCE).toString());
-                fpGb.wAppPath(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_APP_PATH).toString());
-                fpGb.wLaunchCommand(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_LAUNCH_COMMAND).toString());
-                fpGb.wReleaseDate(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_RELEASE_DATE).toString());
-                fpGb.wVersion(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_VERSION).toString());
-                fpGb.wOriginalDescription(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ORIGINAL_DESC).toString());
-                fpGb.wLanguage(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_LANGUAGE).toString());
-                fpGb.wOrderTitle(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ORDER_TITLE).toString());
-
-                // Convert and convert FP game to LB game and add to document
-                LB::Game builtGame = LB::Game(fpGb.build(), mFlashpointInstall->getOFLIbPath());
-                currentPlatformXML->addGame(builtGame);
-
-                // Transfer game images
-                QString imageTransferError;
-                while(!skipAllImages && !mLaunchBoxInstall->transferLogo(imageTransferError, imageOption, mFlashpointInstall->getLogosDirectory(), builtGame))
-                {
-                    imageErrorMsg.setText(imageTransferError);
-                    int choice = imageErrorMsg.exec();
-                    if(choice == QMessageBox::No)
-                        break;
-                    else if(choice == QMessageBox::NoToAll)
-                        skipAllImages = true;
-                }
-
-                while(!skipAllImages && !mLaunchBoxInstall->transferScreenshot(imageTransferError, imageOption, mFlashpointInstall->getScrenshootsDirectory(), builtGame))
-                {
-                    imageErrorMsg.setText(imageTransferError);
-                    int choice = imageErrorMsg.exec();
-                    if(choice == QMessageBox::No)
-                        break;
-                    else if(choice == QMessageBox::NoToAll)
-                        skipAllImages = true;
-                }
-            }
-
-            // Update progress dialog value
-            if(pd->wasCanceled())
-                return Canceled;
-            else
-                pd->setValue(pd->value() + 1);
-        }
-
-        // Update progress dialog label
-        pd->setLabelText(STEP_IMPORTING_PLATFORM_ADD_APPS.arg(currentPlatformGameResult.source));
-        QApplication::processEvents(); // Force title change to show
-
-        // Add applicable additional apps
-        for (QSet<FP::AddApp>::iterator j = addAppsCache.begin(); j != addAppsCache.end();)
-        {
-            // If the current platform doc contains the game this add app belongs to, convert and add it, then remove it from cache
-            if (currentPlatformXML->containsGame((*j).getParentID()))
-            {
-                currentPlatformXML->addAddApp(LB::AddApp(*j, mFlashpointInstall->getOFLIbPath()));
-                j = addAppsCache.erase(j);
-
-                // Reduce progress dialog maximum by total iterations cut from future platforms
-                pd->setMaximum(pd->maximum() - gameQueries.size() + i + 1);
-            }
-            else
-                ++j;
-
-            // Update progress dialog value
-            if(pd->wasCanceled())
-                return Canceled;
-            else
-                pd->setValue(pd->value() + 1);
-        }
-
-        // Finalize document
-        currentPlatformXML->finalize();
-
-        // Add final game details to Playlist Game lookup cache
-        for (QHash<QUuid, LB::Game>::const_iterator i = currentPlatformXML->getFinalGames().constBegin();
-             i != currentPlatformXML->getFinalGames().constEnd(); ++i)
-            playlistGameDetailsCache[i.key()] = {i.value().getTitle(), QFileInfo(i.value().getAppPath()).fileName(), i.value().getPlatform()};
-
-        // Forefit doucment lease and save it
-        QString saveError;
-        if(!mLaunchBoxInstall->saveXMLDocument(saveError, std::move(currentPlatformXML)))
-        {
-            postGenericError(LB::Install::populateErrorWithTarget(LB::Install::XMLWriter::ERR_WRITE_FAILED, docRequest), saveError);
-            return Failed;
-        }
-    }
-
-    // Process playlists
-    for(QPair<FP::Install::DBQueryBuffer, FP::Playlist>& currentPlaylistGameResult : playlistGameQueries)
-    {
-        // Update progress dialog label
-        pd->setLabelText(STEP_IMPORTING_PLAYLIST_GAMES.arg(currentPlaylistGameResult.first.source));
-        QApplication::processEvents(); // Force title change to show
-
-        // Open LB playlist doc
-        LB::Install::XMLHandle docRequest = {LB::Install::Playlist, currentPlaylistGameResult.first.source};
-        std::unique_ptr<LB::Install::XMLDoc> currentPlaylistXML;
-        Qx::XmlStreamReaderError playlistReadError = mLaunchBoxInstall->openXMLDocument(currentPlaylistXML, docRequest, updateOptions);
-
-        // Stop import if error occured
-        if(playlistReadError.isValid())
-        {
-            postXMLReadError(LB::Install::populateErrorWithTarget(MSG_LB_XML_UNEXPECTED_ERROR, docRequest), playlistReadError);
-            return Failed;
-        }
-
-        // Convert and set playlist header
-        currentPlaylistXML->setPlaylistHeader(LB::PlaylistHeader(currentPlaylistGameResult.second));
-
-        // Add/Update playlist games
-        for(int i = 0; i < currentPlaylistGameResult.first.size; i++)
-        {
-            // Advance to next record
-            currentPlaylistGameResult.first.result.next();
-
-            // Only process the playlist game if it was included in import (TODO: Possibly implement checking all other Platform xmls for presence of this game)
-            if(playlistGameDetailsCache.contains(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_ID).toString()))
-            {
-                // Form game from record
-                FP::PlaylistGameBuilder fpPgb;
-                fpPgb.wID(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_ID).toString());
-                fpPgb.wPlaylistID(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_PLAYLIST_ID).toString());
-                fpPgb.wOrder(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_ORDER).toString());
-                fpPgb.wGameID(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_ID).toString());
-
-                // Build FP playlist game, convert to LB and add
-                currentPlaylistXML->addPlaylistGame(LB::PlaylistGame(fpPgb.build(), playlistGameDetailsCache));
-            }
-
-            // Update progress dialog value
-            if(pd->wasCanceled())
-                return Canceled;
-            else
-                pd->setValue(pd->value() + 1);
-        }
-
-        // Finalize document
-        currentPlaylistXML->finalize();
-
-        // Forefit doucment lease and save it
-        QString saveError;
-        if(!mLaunchBoxInstall->saveXMLDocument(saveError, std::move(currentPlaylistXML)))
-        {
-            postGenericError(LB::Install::populateErrorWithTarget(LB::Install::XMLWriter::ERR_WRITE_FAILED, docRequest), saveError);
-            return Failed;
-        }
-    }
-
-    // Close database connection
-    mFlashpointInstall->closeDatabaseConnection();
-
-    // Reset install
-    mLaunchBoxInstall->softReset();
-
-    // Return true on success
-    return Successful;
-}
-
 
 void MainWindow::revertAllLaunchBoxChanges()
 {
@@ -1153,16 +810,51 @@ void MainWindow::all_on_listWidget_itemChanged(QListWidgetItem* item) // Proxy f
         assert("Unhandled use of all_on_listWidget_itemChanged() slot");
 }
 
-void MainWindow::handleBlockingError(int* response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices)
+void MainWindow::handleBlockingError(std::shared_ptr<int> response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices)
 {
-    // Prepare dialog
-    QMessageBox blockingErrorMessage;
-    blockingErrorMessage.setWindowTitle(blockingError.getCaption());
-    blockingErrorMessage.setText(blockingError.getPrimaryInfo());
-    blockingErrorMessage.setInformativeText(blockingError.getSecondaryInfo());
-    blockingErrorMessage.setDetailedText(blockingError.getDetailedInfo());
-    blockingErrorMessage.setStandardButtons(choices);
+    // Post error and get response
+    int userChoice = postGenericError(blockingError, choices);
 
-    // Get response
-    *response = blockingErrorMessage.exec();
+    // If applicable return selection
+    if(response)
+        *response = userChoice;
+}
+
+void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx::GenericError errorReport)
+{
+    // Close progress dialog
+    mImportProgressDialog->close();
+
+    // Terminate work thread
+    mImportProcessThread.quit();
+
+    // Post error report if present
+    if(errorReport.isValid())
+        postGenericError(errorReport, QMessageBox::Ok);
+
+    if(importResult == ImportWorker::Successful)
+    {
+        // Deploy CLIFp
+        QString deployError;
+        while(!mFlashpointInstall->deployCLIFp(deployError))
+            if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | QMessageBox::Ignore, QMessageBox::Retry) == QMessageBox::Ignore)
+                break;
+
+        // Post-import message
+        QMessageBox::information(this, QApplication::applicationName(), MSG_POST_IMPORT);
+
+        // Update selection lists to reflect newly existing platforms
+        gatherInstallInfo();
+    }
+    else if(importResult == ImportWorker::Canceled)
+    {
+        QMessageBox::critical(this, CAPTION_REVERT, MSG_USER_CANCELED);
+        revertAllLaunchBoxChanges();
+    }
+    else
+    {
+        // Show general next steps message
+        QMessageBox::warning(this, CAPTION_REVERT, MSG_HAVE_TO_REVERT);
+        revertAllLaunchBoxChanges();
+    }
 }

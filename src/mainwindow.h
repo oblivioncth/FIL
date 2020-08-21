@@ -8,6 +8,7 @@
 #include "version.h"
 #include "launchboxinstall.h"
 #include "flashpointinstall.h"
+#include "importworker.h"
 #include "qx-io.h"
 
 QT_BEGIN_NAMESPACE
@@ -58,19 +59,26 @@ private:
 
     // Messages - General import procedure
     static inline const QString MSG_PRE_EXISTING_IMPORT = "You have selected one or more Platform(s)/Playlist(s) that already exist in your collection. These will be altered even if they did not orignate from this program (i.e. if you "
-                                                          "already happened to have a Platform/Playlist with the same name as one present in Flashpoint). Are you sure you want to proceed?";
+                                                          "already happened to have a Platform/Playlist with the same name as one present in Flashpoint).\n"
+                                                          "\n"
+                                                          "Are you sure you want to proceed?";
     static inline const QString MSG_LB_CLOSE_PROMPT = "The importer has detected that LaunchBox is running. It must be closed in order to continue. If recently closed, wait a few moments before trying to proceed again as it performs significant cleanup in the background.";
     static inline const QString MSG_POST_IMPORT = "The Flashpoint import has completed succesfully. Next time you start LaunchBox it may take longer than usual as it will have to fill in some default fields for the imported Platforms/Playlists.\n"
                                                   "\n"
                                                   "If you wish to import further selections or update to a newer version of Flashpoint, simply re-run this procedure after pointing it to the desired Flashpoint installation.";
+    // Initial import status
+    static inline const QString STEP_FP_DB_INITIAL_QUERY = "Making initial Flashpoint database queries...";
 
     // Messages - FP General
     static inline const QString MSG_FP_CLOSE_PROMPT = "It is strongly recommended to close Flashpoint before proceeding as it can severely slow or interfer with the import process";
 
     // Messages - FP Database read
-    static inline const QString MSG_FP_DB_CANT_CONNECT = "Failed to establish a handle to the Flashpoint database! Make sure it is not being used by another program (i.e. Flashpoint may be running).";
+    static inline const QString MSG_FP_DB_CANT_CONNECT = "Failed to establish a handle to the Flashpoint database:\n"
+                                                         "\n"
+                                                         "%1";
     static inline const QString MSG_FP_DB_MISSING_TABLE = "The Flashpoint database is missing tables critical to the import process.";
     static inline const QString MSG_FP_DB_TABLE_MISSING_COLUMN = "The Flashpoint database tables are missing columns critical to the import process.";
+    static inline const QString MSG_FP_DB_UNEXPECTED_ERROR = "An unexpected SQL error occured while reading the Flashpoint database:";
 
     // Messages - FP CLIFp
     static inline const QString MSG_FP_CANT_DEPLOY_CLIFP = "Failed to deploy CLIFp.exe to the selected Flashpoint install.\n"
@@ -95,7 +103,7 @@ private:
     static inline const QString CAPTION_LAUNCHBOX_BROWSE = "Select the root directory of your LaunchBox install...";
     static inline const QString CAPTION_FLASHPOINT_BROWSE = "Select the root directory of your Flashpoint install...";
     static inline const QString CAPTION_UPDATE_MODE_HELP = "Update mode options";
-    static inline const QString CAPTION_IMAGE_MODE_HELP = "Image mode options";
+    static inline const QString CAPTION_IMAGE_MODE_HELP = "Image mode options";\
     static inline const QString CAPTION_REVERT = "Reverting changes...";
     static inline const QString CAPTION_REVERT_ERR = "Error reverting changes";
     static inline const QString CAPTION_CLIFP_ERR = "Error deploying CLIFp";
@@ -111,14 +119,19 @@ private:
     Ui::MainWindow *ui;
     QColor mExistingItemColor;
 
-    std::unique_ptr<LB::Install> mLaunchBoxInstall;
-    std::unique_ptr<FP::Install> mFlashpointInstall;
+    QThread mImportProcessThread;
+
+    std::shared_ptr<LB::Install> mLaunchBoxInstall;
+    std::shared_ptr<FP::Install> mFlashpointInstall;
 
     int mLineEdit_launchBoxPath_blocker = 0; // Required due to an oversight with QLineEdit::editingFinished()
     int mLineEdit_flashpointPath_blocker = 0; // Required due to an oversight with QLineEdit::editingFinished()
 
     bool mHasLinkPermissions = false;
     bool mAlteringListWidget = false;
+
+    // Process monitoring
+    std::unique_ptr<QProgressDialog> mImportProgressDialog;
 
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
@@ -145,8 +158,7 @@ private:
     void postSqlError(QString mainText, QSqlError sqlError);
     void postListError(QString mainText, QStringList detailedItems);
     void postIOError(QString mainText, Qx::IOOpReport report);
-    void postXMLReadError(QString mainText, Qx::XmlStreamReaderError xmlError);
-    void postGenericError(QString mainText, QString informativeText = QString());
+    int postGenericError(Qx::GenericError error, QMessageBox::StandardButtons choices);
 
     void importSelectionReaction(QListWidgetItem* item, QWidget* parent);
     QSet<QString> getSelectedPlatforms(bool fileNameLegal = false) const;
@@ -155,11 +167,8 @@ private:
     LB::Install::UpdateOptions getSelectedUpdateOptions() const;
     LB::Install::ImageMode getSelectedImageOption() const;
     void prepareImport();
-    ImportResult coreImportProcess(QProgressDialog* pd);
     void revertAllLaunchBoxChanges();
     void standaloneCLIFpDeploy();
-
-        void handleImportResult();// TODO: Make slot I think
 
 //-Slots---------------------------------------------------------------------------------------------------------
 private slots:
@@ -172,6 +181,11 @@ private slots:
     void all_on_listWidget_itemChanged(QListWidgetItem* item);
 
     // Import Error Handling
-    void handleBlockingError(int* response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices);
+    void handleBlockingError(std::shared_ptr<int> response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices);
+    void handleImportResult(ImportWorker::ImportResult importResult, Qx::GenericError errorReport);
 };
+
+//-Metatype Declarations-----------------------------------------------------------------------------------------
+Q_DECLARE_METATYPE(std::shared_ptr<int>);
+
 #endif // MAINWINDOW_H

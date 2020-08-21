@@ -171,10 +171,14 @@ public:
     static bool pathIsValidtInstall(QString installPath);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
+private:
+    QSqlDatabase getThreadedDatabaseConnection() const;
+
 public:
     bool matchesTargetVersion() const;
-    QSqlDatabase openDatabaseConnection();
-    void closeDatabaseConnection();
+    QSqlError openThreadDatabaseConnection();
+    void closeDatabaseThreadConnection();
+    bool databaseConnectionOpenInThisThread();
     QSqlError checkDatabaseForRequiredTables(QSet<QString>& missingTablesBuffer) const;
     QSqlError checkDatabaseForRequiredColumns(QSet<QString>& missingColumsBuffer) const;
     QSqlError populateAvailableItems();

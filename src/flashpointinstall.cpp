@@ -37,18 +37,13 @@ Install::Install(QString installPath)
     mDatabaseFile = std::make_unique<QFile>(installPath + "/" + DATABASE_PATH);
     mMainEXEFile = std::make_unique<QFile>(installPath + "/" + MAIN_EXE_PATH);
     mCLIFpEXEFile = std::make_unique<QFile>(installPath + "/" + CLIFp::EXE_NAME);
-
-    // Create database connection
-    QSqlDatabase fpDB = QSqlDatabase::addDatabase("QSQLITE", DATABASE_CONNECTION_NAME);
-    fpDB.setConnectOptions("QSQLITE_OPEN_READONLY");
-    fpDB.setDatabaseName(mDatabaseFile->fileName());
 }
 
 //-Destructor------------------------------------------------------------------------------------------------
 //Public:
 Install::~Install()
 {
-    closeDatabaseConnection();
+    closeDatabaseThreadConnection();
 }
 
 //-Class Functions------------------------------------------------------------------------------------------------
@@ -67,6 +62,22 @@ bool Install::pathIsValidtInstall(QString installPath)
 }
 
 //-Instance Functions------------------------------------------------------------------------------------------------
+//Private:
+QSqlDatabase Install::getThreadedDatabaseConnection() const
+{
+    QString threadedName = DATABASE_CONNECTION_NAME + QString::number((quint64)QThread::currentThread(), 16);
+
+    if(QSqlDatabase::contains(threadedName))
+        return QSqlDatabase::database(threadedName, false);
+    else
+    {
+        QSqlDatabase fpDB = QSqlDatabase::addDatabase("QSQLITE", threadedName);
+        fpDB.setConnectOptions("QSQLITE_OPEN_READONLY");
+        fpDB.setDatabaseName(mDatabaseFile->fileName());
+        return fpDB;
+    }
+}
+
 //Public:
 bool Install::matchesTargetVersion() const
 {
@@ -76,20 +87,19 @@ bool Install::matchesTargetVersion() const
     return Qx::Integrity::generateChecksum(mainEXEFileData, QCryptographicHash::Sha256) == TARGET_EXE_SHA256;
 }
 
-QSqlDatabase Install::openDatabaseConnection()
+QSqlError Install::openThreadDatabaseConnection()
 {
-    QSqlDatabase fpDB = QSqlDatabase::database(DATABASE_CONNECTION_NAME, false);
+    QSqlDatabase fpDB = getThreadedDatabaseConnection();
 
-    if(fpDB.isValid())
-        if(fpDB.open())
-            return fpDB;
-
-    // Default return - Only reached on failure
-    return QSqlDatabase();
+    if(fpDB.open())
+        return QSqlError(); // Empty error on success
+    else
+        return fpDB.lastError(); // Open error on fail
 }
 
-void Install::closeDatabaseConnection() { QSqlDatabase::database(DATABASE_CONNECTION_NAME, false).close(); }
+void Install::closeDatabaseThreadConnection() { getThreadedDatabaseConnection().close(); }
 
+bool Install::databaseConnectionOpenInThisThread() { return getThreadedDatabaseConnection().isOpen(); }
 
 QSqlError Install::checkDatabaseForRequiredTables(QSet<QString>& missingTablesReturnBuffer) const
 {
@@ -100,7 +110,7 @@ QSqlError Install::checkDatabaseForRequiredTables(QSet<QString>& missingTablesRe
         missingTablesReturnBuffer.insert(tableAndColumns.name);
 
     // Get tables from DB
-    QSqlDatabase fpDB = QSqlDatabase::database(DATABASE_CONNECTION_NAME);
+    QSqlDatabase fpDB = getThreadedDatabaseConnection();
     QStringList existingTables = fpDB.tables();
 
     // Return if DB error occured
@@ -121,7 +131,7 @@ QSqlError Install::checkDatabaseForRequiredColumns(QSet<QString> &missingColumsR
     missingColumsReturnBuffer.clear();
 
     // Get database
-    QSqlDatabase fpDB = QSqlDatabase::database(DATABASE_CONNECTION_NAME);
+    QSqlDatabase fpDB = getThreadedDatabaseConnection();
 
     // Ensure each table has the required columns
     QSet<QString> existingColumns;
@@ -156,7 +166,7 @@ QSqlError Install::checkDatabaseForRequiredColumns(QSet<QString> &missingColumsR
 QSqlError Install::populateAvailableItems()
 {
     // Get database
-    QSqlDatabase fpDB = QSqlDatabase::database(DATABASE_CONNECTION_NAME);
+    QSqlDatabase fpDB = getThreadedDatabaseConnection();
 
     // Make platform query
     QSqlQuery platformQuery("SELECT DISTINCT " + DBTable_Game::COL_PLATFORM + " FROM " + DBTable_Game::NAME, fpDB);
@@ -231,9 +241,9 @@ QSqlError Install::initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QSet<QSt
     resultBuffer.clear();
 
     // Get database
-    QSqlDatabase fpDB = QSqlDatabase::database(DATABASE_CONNECTION_NAME);
+    QSqlDatabase fpDB = getThreadedDatabaseConnection();
 
-    for(const QString& platform : selectedPlatforms)
+    for(const QString& platform : selectedPlatforms) // Naturally returns empty list if no platforms are selected
     {
         // Create platform query string
         QString placeholder = ":platform";
@@ -283,9 +293,9 @@ QSqlError Install::initialAddAppQuery(DBQueryBuffer& resultBuffer) const
     resultBuffer.size = -1;
 
     // Get database
-    QSqlDatabase fpDB = QSqlDatabase::database(DATABASE_CONNECTION_NAME);
+    QSqlDatabase fpDB = getThreadedDatabaseConnection();
 
-    // Make query (TODO: Restrict the columns of this query to only those actually used)
+    // Make query
     QString baseQueryCommand = "SELECT %1 FROM " + DBTable_Add_App::NAME + " WHERE " +
             DBTable_Add_App::COL_APP_PATH + " != '" + DBTable_Add_App::ENTRY_EXTRAS + "'";
     QString mainQueryCommand = baseQueryCommand.arg("`" + DBTable_Add_App::COLUMN_LIST.join("`,`") + "`");
@@ -324,50 +334,62 @@ QSqlError Install::initialAddAppQuery(DBQueryBuffer& resultBuffer) const
 
 QSqlError Install::initialPlaylistQuery(DBQueryBuffer& resultBuffer, QSet<QString> selectedPlaylists) const
 {
-    // Ensure return buffer is effectively null
-    resultBuffer.source = QString();
-    resultBuffer.result = QSqlQuery();
-    resultBuffer.size = -1;
+    // Return blank result if no playlists are selected
+    if(selectedPlaylists.isEmpty())
+    {
+        resultBuffer.source = QString();
+        resultBuffer.result = QSqlQuery();
+        resultBuffer.size = 0;
 
-    // Get database
-    QSqlDatabase fpDB = QSqlDatabase::database(DATABASE_CONNECTION_NAME);
+        return QSqlError();
+    }
+    else
+    {
+        // Ensure return buffer is effectively null
+        resultBuffer.source = QString();
+        resultBuffer.result = QSqlQuery();
+        resultBuffer.size = -1;
 
-    // Create selected playlists query string
-    QString placeHolders = QString("?,").repeated(selectedPlaylists.size());
-    placeHolders.chop(1); // Remove trailing ?
-    QString baseQueryCommand = "SELECT %1 FROM " + DBTable_Playlist::NAME + " WHERE " +
-            DBTable_Playlist::COL_TITLE + " IN (" + placeHolders + ") AND " +
-            DBTable_Playlist::COL_LIBRARY + " = '" + DBTable_Playlist::GAME_LIBRARY + "'";
-    QString mainQueryCommand = baseQueryCommand.arg("`" + DBTable_Playlist::COLUMN_LIST.join("`,`") + "`");
-    QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
+        // Get database
+        QSqlDatabase fpDB = getThreadedDatabaseConnection();
 
-    // Create main query and bind selected playlists
-    QSqlQuery mainQuery(fpDB);
-    mainQuery.setForwardOnly(true);
-    mainQuery.prepare(mainQueryCommand);
-    for(const QString& playlist : selectedPlaylists)
-        mainQuery.addBindValue(playlist);
+        // Create selected playlists query string
+        QString placeHolders = QString("?,").repeated(selectedPlaylists.size());
+        placeHolders.chop(1); // Remove trailing ?
+        QString baseQueryCommand = "SELECT %1 FROM " + DBTable_Playlist::NAME + " WHERE " +
+                DBTable_Playlist::COL_TITLE + " IN (" + placeHolders + ") AND " +
+                DBTable_Playlist::COL_LIBRARY + " = '" + DBTable_Playlist::GAME_LIBRARY + "'";
+        QString mainQueryCommand = baseQueryCommand.arg("`" + DBTable_Playlist::COLUMN_LIST.join("`,`") + "`");
+        QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
 
-    // Execute query and return if error occurs
-    if(!mainQuery.exec())
-        return mainQuery.lastError();
+        // Create main query and bind selected playlists
+        QSqlQuery mainQuery(fpDB);
+        mainQuery.setForwardOnly(true);
+        mainQuery.prepare(mainQueryCommand);
+        for(const QString& playlist : selectedPlaylists)
+            mainQuery.addBindValue(playlist);
 
-    // Create size query
-    QSqlQuery sizeQuery(fpDB);
-    sizeQuery.setForwardOnly(true);
-    sizeQuery.prepare(sizeQueryCommand);
+        // Execute query and return if error occurs
+        if(!mainQuery.exec())
+            return mainQuery.lastError();
 
-    // Get query size
-    sizeQuery.next();
-    int querySize = sizeQuery.value(0).toInt();
+        // Create size query
+        QSqlQuery sizeQuery(fpDB);
+        sizeQuery.setForwardOnly(true);
+        sizeQuery.prepare(sizeQueryCommand);
 
-    // Set buffer instance to result
-    resultBuffer.source = DBTable_Playlist::NAME;
-    resultBuffer.result = mainQuery;
-    resultBuffer.size = querySize;
+        // Get query size
+        sizeQuery.next();
+        int querySize = sizeQuery.value(0).toInt();
 
-    // Return invalid SqlError
-    return QSqlError();
+        // Set buffer instance to result
+        resultBuffer.source = DBTable_Playlist::NAME;
+        resultBuffer.result = mainQuery;
+        resultBuffer.size = querySize;
+
+        // Return invalid SqlError
+        return QSqlError();
+    }
 }
 
 QSqlError Install::initialPlaylistGameQuery(QList<QPair<DBQueryBuffer, FP::Playlist>>& resultBuffer, const QList<FP::Playlist>& knownPlaylistsToQuery) const
@@ -376,11 +398,11 @@ QSqlError Install::initialPlaylistGameQuery(QList<QPair<DBQueryBuffer, FP::Playl
     resultBuffer.clear();
 
     // Get database
-    QSqlDatabase fpDB = QSqlDatabase::database(DATABASE_CONNECTION_NAME);
+    QSqlDatabase fpDB = getThreadedDatabaseConnection();
 
-    for(const FP::Playlist& playlist : knownPlaylistsToQuery)
+    for(const FP::Playlist& playlist : knownPlaylistsToQuery) // Naturally returns empty list if no playlists are selected
     {
-        // Query all games for the current playlist (TODO: Restrict the columns of this query to only those actually used)
+        // Query all games for the current playlist
         QString baseQueryCommand = "SELECT `" + DBTable_Playlist_Game::COLUMN_LIST.join("`,`") + "` FROM " + DBTable_Playlist_Game::NAME + " WHERE " +
                 DBTable_Playlist_Game::COL_PLAYLIST_ID + " = '" + playlist.getID().toString(QUuid::WithoutBraces) + "'";
         QString mainQueryCommand = baseQueryCommand.arg("`" + DBTable_Playlist_Game::COLUMN_LIST.join("`,`") + "`");

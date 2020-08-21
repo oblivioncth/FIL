@@ -32,15 +32,15 @@ public:
 //-Class Variables-----------------------------------------------------------------------------------------------
 public:
     // Import Steps
-    // ProgressDialog - Import Operation
-    static inline const QString STEP_FP_DB_INITIAL_QUERY = "Making initial Flashpoint database queries...";
     static inline const QString STEP_ADD_APP_PRELOAD = "Pre-loading Additional Apps...";
     static inline const QString STEP_IMPORTING_PLATFORM_GAMES = "Importing games for platform %1...";
     static inline const QString STEP_IMPORTING_PLATFORM_ADD_APPS = "Importing additional apps for platform %1...";
     static inline const QString STEP_IMPORTING_PLAYLIST_GAMES = "Importing playlist %1...";
 
     // Import Errors
+    static inline const QString MSG_FP_DB_CANT_CONNECT = "Failed to establish a handle to the Flashpoint database:";
     static inline const QString MSG_FP_DB_UNEXPECTED_ERROR = "An unexpected SQL error occured while reading the Flashpoint database:";
+    static inline const QString MSG_LB_XML_UNEXPECTED_ERROR = "An unexpected error occured while reading Launchbox XML (%1 | %2):";
 
     // Error Captions
     static inline const QString CAPTION_IMAGE_ERR = "Error importing game image(s)";
@@ -51,7 +51,6 @@ private:
     std::shared_ptr<LB::Install> mLaunchBoxInstall;
     ImportSelections mImportSelections;
     OptionSet mOptionSet;
-    bool mCanceled = false;
 
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
@@ -63,7 +62,6 @@ public:
 //-Slots---------------------------------------------------------------------------------------------------------
 public slots:
     void doImport();
-    void notifyCancel();
 
 //-Signals---------------------------------------------------------------------------------------------------------
 signals:
@@ -73,10 +71,13 @@ signals:
     void progressStepChanged(QString currentStep);
 
     // Error handling
-    void blockingErrorOccured(int* response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices);
+    void blockingErrorOccured(std::shared_ptr<int> response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices);
 
     // Finished
     void importCompleted(ImportResult importResult, Qx::GenericError errorReport);
 };
+
+//-Metatype declarations-------------------------------------------------------------------------------------------
+Q_DECLARE_METATYPE(ImportWorker::ImportResult);
 
 #endif // COREIMPORTWORKER_H
