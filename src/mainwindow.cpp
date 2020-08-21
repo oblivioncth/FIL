@@ -520,6 +520,9 @@ void MainWindow::prepareImport()
                                   {getSelectedPlatforms(), getSelectedPlaylists()},
                                   {getSelectedUpdateOptions(), getSelectedImageOption(), getSelectedGeneralOptions()});
 
+        // Setup blocking error connection
+        connect(&importWorker, &ImportWorker::blockingErrorOccured, this, &MainWindow::handleBlockingError);
+
         // Create process update connections
         connect(&importWorker, &ImportWorker::progressStepChanged, mImportProgressDialog.get(), &QProgressDialog::setLabelText);
         connect(&importWorker, &ImportWorker::progressMaximumChanged, mImportProgressDialog.get(), &QProgressDialog::setMaximum);
