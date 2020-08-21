@@ -25,6 +25,9 @@ private:
 
 //-Class Variables--------------------------------------------------------------------------------------------
 private:
+    // Constants
+    static const int IMPORT_UI_UPD_INTERVAL = 20; // Workaround update tick speed in ms
+
     // Messages - Help
     static inline const QString MSG_UPDATE_MODE_HELP = "<b>%1</b> - Only games not already present in your collection will be added, existing entries will be left completely untouched.<br>"
                                                        "<br>"
@@ -130,6 +133,7 @@ private:
 
     // Process monitoring
     std::unique_ptr<QProgressDialog> mImportProgressDialog;
+    QTimer mUIUpdateWorkaroundTimer;
 
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
@@ -177,6 +181,10 @@ private slots:
     void all_on_lineEdit_returnPressed();
     void all_on_pushButton_clicked();
     void all_on_listWidget_itemChanged(QListWidgetItem* item);
+
+    // Workaround update
+    void resetUpdateTimer();
+    void updateUI();
 
     // Import Error Handling
     void handleBlockingError(std::shared_ptr<int> response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices);

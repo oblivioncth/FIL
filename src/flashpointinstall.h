@@ -177,7 +177,7 @@ private:
 public:
     bool matchesTargetVersion() const;
     QSqlError openThreadDatabaseConnection();
-    void closeDatabaseThreadConnection();
+    void closeThreadedDatabaseConnection();
     bool databaseConnectionOpenInThisThread();
     QSqlError checkDatabaseForRequiredTables(QSet<QString>& missingTablesBuffer) const;
     QSqlError checkDatabaseForRequiredColumns(QSet<QString>& missingColumsBuffer) const;

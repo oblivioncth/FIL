@@ -43,7 +43,7 @@ Install::Install(QString installPath)
 //Public:
 Install::~Install()
 {
-    closeDatabaseThreadConnection();
+    closeThreadedDatabaseConnection();
 }
 
 //-Class Functions------------------------------------------------------------------------------------------------
@@ -97,7 +97,7 @@ QSqlError Install::openThreadDatabaseConnection()
         return fpDB.lastError(); // Open error on fail
 }
 
-void Install::closeDatabaseThreadConnection() { getThreadedDatabaseConnection().close(); }
+void Install::closeThreadedDatabaseConnection() { getThreadedDatabaseConnection().close(); }
 
 bool Install::databaseConnectionOpenInThisThread() { return getThreadedDatabaseConnection().isOpen(); }
 

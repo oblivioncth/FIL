@@ -27,12 +27,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     qRegisterMetaType<Qx::GenericError>("GenericError)");
     qRegisterMetaType<std::shared_ptr<int>>("shared_ptr<int>");
 
-    // Setup
+    // General setup
     ui->setupUi(this);
     QApplication::setApplicationName(VER_PRODUCTNAME_STR);
     setWindowTitle(VER_PRODUCTNAME_STR);
     mHasLinkPermissions = testForLinkPermissions();
     initializeForms();
+
+    // Setup UI update workaround timer
+    mUIUpdateWorkaroundTimer.setInterval(IMPORT_UI_UPD_INTERVAL);
+    connect(&mUIUpdateWorkaroundTimer, &QTimer::timeout, this, &MainWindow::updateUI); // Process events at minimum rate
 
     // Check if Flashpoint is running
     if(Qx::processIsRunning(QFileInfo(FP::Install::MAIN_EXE_PATH).fileName()))
@@ -253,8 +257,6 @@ bool MainWindow::parseFlashpointData()
                                      QMessageBox::Retry | QMessageBox::Abort, QMessageBox::Retry) == QMessageBox::Abort)
                 return false;
     }
-
-
     // Ensure the database contains the required tables
     QSet<QString> missingTables;
     errorCheck = mFlashpointInstall->checkDatabaseForRequiredTables(missingTables);
@@ -524,8 +526,14 @@ void MainWindow::prepareImport()
         connect(&importWorker, &ImportWorker::progressValueChanged, mImportProgressDialog.get(), &QProgressDialog::setValue);
         connect(mImportProgressDialog.get(), &QProgressDialog::canceled, &importWorker, &ImportWorker::notifyCanceled);
 
+        // Create UI update timer reset connection
+        connect(&importWorker, &ImportWorker::progressValueChanged, this, &MainWindow::resetUpdateTimer); // Reset refresh timer since setValue already processes events
+
         // Import error tracker
         Qx::GenericError importError;
+
+        // Start UI update timer
+        mUIUpdateWorkaroundTimer.start();
 
         // Start import and forward result to handler
         handleImportResult(importWorker.doImport(importError), importError);
@@ -800,6 +808,9 @@ void MainWindow::all_on_listWidget_itemChanged(QListWidgetItem* item) // Proxy f
         assert("Unhandled use of all_on_listWidget_itemChanged() slot");
 }
 
+void MainWindow::resetUpdateTimer() { mUIUpdateWorkaroundTimer.start(); }
+void MainWindow::updateUI() { QApplication::processEvents(); }
+
 void MainWindow::handleBlockingError(std::shared_ptr<int> response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices)
 {
     // Post error and get response
@@ -814,6 +825,9 @@ void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx:
 {
     // Close progress dialog
     mImportProgressDialog->close();
+
+    // Stop UI update timer
+    mUIUpdateWorkaroundTimer.stop();
 
     // Post error report if present
     if(errorReport.isValid())

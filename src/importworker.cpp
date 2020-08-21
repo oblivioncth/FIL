@@ -20,6 +20,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
 {
     // TODO: For debug, remove this timer when done
     QElapsedTimer executionTimeCheck;
+    executionTimeCheck.start(); //TODO: Debug, remove after
 
     // Prepare response "return" variable (pointer) for possible blocking errors
     std::shared_ptr<int> blockingErrorResponse = std::make_shared<int>();
@@ -280,11 +281,10 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         currentPlatformXML->finalize();
 
         // Add final game details to Playlist Game lookup cache
-        executionTimeCheck.start(); //TODO: Debug, remove after
         for (QHash<QUuid, LB::Game>::const_iterator i = currentPlatformXML->getFinalGames().constBegin();
              i != currentPlatformXML->getFinalGames().constEnd(); ++i)
            playlistGameDetailsCache[i.key()] = {i.value().getTitle(), QFileInfo(i.value().getAppPath()).fileName(), i.value().getPlatform()};
-        qDebug() << executionTimeCheck.elapsed();
+
         // Forefit doucment lease and save it
         QString saveError;
         if(!mLaunchBoxInstall->saveXMLDocument(saveError, std::move(currentPlatformXML)))
@@ -292,6 +292,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
             errorReport = Qx::GenericError(QString(), LB::Install::populateErrorWithTarget(LB::Install::XMLWriter::ERR_WRITE_FAILED, docRequest), saveError);
             return Failed;
         }
+
     }
 
     // Process playlists
@@ -359,6 +360,8 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
 
     // Reset install
     mLaunchBoxInstall->softReset();
+
+    qDebug() << static_cast<float>(executionTimeCheck.elapsed())/1000.0;
 
     // Emit successful import completion
     errorReport = Qx::GenericError();
