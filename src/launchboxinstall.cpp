@@ -553,7 +553,7 @@ bool Install::XMLWriter::writeAddApp(const AddApp& addApp)
 
     // Write known tags
     mStreamWriter.writeTextElement(XMLMainElement_AddApp::ELEMENT_ID, addApp.getID().toString(QUuid::WithoutBraces));
-    mStreamWriter.writeTextElement(XMLMainElement_AddApp::ELEMENT_GAME_ID, addApp.getID().toString(QUuid::WithoutBraces));
+    mStreamWriter.writeTextElement(XMLMainElement_AddApp::ELEMENT_GAME_ID, addApp.getGameID().toString(QUuid::WithoutBraces));
     mStreamWriter.writeTextElement(XMLMainElement_AddApp::ELEMENT_APP_PATH, addApp.getAppPath());
     mStreamWriter.writeTextElement(XMLMainElement_AddApp::ELEMENT_COMMAND_LINE, addApp.getCommandLine());
     mStreamWriter.writeTextElement(XMLMainElement_AddApp::ELEMENT_AUTORUN_BEFORE, addApp.isAutorunBefore() ? "true" : "false");
