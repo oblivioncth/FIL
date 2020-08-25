@@ -45,16 +45,16 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 RC_FILE = resources.rc
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/lib/ -lQx_static64_0-0-2-2_Qt_5-15-0
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/lib/ -lQx_static64_0-0-2-2_Qt_5-15-0d
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/lib/ -lQx_static64_0-0-2-4_Qt_5-15-0
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/lib/ -lQx_static64_0-0-2-4_Qt_5-15-0d
 
 INCLUDEPATH += $$PWD/include
 DEPENDPATH += $$PWD/include
 
-win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/libQx_static64_0-0-2-2_Qt_5-15-0.a
-else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/libQx_static64_0-0-2-2_Qt_5-15-0d.a
-else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/Qx_static64_0-0-2-2_Qt_5-15-0.lib
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/Qx_static64_0-0-2-2_Qt_5-15-0d.lib
+win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/libQx_static64_0-0-2-4_Qt_5-15-0.a
+else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/libQx_static64_0-0-2-4_Qt_5-15-0d.a
+else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/Qx_static64_0-0-2-4_Qt_5-15-0.lib
+else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/Qx_static64_0-0-2-4_Qt_5-15-0d.lib
 
 RESOURCES += \
     resources.qrc

@@ -176,6 +176,9 @@ private:
 
 public:
     bool matchesTargetVersion() const;
+    bool hasCLIFp() const;
+    Qx::MMRB currentCLIFpVersion() const;
+
     QSqlError openThreadDatabaseConnection();
     void closeThreadedDatabaseConnection();
     bool databaseConnectionOpenInThisThread();

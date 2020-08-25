@@ -1,5 +1,6 @@
 #include "flashpointinstall.h"
 #include "qx-io.h"
+#include "qx-windows.h"
 
 namespace FP
 {
@@ -85,6 +86,20 @@ bool Install::matchesTargetVersion() const
     QByteArray mainEXEFileData = mMainEXEFile->readAll();
     mMainEXEFile->close();
     return Qx::Integrity::generateChecksum(mainEXEFileData, QCryptographicHash::Sha256) == TARGET_EXE_SHA256;
+}
+
+bool Install::hasCLIFp() const
+{
+    QFileInfo presentInfo(*mCLIFpEXEFile);
+    return presentInfo.exists() && presentInfo.isFile();
+}
+
+Qx::MMRB Install::currentCLIFpVersion() const
+{
+    if(!hasCLIFp())
+        return Qx::MMRB();
+    else
+        return Qx::getFileDetails(mCLIFpEXEFile->fileName()).getFileVersion();
 }
 
 QSqlError Install::openThreadDatabaseConnection()
@@ -220,7 +235,7 @@ bool Install::deployCLIFp(QString& errorMessage)
     }
 
     // Deploy new
-    QFile internalCLIFp(":/res/file/CLIFp.exe");
+    QFile internalCLIFp(":/res/file/" + FP::Install::CLIFp::EXE_NAME);
     if(!internalCLIFp.copy(mCLIFpEXEFile->fileName()))
     {
         errorMessage = internalCLIFp.errorString();

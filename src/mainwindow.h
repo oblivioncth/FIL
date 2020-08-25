@@ -28,6 +28,10 @@ private:
     // Constants
     static const int IMPORT_UI_UPD_INTERVAL = 20; // Workaround update tick speed in ms
 
+    // Messages - General
+    static inline const QString MSG_FATAL_NO_INTERNAL_CLIFP_VER = "Failed to get version information from the internal copy of CLIFp.exe!\n"
+                                                                  "\n"
+                                                                  "Execution cannot continue.";
     // Messages - Help
     static inline const QString MSG_UPDATE_MODE_HELP = "<b>%1</b> - Only games not already present in your collection will be added, existing entries will be left completely untouched.<br>"
                                                        "<br>"
@@ -84,7 +88,13 @@ private:
     static inline const QString MSG_FP_DB_UNEXPECTED_ERROR = "An unexpected SQL error occured while reading the Flashpoint database:";
 
     // Messages - FP CLIFp
-    static inline const QString MSG_FP_CANT_DEPLOY_CLIFP = "Failed to deploy CLIFp.exe to the selected Flashpoint install.\n"
+    static inline const QString MSG_FP_CLFIP_WILL_DOWNGRADE = "The existing version of " + FP::Install::CLIFp::EXE_NAME +  " in your Flashpoint install is newer than the version package with this tool.\n"
+                                                              "\n"
+                                                              "Replacing it with the packaged Version (downgrade) will likely cause compatability issues unless you are specifically re-importing are downgrading your Flashpoint install to a previous version.\n"
+                                                              "\n"
+                                                              "Do you wish to downgrade " + FP::Install::CLIFp::EXE_NAME + "?";
+
+    static inline const QString MSG_FP_CANT_DEPLOY_CLIFP = "Failed to deploy " + FP::Install::CLIFp::EXE_NAME + " to the selected Flashpoint install.\n"
                                                            "\n"
                                                            "%1\n"
                                                            "\n"
@@ -103,6 +113,7 @@ private:
     static inline const QString MSG_USER_CANCELED = "Import canceled by user, all changes that occured during import will now be reverted (other than existing images that were replaced with newer versions).";
 
     // Dialog captions
+    static inline const QString CAPTION_GENERAL_FATAL_ERROR = "Fatal Error!";
     static inline const QString CAPTION_LAUNCHBOX_BROWSE = "Select the root directory of your LaunchBox install...";
     static inline const QString CAPTION_FLASHPOINT_BROWSE = "Select the root directory of your Flashpoint install...";
     static inline const QString CAPTION_UPDATE_MODE_HELP = "Update mode options";
@@ -110,6 +121,7 @@ private:
     static inline const QString CAPTION_REVERT = "Reverting changes...";
     static inline const QString CAPTION_REVERT_ERR = "Error reverting changes";
     static inline const QString CAPTION_CLIFP_ERR = "Error deploying CLIFp";
+    static inline const QString CAPTION_CLIFP_DOWNGRADE = "Downgrade CLIFp?";
     static inline const QString CAPTION_IMPORTING = "FP Import";
 
     // URLs
@@ -124,6 +136,7 @@ private:
 
     std::shared_ptr<LB::Install> mLaunchBoxInstall;
     std::shared_ptr<FP::Install> mFlashpointInstall;
+    Qx::MMRB mInternalCLIFpVersion;
 
     int mLineEdit_launchBoxPath_blocker = 0; // Required due to an oversight with QLineEdit::editingFinished()
     int mLineEdit_flashpointPath_blocker = 0; // Required due to an oversight with QLineEdit::editingFinished()

@@ -27,6 +27,23 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     qRegisterMetaType<Qx::GenericError>("GenericError)");
     qRegisterMetaType<std::shared_ptr<int>>("shared_ptr<int>");
 
+    // Get built-in CLIFp version
+    QTemporaryDir tempDir;
+    if(tempDir.isValid())
+    {
+        // Create local copy of internal CLIFp.exe since internal path cannot be used with WinAPI
+        QString localCopyPath = tempDir.path() + '/' + FP::Install::CLIFp::EXE_NAME;
+        if(QFile::copy(":/res/file/" + FP::Install::CLIFp::EXE_NAME, localCopyPath))
+            mInternalCLIFpVersion = Qx::getFileDetails(localCopyPath).getFileVersion();
+    }
+
+    // Abort if no version could be determined
+    if(mInternalCLIFpVersion.isNull())
+    {
+        QMessageBox::critical(this, CAPTION_GENERAL_FATAL_ERROR, MSG_FATAL_NO_INTERNAL_CLIFP_VER);
+        QApplication::exit(1);
+    }
+
     // General setup
     ui->setupUi(this);
     QApplication::setApplicationName(VER_PRODUCTNAME_STR);
@@ -78,6 +95,9 @@ void MainWindow::initializeForms()
 {
     // Capture existing item color from label for use in platform/playlist selection lists
     mExistingItemColor = ui->label_existingItemColor->palette().color(QPalette::Window);
+
+    // Add CLIFp version to deploy option
+    ui->action_deployCLIFp->setText(ui->action_deployCLIFp->text() +  " " + mInternalCLIFpVersion.toString(Qx::MMRB::StringFormat::NoTrailRBZero));
 
     // Setup main forms
     ui->radioButton_launchBoxLink->setEnabled(mHasLinkPermissions);
@@ -599,16 +619,30 @@ void MainWindow::standaloneCLIFpDeploy()
     {
         if(FP::Install::pathIsValidtInstall(selectedDir))
         {
-            FP::Install tempFlashpointInstallinstallPath(selectedDir);
+            FP::Install tempFlashpointInstall(selectedDir);
 
-            if(!tempFlashpointInstallinstallPath.matchesTargetVersion())
+            if(!tempFlashpointInstall.matchesTargetVersion())
                 QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_VER_NOT_TARGET);
 
-            // Deploy exe
-            QString deployError;
-            while(!tempFlashpointInstallinstallPath.deployCLIFp(deployError))
-                if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Retry) == QMessageBox::Cancel)
-                    break;
+            bool willDeploy = true;
+
+            // Check for existing CLIFp
+            if(tempFlashpointInstall.hasCLIFp())
+            {
+                // Notify user if this will be a downgrade
+                if(mInternalCLIFpVersion < tempFlashpointInstall.currentCLIFpVersion())
+                    willDeploy = (QMessageBox::warning(this, CAPTION_CLIFP_DOWNGRADE, MSG_FP_CLFIP_WILL_DOWNGRADE, QMessageBox::Yes | QMessageBox::No, QMessageBox::No) ==  QMessageBox::Yes);
+            }
+
+            // Deploy CLIFp if applicable
+            if(willDeploy)
+            {
+                // Deploy exe
+                QString deployError;
+                while(!tempFlashpointInstall.deployCLIFp(deployError))
+                    if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Retry) == QMessageBox::Cancel)
+                        break;
+            }
         }
         else
             QMessageBox::critical(this, QApplication::applicationName(), MSG_FP_INSTALL_INVALID);
@@ -838,11 +872,24 @@ void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx:
 
     if(importResult == ImportWorker::Successful)
     {
-        // Deploy CLIFp
-        QString deployError;
-        while(!mFlashpointInstall->deployCLIFp(deployError))
-            if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | QMessageBox::Ignore, QMessageBox::Retry) == QMessageBox::Ignore)
-                break;
+        bool willDeploy = true;
+
+        // Check for existing CLIFp
+        if(mFlashpointInstall->hasCLIFp())
+        {
+            // Notify user if this will be a downgrade
+            if(mInternalCLIFpVersion < mFlashpointInstall->currentCLIFpVersion())
+                willDeploy = (QMessageBox::warning(this, CAPTION_CLIFP_DOWNGRADE, MSG_FP_CLFIP_WILL_DOWNGRADE, QMessageBox::Yes | QMessageBox::No, QMessageBox::No) ==  QMessageBox::Yes);
+        }
+
+        // Deploy CLIFp if applicable
+        if(willDeploy)
+        {
+            QString deployError;
+            while(!mFlashpointInstall->deployCLIFp(deployError))
+                if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | QMessageBox::Ignore, QMessageBox::Retry) == QMessageBox::Ignore)
+                    break;
+        }
 
         // Post-import message
         QMessageBox::information(this, QApplication::applicationName(), MSG_POST_IMPORT);
