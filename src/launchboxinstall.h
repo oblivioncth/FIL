@@ -208,7 +208,7 @@ public:
     class XMLWriter
     {
         //-Class variables-----------------------------------------------------------------------------------------------------
-        public: // TODO: Make sure this error is used with its arugments
+        public:
             static inline const QString ERR_WRITE_FAILED = "Writing to the target XML file (%1 | %2) failed";
 
         //-Instance Variables--------------------------------------------------------------------------------------------------
