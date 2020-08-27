@@ -737,8 +737,6 @@ void MainWindow::all_on_pushButton_clicked()
     }
     else if(senderPushButton == ui->pushButton_flashpointBrowse)
     {
-        qDebug() << QFileInfo::exists(ui->label_flashPointPath->text());
-        qDebug() << ui->label_flashPointPath->text();
         QString selectedDir = QFileDialog::getExistingDirectory(this, CAPTION_FLASHPOINT_BROWSE,
                                                                 (QFileInfo::exists(ui->lineEdit_flashpointPath->text()) ? ui->lineEdit_flashpointPath->text() : QDir::currentPath()));
 
