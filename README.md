@@ -49,6 +49,7 @@ Using a version of OFILb that does not target the version of Flashpoint you wish
 The symbolic link related options for handling images require the importer to be run as an administrator or for you to enable [Developer mode](https://www.howtogeek.com/292914/what-is-developer-mode-in-windows-10/#:~:text=How%20to%20Enable%20Developer%20Mode,be%20put%20into%20Developer%20Mode.) within Windows 10
 
 **Example:**
+
 ![OFILb Example Usage](https://i.imgur.com/2MZKwrJ.png)
 
 ### Other Features
