@@ -21,7 +21,8 @@ class MainWindow : public QMainWindow
 
 //-Class Enums------------------------------------------------------------------------------------------------
 private:
-    enum InputStage {Paths, Imports};
+    enum class InputStage {Paths, Imports};
+    enum class Install {LaunchBox, Flashpoint};
 
 //-Class Variables--------------------------------------------------------------------------------------------
 private:
@@ -161,8 +162,8 @@ private:
     bool testForLinkPermissions();
     void initializeForms();
     void setInputStage(InputStage stage);
-    void checkLaunchBoxInput(QString installPath);
-    void checkFlashpointInput(QString installPath);
+    void checkManualInstallInput(Install install);
+    void validateInstall(QString installPath, Install install);
     void gatherInstallInfo();
     void populateImportSelectionBoxes();
     bool parseLaunchBoxData();

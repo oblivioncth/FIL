@@ -104,7 +104,7 @@ void MainWindow::initializeForms()
     ui->radioButton_flashpointLink->setEnabled(mHasLinkPermissions);
     ui->radioButton_launchBoxLink->setChecked(mHasLinkPermissions);
     ui->radioButton_launchBoxCopy->setChecked(!mHasLinkPermissions);
-    setInputStage(Paths);
+    setInputStage(InputStage::Paths);
 
     // TODO: THIS IS FOR DEBUG PURPOSES
     //checkLaunchBoxInput("C:/Users/Player/Desktop/LBTest/LaunchBox");
@@ -115,7 +115,7 @@ void MainWindow::setInputStage(InputStage stage)
 {
     switch(stage)
     {
-        case Paths:
+        case InputStage::Paths:
             ui->groupBox_importSelection->setEnabled(false);
             mAlteringListWidget = true;
             ui->listWidget_platformChoices->clear();
@@ -126,56 +126,85 @@ void MainWindow::setInputStage(InputStage stage)
             ui->pushButton_startImport->setEnabled(false);
         break;
 
-        case Imports:
+        case InputStage::Imports:
             ui->groupBox_importSelection->setEnabled(true);
             ui->groupBox_imageMode->setEnabled(true);
         break;
     }
 }
 
-void MainWindow::checkLaunchBoxInput(QString installPath)
+void MainWindow::checkManualInstallInput(Install install)
 {
-    if(LB::Install::pathIsValidInstall(installPath))
+    QLineEdit* pathSource;
+    QLabel* installStatusIcon;
+
+    switch(install)
     {
-        mLaunchBoxInstall = std::make_shared<LB::Install>(installPath);
-        ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
-        if(mFlashpointInstall)
-            gatherInstallInfo();
+        case Install::LaunchBox:
+            pathSource = ui->lineEdit_launchBoxPath;
+            installStatusIcon = ui->icon_launchBox_install_status;
+            break;
+
+        case Install::Flashpoint:
+            pathSource = ui->lineEdit_flashpointPath;
+            installStatusIcon = ui->icon_flashpoint_install_status;
+            break;
     }
+
+    QFileInfo selectedDir = QDir::cleanPath(QDir::fromNativeSeparators(pathSource->text()));
+    if(selectedDir.exists() && selectedDir.isDir())
+        validateInstall(selectedDir.absoluteFilePath(), install); // TODO: Check every usage of QFileInfo::absolutePath (and similar) and try to switch to QDir and QFile where possible.
     else
     {
-        ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-        mLaunchBoxInstall.reset();
-        setInputStage(Paths);
-        QMessageBox::critical(this, QApplication::applicationName(), MSG_LB_INSTALL_INVALID);
+        installStatusIcon->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
+        setInputStage(InputStage::Paths);
     }
 }
 
-void MainWindow::checkFlashpointInput(QString installPath)
+void MainWindow::validateInstall(QString installPath, Install install)
 {
-    if(FP::Install::pathIsValidtInstall(installPath))
+    switch(install)
     {
-        mFlashpointInstall = std::make_shared<FP::Install>(installPath);
+        case Install::LaunchBox:
+            if(LB::Install::pathIsValidInstall(installPath))
+            {
+                mLaunchBoxInstall = std::make_shared<LB::Install>(installPath);
+                ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
+            }
+            else
+            {
+                ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
+                mLaunchBoxInstall.reset();
+                setInputStage(InputStage::Paths);
+                QMessageBox::critical(this, QApplication::applicationName(), MSG_LB_INSTALL_INVALID);
+            }
+            break;
 
-        if(mFlashpointInstall->matchesTargetVersion())
-            ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
-        else
-        {
-            ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Mismatch_Install.png"));
-            QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_VER_NOT_TARGET);
-        }
+        case Install::Flashpoint:
+            if(FP::Install::pathIsValidtInstall(installPath))
+            {
+                mFlashpointInstall = std::make_shared<FP::Install>(installPath);
 
-
-        if(mLaunchBoxInstall)
-            gatherInstallInfo();
+                if(mFlashpointInstall->matchesTargetVersion())
+                    ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
+                else
+                {
+                    ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Mismatch_Install.png"));
+                    QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_VER_NOT_TARGET);
+                }
+            }
+            else
+            {
+                ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
+                mFlashpointInstall.reset();
+                setInputStage(InputStage::Paths);
+                QMessageBox::critical(this, QApplication::applicationName(), MSG_FP_INSTALL_INVALID);
+            }
+            break;
     }
-    else
-    {
-        ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-        mFlashpointInstall.reset();
-        setInputStage(Paths);
-        QMessageBox::critical(this, QApplication::applicationName(), MSG_FP_INSTALL_INVALID);
-    }
+
+    if(mLaunchBoxInstall && mFlashpointInstall)
+        gatherInstallInfo();
 }
 
 void MainWindow::gatherInstallInfo()
@@ -195,14 +224,14 @@ void MainWindow::gatherInstallInfo()
         {
             mLaunchBoxInstall.reset();
             ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-            setInputStage(Paths);
+            setInputStage(InputStage::Paths);
         }
     }
     else
     {
         mFlashpointInstall.reset();
         ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-        setInputStage(Paths);
+        setInputStage(InputStage::Paths);
     }
 }
 
@@ -353,8 +382,8 @@ void MainWindow::redoInputChecks()
     mFlashpointInstall.reset();
 
     // Check them again
-    checkLaunchBoxInput(launchBoxPath);
-    checkFlashpointInput(flashpointPath);
+    validateInstall(launchBoxPath, Install::LaunchBox);
+    validateInstall(flashpointPath, Install::Flashpoint);
 }
 
 void MainWindow::postSqlError(QString mainText, QSqlError sqlError)
@@ -693,7 +722,7 @@ void MainWindow::all_on_pushButton_clicked()
         if(!selectedDir.isEmpty())
         {
             ui->lineEdit_launchBoxPath->setText(QDir::toNativeSeparators(selectedDir));
-            checkLaunchBoxInput(selectedDir);
+            validateInstall(selectedDir, Install::LaunchBox);
         }
     }
     else if(senderPushButton == ui->pushButton_flashpointBrowse)
@@ -704,7 +733,7 @@ void MainWindow::all_on_pushButton_clicked()
         if(!selectedDir.isEmpty())
         {
             ui->lineEdit_flashpointPath->setText(QDir::toNativeSeparators(selectedDir));
-            checkFlashpointInput(selectedDir);
+            validateInstall(selectedDir, Install::Flashpoint);
         }
     }
     else if(senderPushButton == ui->pushButton_selectAll_platforms)
@@ -757,34 +786,14 @@ void MainWindow::all_on_lineEdit_editingFinished()
     if(senderLineEdit == ui->lineEdit_launchBoxPath)
     {
         if(!mLineEdit_launchBoxPath_blocker)
-        {
-            QFileInfo selectedDir = QFileInfo(QDir::cleanPath(QDir::fromNativeSeparators(ui->lineEdit_launchBoxPath->text())));
-
-            if(selectedDir.exists() && selectedDir.isDir())
-                checkLaunchBoxInput(selectedDir.absolutePath());
-            else
-            {
-                ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-                setInputStage(Paths);
-            }
-        }
+            checkManualInstallInput(Install::LaunchBox);
         else
             mLineEdit_launchBoxPath_blocker--;
     }
     else if(senderLineEdit == ui->lineEdit_flashpointPath)
     {
         if(!mLineEdit_flashpointPath_blocker)
-        {
-            QFileInfo selectedDir = QFileInfo(QDir::cleanPath(ui->lineEdit_flashpointPath->text()));
-
-            if(selectedDir.exists() && selectedDir.isDir())
-                checkFlashpointInput(selectedDir.absolutePath());
-            else
-            {
-                ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-                setInputStage(Paths);
-            }
-        }
+           checkManualInstallInput(Install::Flashpoint);
         else
             mLineEdit_flashpointPath_blocker--;
     }
@@ -792,7 +801,7 @@ void MainWindow::all_on_lineEdit_editingFinished()
         assert("Unhandled use of all_on_linedEdit_textEdited() slot");
 }
 
-void MainWindow::all_on_lineEdit_textEdited() // Required due to an oversight with QLineEdit::editingFinished() TODO: Make sure this works
+void MainWindow::all_on_lineEdit_textEdited() // Required due to an oversight with QLineEdit::editingFinished()
 {
     // Get the object that called this slot
     QLineEdit* senderLineEdit = qobject_cast<QLineEdit *>(sender());
@@ -810,7 +819,7 @@ void MainWindow::all_on_lineEdit_textEdited() // Required due to an oversight wi
         assert("Unhandled use of all_on_linedEdit_textEdited() slot");
 }
 
-void MainWindow::all_on_lineEdit_returnPressed() // Required due to an oversight with QLineEdit::editingFinished() TODO: Make sure this works
+void MainWindow::all_on_lineEdit_returnPressed() // Required due to an oversight with QLineEdit::editingFinished()
 {
     // Get the object that called this slot
     QLineEdit* senderLineEdit = qobject_cast<QLineEdit *>(sender());
@@ -821,9 +830,15 @@ void MainWindow::all_on_lineEdit_returnPressed() // Required due to an oversight
 
     // Determine sender and take corresponding action
     if(senderLineEdit == ui->lineEdit_launchBoxPath)
+    {
         mLineEdit_launchBoxPath_blocker = 2;
+        checkManualInstallInput(Install::LaunchBox);
+    }
     else if(senderLineEdit == ui->lineEdit_flashpointPath)
+    {
         mLineEdit_flashpointPath_blocker = 2;
+        checkManualInstallInput(Install::Flashpoint);
+    }
     else
         assert("Unhandled use of all_on_linedEdit_returnPressed() slot");
 }
