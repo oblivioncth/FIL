@@ -645,10 +645,10 @@
             </colorrole>
             <colorrole role="Text">
              <brush brushstyle="SolidPattern">
-              <color alpha="96">
-               <red>164</red>
-               <green>166</green>
-               <blue>168</blue>
+              <color alpha="255">
+               <red>0</red>
+               <green>0</green>
+               <blue>0</blue>
               </color>
              </brush>
             </colorrole>
@@ -829,7 +829,7 @@
      <x>0</x>
      <y>0</y>
      <width>648</width>
-     <height>24</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -874,7 +874,7 @@
      <normaloff>:/res/icon/GitHub.png</normaloff>:/res/icon/GitHub.png</iconset>
    </property>
    <property name="text">
-    <string>OFLIb (This Importer) GitHub</string>
+    <string>OFLIb (This Import Tool) GitHub</string>
    </property>
   </action>
   <action name="action_goToCLIFpGitHub">
@@ -883,7 +883,7 @@
      <normaloff>:/res/icon/GitHub.png</normaloff>:/res/icon/GitHub.png</iconset>
    </property>
    <property name="text">
-    <string>CLIFp (CLI) GitHub</string>
+    <string>CLIFp (Command-line Interface) GitHub</string>
    </property>
   </action>
   <action name="action_goToLBForums">

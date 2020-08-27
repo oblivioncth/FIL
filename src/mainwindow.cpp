@@ -121,7 +121,7 @@ void MainWindow::setInputStage(InputStage stage)
             ui->listWidget_platformChoices->clear();
             ui->listWidget_playlistChoices->clear();
             mAlteringListWidget = false;
-            ui->groupBox_updateMode->setEnabled(false);
+            customSetUpdateGroupEnabled(false);
             ui->groupBox_imageMode->setEnabled(false);
             ui->pushButton_startImport->setEnabled(false);
         break;
@@ -131,6 +131,15 @@ void MainWindow::setInputStage(InputStage stage)
             ui->groupBox_imageMode->setEnabled(true);
         break;
     }
+}
+
+void MainWindow::customSetUpdateGroupEnabled(bool enabled)
+{
+    ui->radioButton_onlyAdd->setEnabled(enabled);
+    ui->radioButton_updateExisting->setEnabled(enabled);
+    ui->checkBox_removeMissing->setEnabled(enabled);
+    ui->pushButton_updateModeHelp->setEnabled(enabled);
+    ui->radioButton_onlyAdd->setEnabled(enabled);
 }
 
 void MainWindow::checkManualInstallInput(Install install)
@@ -151,9 +160,9 @@ void MainWindow::checkManualInstallInput(Install install)
             break;
     }
 
-    QFileInfo selectedDir = QDir::cleanPath(QDir::fromNativeSeparators(pathSource->text()));
-    if(selectedDir.exists() && selectedDir.isDir())
-        validateInstall(selectedDir.absoluteFilePath(), install); // TODO: Check every usage of QFileInfo::absolutePath (and similar) and try to switch to QDir and QFile where possible.
+    QDir selectedDir = QDir::cleanPath(QDir::fromNativeSeparators(pathSource->text()));
+    if(selectedDir.exists())
+        validateInstall(selectedDir.absolutePath(), install);
     else
     {
         installStatusIcon->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
@@ -270,7 +279,7 @@ void MainWindow::populateImportSelectionBoxes()
     mAlteringListWidget = false;
 
     // Disable update mode box and import start button since no items will be selected after this operation
-    ui->groupBox_updateMode->setEnabled(false);
+    customSetUpdateGroupEnabled(false);
     ui->pushButton_startImport->setEnabled(false);
 }
 
@@ -443,9 +452,10 @@ void MainWindow::importSelectionReaction(QListWidgetItem* item, QWidget* parent)
     if(item->checkState() == Qt::Checked)
     {
         ui->pushButton_startImport->setEnabled(true);
-        ui->groupBox_updateMode->setEnabled(parent == ui->listWidget_platformChoices &&
-                                            mLaunchBoxInstall->getExistingPlatforms().contains(LB::Install::XMLDoc::makeFileNameLBKosher(item->text())));
-//        ui->groupBox_updateMode->setEnabled((parent == ui->listWidget_platformChoices && mLaunchBoxInstall->getExistingPlatforms().contains(item->text())) ||
+        if(parent == ui->listWidget_platformChoices &&
+                mLaunchBoxInstall->getExistingPlatforms().contains(LB::Install::XMLDoc::makeFileNameLBKosher(item->text())))
+            customSetUpdateGroupEnabled(true);
+//        customSetUpdateGroupEnabled((parent == ui->listWidget_platformChoices && mLaunchBoxInstall->getExistingPlatforms().contains(item->text())) ||
 //                                            (parent == ui->listWidget_playlistChoices && mLaunchBoxInstall->getExistingPlaylists().contains(item->text())));
     }
     else
@@ -481,7 +491,7 @@ void MainWindow::importSelectionReaction(QListWidgetItem* item, QWidget* parent)
 //        }
 
         // Apply state changes
-        ui->groupBox_updateMode->setEnabled(keepUpdateGroupEnabled);
+        customSetUpdateGroupEnabled(keepUpdateGroupEnabled);
         ui->pushButton_startImport->setEnabled(keepStartButtonEnabled);
     }
 

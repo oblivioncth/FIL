@@ -162,6 +162,7 @@ private:
     bool testForLinkPermissions();
     void initializeForms();
     void setInputStage(InputStage stage);
+    void customSetUpdateGroupEnabled(bool enabled);
     void checkManualInstallInput(Install install);
     void validateInstall(QString installPath, Install install);
     void gatherInstallInfo();
