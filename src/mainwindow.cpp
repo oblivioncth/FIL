@@ -727,7 +727,7 @@ void MainWindow::all_on_pushButton_clicked()
     if(senderPushButton == ui->pushButton_launchBoxBrowse)
     {
         QString selectedDir = QFileDialog::getExistingDirectory(this, CAPTION_LAUNCHBOX_BROWSE,
-                                                                (QFile::exists(ui->lineEdit_launchBoxPath->text()) ? ui->lineEdit_launchBoxPath->text() : QDir::currentPath()));
+                                                                (QFileInfo::exists(ui->lineEdit_launchBoxPath->text()) ? ui->lineEdit_launchBoxPath->text() : QDir::currentPath()));
 
         if(!selectedDir.isEmpty())
         {
@@ -737,8 +737,10 @@ void MainWindow::all_on_pushButton_clicked()
     }
     else if(senderPushButton == ui->pushButton_flashpointBrowse)
     {
+        qDebug() << QFileInfo::exists(ui->label_flashPointPath->text());
+        qDebug() << ui->label_flashPointPath->text();
         QString selectedDir = QFileDialog::getExistingDirectory(this, CAPTION_FLASHPOINT_BROWSE,
-                                                                (QFile::exists(ui->label_flashPointPath->text()) ? ui->label_flashPointPath->text() : QDir::currentPath()));
+                                                                (QFileInfo::exists(ui->lineEdit_flashpointPath->text()) ? ui->lineEdit_flashpointPath->text() : QDir::currentPath()));
 
         if(!selectedDir.isEmpty())
         {

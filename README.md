@@ -48,6 +48,9 @@ Using a version of OFILb that does not target the version of Flashpoint you wish
 
 The symbolic link related options for handling images require the importer to be run as an administrator or for you to enable [Developer mode](https://www.howtogeek.com/292914/what-is-developer-mode-in-windows-10/#:~:text=How%20to%20Enable%20Developer%20Mode,be%20put%20into%20Developer%20Mode.) within Windows 10
 
+**Example:**
+![OFILb Example Usage](https://i.imgur.com/2MZKwrJ.png)
+
 ### Other Features
  - If for whatever reason you want to only deploy or update CLIFp there is an option for doing so in the Tools menu
  - You can select whether or not you want to include "Explicit" games in each import session using the relevant check-able option in the Tools menu
@@ -62,4 +65,3 @@ The symbolic link related options for handling images require the importer to be
 This tool was written in C++ 17 along with Qt 5 and currently only targets Windows Vista and above; however, this tool can easily be ported to Linux with minimal changes, though to what end I am not sure since this is for a Windows application. The source includes an easy-to-use .pro file if you wish to build the application in Qt Creator and the available latest release was compiled in Qt Creator using MSVC 2019 and a static compilation of Qt 5.15.0. Other than a C++ 17 capable compiler and Qt 5.15.x+ all files required to compile this software are included, with the exception of a standard make file.
 
 All functions/variables under the "Qx" (QExtended) namespace belong to a small, personal library I maintain to always have access to frequently used functionality in my projects. A pre-compiled static version of this library is provided with the source for this tool. If anyone truly needs it, I can provide the source for this library as well.
-o/).
