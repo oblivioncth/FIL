@@ -56,7 +56,8 @@ The symbolic link related options for handling images require the importer to be
 ### Other Features
  - If for whatever reason you want to only deploy or update CLIFp there is an option for doing so in the Tools menu
  - You can select whether or not you want to include "Explicit" games in each import session using the relevant check-able option in the Tools menu
-
+ - The playlist import feature is "smart" in the sense that it won't include games that you aren't importing. So if you only want to import the Flash platform for example and a couple playlists, you wont have to worry about useless entries in the playlist that point to games from other platforms
+ 
 ## Limitations
 
  - Although general compatibility is quite high, compatibility with every single title cannot be assured. Issues with a title or group of titles will be fixed as they are discovered
