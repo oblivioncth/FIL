@@ -14,7 +14,7 @@ You will still be able to use the standard Flashpoint launcher as normal after c
 
 # Compatability
 ### Flashpoint Infinity/Flashpoint Ultimate
-This tool was made with the express purpose of using it with Flashpoint Ultimate (i.e. all games/animation pre-downloaded). Technically it should work if Infinity if you run all of the games you want to import at least once, but its use is not currently directly supported.
+This tool was made with the express purpose of using it with Flashpoint Ultimate (i.e. all games/animation pre-downloaded). Technically it should work with Infinity if you run all of the games you want to import at least once, but its use is not currently directly supported.
 
 ### General
 While testing for 100% compatibility is infeasible given the size of Flashpoint, OFILb was designed with full compatibility in mind; however, the importer itself only provides access to the games and their related playlists within Flashpoint, not the animations, since LaunchBox is primarily a games frontend. Additionally, accessing the "Extras" content of an entry is currently not supported.
@@ -61,7 +61,7 @@ The symbolic link related options for handling images require the importer to be
 ## Limitations
 
  - Although general compatibility is quite high, compatibility with every single title cannot be assured. Issues with a title or group of titles will be fixed as they are discovered
- - The "Extras" feature for some games/animation is currently not support. It is currently unknown if it will be possible to support them at some point since no research into how they are loaded has been performed
+ - The "Extras" feature for some games/animation is currently not supported. It is currently unknown if it will be possible to support them at some point since no research into how they are loaded has been performed
  - The "smart" feature of the Playlist import portion of the tool has the drawback that only games that were included in the same import will be considered for that playlist. If you previously imported a Platform and now want to import a Playlist that contains games from that Playlist you must select that Platform for it to be updated/re-imported in order for those games to be added to that Playlist. This is to avoid significantly decreasing Playlist import speed, but a solution will likely be added as an opt-in option in the future
 
 ## Source
