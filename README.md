@@ -19,6 +19,8 @@ This tool was made with the express purpose of using it with Flashpoint Ultimate
 ### General
 While testing for 100% compatibility is infeasible given the size of Flashpoint, OFILb was designed with full compatibility in mind; however, the importer itself only provides access to the games and their related playlists within Flashpoint, not the animations, since LaunchBox is primarily a games frontend. Additionally, accessing the "Extras" content of an entry is currently not supported.
 
+The ":message:" feature of Flashpoint, commonly used to automatically show usage instructions for some games before they are started, is supported. The entries that use it are added as additional-apps to their respective games as they once were when Flashpoint came packaged with LaunchBox. All messages are displayed in a pop-up dialog via CLIFp.
+
 Since Flashpoint originally used LaunchBox as its launcher most fields within Flashpoint have a one-to-one equivalent (or close enough equivalent) LaunchBox field. That being said there are a few fields that are unique to Flashpoint that do not have matching field and so they are simply excluded during the import, resulting in a relatively minor loss of information for each game in your collection.
 
 ### Version Matching
@@ -59,7 +61,6 @@ The symbolic link related options for handling images require the importer to be
  - The playlist import feature is "smart" in the sense that it won't include games that you aren't importing. So if you only want to import the Flash platform for example and a couple playlists, you wont have to worry about useless entries in the playlist that point to games from other platforms
  
 ## Limitations
-
  - Although general compatibility is quite high, compatibility with every single title cannot be assured. Issues with a title or group of titles will be fixed as they are discovered
  - The "Extras" feature for some games/animation is currently not supported. It is currently unknown if it will be possible to support them at some point since no research into how they are loaded has been performed
  - The "smart" feature of the Playlist import portion of the tool has the drawback that only games that were included in the same import will be considered for that playlist. If you previously imported a Platform and now want to import a Playlist that contains games from that Playlist you must select that Platform for it to be updated/re-imported in order for those games to be added to that Playlist. This is to avoid significantly decreasing Playlist import speed, but a solution will likely be added as an opt-in option in the future
