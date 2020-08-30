@@ -1,6 +1,8 @@
 # OFILb (Obby's Flashpoint Importer for LaunchBox)
 OFILb (pronounced "Awful-B") is an importer tool for [LaunchBox](https://www.launchbox-app.com/) that allows one to add games and playlists from [BlueMaxima's Flashpoint](https://bluemaxima.org/flashpoint/) project to their collection. It is fully automated and only requires the user to provide the paths to the LaunchBox/Flashpoint installs, choose which Platforms/Playlists they wish to import, and select between a few import mode options. Once the import is started the current progress is displayed and any errors that occur are shown to the user, with resolvable errors including a prompt for what the user would like to do. After the process has completed LaunchBox can be started and the games from Flashpoint can be played like those from any other Platform.
 
+For Platforms, the importer is capable of importing each game along with any additional apps, images, and most of the metadata fields (i.e. Title, Description, etc, see below). Pretty much everything except the "Extras" content at the moment.
+
 ## Function
 This utility makes use of its sister project [CLIFp (Command-line Interface for Flashpoint)](https://github.com/oblivioncth/CLIFp) to allow LaunchBox to actually start and exit the games correctly. It is automatically deployed into your Flashpoint installation (updated if necessary) at the end of a successful import and the latest version of CLIFp will be included in each release of this utility so it is not generally something the end-user needs to concern themselves with.
 
@@ -31,6 +33,27 @@ Each release of this application targets a specific version or versions of BlueM
 | TBD | TBD | 8.2 ("Approaching Planet Nine") |
 
 Using a version of OFILb that does not target the version of Flashpoint you wish to use it with is highly discouraged as some features may not work correctly or at all and in some cases the utility may fail to function entirely or even damage the Flashpoint install it is used with.
+
+### Metadata Fields
+
+Currently the following fields in LaunchBox will be populated for each game, which is limited by what is available within Flashpoint:
+
+- Title
+- Series
+- Developer
+- Publisher
+- Platform
+- Sort Title
+- Date Added
+- Date Modified
+- Broken Flag
+- Play Mode
+- Status
+- Region
+- Notes
+- Source
+- Release Date
+- Version
 
 ## Usage
 ### Primary Usage
