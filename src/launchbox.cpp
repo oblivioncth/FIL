@@ -1,5 +1,6 @@
 #include "launchbox.h"
 #include "flashpointinstall.h"
+#include "qx-io.h"
 
 namespace LB
 {
@@ -25,7 +26,8 @@ Game::Game(FP::Game flashpointGame, QString fullOFLIbPath)
       mBroken(flashpointGame.isBroken()),
       mPlayMode(flashpointGame.getPlayMode()),
       mStatus(flashpointGame.getStatus()),
-      mRegion(flashpointGame.getLanguage()),
+      mRegion(Qx::kosherizeFileName(flashpointGame.getLanguage().replace(':',';'))),
+      // Some entries have a typo and since mRegion is used in folder creation the field must be kosher
       mNotes(flashpointGame.getNotes()),
       mSource(flashpointGame.getSource()),
       mAppPath(fullOFLIbPath),

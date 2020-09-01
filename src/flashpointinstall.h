@@ -132,9 +132,11 @@ public:
     static inline const QString SCREENSHOTS_PATH = "Data/Images/Screenshots";
     static inline const QString DATABASE_PATH = "Data/flashpoint.sqlite";
     static inline const QString MAIN_EXE_PATH = "Launcher/Flashpoint.exe";
+    static inline const QString VER_TXT_PATH = "version.txt";
 
     // Version check
-    static inline const QByteArray TARGET_EXE_SHA256 = Qx::ByteArray::RAWFromStringHex("868ab614df81ece9ab7b74e888f6888f474105cf60ea193856cf56e112086157");
+    static inline const QByteArray TARGET_EXE_SHA256 = Qx::ByteArray::RAWFromStringHex("825dcf27b93214ec32aa8084ab8d6c3a6f35a7d8132643cb7561ea5674c3b325");
+    static inline const QString TARGET_VER_STRING = R"(Flashpoint 8.2 Ultimate - "Approaching Planet Nine")";
 
     // Database
     static inline const QString DATABASE_CONNECTION_NAME = "Flashpoint Database";
@@ -153,6 +155,7 @@ private:
     std::unique_ptr<QFile> mDatabaseFile;
     std::unique_ptr<QFile> mMainEXEFile;
     std::unique_ptr<QFile> mCLIFpEXEFile;
+    std::unique_ptr<QFile> mVersionTXTFile;
 
     // Database information
     QStringList mPlatformList;

@@ -38,6 +38,7 @@ Install::Install(QString installPath)
     mDatabaseFile = std::make_unique<QFile>(installPath + "/" + DATABASE_PATH);
     mMainEXEFile = std::make_unique<QFile>(installPath + "/" + MAIN_EXE_PATH);
     mCLIFpEXEFile = std::make_unique<QFile>(installPath + "/" + CLIFp::EXE_NAME);
+    mVersionTXTFile = std::make_unique<QFile>(installPath + "/" + VER_TXT_PATH);
 }
 
 //-Destructor------------------------------------------------------------------------------------------------
@@ -81,11 +82,28 @@ QSqlDatabase Install::getThreadedDatabaseConnection() const
 
 //Public:
 bool Install::matchesTargetVersion() const
-{
+{    
+    // Check exe checksum
     mMainEXEFile->open(QFile::ReadOnly);
     QByteArray mainEXEFileData = mMainEXEFile->readAll();
     mMainEXEFile->close();
-    return Qx::Integrity::generateChecksum(mainEXEFileData, QCryptographicHash::Sha256) == TARGET_EXE_SHA256;
+
+    if(Qx::Integrity::generateChecksum(mainEXEFileData, QCryptographicHash::Sha256) != TARGET_EXE_SHA256)
+        return false;
+
+    // Check version file
+    QString readVersion;
+    if(!mVersionTXTFile->exists())
+        return false;
+
+    if(!Qx::readTextFromFile(readVersion, *mVersionTXTFile, Qx::TextPos::START).wasSuccessful())
+        return false;
+
+    if(readVersion != TARGET_VER_STRING)
+        return false;
+
+    // Return true if all passes
+    return true;
 }
 
 bool Install::hasCLIFp() const

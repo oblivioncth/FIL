@@ -1,11 +1,11 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-#define VER_FILEVERSION             0,1,0,0
-#define VER_FILEVERSION_STR         "0.1.0.0"
+#define VER_FILEVERSION             0,1,1,0
+#define VER_FILEVERSION_STR         "0.1.1.0"
 
-#define VER_PRODUCTVERSION          8,1
-#define VER_PRODUCTVERSION_STR      "8.1"
+#define VER_PRODUCTVERSION          8,2
+#define VER_PRODUCTVERSION_STR      "8.2"
 
 #define VER_COMPANYNAME_STR         "Obby Apps"
 #define VER_FILEDESCRIPTION_STR     "Flashpoint Importer for LaunchBox"
