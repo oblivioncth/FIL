@@ -52,8 +52,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     initializeForms();
 
     // Setup UI update workaround timer
-    mUIUpdateWorkaroundTimer.setInterval(IMPORT_UI_UPD_INTERVAL);
-    connect(&mUIUpdateWorkaroundTimer, &QTimer::timeout, this, &MainWindow::updateUI); // Process events at minimum rate
+    //mUIUpdateWorkaroundTimer.setInterval(IMPORT_UI_UPD_INTERVAL);
+    //connect(&mUIUpdateWorkaroundTimer, &QTimer::timeout, this, &MainWindow::updateUI); // Process events at minimum rate
 
     // Check if Flashpoint is running
     if(Qx::processIsRunning(QFileInfo(FP::Install::MAIN_EXE_PATH).fileName()))
@@ -589,13 +589,13 @@ void MainWindow::prepareImport()
         connect(mImportProgressDialog.get(), &QProgressDialog::canceled, &importWorker, &ImportWorker::notifyCanceled);
 
         // Create UI update timer reset connection
-        connect(&importWorker, &ImportWorker::progressValueChanged, this, &MainWindow::resetUpdateTimer); // Reset refresh timer since setValue already processes events
+        //connect(&importWorker, &ImportWorker::progressValueChanged, this, &MainWindow::resetUpdateTimer); // Reset refresh timer since setValue already processes events
 
         // Import error tracker
         Qx::GenericError importError;
 
         // Start UI update timer
-        mUIUpdateWorkaroundTimer.start();
+        //mUIUpdateWorkaroundTimer.start();
 
         // Start import and forward result to handler
         handleImportResult(importWorker.doImport(importError), importError);
@@ -870,8 +870,8 @@ void MainWindow::all_on_listWidget_itemChanged(QListWidgetItem* item) // Proxy f
         assert("Unhandled use of all_on_listWidget_itemChanged() slot");
 }
 
-void MainWindow::resetUpdateTimer() { mUIUpdateWorkaroundTimer.start(); }
-void MainWindow::updateUI() { QApplication::processEvents(); }
+//void MainWindow::resetUpdateTimer() { mUIUpdateWorkaroundTimer.start(); }
+//void MainWindow::updateUI() { QApplication::processEvents(); }
 
 void MainWindow::handleBlockingError(std::shared_ptr<int> response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices)
 {
@@ -889,7 +889,7 @@ void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx:
     mImportProgressDialog->close();
 
     // Stop UI update timer
-    mUIUpdateWorkaroundTimer.stop();
+    //mUIUpdateWorkaroundTimer.stop();
 
     // Post error report if present
     if(errorReport.isValid())

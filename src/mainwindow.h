@@ -147,7 +147,7 @@ private:
 
     // Process monitoring
     std::unique_ptr<QProgressDialog> mImportProgressDialog;
-    QTimer mUIUpdateWorkaroundTimer;
+    //QTimer mUIUpdateWorkaroundTimer;
 
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
@@ -198,8 +198,8 @@ private slots:
     void all_on_listWidget_itemChanged(QListWidgetItem* item);
 
     // Workaround update
-    void resetUpdateTimer();
-    void updateUI();
+    //void resetUpdateTimer();
+    //void updateUI();
 
     // Import Error Handling
     void handleBlockingError(std::shared_ptr<int> response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices);
