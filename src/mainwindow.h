@@ -27,7 +27,7 @@ private:
 //-Class Variables--------------------------------------------------------------------------------------------
 private:
     // Constants
-    static const int IMPORT_UI_UPD_INTERVAL = 20; // Workaround update tick speed in ms
+    static const int IMPORT_UI_UPD_INTERVAL = 17; // Workaround update tick speed in ms
 
     // Messages - General
     static inline const QString MSG_FATAL_NO_INTERNAL_CLIFP_VER = "Failed to get version information from the internal copy of CLIFp.exe!\n"
