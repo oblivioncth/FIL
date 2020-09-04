@@ -6,7 +6,6 @@
 #include <QFile>
 #include <QtSql>
 #include "qx.h"
-#include "flashpoint.h"
 
 namespace FP
 {
@@ -171,7 +170,7 @@ public:
 
 //-Class Functions------------------------------------------------------------------------------------------------------
 public:
-    static bool pathIsValidtInstall(QString installPath);
+    static bool pathIsValidInstall(QString installPath);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 private:
@@ -193,7 +192,7 @@ public:
     QSqlError initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QSet<QString> selectedPlatforms) const;
     QSqlError initialAddAppQuery(DBQueryBuffer& resultBuffer) const;
     QSqlError initialPlaylistQuery(DBQueryBuffer& resultBuffer, QSet<QString> selectedPlaylists) const;
-    QSqlError initialPlaylistGameQuery(QList<QPair<DBQueryBuffer, FP::Playlist>>& resultBuffer, const QList<FP::Playlist>& knownPlaylistsToQuery) const;
+    QSqlError initialPlaylistGameQuery(QList<QPair<DBQueryBuffer, QUuid>>& resultBuffer, const QList<QUuid>& knownPlaylistsToQuery) const;
 
     QString getPath() const;
     QStringList getPlatformList() const;

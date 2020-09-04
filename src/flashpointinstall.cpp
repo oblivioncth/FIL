@@ -28,7 +28,7 @@ QString Install::CLIFp::parametersFromStandard(QString originalAppPath, QString 
 Install::Install(QString installPath)
 {
     // Ensure instance will be valid
-    if(!pathIsValidtInstall(installPath))
+    if(!pathIsValidInstall(installPath))
         assert("Cannot create a Install instance with an invalid installPath. Check first with Install::pathIsValidInstall(QString).");
 
     // Initialize files and directories;
@@ -50,7 +50,7 @@ Install::~Install()
 
 //-Class Functions------------------------------------------------------------------------------------------------
 //Public:
-bool Install::pathIsValidtInstall(QString installPath)
+bool Install::pathIsValidInstall(QString installPath)
 {
     QFileInfo logosFolder(installPath + "/" + LOGOS_PATH);
     QFileInfo screenshotsFolder(installPath + "/" + SCREENSHOTS_PATH);
@@ -425,7 +425,7 @@ QSqlError Install::initialPlaylistQuery(DBQueryBuffer& resultBuffer, QSet<QStrin
     }
 }
 
-QSqlError Install::initialPlaylistGameQuery(QList<QPair<DBQueryBuffer, FP::Playlist>>& resultBuffer, const QList<FP::Playlist>& knownPlaylistsToQuery) const
+QSqlError Install::initialPlaylistGameQuery(QList<QPair<DBQueryBuffer, QUuid>>& resultBuffer, const QList<QUuid>& knownPlaylistsToQuery) const
 {
     // Ensure return buffer is empty
     resultBuffer.clear();
@@ -433,11 +433,11 @@ QSqlError Install::initialPlaylistGameQuery(QList<QPair<DBQueryBuffer, FP::Playl
     // Get database
     QSqlDatabase fpDB = getThreadedDatabaseConnection();
 
-    for(const FP::Playlist& playlist : knownPlaylistsToQuery) // Naturally returns empty list if no playlists are selected
+    for(QUuid playlistID : knownPlaylistsToQuery) // Naturally returns empty list if no playlists are selected
     {
         // Query all games for the current playlist
         QString baseQueryCommand = "SELECT `" + DBTable_Playlist_Game::COLUMN_LIST.join("`,`") + "` FROM " + DBTable_Playlist_Game::NAME + " WHERE " +
-                DBTable_Playlist_Game::COL_PLAYLIST_ID + " = '" + playlist.getID().toString(QUuid::WithoutBraces) + "'";
+                DBTable_Playlist_Game::COL_PLAYLIST_ID + " = '" + playlistID.toString(QUuid::WithoutBraces) + "'";
         QString mainQueryCommand = baseQueryCommand.arg("`" + DBTable_Playlist_Game::COLUMN_LIST.join("`,`") + "`");
         QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
 
@@ -464,7 +464,7 @@ QSqlError Install::initialPlaylistGameQuery(QList<QPair<DBQueryBuffer, FP::Playl
         int querySize = sizeQuery.value(0).toInt();
 
         // Add result to buffer
-        resultBuffer.append(qMakePair(DBQueryBuffer{playlist.getTitle(), mainQuery, querySize}, playlist));
+        resultBuffer.append(qMakePair(DBQueryBuffer{playlistID.toString(), mainQuery, querySize}, playlistID));
     }
 
     // Return invalid SqlError

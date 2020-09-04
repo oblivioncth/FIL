@@ -26,13 +26,14 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
 
     // Caches
     QSet<FP::AddApp> addAppsCache;
+    QHash<QUuid, FP::Playlist> playlistsCache;
     QHash<QUuid, LB::PlaylistGame::EntryDetails> playlistGameDetailsCache;
 
     // Initial query buffers
     QList<FP::Install::DBQueryBuffer> gameQueries;
     FP::Install::DBQueryBuffer addAppQuery;
     FP::Install::DBQueryBuffer playlistQueries;
-    QList<QPair<FP::Install::DBQueryBuffer, FP::Playlist>> playlistGameQueries;
+    QList<QPair<FP::Install::DBQueryBuffer, QUuid>> playlistGameQueries;
 
     // Make initial game query
     queryError = mFlashpointInstall->initialGameQuery(gameQueries, mImportSelections.platforms);
@@ -58,8 +59,8 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         return Failed;
     }
 
-    // Process Playlists and list for playlist game query
-    QList<FP::Playlist> targetKnownPlaylists;
+    // Process Playlists, add to cache and create ID list
+    QList<QUuid> targetPlaylistIDs;
     for(int i = 0; i < playlistQueries.size; i++)
     {
         // Advance to next record
@@ -72,12 +73,18 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         fpPb.wDescription(playlistQueries.result.value(FP::Install::DBTable_Playlist::COL_DESCRIPTION).toString());
         fpPb.wAuthor(playlistQueries.result.value(FP::Install::DBTable_Playlist::COL_AUTHOR).toString());
 
-        // Build playlist and add to list
-        targetKnownPlaylists.append(fpPb.build());
+        // Build playlist
+        FP::Playlist playlist = fpPb.build();
+
+        // Add to cache
+        playlistsCache[playlist.getID()] = playlist;
+
+        // Add to ID list
+        targetPlaylistIDs.append(playlist.getID());
     }
 
     // Make initial playlist games query
-    queryError = mFlashpointInstall->initialPlaylistGameQuery(playlistGameQueries, targetKnownPlaylists);
+    queryError = mFlashpointInstall->initialPlaylistGameQuery(playlistGameQueries, targetPlaylistIDs);
     if(queryError.isValid())
     {
        errorReport = Qx::GenericError(QString(), MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());
@@ -89,7 +96,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     int maximumProgressValue = addAppQuery.size; // Additional App pre-load
     for(FP::Install::DBQueryBuffer& query : gameQueries) // All games
         maximumProgressValue += query.size;
-    for(QPair<FP::Install::DBQueryBuffer, FP::Playlist>& query : playlistGameQueries) // All playlist games
+    for(QPair<FP::Install::DBQueryBuffer, QUuid>& query : playlistGameQueries) // All playlist games
         maximumProgressValue += query.first.size;
     maximumProgressValue += addAppQuery.size * gameQueries.size(); // All checks of Additional Apps
 
@@ -292,13 +299,16 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     }
 
     // Process playlists
-    for(QPair<FP::Install::DBQueryBuffer, FP::Playlist>& currentPlaylistGameResult : playlistGameQueries)
+    for(QPair<FP::Install::DBQueryBuffer, QUuid>& currentPlaylistGameResult : playlistGameQueries)
     {
+        // Get corresponding playlist from cache
+        FP::Playlist currentPlaylist = playlistsCache.value(currentPlaylistGameResult.second);
+
         // Update progress dialog label
-        emit progressStepChanged(STEP_IMPORTING_PLAYLIST_GAMES.arg(currentPlaylistGameResult.first.source));
+        emit progressStepChanged(STEP_IMPORTING_PLAYLIST_GAMES.arg(currentPlaylist.getTitle()));
 
         // Open LB playlist doc
-        LB::Install::XMLHandle docRequest = {LB::Install::Playlist, currentPlaylistGameResult.first.source};
+        LB::Install::XMLHandle docRequest = {LB::Install::Playlist, currentPlaylist.getTitle()};
         std::unique_ptr<LB::Install::XMLDoc> currentPlaylistXML;
         Qx::XmlStreamReaderError playlistReadError = mLaunchBoxInstall->openXMLDocument(currentPlaylistXML, docRequest, mOptionSet.updateOptions);
 
@@ -310,7 +320,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         }
 
         // Convert and set playlist header
-        currentPlaylistXML->setPlaylistHeader(LB::PlaylistHeader(currentPlaylistGameResult.second));
+        currentPlaylistXML->setPlaylistHeader(LB::PlaylistHeader(currentPlaylist));
 
         // Add/Update playlist games
         for(int i = 0; i < currentPlaylistGameResult.first.size; i++)
