@@ -697,7 +697,7 @@ void MainWindow::all_on_action_triggered()
 
     // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
     if(senderAction == nullptr)
-        assert("Pointer conversion to action failed");
+        throw std::runtime_error("Pointer conversion to action failed");
 
     // Determine sender and take corresponding action
     if(senderAction == ui->action_exit)
@@ -711,7 +711,7 @@ void MainWindow::all_on_action_triggered()
     else if(senderAction == ui->action_goToLBForums)
         QDesktopServices::openUrl(URL_LB_FORUMS);
     else
-        assert("Unhandled use of all_on_action_triggered() slot");
+        throw std::runtime_error("Unhandled use of all_on_action_triggered() slot");
 }
 
 void MainWindow::all_on_pushButton_clicked()
@@ -721,7 +721,7 @@ void MainWindow::all_on_pushButton_clicked()
 
     // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
     if(senderPushButton == nullptr)
-        assert("Pointer conversion to push button failed");
+        throw std::runtime_error("Pointer conversion to push button failed");
 
     // Determine sender and take corresponding action
     if(senderPushButton == ui->pushButton_launchBoxBrowse)
@@ -780,7 +780,7 @@ void MainWindow::all_on_pushButton_clicked()
     else if(senderPushButton == ui->pushButton_exit)
         QApplication::quit();
     else
-        assert("Unhandled use of all_on_pushButton_clicked() slot");
+        throw std::runtime_error("Unhandled use of all_on_pushButton_clicked() slot");
 }
 
 void MainWindow::all_on_lineEdit_editingFinished()
@@ -790,7 +790,7 @@ void MainWindow::all_on_lineEdit_editingFinished()
 
     // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
     if(senderLineEdit == nullptr)
-        assert("Pointer conversion to line edit failed");
+        throw std::runtime_error("Pointer conversion to line edit failed");
 
     // Determine sender and take corresponding action
     if(senderLineEdit == ui->lineEdit_launchBoxPath)
@@ -808,7 +808,7 @@ void MainWindow::all_on_lineEdit_editingFinished()
             mLineEdit_flashpointPath_blocker--;
     }
     else
-        assert("Unhandled use of all_on_linedEdit_textEdited() slot");
+        throw std::runtime_error("Unhandled use of all_on_linedEdit_textEdited() slot");
 }
 
 void MainWindow::all_on_lineEdit_textEdited() // Required due to an oversight with QLineEdit::editingFinished()
@@ -818,7 +818,7 @@ void MainWindow::all_on_lineEdit_textEdited() // Required due to an oversight wi
 
     // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
     if(senderLineEdit == nullptr)
-        assert("Pointer conversion to line edit failed");
+        throw std::runtime_error("Pointer conversion to line edit failed");
 
     // Determine sender and take corresponding action
     if(senderLineEdit == ui->lineEdit_launchBoxPath)
@@ -826,7 +826,7 @@ void MainWindow::all_on_lineEdit_textEdited() // Required due to an oversight wi
     else if(senderLineEdit == ui->lineEdit_flashpointPath)
         mLineEdit_flashpointPath_blocker = 0;
     else
-        assert("Unhandled use of all_on_linedEdit_textEdited() slot");
+        throw std::runtime_error("Unhandled use of all_on_linedEdit_textEdited() slot");
 }
 
 void MainWindow::all_on_lineEdit_returnPressed() // Required due to an oversight with QLineEdit::editingFinished()
@@ -836,7 +836,7 @@ void MainWindow::all_on_lineEdit_returnPressed() // Required due to an oversight
 
     // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
     if(senderLineEdit == nullptr)
-        assert("Pointer conversion to line edit failed");
+        throw std::runtime_error("Pointer conversion to line edit failed");
 
     // Determine sender and take corresponding action
     if(senderLineEdit == ui->lineEdit_launchBoxPath)
@@ -850,7 +850,7 @@ void MainWindow::all_on_lineEdit_returnPressed() // Required due to an oversight
         checkManualInstallInput(Install::Flashpoint);
     }
     else
-        assert("Unhandled use of all_on_linedEdit_returnPressed() slot");
+        throw std::runtime_error("Unhandled use of all_on_linedEdit_returnPressed() slot");
 }
 
 void MainWindow::all_on_listWidget_itemChanged(QListWidgetItem* item) // Proxy for "onItemChecked"
@@ -860,14 +860,14 @@ void MainWindow::all_on_listWidget_itemChanged(QListWidgetItem* item) // Proxy f
 
     // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
     if(senderListWidget == nullptr)
-        assert("Pointer conversion to line edit failed");
+        throw std::runtime_error("Pointer conversion to line edit failed");
 
     if(senderListWidget == ui->listWidget_platformChoices && !mAlteringListWidget)
         importSelectionReaction(item, ui->listWidget_platformChoices);
 //    else if(senderListWidget == ui->listWidget_playlistChoices && !mAlteringListWidget) TODO: Playlists currently only get games from selected platforms,
 //        importSelectionReaction(item, ui->listWidget_playlistChoices);                        so triggering this here is no longer required. Possibly remove
     else
-        assert("Unhandled use of all_on_listWidget_itemChanged() slot");
+        throw std::runtime_error("Unhandled use of all_on_listWidget_itemChanged() slot");
 }
 
 //void MainWindow::resetUpdateTimer() { mUIUpdateWorkaroundTimer.start(); }
