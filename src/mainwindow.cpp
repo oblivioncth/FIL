@@ -190,7 +190,7 @@ void MainWindow::validateInstall(QString installPath, Install install)
             break;
 
         case Install::Flashpoint:
-            if(FP::Install::pathIsValidInstall(installPath))
+            if(FP::Install::pathIsValidInstall(installPath, FP::Install::CompatLevel::Full))
             {
                 mFlashpointInstall = std::make_shared<FP::Install>(installPath);
 
@@ -656,7 +656,7 @@ void MainWindow::standaloneCLIFpDeploy()
 
     if(!selectedDir.isEmpty())
     {
-        if(FP::Install::pathIsValidInstall(selectedDir))
+        if(FP::Install::pathIsValidInstall(selectedDir, FP::Install::CompatLevel::Full))
         {
             FP::Install tempFlashpointInstall(selectedDir);
 

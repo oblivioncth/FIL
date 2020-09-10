@@ -116,7 +116,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         fpAab.wID(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_ID).toString());
         fpAab.wAppPath(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_APP_PATH).toString());
         fpAab.wAutorunBefore(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_AUTORUN).toString());
-        fpAab.wLaunchCommand(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_LAUNCH_COMMNAND).toString());
+        fpAab.wLaunchCommand(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_LAUNCH_COMMAND).toString());
         fpAab.wName(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_NAME).toString());
         fpAab.wWaitExit(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_WAIT_EXIT).toString());
         fpAab.wParentID(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_PARENT_ID).toString());
@@ -207,7 +207,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
                 fpGb.wOrderTitle(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ORDER_TITLE).toString());
 
                 // Convert and convert FP game to LB game and add to document
-                LB::Game builtGame = LB::Game(fpGb.build(), mFlashpointInstall->getOFLIbPath());
+                LB::Game builtGame = LB::Game(fpGb.build(), mFlashpointInstall->getCLIFpPath());
                 currentPlatformXML->addGame(builtGame);
 
                 // Setup for ensuring image sub-directories exist
@@ -260,7 +260,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
             // If the current platform doc contains the game this add app belongs to, convert and add it, then remove it from cache
             if (currentPlatformXML->containsGame((*j).getParentID()))
             {
-               currentPlatformXML->addAddApp(LB::AddApp(*j, mFlashpointInstall->getOFLIbPath()));
+               currentPlatformXML->addAddApp(LB::AddApp(*j, mFlashpointInstall->getCLIFpPath()));
                j = addAppsCache.erase(j);
 
                // Reduce progress dialog maximum by total iterations cut from future platforms

@@ -4,9 +4,282 @@
 
 namespace FP
 {
+//===============================================================================================================
+// INSTALL::StartStop
+//===============================================================================================================
+
+//-Opperators----------------------------------------------------------------------------------------------------
+//Public:
+bool operator== (const Install::StartStop& lhs, const Install::StartStop& rhs) noexcept
+{
+    return lhs.path == rhs.path && lhs.filename == rhs.filename && lhs.arguments == rhs.arguments;
+}
+
+//-Hashing------------------------------------------------------------------------------------------------------
+uint qHash(const Install::StartStop& key, uint seed) noexcept
+{
+    QtPrivate::QHashCombine hash;
+    seed = hash(seed, key.path);
+    seed = hash(seed, key.filename);
+    seed = hash(seed, key.arguments);
+
+    return seed;
+}
 
 //===============================================================================================================
-// INSTALL::OFLIb
+// INSTALL::JSONServicesReader
+//===============================================================================================================
+
+//-Constructor------------------------------------------------------------------------------------------------
+//Public:
+Install::JSONServicesReader::JSONServicesReader(const Install* hostInstall, Services* targetServices, std::shared_ptr<QFile> targetJSONFile)
+    : mHostInstall(hostInstall), mTargetServices(targetServices), mTargetJSONFile(targetJSONFile) {}
+
+//-Instance Functions------------------------------------------------------------------------------------------------
+//Private:
+QString Install::JSONServicesReader::resolveFlashpointMacros(QString macroString)
+{
+    // Resolve all known macros
+    macroString.replace(MACRO_FP_PATH, mHostInstall->getPath());
+
+    return macroString;
+}
+
+Qx::GenericError Install::JSONServicesReader::parseServicesDocument(const QJsonDocument& servicesDoc)
+{
+    // Ensure top level container is object
+    if(!servicesDoc.isObject())
+        return Qx::GenericError(QString(), ERR_PARSING_JSON_DOC.arg(mTargetJSONFile->fileName()), ERR_JSON_UNEXP_FORMAT);
+
+    // Value error checking buffer
+    Qx::GenericError valueError;
+
+    // Get watches
+    // TODO: include logs
+
+    // Get servers
+    QJsonArray jaServers;
+    if((valueError = Qx::Json::checkedKeyRetrieval(jaServers, servicesDoc.object(), JSONObject_Services::KEY_SERVER)).isValid())
+        return valueError;
+
+    // Parse servers
+    for(const QJsonValue& jvServer : jaServers)
+    {
+        Server serverBuffer;
+        if((valueError = parseServer(serverBuffer, jvServer)).isValid())
+            return valueError;
+
+        mTargetServices->servers.insert(serverBuffer.name, serverBuffer);
+    }
+
+    // Get starts
+    QJsonArray jaStarts;
+    if((valueError = Qx::Json::checkedKeyRetrieval(jaStarts, servicesDoc.object(), JSONObject_Services::KEY_START)).isValid())
+        return valueError;
+
+    // Parse starts
+    for(const QJsonValue& jvStart : jaStarts)
+    {
+        StartStop startStopBuffer;
+        if((valueError = parseStartStop(startStopBuffer, jvStart)).isValid())
+            return valueError;
+
+        mTargetServices->starts.insert(startStopBuffer);
+    }
+
+    // Get stops
+    QJsonArray jaStops;
+    if((valueError = Qx::Json::checkedKeyRetrieval(jaStops, servicesDoc.object(), JSONObject_Services::KEY_STOP)).isValid())
+        return valueError;
+
+    // Parse starts
+    for(const QJsonValue& jvStop : jaStops)
+    {
+        StartStop startStopBuffer;
+        if((valueError = parseStartStop(startStopBuffer, jvStop)).isValid())
+            return valueError;
+
+        mTargetServices->stops.insert(startStopBuffer);
+    }
+
+    // Return invalid error on success
+    return Qx::GenericError();
+}
+
+Qx::GenericError Install::JSONServicesReader::parseServer(Server& serverBuffer, const QJsonValue& jvServer)
+{
+    // Ensure array element is Object
+    if(!jvServer.isObject())
+        return Qx::GenericError(QString(), ERR_PARSING_JSON_DOC.arg(mTargetJSONFile->fileName()), ERR_JSON_UNEXP_FORMAT);
+
+    // Get server Object
+    QJsonObject joServer = jvServer.toObject();
+
+    // Value error checking buffer
+    Qx::GenericError valueError;
+
+    // Get direct values
+    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.name, joServer, JSONObject_Server::KEY_NAME)).isValid())
+        return valueError;
+
+    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.path, joServer, JSONObject_Server::KEY_PATH)).isValid())
+        return valueError;
+
+    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.filename, joServer, JSONObject_Server::KEY_FILENAME)).isValid())
+        return valueError;
+
+    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.kill, joServer, JSONObject_Server::KEY_KILL)).isValid())
+        return valueError;
+
+    // Get arguments
+    QJsonArray jaArgs;
+    if((valueError = Qx::Json::checkedKeyRetrieval(jaArgs, joServer, JSONObject_Server::KEY_ARGUMENTS)).isValid())
+        return valueError;
+
+    for(const QJsonValue& jvArg : jaArgs)
+    {
+        // Ensure array element is String
+        if(!jvArg.isString())
+            return Qx::GenericError(QString(), ERR_PARSING_JSON_DOC.arg(mTargetJSONFile->fileName()), ERR_JSON_UNEXP_FORMAT);
+
+        serverBuffer.arguments.append(jvArg.toString());
+    }
+
+    // Ensure filename has extension (assuming exe)
+    if(QFileInfo(serverBuffer.filename).suffix().isEmpty())
+        serverBuffer.filename += ".exe";
+
+    // Resolve macros for relavent variables
+    serverBuffer.path = resolveFlashpointMacros(serverBuffer.path);
+    for(QString& arg : serverBuffer.arguments)
+        arg = resolveFlashpointMacros(arg);
+
+    // Return invalid error on success
+    return Qx::GenericError();
+}
+
+Qx::GenericError Install::JSONServicesReader::parseStartStop(StartStop& startStopBuffer, const QJsonValue& jvStartStop)
+{
+    // Ensure return buffer is null
+    startStopBuffer = StartStop();
+
+    // Ensure array element is Object
+    if(!jvStartStop.isObject())
+        return Qx::GenericError(QString(), ERR_PARSING_JSON_DOC.arg(mTargetJSONFile->fileName()), ERR_JSON_UNEXP_FORMAT);
+
+    // Get server Object
+    QJsonObject joStartStop = jvStartStop.toObject();
+
+    // Value error checking buffer
+    Qx::GenericError valueError;
+
+    // Get direct values
+    if((valueError = Qx::Json::checkedKeyRetrieval(startStopBuffer.path, joStartStop , JSONObject_StartStop::KEY_PATH)).isValid())
+        return valueError;
+
+    if((valueError = Qx::Json::checkedKeyRetrieval(startStopBuffer.filename, joStartStop, JSONObject_StartStop::KEY_FILENAME)).isValid())
+        return valueError;
+
+    // Get arguments
+    QJsonArray jaArgs;
+    if((valueError = Qx::Json::checkedKeyRetrieval(jaArgs, joStartStop, JSONObject_StartStop::KEY_ARGUMENTS)).isValid())
+        return valueError;
+
+    for(const QJsonValue& jvArg : jaArgs)
+    {
+        // Ensure array element is String
+        if(!jvArg.isString())
+            return Qx::GenericError(QString(), ERR_PARSING_JSON_DOC.arg(mTargetJSONFile->fileName()), ERR_JSON_UNEXP_FORMAT);
+
+        startStopBuffer.arguments.append(jvArg.toString());
+    }
+
+    // Ensure filename has extension (assuming exe)
+    if(QFileInfo(startStopBuffer.filename).suffix().isEmpty())
+        startStopBuffer.filename += ".exe";
+
+    // Resolve macros for relavent variables
+    startStopBuffer.path = resolveFlashpointMacros(startStopBuffer.path);
+    for(QString& arg : startStopBuffer.arguments)
+        arg = resolveFlashpointMacros(arg);
+
+    // Return invalid error on success
+    return Qx::GenericError();
+}
+
+//Public:
+Qx::GenericError Install::JSONServicesReader::readInto()
+{
+    // Load original JSON file
+    QByteArray servicesData;
+    Qx::IOOpReport servicesLoadReport = Qx::readAllBytesFromFile(servicesData, *mTargetJSONFile);
+
+    if(!servicesLoadReport.wasSuccessful())
+        return Qx::GenericError(QString(), ERR_PARSING_JSON_DOC.arg(mTargetJSONFile->fileName()), servicesLoadReport.getOutcomeInfo());
+
+    // Parse original JSON data
+    QJsonParseError parseError;
+    QJsonDocument servicesDocument = QJsonDocument::fromJson(servicesData, &parseError);
+
+    if(servicesDocument.isNull())
+        return Qx::GenericError(QString(), ERR_PARSING_JSON_DOC.arg(mTargetJSONFile->fileName()), parseError.errorString());
+    else
+        return parseServicesDocument(servicesDocument);
+}
+
+//===============================================================================================================
+// INSTALL::JSONServicesReader
+//===============================================================================================================
+
+//-Constructor------------------------------------------------------------------------------------------------
+//Public:
+Install::JSONConfigReader::JSONConfigReader(Config* targetConfig, std::shared_ptr<QFile> targetJSONFile)
+    : mTargetConfig(targetConfig), mTargetJSONFile(targetJSONFile) {}
+
+//-Instance Functions------------------------------------------------------------------------------------------------
+//Private:
+Qx::GenericError Install::JSONConfigReader::parseConfigDocument(const QJsonDocument& configDoc)
+{
+    // Ensure top level container is object
+    if(!configDoc.isObject())
+        return Qx::GenericError(QString(), ERR_PARSING_JSON_DOC.arg(mTargetJSONFile->fileName()), ERR_JSON_UNEXP_FORMAT);
+
+    // Get values
+    Qx::GenericError valueError;
+
+    if((valueError = Qx::Json::checkedKeyRetrieval(mTargetConfig->startServer, configDoc.object(), JSONObject_Config::KEY_START_SERVER)).isValid())
+        return valueError;
+
+    if((valueError = Qx::Json::checkedKeyRetrieval(mTargetConfig->server, configDoc.object(), JSONObject_Config::KEY_SERVER)).isValid())
+        return valueError;
+
+    // Return invalid error on success
+    return Qx::GenericError();
+
+}
+
+//Public:
+Qx::GenericError Install::JSONConfigReader::readInto()
+{
+    // Load original JSON file
+    QByteArray configData;
+    Qx::IOOpReport configLoadReport = Qx::readAllBytesFromFile(configData, *mTargetJSONFile);
+
+    if(!configLoadReport.wasSuccessful())
+        return Qx::GenericError(QString(), ERR_PARSING_JSON_DOC.arg(mTargetJSONFile->fileName()), configLoadReport.getOutcomeInfo());
+
+    // Parse original JSON data
+    QJsonParseError parseError;
+    QJsonDocument configDocument = QJsonDocument::fromJson(configData, &parseError);
+
+    if(configDocument.isNull())
+        return Qx::GenericError(QString(), ERR_PARSING_JSON_DOC.arg(mTargetJSONFile->fileName()), parseError.errorString());
+    else
+        return parseConfigDocument(configDocument);
+}
+
+//===============================================================================================================
+// INSTALL::CLIFp
 //===============================================================================================================
 
 //-Class Functions--------------------------------------------------------------------------------------------
@@ -15,6 +288,8 @@ QString Install::CLIFp::parametersFromStandard(QString originalAppPath, QString 
 {
     if(originalAppPath == DBTable_Add_App::ENTRY_MESSAGE)
         return MSG_ARG.arg(originalAppParams);
+    else if(originalAppPath == DBTable_Add_App::ENTRY_EXTRAS)
+        return EXTRA_ARG.arg(originalAppParams);
     else
         return APP_ARG.arg(originalAppPath) + " " + PARAM_ARG.arg(originalAppParams);
 }
@@ -27,17 +302,20 @@ QString Install::CLIFp::parametersFromStandard(QString originalAppPath, QString 
 //Public:
 Install::Install(QString installPath)
 {
-    // Ensure instance will be valid
-    if(!pathIsValidInstall(installPath))
+    // Ensure instance will be at least minimally compatible
+    if(!pathIsValidInstall(installPath, CompatLevel::Execution))
         assert("Cannot create a Install instance with an invalid installPath. Check first with Install::pathIsValidInstall(QString).");
 
     // Initialize files and directories;
     mRootDirectory = QDir(installPath);
     mLogosDirectory = QDir(installPath + "/" + LOGOS_PATH);
     mScreenshotsDirectory = QDir(installPath + "/" + SCREENSHOTS_PATH);
-    mDatabaseFile = std::make_unique<QFile>(installPath + "/" + DATABASE_PATH);
+    mExtrasDirectory = QDir(installPath + "/" + EXTRAS_PATH);
     mMainEXEFile = std::make_unique<QFile>(installPath + "/" + MAIN_EXE_PATH);
     mCLIFpEXEFile = std::make_unique<QFile>(installPath + "/" + CLIFp::EXE_NAME);
+    mDatabaseFile = std::make_unique<QFile>(installPath + "/" + DATABASE_PATH);
+    mServicesJSONFile = std::make_shared<QFile>(installPath + "/" + SERVICES_JSON_PATH);
+    mConfigJSONFile = std::make_shared<QFile>(installPath + "/" + CONFIG_JSON_PATH);
     mVersionTXTFile = std::make_unique<QFile>(installPath + "/" + VER_TXT_PATH);
 }
 
@@ -50,17 +328,39 @@ Install::~Install()
 
 //-Class Functions------------------------------------------------------------------------------------------------
 //Public:
-bool Install::pathIsValidInstall(QString installPath)
+bool Install::pathIsValidInstall(QString installPath, CompatLevel compatLevel)
 {
     QFileInfo logosFolder(installPath + "/" + LOGOS_PATH);
     QFileInfo screenshotsFolder(installPath + "/" + SCREENSHOTS_PATH);
-    QFileInfo database(installPath + "/" + DATABASE_PATH);
+    QFileInfo extrasFolder(installPath + "/" + EXTRAS_PATH);
     QFileInfo mainEXE(installPath + "/" + MAIN_EXE_PATH);
+    QFileInfo database(installPath + "/" + DATABASE_PATH);
+    QFileInfo services(installPath + "/" + SERVICES_JSON_PATH);
+    QFileInfo config(installPath + "/" + CONFIG_JSON_PATH);
+    QFileInfo version(installPath + "/" + VER_TXT_PATH);
 
-    return logosFolder.exists() && logosFolder.isDir() &&
-           screenshotsFolder.exists() && screenshotsFolder.isDir() &&
-           database.exists() && database.isFile() &&
-           mainEXE.exists() && mainEXE.isExecutable();
+    bool compatible = false; // Used to avoid incorrect "not all control paths return a value" warning
+
+    switch (compatLevel)
+    {
+        case CompatLevel::Execution:
+            compatible = extrasFolder.exists() && extrasFolder.isDir() &&
+                         database.exists() && database.isFile() &&
+                         services.exists() && services.isFile() &&
+                         config.exists() && config.isFile();
+
+        case CompatLevel::Full:
+            compatible = logosFolder.exists() && logosFolder.isDir() &&
+                         screenshotsFolder.exists() && screenshotsFolder.isDir() &&
+                         extrasFolder.exists() && extrasFolder.isDir() &&
+                         mainEXE.exists() && mainEXE.isExecutable() &&
+                         database.exists() && database.isFile() &&
+                         services.exists() && services.isFile() &&
+                         config.exists() && config.isFile() &&
+                         version.exists() && version.isFile();
+    }
+
+    return compatible;
 }
 
 //-Instance Functions------------------------------------------------------------------------------------------------
@@ -78,6 +378,38 @@ QSqlDatabase Install::getThreadedDatabaseConnection() const
         fpDB.setDatabaseName(mDatabaseFile->fileName());
         return fpDB;
     }
+}
+
+QSqlError Install::makeNonBindQuery(DBQueryBuffer& resultBuffer, QSqlDatabase* database, QString queryCommand, QString sizeQueryCommand) const
+{
+    // Create main query
+    QSqlQuery mainQuery(*database);
+    mainQuery.setForwardOnly(true);
+    mainQuery.prepare(queryCommand);
+
+    // Execute query and return if error occurs
+    if(!mainQuery.exec())
+        return mainQuery.lastError();
+
+    // Create size query
+    QSqlQuery sizeQuery(*database);
+    sizeQuery.setForwardOnly(true);
+    sizeQuery.prepare(sizeQueryCommand);
+
+    // Execute query and return if error occurs
+    if(!sizeQuery.exec())
+        return sizeQuery.lastError();
+
+    // Get query size
+    sizeQuery.next();
+    int querySize = sizeQuery.value(0).toInt();
+
+    // Set buffer instance to result
+    resultBuffer.result = mainQuery;
+    resultBuffer.size = querySize;
+
+    // Return invalid SqlError
+    return QSqlError();
 }
 
 //Public:
@@ -133,6 +465,30 @@ QSqlError Install::openThreadDatabaseConnection()
 void Install::closeThreadedDatabaseConnection() { getThreadedDatabaseConnection().close(); }
 
 bool Install::databaseConnectionOpenInThisThread() { return getThreadedDatabaseConnection().isOpen(); }
+
+Qx::GenericError Install::getConfig(Config& configBuffer)
+{
+    // Ensure return services is null
+    configBuffer = Config();
+
+    // Create reader instance
+    JSONConfigReader jsReader(&configBuffer, mConfigJSONFile);
+
+    // Read services file
+    return jsReader.readInto();
+}
+
+Qx::GenericError Install::getServices(Services &servicesBuffer)
+{
+    // Ensure return services is null
+    servicesBuffer = Services();
+
+    // Create reader instance
+    JSONServicesReader jsReader(this, &servicesBuffer, mServicesJSONFile);
+
+    // Read services file
+    return jsReader.readInto();
+}
 
 QSqlError Install::checkDatabaseForRequiredTables(QSet<QString>& missingTablesReturnBuffer) const
 {
@@ -321,48 +677,18 @@ QSqlError Install::initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QSet<QSt
 QSqlError Install::initialAddAppQuery(DBQueryBuffer& resultBuffer) const
 {
     // Ensure return buffer is effectively null
-    resultBuffer.source = QString();
-    resultBuffer.result = QSqlQuery();
-    resultBuffer.size = -1;
+    resultBuffer = DBQueryBuffer();
 
     // Get database
     QSqlDatabase fpDB = getThreadedDatabaseConnection();
 
     // Make query
-    QString baseQueryCommand = "SELECT %1 FROM " + DBTable_Add_App::NAME + " WHERE " +
-            DBTable_Add_App::COL_APP_PATH + " != '" + DBTable_Add_App::ENTRY_EXTRAS + "'";
+    QString baseQueryCommand = "SELECT %1 FROM " + DBTable_Add_App::NAME;
     QString mainQueryCommand = baseQueryCommand.arg("`" + DBTable_Add_App::COLUMN_LIST.join("`,`") + "`");
     QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
 
-    // Create main query
-    QSqlQuery mainQuery(fpDB);
-    mainQuery.setForwardOnly(true);
-    mainQuery.prepare(mainQueryCommand);
-
-    // Execute query and return if error occurs
-    if(!mainQuery.exec())
-        return mainQuery.lastError();
-
-    // Create size query
-    QSqlQuery sizeQuery(fpDB);
-    sizeQuery.setForwardOnly(true);
-    sizeQuery.prepare(sizeQueryCommand);
-
-    // Execute query and return if error occurs
-    if(!sizeQuery.exec())
-        return sizeQuery.lastError();
-
-    // Get query size
-    sizeQuery.next();
-    int querySize = sizeQuery.value(0).toInt();
-
-    // Set buffer instance to result
     resultBuffer.source = DBTable_Add_App::NAME;
-    resultBuffer.result = mainQuery;
-    resultBuffer.size = querySize;
-
-    // Return invalid SqlError
-    return QSqlError();
+    return makeNonBindQuery(resultBuffer, &fpDB, mainQueryCommand, sizeQueryCommand);
 }
 
 QSqlError Install::initialPlaylistQuery(DBQueryBuffer& resultBuffer, QSet<QString> selectedPlaylists) const
@@ -379,9 +705,7 @@ QSqlError Install::initialPlaylistQuery(DBQueryBuffer& resultBuffer, QSet<QStrin
     else
     {
         // Ensure return buffer is effectively null
-        resultBuffer.source = QString();
-        resultBuffer.result = QSqlQuery();
-        resultBuffer.size = -1;
+        resultBuffer = DBQueryBuffer();
 
         // Get database
         QSqlDatabase fpDB = getThreadedDatabaseConnection();
@@ -441,34 +765,74 @@ QSqlError Install::initialPlaylistGameQuery(QList<QPair<DBQueryBuffer, QUuid>>& 
         QString mainQueryCommand = baseQueryCommand.arg("`" + DBTable_Playlist_Game::COLUMN_LIST.join("`,`") + "`");
         QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
 
-        // Create main query
-        QSqlQuery mainQuery(fpDB);
-        mainQuery.setForwardOnly(true);
-        mainQuery.prepare(mainQueryCommand);
+        // Make query
+        QSqlError queryError;
+        DBQueryBuffer queryResult;
+        queryResult.source = playlistID.toString();
 
-        // Execute query and return if error occurs
-        if(!mainQuery.exec())
-            return mainQuery.lastError();
-
-        // Create size query
-        QSqlQuery sizeQuery(fpDB);
-        sizeQuery.setForwardOnly(true);
-        sizeQuery.prepare(sizeQueryCommand);
-
-        // Execute query and return if error occurs
-        if(!sizeQuery.exec())
-            return sizeQuery.lastError();
-
-        // Get query size
-        sizeQuery.next();
-        int querySize = sizeQuery.value(0).toInt();
+        if((queryError = makeNonBindQuery(queryResult, &fpDB, mainQueryCommand, sizeQueryCommand)).isValid())
+            return queryError;
 
         // Add result to buffer
-        resultBuffer.append(qMakePair(DBQueryBuffer{playlistID.toString(), mainQuery, querySize}, playlistID));
+        resultBuffer.append(qMakePair(queryResult, playlistID));
     }
 
     // Return invalid SqlError
     return QSqlError();
+}
+
+QSqlError Install::queryEntryID(DBQueryBuffer& resultBuffer, QUuid appID) const
+{
+    // Ensure return buffer is effectively null
+    resultBuffer = DBQueryBuffer();
+
+    // Get database
+    QSqlDatabase fpDB = getThreadedDatabaseConnection();
+
+    // Check for entry as a game first
+    QString baseQueryCommand = "SELECT %1 FROM " + DBTable_Game::NAME + " WHERE " +
+            DBTable_Game::COL_ID + " == '" + appID.toString(QUuid::WithoutBraces) + "'";
+    QString mainQueryCommand = baseQueryCommand.arg("`" + DBTable_Game::COLUMN_LIST.join("`,`") + "`");
+    QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
+
+    // Make query
+    QSqlError queryError;
+    resultBuffer.source = DBTable_Game::NAME;
+
+    if((queryError = makeNonBindQuery(resultBuffer, &fpDB, mainQueryCommand, sizeQueryCommand)).isValid())
+        return queryError;
+
+    // Return result if one or more result were found (reciever handles situation in latter case)
+    if(resultBuffer.size >= 1)
+        return QSqlError();
+
+    // Check for entry as an additional app second
+    baseQueryCommand = "SELECT %1 FROM " + DBTable_Add_App::NAME + " WHERE " +
+        DBTable_Add_App::COL_ID + " == '" + appID.toString(QUuid::WithoutBraces) + "'";
+    mainQueryCommand = baseQueryCommand.arg("`" + DBTable_Add_App::COLUMN_LIST.join("`,`") + "`");
+    sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
+
+    // Make query and return result regardless of outcome
+    resultBuffer.source = DBTable_Add_App::NAME;
+    return makeNonBindQuery(resultBuffer, &fpDB, mainQueryCommand, sizeQueryCommand);
+}
+
+QSqlError Install::queryEntryAddApps(DBQueryBuffer& resultBuffer, QUuid appID) const
+{
+    // Ensure return buffer is effectively null
+    resultBuffer = DBQueryBuffer();
+
+    // Get database
+    QSqlDatabase fpDB = getThreadedDatabaseConnection();
+
+    // Make query
+    QString baseQueryCommand = "SELECT %1 FROM " + DBTable_Add_App::NAME + " WHERE " +
+            DBTable_Add_App::COL_PARENT_ID + " == '" + appID.toString(QUuid::WithoutBraces) + "'";
+    QString mainQueryCommand = baseQueryCommand.arg("`" + DBTable_Add_App::COLUMN_LIST.join("`,`") + "`");
+    QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
+
+    resultBuffer.source = DBTable_Add_App::NAME;
+    return makeNonBindQuery(resultBuffer, &fpDB, mainQueryCommand, sizeQueryCommand);
 }
 
 QString Install::getPath() const { return mRootDirectory.absolutePath(); }
@@ -476,6 +840,7 @@ QStringList Install::getPlatformList() const { return mPlatformList; }
 QStringList Install::getPlaylistList() const { return mPlaylistList; }
 QDir Install::getLogosDirectory() const { return mLogosDirectory; }
 QDir Install::getScrenshootsDirectory() const { return mScreenshotsDirectory; }
-QString Install::getOFLIbPath() const { return mCLIFpEXEFile->fileName(); }
+QDir Install::getExtrasDirectory() const { return mExtrasDirectory; }
+QString Install::getCLIFpPath() const { return mCLIFpEXEFile->fileName(); }
 
 }
