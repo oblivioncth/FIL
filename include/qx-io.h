@@ -40,6 +40,7 @@ public:
 
 //-Instance Members-------------------------------------------------------------------------------------------------
 private:
+    bool mNull;
     IOOpType mOperation;
     IOOpResultType mResult;
     IOOpTargetType mTargetType;
@@ -49,10 +50,13 @@ private:
 //-Constructor-------------------------------------------------------------------------------------------------------
 public:
     IOOpReport();
-    IOOpReport(IOOpType op, IOOpResultType res, QFile& tar);
-    IOOpReport(IOOpType op, IOOpResultType res, QDir& tar);
+    IOOpReport(IOOpType op, IOOpResultType res, const QFile& tar);
+    IOOpReport(IOOpType op, IOOpResultType res, const QDir& tar);
 
 //-Instance Functions----------------------------------------------------------------------------------------------
+private:
+    void parseOutcome();
+
 public:
     IOOpType getOperation() const;
     IOOpResultType getResult() const;
@@ -61,8 +65,7 @@ public:
     QString getOutcome() const;
     QString getOutcomeInfo() const;
     bool wasSuccessful() const;
-private:
-    void parseOutcome();
+    bool isNull() const;
 };
 
 class TextPos
@@ -82,12 +85,12 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 public:
-    int getLineNum();
-    int getCharNum();
+    int getLineNum() const;
+    int getCharNum() const;
     void setLineNum(int lineNum);
     void setCharNum(int charNum);
     void setNull();
-    bool isNull();
+    bool isNull() const;
 
     bool operator== (const TextPos &otherTextPos);
     bool operator!= (const TextPos &otherTextPos);
@@ -104,12 +107,13 @@ static inline QString ENDL = "\r\n"; //NOTE: Currently this is windows only
 //-Functions-------------------------------------------------------------------------------------------------------------
 
 // General:
-    bool fileIsEmpty(QFile& file);
-    bool fileIsEmpty(QFile& file, IOOpReport& reportBuffer);
+    bool fileIsEmpty(const QFile& file);
+    bool fileIsEmpty(const QFile& file, IOOpReport& reportBuffer);
     QString kosherizeFileName(QString fileName);
 // Text Based:
     IOOpReport getLineCountOfFile(long long& returnBuffer, QFile& textFile);
     IOOpReport findStringInFile(TextPos& returnBuffer, QFile& textFile, const QString& query, int hitsToSkip = 0, Qt::CaseSensitivity caseSensitivity = Qt::CaseSensitive);
+    IOOpReport findStringInFile(QList<TextPos>& returnBuffer, QFile& textFile, const QString& query, int hitLimit = -1, Qt::CaseSensitivity caseSensitivity = Qt::CaseSensitive);
     IOOpReport readTextFromFile(QString& returnBuffer, QFile& textFile, TextPos textPos, int characters = -1);
     IOOpReport readTextRangeFromFile(QString& returnBuffer, QFile& textFile, TextPos startPos, TextPos endPos = TextPos::END);
     IOOpReport readTextFromFileByLine(QStringList& returnBuffer, QFile &textFile, int startLine = 0, int endLine = -1);

@@ -432,16 +432,16 @@ int MainWindow::postGenericError(Qx::GenericError error, QMessageBox::StandardBu
 {
     // Prepare dialog
     QMessageBox genericErrorMessage;
-    if(!error.getCaption().isEmpty())
-        genericErrorMessage.setWindowTitle(error.getCaption());
-    if(!error.getPrimaryInfo().isEmpty())
-        genericErrorMessage.setText(error.getPrimaryInfo());
-    if(!error.getSecondaryInfo().isEmpty())
-        genericErrorMessage.setInformativeText(error.getSecondaryInfo());
-    if(!error.getDetailedInfo().isEmpty())
-        genericErrorMessage.setDetailedText(error.getDetailedInfo());
+    if(!error.caption().isEmpty())
+        genericErrorMessage.setWindowTitle(error.caption());
+    if(!error.primaryInfo().isEmpty())
+        genericErrorMessage.setText(error.primaryInfo());
+    if(!error.secondaryInfo().isEmpty())
+        genericErrorMessage.setInformativeText(error.secondaryInfo());
+    if(!error.detailedInfo().isEmpty())
+        genericErrorMessage.setDetailedText(error.detailedInfo());
     genericErrorMessage.setStandardButtons(choices);
-    genericErrorMessage.setIcon(QMessageBox::Critical);
+    genericErrorMessage.setIcon(error.errorLevel() == Qx::GenericError::Warning ? QMessageBox::Warning : QMessageBox::Critical);
 
     return genericErrorMessage.exec();
 }

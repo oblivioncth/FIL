@@ -39,7 +39,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     queryError = mFlashpointInstall->initialGameQuery(gameQueries, mImportSelections.platforms);
     if(queryError.isValid())
     {
-        errorReport = Qx::GenericError(QString(), MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());
+        errorReport = Qx::GenericError(Qx::GenericError::Critical, MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());
         return Failed;
     }
 
@@ -47,7 +47,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     queryError = mFlashpointInstall->initialAddAppQuery(addAppQuery);
     if(queryError.isValid())
     {
-        errorReport = Qx::GenericError(QString(), MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());
+        errorReport = Qx::GenericError(Qx::GenericError::Critical, MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());
         return Failed;
     }
 
@@ -55,7 +55,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     queryError = mFlashpointInstall->initialPlaylistQuery(playlistQueries, mImportSelections.playlists);
     if(queryError.isValid())
     {
-        errorReport = Qx::GenericError(QString(), MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());
+        errorReport = Qx::GenericError(Qx::GenericError::Critical, MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());
         return Failed;
     }
 
@@ -87,7 +87,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     queryError = mFlashpointInstall->initialPlaylistGameQuery(playlistGameQueries, targetPlaylistIDs);
     if(queryError.isValid())
     {
-       errorReport = Qx::GenericError(QString(), MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());
+       errorReport = Qx::GenericError(Qx::GenericError::Critical, MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());
        return Failed;
     }
 
@@ -155,7 +155,8 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         if(platformReadError.isValid())
         {
             // Emit import failure
-            errorReport = Qx::GenericError(QString(),LB::Install::populateErrorWithTarget(MSG_LB_XML_UNEXPECTED_ERROR, docRequest), platformReadError.getText());
+            errorReport = Qx::GenericError(Qx::GenericError::Critical, LB::Install::populateErrorWithTarget(MSG_LB_XML_UNEXPECTED_ERROR, docRequest),
+                                           platformReadError.getText());
             return Failed;
         }
 
@@ -167,7 +168,8 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         while(!mLaunchBoxInstall->ensureImageDirectories(imageDirError, currentPlatformGameResult.source))
         {
             // Notify GUI Thread of error
-            emit blockingErrorOccured(blockingErrorResponse, Qx::GenericError(CAPTION_IMAGE_ERR, imageDirError, "Retry?"), QMessageBox::Yes | QMessageBox::No);
+            emit blockingErrorOccured(blockingErrorResponse, Qx::GenericError(Qx::GenericError::Error, imageDirError, "Retry?", QString(), CAPTION_IMAGE_ERR),
+                                      QMessageBox::Yes | QMessageBox::No);
 
             // Check response
             if(*blockingErrorResponse == QMessageBox::No)
@@ -219,7 +221,8 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
                 while(!skipAllImages && !mLaunchBoxInstall->transferLogo(imageTransferError, mOptionSet.imageMode, mFlashpointInstall->getLogosDirectory(), builtGame))
                 {
                     // Notify GUI Thread of error
-                    emit blockingErrorOccured(blockingErrorResponse, Qx::GenericError(CAPTION_IMAGE_ERR, imageTransferError, "Retry?"), QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
+                    emit blockingErrorOccured(blockingErrorResponse, Qx::GenericError(Qx::GenericError::Error, imageTransferError, "Retry?", QString(), CAPTION_IMAGE_ERR),
+                                              QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
 
                     // Check response
                     if(*blockingErrorResponse == QMessageBox::No)
@@ -231,7 +234,8 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
                 while(!skipAllImages && !mLaunchBoxInstall->transferScreenshot(imageTransferError, mOptionSet.imageMode, mFlashpointInstall->getScrenshootsDirectory(), builtGame))
                 {
                     // Notify GUI Thread of error
-                    emit blockingErrorOccured(blockingErrorResponse, Qx::GenericError(CAPTION_IMAGE_ERR, imageTransferError, "Retry?"), QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
+                    emit blockingErrorOccured(blockingErrorResponse, Qx::GenericError(Qx::GenericError::Error, imageTransferError, "Retry?", QString(), CAPTION_IMAGE_ERR),
+                                              QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
 
                     // Check response
                     if(*blockingErrorResponse == QMessageBox::No)
@@ -292,7 +296,8 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         QString saveError;
         if(!mLaunchBoxInstall->saveXMLDocument(saveError, std::move(currentPlatformXML)))
         {
-            errorReport = Qx::GenericError(QString(), LB::Install::populateErrorWithTarget(LB::Install::XMLWriter::ERR_WRITE_FAILED, docRequest), saveError);
+            errorReport = Qx::GenericError(Qx::GenericError::Critical,
+                                           LB::Install::populateErrorWithTarget(LB::Install::XMLWriter::ERR_WRITE_FAILED, docRequest), saveError);
             return Failed;
         }
 
@@ -315,7 +320,8 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         // Stop import if error occured
         if(playlistReadError.isValid())
         {
-            errorReport = Qx::GenericError(QString(), LB::Install::populateErrorWithTarget(MSG_LB_XML_UNEXPECTED_ERROR, docRequest), playlistReadError.getText());
+            errorReport = Qx::GenericError(Qx::GenericError::Critical,
+                                           LB::Install::populateErrorWithTarget(MSG_LB_XML_UNEXPECTED_ERROR, docRequest), playlistReadError.getText());
             return Failed;
         }
 
@@ -359,7 +365,8 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         QString saveError;
         if(!mLaunchBoxInstall->saveXMLDocument(saveError, std::move(currentPlaylistXML)))
         {
-            errorReport = Qx::GenericError(QString(), LB::Install::populateErrorWithTarget(LB::Install::XMLWriter::ERR_WRITE_FAILED, docRequest), saveError);
+            errorReport = Qx::GenericError(Qx::GenericError::Critical,
+                                           LB::Install::populateErrorWithTarget(LB::Install::XMLWriter::ERR_WRITE_FAILED, docRequest), saveError);
             return Failed;
         }
     }
