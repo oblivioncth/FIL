@@ -1,7 +1,7 @@
 # OFILb (Obby's Flashpoint Importer for LaunchBox)
 OFILb (pronounced "Awful-B") is an importer tool for [LaunchBox](https://www.launchbox-app.com/) that allows one to add games and playlists from [BlueMaxima's Flashpoint](https://bluemaxima.org/flashpoint/) project to their collection. It is fully automated and only requires the user to provide the paths to the LaunchBox/Flashpoint installs, choose which Platforms/Playlists they wish to import, and select between a few import mode options. Once the import is started the current progress is displayed and any errors that occur are shown to the user, with resolvable errors including a prompt for what the user would like to do. After the process has completed LaunchBox can be started and the games from Flashpoint can be played like those from any other Platform.
 
-For Platforms, the importer is capable of importing each game along with any additional apps, images, and most of the metadata fields (i.e. Title, Description, etc, see below). Pretty much everything except the "Extras" content at the moment.
+For Platforms, the importer is capable of importing each game along with any additional apps, images, and most of the metadata fields (i.e. Title, Description, etc, see below). Pretty much everything.
 
 ## Function
 This utility makes use of its sister project [CLIFp (Command-line Interface for Flashpoint)](https://github.com/oblivioncth/CLIFp) to allow LaunchBox to actually start and exit the games correctly. It is automatically deployed into your Flashpoint installation (updated if necessary) at the end of a successful import and the latest version of CLIFp will be included in each release of this utility so it is not generally something the end-user needs to concern themselves with.
@@ -16,12 +16,14 @@ You will still be able to use the standard Flashpoint launcher as normal after c
 
 # Compatability
 ### Flashpoint Infinity/Flashpoint Ultimate
-This tool was made with the express purpose of using it with Flashpoint Ultimate (i.e. all games/animation pre-downloaded). Technically it should work with Infinity if you run all of the games you want to import at least once, but its use is not currently directly supported.
+This tool was made with the express purpose of using it with Flashpoint Ultimate (i.e. all games/animations pre-downloaded), but since the 0.2 rewrite of CLIFp it should work with Infinity as well. Just note that use with Infinity is largely untested.
 
 ### General
-While testing for 100% compatibility is infeasible given the size of Flashpoint, OFILb was designed with full compatibility in mind; however, the importer itself only provides access to the games and their related playlists within Flashpoint, not the animations, since LaunchBox is primarily a games frontend. Additionally, accessing the "Extras" content of an entry is currently not supported.
+While testing for 100% compatibility is infeasible given the size of Flashpoint, OFILb was designed with full compatibility in mind; however, the importer itself only provides access to the games and their related playlists within Flashpoint, not the animations, since LaunchBox is primarily a games frontend.
 
 The ":message:" feature of Flashpoint, commonly used to automatically show usage instructions for some games before they are started, is supported. The entries that use it are added as additional-apps to their respective games as they once were when Flashpoint came packaged with LaunchBox. All messages are displayed in a pop-up dialog via CLIFp.
+
+Viewing extras (which are simply a folder) is also supported and the corresponding additional apps that open these folders will be added when importing a platform.
 
 Since Flashpoint originally used LaunchBox as its launcher most fields within Flashpoint have a one-to-one equivalent (or close enough equivalent) LaunchBox field. That being said there are a few fields that are unique to Flashpoint that do not have matching field and so they are simply excluded during the import, resulting in a relatively minor loss of information for each game in your collection.
 
@@ -31,6 +33,7 @@ Each release of this application targets a specific version or versions of BlueM
 |--|--|--|
 | 0.1 | 0.1 | 8.1 ("Spirit of Adventure") |
 | 0.1.1 | 0.1.1 | 8.2 ("Approaching Planet Nine") |
+| 0.1.2| 0.3 | 8.2 ("Approaching Planet Nine") |
 
 Using a version of OFILb that does not target the version of Flashpoint you wish to use it with is highly discouraged as some features may not work correctly or at all and in some cases the utility may fail to function entirely or even damage the Flashpoint install it is used with.
 
@@ -85,7 +88,6 @@ The symbolic link related options for handling images require the importer to be
  
 ## Limitations
  - Although general compatibility is quite high, compatibility with every single title cannot be assured. Issues with a title or group of titles will be fixed as they are discovered
- - The "Extras" feature for some games/animation is currently not supported. It is currently unknown if it will be possible to support them at some point since no research into how they are loaded has been performed
  - The "smart" feature of the Playlist import portion of the tool has the drawback that only games that were included in the same import will be considered for that playlist. If you previously imported a Platform and now want to import a Playlist that contains games from that Playlist you must select that Platform for it to be updated/re-imported in order for those games to be added to that Playlist. This is to avoid significantly decreasing Playlist import speed, but a solution will likely be added as an opt-in option in the future
 
 ## Source

@@ -227,7 +227,7 @@ PlaylistHeader PlaylistHeaderBuilder::build() { return mPlaylistHeaderBlueprint;
 //Public:
 PlaylistGame::PlaylistGame(FP::PlaylistGame flashpointPlaylistGame, const QHash<QUuid, EntryDetails>& playlistGameDetailsMap)
     : mGameID(flashpointPlaylistGame.getGameID()),
-      mLBDatabaseID(-1),
+      mLBDatabaseID(-1), // TODO: This doesn't end up getting changed later when added to LB::Install, see why
       mGameTitle(playlistGameDetailsMap.value(mGameID).title),
       mGameFileName(playlistGameDetailsMap.value(mGameID).fileName),
       mGamePlatform(playlistGameDetailsMap.value(mGameID).platform),

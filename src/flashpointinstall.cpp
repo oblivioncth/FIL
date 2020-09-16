@@ -287,11 +287,11 @@ Qx::GenericError Install::JSONConfigReader::readInto()
 QString Install::CLIFp::parametersFromStandard(QString originalAppPath, QString originalAppParams)
 {
     if(originalAppPath == DBTable_Add_App::ENTRY_MESSAGE)
-        return MSG_ARG.arg(originalAppParams);
+        return MSG_ARG.arg(originalAppParams) + " -q";
     else if(originalAppPath == DBTable_Add_App::ENTRY_EXTRAS)
-        return EXTRA_ARG.arg(originalAppParams);
+        return EXTRA_ARG.arg(originalAppParams) + " -q";
     else
-        return APP_ARG.arg(originalAppPath) + " " + PARAM_ARG.arg(originalAppParams);
+        return APP_ARG.arg(originalAppPath) + " " + PARAM_ARG.arg(originalAppParams) + " -q";
 }
 
 //===============================================================================================================
