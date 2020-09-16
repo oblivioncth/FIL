@@ -33,7 +33,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     QList<FP::Install::DBQueryBuffer> gameQueries;
     FP::Install::DBQueryBuffer addAppQuery;
     FP::Install::DBQueryBuffer playlistQueries;
-    QList<QPair<FP::Install::DBQueryBuffer, QUuid>> playlistGameQueries;
+    QList<FP::Install::DBQueryBuffer> playlistGameQueries;
 
     // Make initial game query
     queryError = mFlashpointInstall->initialGameQuery(gameQueries, mImportSelections.platforms);
@@ -94,10 +94,10 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     // Determine workload
     int currentProgressValue = 0;
     int maximumProgressValue = addAppQuery.size; // Additional App pre-load
-    for(FP::Install::DBQueryBuffer& query : gameQueries) // All games
+    for(const FP::Install::DBQueryBuffer& query : gameQueries) // All games
         maximumProgressValue += query.size;
-    for(QPair<FP::Install::DBQueryBuffer, QUuid>& query : playlistGameQueries) // All playlist games
-        maximumProgressValue += query.first.size;
+    for(const FP::Install::DBQueryBuffer& query : playlistGameQueries) // All playlist games
+        maximumProgressValue += query.size;
     maximumProgressValue += addAppQuery.size * gameQueries.size(); // All checks of Additional Apps
 
     // Re-prep progress dialog
@@ -304,10 +304,10 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     }
 
     // Process playlists
-    for(QPair<FP::Install::DBQueryBuffer, QUuid>& currentPlaylistGameResult : playlistGameQueries)
+    for(FP::Install::DBQueryBuffer& currentPlaylistGameResult : playlistGameQueries)
     {
         // Get corresponding playlist from cache
-        FP::Playlist currentPlaylist = playlistsCache.value(currentPlaylistGameResult.second);
+        FP::Playlist currentPlaylist = playlistsCache.value(QUuid(currentPlaylistGameResult.source));
 
         // Update progress dialog label
         emit progressStepChanged(STEP_IMPORTING_PLAYLIST_GAMES.arg(currentPlaylist.getTitle()));
@@ -329,20 +329,20 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         currentPlaylistXML->setPlaylistHeader(LB::PlaylistHeader(currentPlaylist));
 
         // Add/Update playlist games
-        for(int i = 0; i < currentPlaylistGameResult.first.size; i++)
+        for(int i = 0; i < currentPlaylistGameResult.size; i++)
         {
             // Advance to next record
-            currentPlaylistGameResult.first.result.next();
+            currentPlaylistGameResult.result.next();
 
             // Only process the playlist game if it was included in import (TODO: Possibly implement checking all other Platform xmls for presence of this game)
-            if(playlistGameDetailsCache.contains(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_ID).toString()))
+            if(playlistGameDetailsCache.contains(currentPlaylistGameResult.result.value(FP::Install::DBTable_Playlist_Game::COL_GAME_ID).toString()))
             {
                 // Form game from record
                 FP::PlaylistGameBuilder fpPgb;
-                fpPgb.wID(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_ID).toString());
-                fpPgb.wPlaylistID(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_PLAYLIST_ID).toString());
-                fpPgb.wOrder(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_ORDER).toString());
-                fpPgb.wGameID(currentPlaylistGameResult.first.result.value(FP::Install::DBTable_Playlist_Game::COL_ID).toString());
+                fpPgb.wID(currentPlaylistGameResult.result.value(FP::Install::DBTable_Playlist_Game::COL_ID).toString());
+                fpPgb.wPlaylistID(currentPlaylistGameResult.result.value(FP::Install::DBTable_Playlist_Game::COL_PLAYLIST_ID).toString());
+                fpPgb.wOrder(currentPlaylistGameResult.result.value(FP::Install::DBTable_Playlist_Game::COL_ORDER).toString());
+                fpPgb.wGameID(currentPlaylistGameResult.result.value(FP::Install::DBTable_Playlist_Game::COL_GAME_ID).toString());
 
                 // Build FP playlist game, convert to LB and add
                 currentPlaylistXML->addPlaylistGame(LB::PlaylistGame(fpPgb.build(), playlistGameDetailsCache));

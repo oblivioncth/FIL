@@ -161,7 +161,7 @@ void MainWindow::checkManualInstallInput(Install install)
     }
 
     QDir selectedDir = QDir::cleanPath(QDir::fromNativeSeparators(pathSource->text()));
-    if(selectedDir.exists())
+    if(!pathSource->text().isEmpty() && selectedDir.exists())
         validateInstall(selectedDir.absolutePath(), install);
     else
     {
@@ -598,7 +598,8 @@ void MainWindow::prepareImport()
         //mUIUpdateWorkaroundTimer.start();
 
         // Start import and forward result to handler
-        handleImportResult(importWorker.doImport(importError), importError);
+        ImportWorker::ImportResult importResult = importWorker.doImport(importError);
+        handleImportResult(importResult, importError);
     }
 }
 
@@ -786,7 +787,7 @@ void MainWindow::all_on_pushButton_clicked()
 void MainWindow::all_on_lineEdit_editingFinished()
 {
     // Get the object that called this slot
-    QLineEdit* senderLineEdit = qobject_cast<QLineEdit *>(sender());
+    QLineEdit* senderLineEdit = qobject_cast<QLineEdit*>(sender());
 
     // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
     if(senderLineEdit == nullptr)
@@ -862,8 +863,11 @@ void MainWindow::all_on_listWidget_itemChanged(QListWidgetItem* item) // Proxy f
     if(senderListWidget == nullptr)
         throw std::runtime_error("Pointer conversion to line edit failed");
 
-    if(senderListWidget == ui->listWidget_platformChoices && !mAlteringListWidget)
-        importSelectionReaction(item, ui->listWidget_platformChoices);
+    if(senderListWidget == ui->listWidget_platformChoices)
+    {
+        if(!mAlteringListWidget)
+            importSelectionReaction(item, ui->listWidget_platformChoices);
+    }
 //    else if(senderListWidget == ui->listWidget_playlistChoices && !mAlteringListWidget) TODO: Playlists currently only get games from selected platforms,
 //        importSelectionReaction(item, ui->listWidget_playlistChoices);                        so triggering this here is no longer required. Possibly remove
     else

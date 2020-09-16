@@ -829,7 +829,7 @@
      <x>0</x>
      <y>0</y>
      <width>648</width>
-     <height>20</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -1124,22 +1124,6 @@
    <hints>
     <hint type="sourcelabel">
      <x>125</x>
-     <y>336</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>244</x>
-     <y>333</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>listWidget_playlistChoices</sender>
-   <signal>itemChanged(QListWidgetItem*)</signal>
-   <receiver>MainWindow</receiver>
-   <slot>all_on_listWidget_itemChanged(QListWidgetItem*)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>365</x>
      <y>336</y>
     </hint>
     <hint type="destinationlabel">
