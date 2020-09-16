@@ -28,7 +28,7 @@ Game::Game(FP::Game flashpointGame, QString fullOFLIbPath)
       mStatus(flashpointGame.getStatus()),
       mRegion(Qx::kosherizeFileName(flashpointGame.getLanguage().replace(':',';'))),
       // Some entries have a typo and since mRegion is used in folder creation the field must be kosher
-      mNotes(flashpointGame.getNotes()),
+      mNotes(flashpointGame.getOriginalDescription() + "\n\n" + flashpointGame.getNotes()),
       mSource(flashpointGame.getSource()),
       mAppPath(fullOFLIbPath),
       mCommandLine(FP::Install::CLIFp::parametersFromStandard(flashpointGame.getAppPath(), flashpointGame.getLaunchCommand())),
