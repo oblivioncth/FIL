@@ -190,7 +190,8 @@ void MainWindow::validateInstall(QString installPath, Install install)
             break;
 
         case Install::Flashpoint:
-            if(FP::Install::pathIsValidInstall(installPath, FP::Install::CompatLevel::Full))
+            FP::Install::ValidityReport fpValidity = FP::Install::checkInstallValidity(installPath, FP::Install::CompatLevel::Full);
+            if(fpValidity.installValid)
             {
                 mFlashpointInstall = std::make_shared<FP::Install>(installPath);
 
@@ -207,7 +208,7 @@ void MainWindow::validateInstall(QString installPath, Install install)
                 ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
                 mFlashpointInstall.reset();
                 setInputStage(InputStage::Paths);
-                QMessageBox::critical(this, QApplication::applicationName(), MSG_FP_INSTALL_INVALID);
+                postGenericError(Qx::GenericError(Qx::GenericError::Critical, MSG_FP_INSTALL_INVALID, fpValidity.details), QMessageBox::Ok);
             }
             break;
     }
@@ -657,7 +658,8 @@ void MainWindow::standaloneCLIFpDeploy()
 
     if(!selectedDir.isEmpty())
     {
-        if(FP::Install::pathIsValidInstall(selectedDir, FP::Install::CompatLevel::Full))
+        FP::Install::ValidityReport fpValidity = FP::Install::checkInstallValidity(selectedDir, FP::Install::CompatLevel::Full);
+        if(fpValidity.installValid)
         {
             FP::Install tempFlashpointInstall(selectedDir);
 
@@ -685,7 +687,7 @@ void MainWindow::standaloneCLIFpDeploy()
             }
         }
         else
-            QMessageBox::critical(this, QApplication::applicationName(), MSG_FP_INSTALL_INVALID);
+            postGenericError(Qx::GenericError(Qx::GenericError::Critical, MSG_FP_INSTALL_INVALID, fpValidity.details), QMessageBox::Ok);
     }
 }
 

@@ -128,7 +128,7 @@ private:
     // URLs
     static inline const QUrl URL_CLIFP_GITHUB = QUrl("https://github.com/oblivioncth/CLIFp");
     static inline const QUrl URL_OFLIB_GITHUB =  QUrl("https://github.com/oblivioncth/OFILb");
-    static inline const QUrl URL_LB_FORUMS =  QUrl("???"); //TODO: ADD ME
+    static inline const QUrl URL_LB_FORUMS =  QUrl("https://forums.launchbox-app.com/files/file/2652-obbys-flashpoint-importer-for-launchbox"); //TODO: ADD ME
 
 //-Instance Variables--------------------------------------------------------------------------------------------
 private:
