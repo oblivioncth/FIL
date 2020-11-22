@@ -5,11 +5,14 @@
 #include <QListWidgetItem>
 #include <QProgressDialog>
 #include <QMessageBox>
+#include <QWinTaskbarButton>
+#include <QWinTaskbarProgress>
 #include "version.h"
 #include "launchboxinstall.h"
 #include "flashpointinstall.h"
 #include "importworker.h"
 #include "qx-io.h"
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -147,6 +150,8 @@ private:
 
     // Process monitoring
     std::unique_ptr<QProgressDialog> mImportProgressDialog;
+    QWinTaskbarButton* mWindowTaskbarButton;
+
     //QTimer mUIUpdateWorkaroundTimer;
 
 //-Constructor---------------------------------------------------------------------------------------------------
@@ -186,6 +191,9 @@ private:
     void prepareImport();
     void revertAllLaunchBoxChanges();
     void standaloneCLIFpDeploy();
+
+protected:
+    void showEvent(QShowEvent* event);
 
 //-Slots---------------------------------------------------------------------------------------------------------
 private slots:

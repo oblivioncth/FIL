@@ -9,6 +9,7 @@
 #include <QMessageBox>
 #include <QDesktopServices>
 #include <QUrl>
+#include <QShowEvent>
 #include <filesystem>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -565,15 +566,25 @@ void MainWindow::prepareImport()
 
     if(!lbRunning)
     {
-        // Create progress dialog, set initial busy state and show
-        mImportProgressDialog = std::make_unique<QProgressDialog>(STEP_FP_DB_INITIAL_QUERY, "Cancel", 0, 10000, this); //Arbitrarily high maximum so initial percentage is 0
+        // Create progress dialog, set initial state and show
+        mImportProgressDialog = std::make_unique<QProgressDialog>(STEP_FP_DB_INITIAL_QUERY, "Cancel", 0, 10000, this); // Arbitrarily high maximum so initial percentage is 0
         mImportProgressDialog->setWindowTitle(CAPTION_IMPORTING);
         mImportProgressDialog->setWindowModality(Qt::WindowModal);
         mImportProgressDialog->setAutoReset(false);
         mImportProgressDialog->setAutoClose(false);
         mImportProgressDialog->setMinimumDuration(0); // Always show pd
         mImportProgressDialog->setValue(0); // Get pd to show
-        QApplication::processEvents(); // Force show immediately
+
+        // Get taskbar progress indicator and set it up
+        QWinTaskbarProgress* tbProgress = mWindowTaskbarButton->progress();
+        tbProgress->setMinimum(0);
+        tbProgress->setMaximum(10000); // Arbitrarily high maximum so initial percentage is 0
+        tbProgress->setValue(0);
+        tbProgress->resume(); // Ensure possible previous errors are cleared
+        tbProgress->setVisible(true);
+
+        // Force show progress immediately
+        QApplication::processEvents();
 
         // Setup import worker
         ImportWorker importWorker(mFlashpointInstall, mLaunchBoxInstall,
@@ -586,7 +597,9 @@ void MainWindow::prepareImport()
         // Create process update connections
         connect(&importWorker, &ImportWorker::progressStepChanged, mImportProgressDialog.get(), &QProgressDialog::setLabelText);
         connect(&importWorker, &ImportWorker::progressMaximumChanged, mImportProgressDialog.get(), &QProgressDialog::setMaximum);
+        connect(&importWorker, &ImportWorker::progressMaximumChanged, tbProgress, &QWinTaskbarProgress::setMaximum);
         connect(&importWorker, &ImportWorker::progressValueChanged, mImportProgressDialog.get(), &QProgressDialog::setValue);
+        connect(&importWorker, &ImportWorker::progressValueChanged, tbProgress, &QWinTaskbarProgress::setValue);
         connect(mImportProgressDialog.get(), &QProgressDialog::canceled, &importWorker, &ImportWorker::notifyCanceled);
 
         // Create UI update timer reset connection
@@ -689,6 +702,17 @@ void MainWindow::standaloneCLIFpDeploy()
         else
             postGenericError(Qx::GenericError(Qx::GenericError::Critical, MSG_FP_INSTALL_INVALID, fpValidity.details), QMessageBox::Ok);
     }
+}
+
+//Protected:
+void MainWindow::showEvent(QShowEvent* event)
+{
+    // Call standard function
+    QMainWindow::showEvent(event);
+
+    // Configure taskbar button
+    mWindowTaskbarButton = new QWinTaskbarButton(this);
+    mWindowTaskbarButton->setWindow(this->windowHandle());
 }
 
 //-Slots---------------------------------------------------------------------------------------------------------
@@ -881,8 +905,15 @@ void MainWindow::all_on_listWidget_itemChanged(QListWidgetItem* item) // Proxy f
 
 void MainWindow::handleBlockingError(std::shared_ptr<int> response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices)
 {
+    // Get taskbar progress and indicate error
+    QWinTaskbarProgress* tbProgress = mWindowTaskbarButton->progress();
+    tbProgress->stop();
+
     // Post error and get response
     int userChoice = postGenericError(blockingError, choices);
+
+    // Clear taskbar error
+    tbProgress->resume();
 
     // If applicable return selection
     if(response)
@@ -891,8 +922,10 @@ void MainWindow::handleBlockingError(std::shared_ptr<int> response, Qx::GenericE
 
 void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx::GenericError errorReport)
 {
-    // Close progress dialog
+    // Close progress dialog and reset taskbar progress indicator
     mImportProgressDialog->close();
+    mWindowTaskbarButton->progress()->reset();
+    mWindowTaskbarButton->progress()->setVisible(false);
 
     // Stop UI update timer
     //mUIUpdateWorkaroundTimer.stop();
