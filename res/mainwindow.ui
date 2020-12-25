@@ -829,7 +829,7 @@
      <x>0</x>
      <y>0</y>
      <width>648</width>
-     <height>24</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -910,10 +910,6 @@
    </property>
    <property name="checked">
     <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="../resources.qrc">
-     <normaloff>:/res/icon/Extreme_game.png</normaloff>:/res/icon/Extreme_game.png</iconset>
    </property>
    <property name="text">
     <string>Include Extreme/Adult Games</string>
