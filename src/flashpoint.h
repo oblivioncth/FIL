@@ -14,11 +14,10 @@ class AddAppBuilder;
 class PlaylistBuilder;
 class PlaylistGameBuilder;
 
+//-Namespace Global Classes-----------------------------------------------------------------------------------------
 class Game
 {
     friend class GameBuilder;
-//-Class Enums------------------------------------------------------------------------------------------------------
-public:
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -42,7 +41,7 @@ private:
     QString mOriginalDescription;
     QString mLanguage;
     QString mOrderTitle;
-
+    QString mLibrary;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -70,6 +69,7 @@ public:
     QString getOriginalDescription() const;
     QString getLanguage() const;
     QString getOrderTitle() const;
+    QString getLibrary() const;
 };
 
 class GameBuilder
@@ -108,6 +108,7 @@ public:
     GameBuilder& wOriginalDescription(QString originalDescription);
     GameBuilder& wLanguage(QString language);
     GameBuilder& wOrderTitle(QString orderTitle);
+    GameBuilder& wLibrary(QString library);
 
     Game build();
 };

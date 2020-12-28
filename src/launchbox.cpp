@@ -33,7 +33,8 @@ Game::Game(FP::Game flashpointGame, QString fullOFLIbPath)
       mAppPath(fullOFLIbPath),
       mCommandLine(FP::Install::CLIFp::parametersFromStandard(flashpointGame.getAppPath(), flashpointGame.getLaunchCommand())),
       mReleaseDate(flashpointGame.getReleaseDate()),
-      mVersion(flashpointGame.getVersion()) {}
+      mVersion(flashpointGame.getVersion()),
+      mReleaseType(flashpointGame.getLibrary() == FP::Install::DBTable_Game::ENTRY_GAME_LIBRARY ? RELEASE_TYPE_GAME : RELEASE_TYPE_ANIM) {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:

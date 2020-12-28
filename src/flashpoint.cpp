@@ -34,6 +34,7 @@ QString Game::getVersion() const { return mVersion; }
 QString Game::getOriginalDescription() const { return mOriginalDescription; }
 QString Game::getLanguage() const { return mLanguage; }
 QString Game::getOrderTitle() const { return mOrderTitle; }
+QString Game::getLibrary() const { return mLibrary; }
 
 //===============================================================================================================
 // GAME BUILDER
@@ -87,6 +88,7 @@ GameBuilder& GameBuilder::wVersion(QString version)  { mGameBlueprint.mVersion =
 GameBuilder& GameBuilder::wOriginalDescription(QString originalDescription)  { mGameBlueprint.mOriginalDescription = originalDescription; return *this; }
 GameBuilder& GameBuilder::wLanguage(QString language)  { mGameBlueprint.mLanguage = language; return *this; }
 GameBuilder& GameBuilder::wOrderTitle(QString orderTitle)  { mGameBlueprint.mOrderTitle = orderTitle; return *this; }
+GameBuilder& GameBuilder::wLibrary(QString library) { mGameBlueprint.mLibrary = library; return *this; }
 
 Game GameBuilder::build() { return mGameBlueprint; }
 

@@ -207,6 +207,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
                 fpGb.wOriginalDescription(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ORIGINAL_DESC).toString());
                 fpGb.wLanguage(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_LANGUAGE).toString());
                 fpGb.wOrderTitle(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ORDER_TITLE).toString());
+                fpGb.wLibrary(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_LIBRARY).toString());
 
                 // Convert and convert FP game to LB game and add to document
                 LB::Game builtGame = LB::Game(fpGb.build(), mFlashpointInstall->getCLIFpPath());

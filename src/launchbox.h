@@ -16,10 +16,15 @@ class AddAppBuilder;
 class PlaylistHeaderBuilder;
 class PlaylistGameBuilder;
 
-//-Namespace Global Structs-----------------------------------------------------------------------------------------
+//-Namespace Global Classes-----------------------------------------------------------------------------------------
 class Game
 {
     friend class GameBuilder;
+
+//-Class Variables--------------------------------------------------------------------------------------------------
+private:
+    static inline const QString RELEASE_TYPE_GAME = "Game";
+    static inline const QString RELEASE_TYPE_ANIM = "Animation";
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -42,6 +47,7 @@ private:
     QString mCommandLine;
     QDateTime mReleaseDate;
     QString mVersion;
+    QString mReleaseType;
     QHash<QString, QString> mOtherFields;
 
 //-Constructor-------------------------------------------------------------------------------------------------
@@ -70,6 +76,7 @@ public:
     QString getCommandLine() const;
     QDateTime getReleaseDate() const;
     QString getVersion() const;
+    QString getReleaseType() const;
     QHash<QString, QString>& getOtherFields();
     const QHash<QString, QString>& getOtherFields() const;
 
@@ -107,6 +114,7 @@ public:
     GameBuilder& wCommandLine(QString commandLine);
     GameBuilder& wReleaseDate(QString rawReleaseDate);
     GameBuilder& wVersion(QString version);
+    GameBuilder& wReleaseType(QString releaseType);
     GameBuilder& wOtherField(QPair<QString, QString> otherField);
 
     Game build();
