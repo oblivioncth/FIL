@@ -2,6 +2,7 @@
 OFILb (pronounced "Awful-B") is an importer tool for [LaunchBox](https://www.launchbox-app.com/) that allows one to add games and playlists from [BlueMaxima's Flashpoint](https://bluemaxima.org/flashpoint/) project to their collection. It is fully automated and only requires the user to provide the paths to the LaunchBox/Flashpoint installs, choose which Platforms/Playlists they wish to import, and select between a few import mode options. Once the import is started the current progress is displayed and any errors that occur are shown to the user, with resolvable errors including a prompt for what the user would like to do. After the process has completed LaunchBox can be started and the games from Flashpoint can be played like those from any other Platform.
 
 For Platforms, the importer is capable of importing each game along with any additional apps, images, and most of the metadata fields (i.e. Title, Description, etc, see below).
+
 ## Function
 This utility makes use of its sister project [CLIFp (Command-line Interface for Flashpoint)](https://github.com/oblivioncth/CLIFp) to allow LaunchBox to actually start and exit the games correctly. It is automatically deployed into your Flashpoint installation (updated if necessary) at the end of a successful import and the latest version of CLIFp will be included in each release of this utility so it is not generally something the end-user needs to concern themselves with.
 
@@ -9,7 +10,7 @@ Before making any changes to your LaunchBox collection any XML files that will b
 
 OFILb can safely be used multiple times on the same collection to update the selected Platforms and Playlists if that have already been imported previously. The method with which to handle existing entries is selected within the program before each import.
 
-The import time will vary, correlated with how many Platforms/Playlists you have selected. Importing the entire collection usually takes 5-10 minutes but can take longer with a more basic PC.
+The import time will vary, correlated with how many Platforms/Playlists you have selected. Importing the entire collection usually takes 5-10 minutes but can take longer with a more basic PC. The vast majority of the processing time is due to the plethora of images that have to be copied/symlinked when games are added/removed (doing an update is much, much faster) so the speed of your storage device is the most significant factor. I plan on trying to have LaunchBox source the game/animation images directly from Flashpoint to avoid symlinks altogether when going with the non-copy option, but this may require a feature request for LaunchBox itself.
 
 You will still be able to use the standard Flashpoint launcher as normal after completing an import.
 
@@ -88,7 +89,7 @@ The symbolic link related options for handling images require the importer to be
  
 ## Limitations
  - Although general compatibility is quite high, compatibility with every single title cannot be assured. Issues with a title or group of titles will be fixed as they are discovered
- - The "smart" feature of the Playlist import portion of the tool has the drawback that only games that were included in the same import will be considered for that playlist. If you previously imported a Platform and now want to import a Playlist that contains games from that Platform you must make sure you select it again for it to be updated/re-imported in order for those games to be added to that Playlist. This is to avoid significantly decreasing Playlist import speed, but a solution to also scan for existing game imports when parsing playlists will likely be added as an opt-in option in the future.
+ - The "smart" feature of the Playlist import portion of the tool has the drawback that only games that were included in the same import will be considered for that playlist. If you previously imported a Platform and now want to import a Playlist that contains games from that Platform you must make sure you select it again for it to be updated/re-imported in order for those games to be added to that Playlist. This is to avoid significantly decreasing Playlist import speed, but a solution to also scan for existing game imports when parsing playlists will likely be added as an opt-in option in the future.
 
 ## Source
 This tool was written in C++ 17 along with Qt 5 and currently only targets Windows Vista and above; however, this tool can easily be ported to Linux with minimal changes, though to what end I am not sure since this is for a Windows application. The source includes an easy-to-use .pro file if you wish to build the application in Qt Creator and the available latest release was compiled in Qt Creator using MSVC 2019 and a static compilation of Qt 5.15.0. Other than a C++ 17 capable compiler and Qt 5.15.x+ all files required to compile this software are included, with the exception of a standard make file.
