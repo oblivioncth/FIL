@@ -713,16 +713,35 @@ QString Install::transferImage(ImageMode imageOption, QDir sourceDir, QString de
     QString sourcePath = sourceDir.absolutePath() + '/' + gameIDString.left(2) + '/' + gameIDString.mid(2, 2) + '/' + gameIDString + IMAGE_EXT;
     QString destinationPath = mPlatformImagesDirectory.absolutePath() + '/' + game.getPlatform() + '/' + destinationSubPath + '/' + gameIDString + IMAGE_EXT;
 
-    // Image Info
-    QFileInfo sourceInfo(sourcePath);
+    // Image info
     QFileInfo destinationInfo(destinationPath);
-    bool sourceAvailable = sourceInfo.exists() && !sourceInfo.isSymLink();
+    QFileInfo sourceInfo(sourcePath);
     bool destinationOccupied = destinationInfo.exists() && (destinationInfo.isFile() || destinationInfo.isSymLink());
+    bool sourceAvailable = sourceInfo.exists() && !sourceInfo.isSymLink();
+
+    // Return if image is already up-to-date
+    if(sourceAvailable && destinationOccupied)
+    {
+        if(destinationInfo.isSymLink() && imageOption == LB_Link)
+            return QString();
+        else
+        {
+            QFile source(sourcePath);
+            QFile destination(destinationPath);
+            QByteArray sourceChecksum;
+            QByteArray destinationChecksum;
+
+            if(Qx::calculateFileChecksum(sourceChecksum, source, QCryptographicHash::Md5).wasSuccessful() &&
+               Qx::calculateFileChecksum(destinationChecksum, destination, QCryptographicHash::Md5).wasSuccessful() &&
+               sourceChecksum == destinationChecksum)
+                return QString();
+        }
+    }
 
     // Determine backup path
     QString backupPath = destinationInfo.absolutePath() + '/' + destinationInfo.baseName() + MODIFIED_FILE_EXT;
 
-    // Temporarily backup image if it already exists
+    // Temporarily backup image if it already exists (also acts as deletion marking in case images for the title were removed in an update)
     if(destinationOccupied && sourceAvailable)
         if(!QFile::rename(destinationPath, backupPath)) // Temp backup
             return ERR_IMAGE_WONT_BACKUP.arg(destinationPath);

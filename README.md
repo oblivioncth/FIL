@@ -10,7 +10,9 @@ Before making any changes to your LaunchBox collection any XML files that will b
 
 OFILb can safely be used multiple times on the same collection to update the selected Platforms and Playlists if that have already been imported previously. The method with which to handle existing entries is selected within the program before each import.
 
-The import time will vary, correlated with how many Platforms/Playlists you have selected. Importing the entire collection usually takes 5-10 minutes but can take longer with a more basic PC. The vast majority of the processing time is due to the plethora of images that have to be copied/symlinked when games are added/removed (doing an update is much, much faster) so the speed of your storage device is the most significant factor. I plan on trying to have LaunchBox source the game/animation images directly from Flashpoint to avoid symlinks altogether when going with the non-copy option, but this may require a feature request for LaunchBox itself.
+The import time will vary, correlated with how many Platforms/Playlists you have selected. Importing the entire collection usually takes 5-10 minutes but can take longer with a more basic PC. The vast majority of the processing time is due to the plethora of images that have to be copied/symlinked when games processed so the speed of your storage device is the most significant factor. Running the importer for updates should be significantly faster it first checks to see if the source image from the new import source is actually different than your current one before copying/linking it.
+
+I plan on trying to have LaunchBox source the game/animation images directly from Flashpoint to avoid symlinks altogether when going with the non-copy option, but this may require a feature request for LaunchBox itself.
 
 You will still be able to use the standard Flashpoint launcher as normal after completing an import.
 
