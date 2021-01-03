@@ -57,6 +57,7 @@ QString Game::getAppPath() const { return mAppPath; }
 QString Game::getCommandLine() const { return mCommandLine; }
 QDateTime Game::getReleaseDate() const { return mReleaseDate; }
 QString Game::getVersion() const { return mVersion; }
+QString Game::getReleaseType() const { return mReleaseType; }
 QHash<QString, QString>& Game::getOtherFields() { return mOtherFields; }
 const QHash<QString, QString>& Game::getOtherFields() const { return mOtherFields; }
 
@@ -108,6 +109,7 @@ GameBuilder& GameBuilder::wReleaseDate(QString rawReleaseDate)
 }
 
 GameBuilder& GameBuilder::wVersion(QString version) { mGameBlueprint.mVersion = version; return *this; }
+GameBuilder& GameBuilder::wReleaseType(QString releaseType) { mGameBlueprint.mReleaseType = releaseType; return *this; }
 
 GameBuilder& GameBuilder::wOtherField(QPair<QString, QString> otherField)
 {

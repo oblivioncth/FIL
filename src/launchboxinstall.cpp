@@ -39,11 +39,11 @@ uint qHash(const Install::XMLHandle& key, uint seed) noexcept
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-Install::XMLDoc::XMLDoc(std::unique_ptr<QFile> xmlFile, XMLHandle xmlMetaData, UpdateOptions updateOptions, Qx::FreeIndexTracker<int>* lbDBFIDT, const Key&)
+Install::XMLDocLegacy::XMLDocLegacy(std::unique_ptr<QFile> xmlFile, XMLHandle xmlMetaData, UpdateOptions updateOptions, Qx::FreeIndexTracker<int>* lbDBFIDT, const Key&)
     : mDocumentFile(std::move(xmlFile)), mHandleTarget(xmlMetaData), mUpdateOptions(updateOptions), mPlaylistGameFreeLBDBIDTracker(lbDBFIDT) {}
 
 //-Class Functions-----------------------------------------------------------------------------------------------------
-QString Install::XMLDoc::makeFileNameLBKosher(QString fileName)
+QString Install::XMLDocLegacy::makeFileNameLBKosher(QString fileName)
 {
     // Perform general kosherization
     fileName = Qx::kosherizeFileName(fileName);
@@ -57,18 +57,18 @@ QString Install::XMLDoc::makeFileNameLBKosher(QString fileName)
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-Install::XMLHandle Install::XMLDoc::getHandleTarget() const { return mHandleTarget; }
+Install::XMLHandle Install::XMLDocLegacy::getHandleTarget() const { return mHandleTarget; }
 
-const QHash<QUuid, Game>& Install::XMLDoc::getFinalGames() const { return mGamesFinal; }
-const QHash<QUuid, AddApp>& Install::XMLDoc::getFinalAddApps() const { return mAddAppsFinal; }
-const PlaylistHeader& Install::XMLDoc::getPlaylistHeader() const { return mPlaylistHeader; }
-const QHash<QUuid, PlaylistGame>& Install::XMLDoc::getFinalPlaylistGames() const { return mPlaylistGamesFinal; }
+const QHash<QUuid, Game>& Install::XMLDocLegacy::getFinalGames() const { return mGamesFinal; }
+const QHash<QUuid, AddApp>& Install::XMLDocLegacy::getFinalAddApps() const { return mAddAppsFinal; }
+const PlaylistHeader& Install::XMLDocLegacy::getPlaylistHeader() const { return mPlaylistHeader; }
+const QHash<QUuid, PlaylistGame>& Install::XMLDocLegacy::getFinalPlaylistGames() const { return mPlaylistGamesFinal; }
 
-bool Install::XMLDoc::containsGame(QUuid gameID) const { return mGamesFinal.contains(gameID) || mGamesExisting.contains(gameID); }
-bool Install::XMLDoc::containsAddApp(QUuid addAppId) const { return mAddAppsFinal.contains(addAppId) || mAddAppsExisting.contains(addAppId); }
-bool Install::XMLDoc::containsPlaylistGame(QUuid gameID) const { return mPlaylistGamesFinal.contains(gameID) || mPlaylistGamesExisting.contains(gameID); }
+bool Install::XMLDocLegacy::containsGame(QUuid gameID) const { return mGamesFinal.contains(gameID) || mGamesExisting.contains(gameID); }
+bool Install::XMLDocLegacy::containsAddApp(QUuid addAppId) const { return mAddAppsFinal.contains(addAppId) || mAddAppsExisting.contains(addAppId); }
+bool Install::XMLDocLegacy::containsPlaylistGame(QUuid gameID) const { return mPlaylistGamesFinal.contains(gameID) || mPlaylistGamesExisting.contains(gameID); }
 
-void Install::XMLDoc::addGame(Game game)
+void Install::XMLDocLegacy::addGame(Game game)
 {
     // Only act if this doc is the appropriate type
     if(mHandleTarget.type == Platform)
@@ -97,7 +97,7 @@ void Install::XMLDoc::addGame(Game game)
     }
 }
 
-void Install::XMLDoc::addAddApp(AddApp app)
+void Install::XMLDocLegacy::addAddApp(AddApp app)
 {
     // Only act if this doc is the appropriate type
     if(mHandleTarget.type == Platform)
@@ -126,7 +126,7 @@ void Install::XMLDoc::addAddApp(AddApp app)
     }
 }
 
-void Install::XMLDoc::setPlaylistHeader(PlaylistHeader header)
+void Install::XMLDocLegacy::setPlaylistHeader(PlaylistHeader header)
 {
     // Only act if this doc is the appropriate type
     if(mHandleTarget.type == Playlist)
@@ -136,7 +136,7 @@ void Install::XMLDoc::setPlaylistHeader(PlaylistHeader header)
     }
 }
 
-void Install::XMLDoc::addPlaylistGame(PlaylistGame playlistGame)
+void Install::XMLDocLegacy::addPlaylistGame(PlaylistGame playlistGame)
 {
     // Only act if this doc is the appropriate type
     if(mHandleTarget.type == Playlist)
@@ -169,9 +169,9 @@ void Install::XMLDoc::addPlaylistGame(PlaylistGame playlistGame)
     }
 }
 
-void Install::XMLDoc::clearFile() { mDocumentFile->resize(0); }
+void Install::XMLDocLegacy::clearFile() { mDocumentFile->resize(0); }
 
-void Install::XMLDoc::finalize()
+void Install::XMLDocLegacy::finalize()
 {
     // Copy items to final list if obsolete entries are to be kept
     if(!mUpdateOptions.removeObsolete)
@@ -193,12 +193,12 @@ void Install::XMLDoc::finalize()
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-Install::XMLReader::XMLReader(XMLDoc* targetDoc)
+Install::XMLReaderLegacy::XMLReaderLegacy(XMLDocLegacy* targetDoc)
     : mTargetDocument(targetDoc) {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Public:
-Qx::XmlStreamReaderError Install::XMLReader::readInto()
+Qx::XmlStreamReaderError Install::XMLReaderLegacy::readInto()
 {
     // Hook reader to document handle
     mStreamReader.setDevice(mTargetDocument->mDocumentFile.get());
@@ -220,7 +220,7 @@ Qx::XmlStreamReaderError Install::XMLReader::readInto()
 }
 
 //Private:
-Qx::XmlStreamReaderError Install::XMLReader::readLaunchBoxDocument()
+Qx::XmlStreamReaderError Install::XMLReaderLegacy::readLaunchBoxDocument()
 {
     while(mStreamReader.readNextStartElement())
     {
@@ -268,7 +268,7 @@ Qx::XmlStreamReaderError Install::XMLReader::readLaunchBoxDocument()
         return Qx::XmlStreamReaderError();
 }
 
-void Install::XMLReader::parseGame()
+void Install::XMLReaderLegacy::parseGame()
 {
     // Game to build
     GameBuilder gb;
@@ -314,6 +314,8 @@ void Install::XMLReader::parseGame()
             gb.wReleaseDate(mStreamReader.readElementText());
         else if(mStreamReader.name() == XMLMainElement_Game::ELEMENT_VERSION)
             gb.wVersion(mStreamReader.readElementText());
+        else if(mStreamReader.name() == XMLMainElement_Game::ELEMENT_RELEASE_TYPE)
+            gb.wReleaseType(mStreamReader.readElementText());
         else
             gb.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
     }
@@ -323,7 +325,7 @@ void Install::XMLReader::parseGame()
     mTargetDocument->mGamesExisting[existingGame.getID()] = existingGame;
 }
 
-void Install::XMLReader::parseAddApp()
+void Install::XMLReaderLegacy::parseAddApp()
 {
     // Additional App to Build
     AddAppBuilder aab;
@@ -354,7 +356,7 @@ void Install::XMLReader::parseAddApp()
     mTargetDocument->mAddAppsExisting[existingAddApp.getID()] = existingAddApp;
 
 }
-void Install::XMLReader::parsePlaylistHeader()
+void Install::XMLReaderLegacy::parsePlaylistHeader()
 {
     // Playlist Header to Build
     PlaylistHeaderBuilder phb;
@@ -379,7 +381,7 @@ void Install::XMLReader::parsePlaylistHeader()
 
 }
 
-void Install::XMLReader::parsePlaylistGame()
+void Install::XMLReaderLegacy::parsePlaylistGame()
 {
     // Playlist Game to Build
     PlaylistGameBuilder pgb;
@@ -422,12 +424,12 @@ void Install::XMLReader::parsePlaylistGame()
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-Install::XMLWriter::XMLWriter(XMLDoc* sourceDoc)
+Install::XMLWriterLegacy::XMLWriterLegacy(XMLDocLegacy* sourceDoc)
     : mSourceDocument(sourceDoc) {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Public:
-QString Install::XMLWriter::writeOutOf()
+QString Install::XMLWriterLegacy::writeOutOf()
 {
     // Hook writer to document handle
     mStreamWriter.setDevice(mSourceDocument->mDocumentFile.get());
@@ -456,7 +458,7 @@ QString Install::XMLWriter::writeOutOf()
 }
 
 //Private:
-bool Install::XMLWriter::writeLaunchBoxDocument()
+bool Install::XMLWriterLegacy::writeLaunchBoxDocument()
 {
     // Platform procedure
     if(mSourceDocument->getHandleTarget().type == Platform)
@@ -493,7 +495,7 @@ bool Install::XMLWriter::writeLaunchBoxDocument()
     return true;
 }
 
-bool Install::XMLWriter::writeGame(const Game& game)
+bool Install::XMLWriterLegacy::writeGame(const Game& game)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(XMLMainElement_Game::NAME);
@@ -526,6 +528,7 @@ bool Install::XMLWriter::writeGame(const Game& game)
         mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_RELEASE_DATE, game.getReleaseDate().toString(Qt::ISODateWithMs));
 
     mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_VERSION, game.getVersion());
+    mStreamWriter.writeTextElement(XMLMainElement_Game::ELEMENT_RELEASE_TYPE, game.getReleaseType());
 
     if(mStreamWriter.hasError())
         return false;
@@ -546,7 +549,7 @@ bool Install::XMLWriter::writeGame(const Game& game)
     return true;
 }
 
-bool Install::XMLWriter::writeAddApp(const AddApp& addApp)
+bool Install::XMLWriterLegacy::writeAddApp(const AddApp& addApp)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(XMLMainElement_AddApp::NAME);
@@ -579,7 +582,7 @@ bool Install::XMLWriter::writeAddApp(const AddApp& addApp)
     return true;
 }
 
-bool Install::XMLWriter::writePlaylistHeader(const PlaylistHeader& playlistHeader)
+bool Install::XMLWriterLegacy::writePlaylistHeader(const PlaylistHeader& playlistHeader)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(XMLMainElement_PlaylistHeader::NAME);
@@ -609,7 +612,7 @@ bool Install::XMLWriter::writePlaylistHeader(const PlaylistHeader& playlistHeade
     return true;
 }
 
-bool Install::XMLWriter::writePlaylistGame(const PlaylistGame& playlistGame)
+bool Install::XMLWriterLegacy::writePlaylistGame(const PlaylistGame& playlistGame)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(XMLMainElement_PlaylistGame::NAME);
@@ -838,7 +841,7 @@ Qx::IOOpReport Install::populateExistingItems()
 }
 
 // Get a handle to the specified XML file (do not include ".xml" extension)
-Qx::XmlStreamReaderError Install::openXMLDocument(std::unique_ptr<XMLDoc>& returnBuffer, XMLHandle requestHandle, UpdateOptions updateOptions)
+Qx::XmlStreamReaderError Install::openXMLDocument(std::unique_ptr<XMLDocLegacy>& returnBuffer, XMLHandle requestHandle, UpdateOptions updateOptions)
 {
     // Ensure return buffer is reset
     returnBuffer.reset();
@@ -849,14 +852,14 @@ Qx::XmlStreamReaderError Install::openXMLDocument(std::unique_ptr<XMLDoc>& retur
     // Check if existing instance is already allocated and set handle to null if so
     if(mLeasedHandles.contains(requestHandle))
     {
-        returnBuffer = std::unique_ptr<Install::XMLDoc>();
-        openReadError = Qx::XmlStreamReaderError(populateErrorWithTarget(XMLReader::ERR_DOC_ALREADY_OPEN, requestHandle));
+        returnBuffer = std::unique_ptr<Install::XMLDocLegacy>();
+        openReadError = Qx::XmlStreamReaderError(populateErrorWithTarget(XMLReaderLegacy::ERR_DOC_ALREADY_OPEN, requestHandle));
     }
     else
     {
         // Get full path to target file
         QString targetPath = (requestHandle.type == Platform ? mPlatformsDirectory : mPlaylistsDirectory).absolutePath() + '/' +
-                              XMLDoc::makeFileNameLBKosher(requestHandle.name) + XML_EXT;
+                              XMLDocLegacy::makeFileNameLBKosher(requestHandle.name) + XML_EXT;
 
         // Create unique reference to the target file for the new handle
         std::unique_ptr<QFile> xmlFile = std::make_unique<QFile>(targetPath);
@@ -871,11 +874,11 @@ Qx::XmlStreamReaderError Install::openXMLDocument(std::unique_ptr<XMLDoc>& retur
             if(QFile::exists(backupPath) && QFileInfo(backupPath).isFile())
             {
                 if(!QFile::remove(backupPath))
-                    return Qx::XmlStreamReaderError(populateErrorWithTarget(XMLReader::ERR_BAK_WONT_DEL, requestHandle));
+                    return Qx::XmlStreamReaderError(populateErrorWithTarget(XMLReaderLegacy::ERR_BAK_WONT_DEL, requestHandle));
             }
 
             if(!QFile::copy(targetPath, backupPath))
-                return Qx::XmlStreamReaderError(populateErrorWithTarget(XMLReader::ERR_CANT_MAKE_BAK, requestHandle));
+                return Qx::XmlStreamReaderError(populateErrorWithTarget(XMLReaderLegacy::ERR_CANT_MAKE_BAK, requestHandle));
         }
 
         // Add file to modified list
@@ -885,13 +888,13 @@ Qx::XmlStreamReaderError Install::openXMLDocument(std::unique_ptr<XMLDoc>& retur
         if(xmlFile->open(QFile::ReadWrite)) // Ensures that empty file is created if the target doesn't exist
         {
             // Create new handle to requested document
-            returnBuffer = std::make_unique<XMLDoc>(std::move(xmlFile), requestHandle, updateOptions, &mLBDatabaseIDTracker, XMLDoc::Key{});
+            returnBuffer = std::make_unique<XMLDocLegacy>(std::move(xmlFile), requestHandle, updateOptions, &mLBDatabaseIDTracker, XMLDocLegacy::Key{});
 
             // Read existing file if present
             if((requestHandle.type == Platform && mExistingPlatforms.contains(requestHandle.name)) ||
                 (requestHandle.type == Playlist && mExistingPlaylists.contains(requestHandle.name)))
             {
-                XMLReader docReader(returnBuffer.get());
+                XMLReaderLegacy docReader(returnBuffer.get());
                 openReadError = docReader.readInto();
 
                 // Clear file to prepare for writing
@@ -900,22 +903,22 @@ Qx::XmlStreamReaderError Install::openXMLDocument(std::unique_ptr<XMLDoc>& retur
 
             // Add handle to lease set if no error occured while readding
             if(openReadError.isValid())
-                returnBuffer = std::unique_ptr<Install::XMLDoc>();
+                returnBuffer = std::unique_ptr<Install::XMLDocLegacy>();
             else
                 mLeasedHandles.insert(requestHandle);
         }
         else
-            openReadError = Qx::XmlStreamReaderError(populateErrorWithTarget(XMLReader::ERR_DOC_CANT_OPEN, requestHandle).arg(xmlFile->errorString()));
+            openReadError = Qx::XmlStreamReaderError(populateErrorWithTarget(XMLReaderLegacy::ERR_DOC_CANT_OPEN, requestHandle).arg(xmlFile->errorString()));
     }
 
     // Return new handle
     return openReadError;
 }
 
-bool Install::saveXMLDocument(QString& errorMessage, std::unique_ptr<XMLDoc> document)
+bool Install::saveXMLDocument(QString& errorMessage, std::unique_ptr<XMLDocLegacy> document)
 {
     // Prepare writer
-    XMLWriter docWriter(document.get());
+    XMLWriterLegacy docWriter(document.get());
 
     // Write to file
     errorMessage = docWriter.writeOutOf();

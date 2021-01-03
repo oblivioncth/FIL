@@ -264,7 +264,7 @@ void MainWindow::populateImportSelectionBoxes()
         currentItem->setFlags(currentItem->flags() | Qt::ItemIsUserCheckable);
         currentItem->setCheckState(Qt::Unchecked);
 
-        if(mLaunchBoxInstall->getExistingPlatforms().contains(LB::Install::XMLDoc::makeFileNameLBKosher(currentItem->text())))
+        if(mLaunchBoxInstall->getExistingPlatforms().contains(LB::Install::XMLDocLegacy::makeFileNameLBKosher(currentItem->text())))
             currentItem->setBackground(QBrush(mExistingItemColor));
     }
 
@@ -274,7 +274,7 @@ void MainWindow::populateImportSelectionBoxes()
         currentItem->setFlags(currentItem->flags() | Qt::ItemIsUserCheckable);
         currentItem->setCheckState(Qt::Unchecked);
 
-        if(mLaunchBoxInstall->getExistingPlaylists().contains(LB::Install::XMLDoc::makeFileNameLBKosher(currentItem->text())))
+        if(mLaunchBoxInstall->getExistingPlaylists().contains(LB::Install::XMLDocLegacy::makeFileNameLBKosher(currentItem->text())))
             currentItem->setBackground(QBrush(mExistingItemColor));
     }
 
@@ -455,7 +455,7 @@ void MainWindow::importSelectionReaction(QListWidgetItem* item, QWidget* parent)
     {
         ui->pushButton_startImport->setEnabled(true);
         if(parent == ui->listWidget_platformChoices &&
-                mLaunchBoxInstall->getExistingPlatforms().contains(LB::Install::XMLDoc::makeFileNameLBKosher(item->text())))
+                mLaunchBoxInstall->getExistingPlatforms().contains(LB::Install::XMLDocLegacy::makeFileNameLBKosher(item->text())))
             customSetUpdateGroupEnabled(true);
 //        customSetUpdateGroupEnabled((parent == ui->listWidget_platformChoices && mLaunchBoxInstall->getExistingPlatforms().contains(item->text())) ||
 //                                            (parent == ui->listWidget_playlistChoices && mLaunchBoxInstall->getExistingPlaylists().contains(item->text())));
@@ -472,7 +472,7 @@ void MainWindow::importSelectionReaction(QListWidgetItem* item, QWidget* parent)
             {
                 keepStartButtonEnabled = true;
 
-                if(mLaunchBoxInstall->getExistingPlatforms().contains(LB::Install::XMLDoc::makeFileNameLBKosher(ui->listWidget_platformChoices->item(i)->text())))
+                if(mLaunchBoxInstall->getExistingPlatforms().contains(LB::Install::XMLDocLegacy::makeFileNameLBKosher(ui->listWidget_platformChoices->item(i)->text())))
                     keepUpdateGroupEnabled = true;
             }
         }
@@ -505,7 +505,7 @@ QSet<QString> MainWindow::getSelectedPlatforms(bool fileNameLegal) const
 
     for(int i = 0; i < ui->listWidget_platformChoices->count(); i++)
         if(ui->listWidget_platformChoices->item(i)->checkState() == Qt::Checked)
-            selectedPlatforms.insert(fileNameLegal ? LB::Install::XMLDoc::makeFileNameLBKosher(ui->listWidget_platformChoices->item(i)->text()) :
+            selectedPlatforms.insert(fileNameLegal ? LB::Install::XMLDocLegacy::makeFileNameLBKosher(ui->listWidget_platformChoices->item(i)->text()) :
                                                      ui->listWidget_platformChoices->item(i)->text());
 
     return selectedPlatforms;
@@ -517,7 +517,7 @@ QSet<QString> MainWindow::getSelectedPlaylists(bool fileNameLegal) const
 
     for(int i = 0; i < ui->listWidget_playlistChoices->count(); i++)
         if(ui->listWidget_playlistChoices->item(i)->checkState() == Qt::Checked)
-            selectedPlaylists.insert(fileNameLegal ? LB::Install::XMLDoc::makeFileNameLBKosher(ui->listWidget_playlistChoices->item(i)->text()) :
+            selectedPlaylists.insert(fileNameLegal ? LB::Install::XMLDocLegacy::makeFileNameLBKosher(ui->listWidget_playlistChoices->item(i)->text()) :
                                                      ui->listWidget_playlistChoices->item(i)->text());
 
     return selectedPlaylists;

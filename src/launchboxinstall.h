@@ -15,8 +15,8 @@ class Install
 {
 //-Class Forward Declarations--------------------------------------------------------------------------------------
 public:
-    class XMLReader;
-    class XMLWriter;
+    class XMLReaderLegacy; // TODO: Rework into genericized class child
+    class XMLWriterLegacy; // TODO: Rework into genericized class child
 
 //-Class Enums---------------------------------------------------------------------------------------------------
 public:
@@ -73,6 +73,7 @@ public:
         static inline const QString ELEMENT_COMMAND_LINE = "CommandLine";
         static inline const QString ELEMENT_RELEASE_DATE = "ReleaseDate";
         static inline const QString ELEMENT_VERSION = "Version";
+        static inline const QString ELEMENT_RELEASE_TYPE = "ReleaseType";
     };
 
     class XMLMainElement_AddApp
@@ -113,10 +114,10 @@ public:
         static inline const QString ELEMENT_LB_DB_ID = "LaunchBoxDbId";
     };
 
-    class XMLDoc
+    class XMLDocLegacy // TODO: Rework into genericized class child
     {
-        friend class XMLReader;
-        friend class XMLWriter;
+        friend class XMLReaderLegacy;
+        friend class XMLWriterLegacy;
         friend class Install;
 
     //-Inner Classes----------------------------------------------------------------------------------------------------
@@ -147,7 +148,7 @@ public:
 
     //-Constructor--------------------------------------------------------------------------------------------------------
     public:
-        explicit XMLDoc(std::unique_ptr<QFile> xmlFile, XMLHandle xmlMetaData, UpdateOptions updateOptions, Qx::FreeIndexTracker<int>* lbDBFIDT, const Key&);
+        explicit XMLDocLegacy(std::unique_ptr<QFile> xmlFile, XMLHandle xmlMetaData, UpdateOptions updateOptions, Qx::FreeIndexTracker<int>* lbDBFIDT, const Key&);
 
     //-Class Functions-----------------------------------------------------------------------------------------------------
         static QString makeFileNameLBKosher(QString fileName);
@@ -173,7 +174,15 @@ public:
         void finalize();
     };
 
-    class XMLReader
+    class XMLDoc
+    {
+    //-Instance Variables--------------------------------------------------------------------------------------------------
+    private:
+        std::unique_ptr<QFile> mDocumentFile;
+
+    };
+
+    class XMLReaderLegacy
     {
     //-Class variables-----------------------------------------------------------------------------------------------------
     public:
@@ -187,11 +196,11 @@ public:
     //-Instance Variables--------------------------------------------------------------------------------------------------
     private:
         QXmlStreamReader mStreamReader;
-        XMLDoc* mTargetDocument;
+        XMLDocLegacy* mTargetDocument;
 
     //-Constructor--------------------------------------------------------------------------------------------------------
     public:
-        XMLReader(XMLDoc* targetDoc);
+        XMLReaderLegacy(XMLDocLegacy* targetDoc);
 
     //-Instance Functions-------------------------------------------------------------------------------------------------
     public:
@@ -205,7 +214,7 @@ public:
         void parsePlaylistGame();
     };
 
-    class XMLWriter
+    class XMLWriterLegacy
     {
         //-Class variables-----------------------------------------------------------------------------------------------------
         public:
@@ -214,11 +223,11 @@ public:
         //-Instance Variables--------------------------------------------------------------------------------------------------
         private:
             QXmlStreamWriter mStreamWriter;
-            XMLDoc* mSourceDocument;
+            XMLDocLegacy* mSourceDocument;
 
         //-Constructor--------------------------------------------------------------------------------------------------------
         public:
-            XMLWriter(XMLDoc* sourceDoc);
+            XMLWriterLegacy(XMLDocLegacy* sourceDoc);
 
         //-Instance Functions-------------------------------------------------------------------------------------------------
         public:
@@ -303,8 +312,8 @@ private:
 public:
    Qx::IOOpReport populateExistingItems();
 
-   Qx::XmlStreamReaderError openXMLDocument(std::unique_ptr<XMLDoc>& returnBuffer, XMLHandle requestHandle, UpdateOptions updateOptions);
-   bool saveXMLDocument(QString& errorMessage, std::unique_ptr<XMLDoc> document);
+   Qx::XmlStreamReaderError openXMLDocument(std::unique_ptr<XMLDocLegacy>& returnBuffer, XMLHandle requestHandle, UpdateOptions updateOptions);
+   bool saveXMLDocument(QString& errorMessage, std::unique_ptr<XMLDocLegacy> document);
    bool ensureImageDirectories(QString& errorMessage, QString platform);
    bool transferLogo(QString& errorMessage, ImageMode imageOption, QDir logoSourceDir, const LB::Game& game);
    bool transferScreenshot(QString& errorMessage, ImageMode imageOption, QDir screenshotSourceDir, const LB::Game& game);
