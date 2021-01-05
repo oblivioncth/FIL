@@ -44,7 +44,7 @@ public:
         QString name;
 
         friend bool operator== (const XMLHandle& lhs, const XMLHandle& rhs) noexcept;
-        friend uint qHash(const XMLHandle& key, uint seed) noexcept;
+        friend size_t qHash(const XMLHandle& key, size_t seed) noexcept;
     };
 
 //-Inner Classes-------------------------------------------------------------------------------------------------

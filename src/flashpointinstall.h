@@ -54,7 +54,7 @@ public:
         QStringList arguments;
 
         friend bool operator== (const StartStop& lhs, const StartStop& rhs) noexcept;
-        friend uint qHash(const StartStop& key, uint seed) noexcept;
+        friend size_t qHash(const StartStop& key, size_t seed) noexcept;
     };
 
     struct Services

@@ -336,7 +336,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
             currentPlaylistGameResult.result.next();
 
             // Only process the playlist game if it was included in import (TODO: Possibly implement checking all other Platform xmls for presence of this game)
-            if(playlistGameDetailsCache.contains(currentPlaylistGameResult.result.value(FP::Install::DBTable_Playlist_Game::COL_GAME_ID).toString()))
+            if(playlistGameDetailsCache.contains(QUuid(currentPlaylistGameResult.result.value(FP::Install::DBTable_Playlist_Game::COL_GAME_ID).toString())))
             {
                 // Form game from record
                 FP::PlaylistGameBuilder fpPgb;

@@ -5,8 +5,8 @@
 #include <QListWidgetItem>
 #include <QProgressDialog>
 #include <QMessageBox>
-#include <QWinTaskbarButton>
-#include <QWinTaskbarProgress>
+//#include <QWinTaskbarButton>
+//#include <QWinTaskbarProgress>
 #include "version.h"
 #include "launchboxinstall.h"
 #include "flashpointinstall.h"
@@ -150,7 +150,7 @@ private:
 
     // Process monitoring
     std::unique_ptr<QProgressDialog> mImportProgressDialog;
-    QWinTaskbarButton* mWindowTaskbarButton;
+    //QWinTaskbarButton* mWindowTaskbarButton; // Currently not present in Qt 6 TODO: Re-add this functionality when available
 
     //QTimer mUIUpdateWorkaroundTimer;
 

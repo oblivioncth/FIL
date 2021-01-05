@@ -114,7 +114,7 @@ bool operator== (const AddApp& lhs, const AddApp& rhs) noexcept
 }
 
 //-Hashing------------------------------------------------------------------------------------------------------
-uint qHash(const AddApp& key, uint seed) noexcept
+size_t qHash(const AddApp& key, size_t seed) noexcept
 {
     QtPrivate::QHashCombine hash;
     seed = hash(seed, key.mID);

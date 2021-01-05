@@ -16,7 +16,7 @@ bool operator== (const Install::StartStop& lhs, const Install::StartStop& rhs) n
 }
 
 //-Hashing------------------------------------------------------------------------------------------------------
-uint qHash(const Install::StartStop& key, uint seed) noexcept
+size_t qHash(const Install::StartStop& key, size_t seed) noexcept
 {
     QtPrivate::QHashCombine hash;
     seed = hash(seed, key.path);

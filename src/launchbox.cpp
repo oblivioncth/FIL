@@ -163,9 +163,9 @@ AddAppBuilder& AddAppBuilder::wID(QString rawID) { mAddAppBlueprint.mID = QUuid(
 AddAppBuilder& AddAppBuilder::wGameID(QString rawGameID) { mAddAppBlueprint.mGameID = QUuid(rawGameID); return *this; }
 AddAppBuilder& AddAppBuilder::wAppPath(QString appPath) { mAddAppBlueprint.mAppPath = appPath; return *this; }
 AddAppBuilder& AddAppBuilder::wCommandLine(QString commandLine) { mAddAppBlueprint.mCommandLine = commandLine; return *this; }
-AddAppBuilder& AddAppBuilder::wAutorunBefore(QString rawAutorunBefore) { mAddAppBlueprint.mAutorunBefore = rawAutorunBefore != 0; return *this; }
+AddAppBuilder& AddAppBuilder::wAutorunBefore(QString rawAutorunBefore) { mAddAppBlueprint.mAutorunBefore = rawAutorunBefore != "0"; return *this; }
 AddAppBuilder& AddAppBuilder::wName(QString name) { mAddAppBlueprint.mName = name; return *this; }
-AddAppBuilder& AddAppBuilder::wWaitForExit(QString rawWaitForExit) { mAddAppBlueprint.mWaitForExit = rawWaitForExit != 0; return *this; }
+AddAppBuilder& AddAppBuilder::wWaitForExit(QString rawWaitForExit) { mAddAppBlueprint.mWaitForExit = rawWaitForExit != "0"; return *this; }
 AddAppBuilder& AddAppBuilder::wOtherField(QPair<QString, QString> otherField)
 {
     mAddAppBlueprint.mOtherFields[otherField.first] = otherField.second;
