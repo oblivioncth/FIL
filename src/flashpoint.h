@@ -137,7 +137,7 @@ public:
 
 //-Hashing-------------------------------------------------------------------------------------------------------------
 public:
-    friend size_t qHash(const AddApp& key, size_t seed) noexcept;
+    friend uint qHash(const AddApp& key, uint seed) noexcept;
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:

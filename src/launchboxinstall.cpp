@@ -24,7 +24,7 @@ bool operator== (const Install::XMLHandle& lhs, const Install::XMLHandle& rhs) n
 }
 
 //-Hashing------------------------------------------------------------------------------------------------------
-size_t qHash(const Install::XMLHandle& key, size_t seed) noexcept
+uint qHash(const Install::XMLHandle& key, uint seed) noexcept
 {
     QtPrivate::QHashCombine hash;
     seed = hash(seed, key.type);

@@ -5,8 +5,8 @@
 #include <QListWidgetItem>
 #include <QProgressDialog>
 #include <QMessageBox>
-//#include <QWinTaskbarButton>
-//#include <QWinTaskbarProgress>
+#include <QWinTaskbarButton>
+#include <QWinTaskbarProgress>
 #include "version.h"
 #include "launchboxinstall.h"
 #include "flashpointinstall.h"
@@ -131,7 +131,7 @@ private:
     // URLs
     static inline const QUrl URL_CLIFP_GITHUB = QUrl("https://github.com/oblivioncth/CLIFp");
     static inline const QUrl URL_OFLIB_GITHUB =  QUrl("https://github.com/oblivioncth/OFILb");
-    static inline const QUrl URL_LB_FORUMS =  QUrl("https://forums.launchbox-app.com/files/file/2652-obbys-flashpoint-importer-for-launchbox"); //TODO: ADD ME
+    static inline const QUrl URL_LB_FORUMS =  QUrl("https://forums.launchbox-app.com/files/file/2652-obbys-flashpoint-importer-for-launchbox");
 
 //-Instance Variables--------------------------------------------------------------------------------------------
 private:
@@ -150,7 +150,7 @@ private:
 
     // Process monitoring
     std::unique_ptr<QProgressDialog> mImportProgressDialog;
-    //QWinTaskbarButton* mWindowTaskbarButton; // Currently not present in Qt 6 TODO: Re-add this functionality when available
+    QWinTaskbarButton* mWindowTaskbarButton; // TODO: Remove for Qt6
 
     //QTimer mUIUpdateWorkaroundTimer;
 
