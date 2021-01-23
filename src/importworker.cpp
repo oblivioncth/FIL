@@ -147,15 +147,15 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         emit progressStepChanged(STEP_IMPORTING_PLATFORM_GAMES.arg(currentPlatformGameResult.source));
 
         // Open LB platform doc
-        LB::Install::XMLHandle docRequest = {LB::Install::Platform, currentPlatformGameResult.source};
-        std::unique_ptr<LB::Install::XMLDocLegacy> currentPlatformXML;
-        Qx::XmlStreamReaderError platformReadError = mLaunchBoxInstall->openXMLDocument(currentPlatformXML, docRequest, mOptionSet.updateOptions);
+        LB::Xml::DataDocHandle docRequest = {LB::Xml::Platform::TYPE_NAME, currentPlatformGameResult.source};
+        std::unique_ptr<LB::Xml::Platform> currentPlatformXML;
+        Qx::XmlStreamReaderError platformReadError = mLaunchBoxInstall->openPlatformDoc(currentPlatformXML, docRequest.docName, mOptionSet.updateOptions);
 
         // Stop import if error occured
         if(platformReadError.isValid())
         {
             // Emit import failure
-            errorReport = Qx::GenericError(Qx::GenericError::Critical, LB::Install::populateErrorWithTarget(MSG_LB_XML_UNEXPECTED_ERROR, docRequest),
+            errorReport = Qx::GenericError(Qx::GenericError::Critical, LB::Xml::formatDataDocError(MSG_LB_XML_UNEXPECTED_ERROR, docRequest),
                                            platformReadError.getText());
             return Failed;
         }
@@ -295,10 +295,10 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
 
         // Forefit doucment lease and save it
         QString saveError;
-        if(!mLaunchBoxInstall->saveXMLDocument(saveError, std::move(currentPlatformXML)))
+        if(!mLaunchBoxInstall->savePlatformDoc(saveError, std::move(currentPlatformXML)))
         {
             errorReport = Qx::GenericError(Qx::GenericError::Critical,
-                                           LB::Install::populateErrorWithTarget(LB::Install::XMLWriterLegacy::ERR_WRITE_FAILED, docRequest), saveError);
+                                           LB::Xml::formatDataDocError(LB::Xml::ERR_WRITE_FAILED, docRequest), saveError);
             return Failed;
         }
 
@@ -314,15 +314,15 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         emit progressStepChanged(STEP_IMPORTING_PLAYLIST_GAMES.arg(currentPlaylist.getTitle()));
 
         // Open LB playlist doc
-        LB::Install::XMLHandle docRequest = {LB::Install::Playlist, currentPlaylist.getTitle()};
-        std::unique_ptr<LB::Install::XMLDocLegacy> currentPlaylistXML;
-        Qx::XmlStreamReaderError playlistReadError = mLaunchBoxInstall->openXMLDocument(currentPlaylistXML, docRequest, mOptionSet.updateOptions);
+        LB::Xml::DataDocHandle docRequest = {LB::Xml::Playlist::TYPE_NAME, currentPlaylist.getTitle()};
+        std::unique_ptr<LB::Xml::Playlist> currentPlaylistXML;
+        Qx::XmlStreamReaderError playlistReadError = mLaunchBoxInstall->openPlaylistDoc(currentPlaylistXML, docRequest.docName, mOptionSet.updateOptions);
 
         // Stop import if error occured
         if(playlistReadError.isValid())
         {
             errorReport = Qx::GenericError(Qx::GenericError::Critical,
-                                           LB::Install::populateErrorWithTarget(MSG_LB_XML_UNEXPECTED_ERROR, docRequest), playlistReadError.getText());
+                                           LB::Xml::formatDataDocError(MSG_LB_XML_UNEXPECTED_ERROR, docRequest), playlistReadError.getText());
             return Failed;
         }
 
@@ -364,10 +364,10 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
 
         // Forefit doucment lease and save it
         QString saveError;
-        if(!mLaunchBoxInstall->saveXMLDocument(saveError, std::move(currentPlaylistXML)))
+        if(!mLaunchBoxInstall->savePlaylistDoc(saveError, std::move(currentPlaylistXML)))
         {
             errorReport = Qx::GenericError(Qx::GenericError::Critical,
-                                           LB::Install::populateErrorWithTarget(LB::Install::XMLWriterLegacy::ERR_WRITE_FAILED, docRequest), saveError);
+                                           LB::Xml::formatDataDocError(LB::Xml::ERR_WRITE_FAILED, docRequest), saveError);
             return Failed;
         }
     }

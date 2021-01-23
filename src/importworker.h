@@ -24,8 +24,8 @@ public:
 
     struct OptionSet
     {
-        LB::Install::UpdateOptions updateOptions;
-        LB::Install::ImageMode imageMode;
+        LB::UpdateOptions updateOptions;
+        LB::Install::ImageModeL imageMode;
         LB::Install::GeneralOptions generalOptions;
     };
 

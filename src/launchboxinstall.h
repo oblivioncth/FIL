@@ -8,6 +8,7 @@
 #include "qx-io.h"
 #include "qx-xml.h"
 #include "launchbox.h"
+#include "launchboxxml.h"
 
 namespace LB {
 
@@ -20,239 +21,33 @@ public:
 
 //-Class Enums---------------------------------------------------------------------------------------------------
 public:
-    enum XMLDocType {Platform, Playlist};
-    enum ImportMode {OnlyNew, NewAndExisting};
-    enum ImageMode {LB_Copy, LB_Link, FP_Link};
+    enum ImageModeL {LB_CopyL, LB_LinkL, FP_LinkL};
 
 //-Class Structs----------------------------------------------------------------------------------------------------
 public:
-    struct UpdateOptions
-    {
-        ImportMode importMode;
-        bool removeObsolete;
-    };
-
     struct GeneralOptions
     {
         bool includeExtreme;
-    };
-
-    class XMLHandle
-    {
-    public:
-        XMLDocType type;
-        QString name;
-
-        friend bool operator== (const XMLHandle& lhs, const XMLHandle& rhs) noexcept;
-        friend size_t qHash(const XMLHandle& key, size_t seed) noexcept;
-    };
-
-//-Inner Classes-------------------------------------------------------------------------------------------------
-public:    
-    class XMLMainElement_Game
-    {
-    public:
-        static inline const QString NAME = "Game";
-
-        static inline const QString ELEMENT_ID = "ID";
-        static inline const QString ELEMENT_TITLE = "Title";
-        static inline const QString ELEMENT_SERIES = "Series";
-        static inline const QString ELEMENT_DEVELOPER = "Developer";
-        static inline const QString ELEMENT_PUBLISHER = "Publisher";
-        static inline const QString ELEMENT_PLATFORM = "Platform";
-        static inline const QString ELEMENT_SORT_TITLE = "SortTitle";
-        static inline const QString ELEMENT_DATE_ADDED = "DateAdded";
-        static inline const QString ELEMENT_DATE_MODIFIED = "DateModified";
-        static inline const QString ELEMENT_BROKEN = "Broken";
-        static inline const QString ELEMENT_PLAYMODE = "PlayMode";
-        static inline const QString ELEMENT_STATUS = "Status";
-        static inline const QString ELEMENT_REGION = "Region";
-        static inline const QString ELEMENT_NOTES = "Notes";
-        static inline const QString ELEMENT_SOURCE = "Source";
-        static inline const QString ELEMENT_APP_PATH = "ApplicationPath";
-        static inline const QString ELEMENT_COMMAND_LINE = "CommandLine";
-        static inline const QString ELEMENT_RELEASE_DATE = "ReleaseDate";
-        static inline const QString ELEMENT_VERSION = "Version";
-        static inline const QString ELEMENT_RELEASE_TYPE = "ReleaseType";
-    };
-
-    class XMLMainElement_AddApp
-    {
-    public:
-        static inline const QString NAME = "AdditionalApplication";
-
-        static inline const QString ELEMENT_ID = "Id";
-        static inline const QString ELEMENT_GAME_ID = "GameID";
-        static inline const QString ELEMENT_APP_PATH = "ApplicationPath";
-        static inline const QString ELEMENT_COMMAND_LINE = "CommandLine";
-        static inline const QString ELEMENT_AUTORUN_BEFORE = "AutoRunBefore";
-        static inline const QString ELEMENT_NAME = "Name";
-        static inline const QString ELEMENT_WAIT_FOR_EXIT = "WaitForExit";
-    };
-
-    class XMLMainElement_PlaylistHeader
-    {
-    public:
-        static inline const QString NAME = "Playlist";
-
-        static inline const QString ELEMENT_ID = "PlaylistId";
-        static inline const QString ELEMENT_NAME = "Name";
-        static inline const QString ELEMENT_NESTED_NAME = "NestedName";
-        static inline const QString ELEMENT_NOTES = "Notes";
-    };
-
-    class XMLMainElement_PlaylistGame
-    {
-    public:
-        static inline const QString NAME = "PlaylistGame";
-
-        static inline const QString ELEMENT_ID = "GameId";
-        static inline const QString ELEMENT_GAME_TITLE = "GameTitle";
-        static inline const QString ELEMENT_GAME_FILE_NAME = "GameFileName";
-        static inline const QString ELEMENT_GAME_PLATFORM = "GamePlatform";
-        static inline const QString ELEMENT_MANUAL_ORDER = "ManualOrder";
-        static inline const QString ELEMENT_LB_DB_ID = "LaunchBoxDbId";
-    };
-
-    class XMLDocLegacy // TODO: Rework into genericized class child
-    {
-        friend class XMLReaderLegacy;
-        friend class XMLWriterLegacy;
-        friend class Install;
-
-    //-Inner Classes----------------------------------------------------------------------------------------------------
-    public:
-        class Key
-        {
-            friend class Install;
-        private:
-            Key() {};
-            Key(const Key&) = default;
-        };
-
-    //-Instance Variables--------------------------------------------------------------------------------------------------
-    private:
-        std::unique_ptr<QFile> mDocumentFile;
-        XMLHandle mHandleTarget;
-        UpdateOptions mUpdateOptions;
-        Qx::FreeIndexTracker<int>* mPlaylistGameFreeLBDBIDTracker;
-
-        QHash<QUuid, Game> mGamesFinal;
-        QHash<QUuid, Game> mGamesExisting;
-        QHash<QUuid, AddApp> mAddAppsFinal;
-        QHash<QUuid, AddApp> mAddAppsExisting;
-        PlaylistHeader mPlaylistHeader;
-        QHash<QUuid, PlaylistGame> mPlaylistGamesFinal;
-        QHash<QUuid, PlaylistGame> mPlaylistGamesExisting;
-
-
-    //-Constructor--------------------------------------------------------------------------------------------------------
-    public:
-        explicit XMLDocLegacy(std::unique_ptr<QFile> xmlFile, XMLHandle xmlMetaData, UpdateOptions updateOptions, Qx::FreeIndexTracker<int>* lbDBFIDT, const Key&);
-
-    //-Class Functions-----------------------------------------------------------------------------------------------------
-        static QString makeFileNameLBKosher(QString fileName);
-
-    //-Instance Functions--------------------------------------------------------------------------------------------------
-    public:
-        XMLHandle getHandleTarget() const;
-        const QHash<QUuid, Game>& getFinalGames() const;
-        const QHash<QUuid, AddApp>& getFinalAddApps() const;
-        const PlaylistHeader& getPlaylistHeader() const;
-        const QHash<QUuid, PlaylistGame>& getFinalPlaylistGames() const;
-
-        bool containsGame(QUuid gameID) const;
-        bool containsAddApp(QUuid addAppId) const;
-        bool containsPlaylistGame(QUuid gameID) const;
-
-        void addGame(Game game);
-        void addAddApp(AddApp app);
-        void setPlaylistHeader(PlaylistHeader header);
-        void addPlaylistGame(PlaylistGame playlistGame);
-
-        void clearFile();
-        void finalize();
-    };
-
-    class XMLDoc
-    {
-    //-Instance Variables--------------------------------------------------------------------------------------------------
-    private:
-        std::unique_ptr<QFile> mDocumentFile;
-
-    };
-
-    class XMLReaderLegacy
-    {
-    //-Class variables-----------------------------------------------------------------------------------------------------
-    public:
-        static inline const QString ERR_DOC_ALREADY_OPEN = "The target XML file (%1 | %2) is already open";
-        static inline const QString ERR_DOC_CANT_OPEN = "The target XML file (%1 | %2) cannot be opened; %3";
-        static inline const QString ERR_NOT_LB_DOC = "The target XML file (%1 | %2) is not a LaunchBox document.";
-        static inline const QString ERR_BAK_WONT_DEL = "The existing backup of the target XML file (%1 | %2) could not be removed.";
-        static inline const QString ERR_CANT_MAKE_BAK = "Could not create a backup of the target XML file (%1 | %2).";
-        static inline const QString ERR_DOC_TYPE_MISMATCH = "The document (%1 | %2) contained an element that belongs to a different document type than expected.";
-
-    //-Instance Variables--------------------------------------------------------------------------------------------------
-    private:
-        QXmlStreamReader mStreamReader;
-        XMLDocLegacy* mTargetDocument;
-
-    //-Constructor--------------------------------------------------------------------------------------------------------
-    public:
-        XMLReaderLegacy(XMLDocLegacy* targetDoc);
-
-    //-Instance Functions-------------------------------------------------------------------------------------------------
-    public:
-        Qx::XmlStreamReaderError readInto();
-
-    private:
-        Qx::XmlStreamReaderError readLaunchBoxDocument();
-        void parseGame();
-        void parseAddApp();
-        void parsePlaylistHeader();
-        void parsePlaylistGame();
-    };
-
-    class XMLWriterLegacy
-    {
-        //-Class variables-----------------------------------------------------------------------------------------------------
-        public:
-            static inline const QString ERR_WRITE_FAILED = "Writing to the target XML file (%1 | %2) failed";
-
-        //-Instance Variables--------------------------------------------------------------------------------------------------
-        private:
-            QXmlStreamWriter mStreamWriter;
-            XMLDocLegacy* mSourceDocument;
-
-        //-Constructor--------------------------------------------------------------------------------------------------------
-        public:
-            XMLWriterLegacy(XMLDocLegacy* sourceDoc);
-
-        //-Instance Functions-------------------------------------------------------------------------------------------------
-        public:
-            QString writeOutOf();
-
-        private:
-            bool writeLaunchBoxDocument();
-            bool writeGame(const Game& game);
-            bool writeAddApp(const AddApp& addApp);
-            bool writePlaylistHeader(const PlaylistHeader& playlistHeader);
-            bool writePlaylistGame(const PlaylistGame& playlistGame);
+        // TODO: Add option to import animations
     };
 
 //-Class Variables--------------------------------------------------------------------------------------------------
 public:
+    //
+
     // Paths
     static inline const QString PLATFORMS_PATH = "Data/Platforms";
     static inline const QString PLAYLISTS_PATH = "Data/Playlists";
+    static inline const QString DATA_PATH = "Data";
     static inline const QString MAIN_EXE_PATH = "LaunchBox.exe";
     static inline const QString PLATFORM_IMAGES_PATH = "Images";
     static inline const QString LOGO_PATH = "Box - Front";
     static inline const QString SCREENSHOT_PATH = "Screenshot - Gameplay";
 
-    // Images
+    // Files
+    static inline const QString XML_EXT = ".xml";
     static inline const QString IMAGE_EXT = ".png";
+    static inline const QString MODIFIED_FILE_EXT = ".obk";
 
     // Images Errors
     static inline const QString ERR_IMAGE_WONT_BACKUP = R"(Cannot rename the existing image "%1" for backup.)";
@@ -260,11 +55,6 @@ public:
     static inline const QString ERR_IMAGE_WONT_MOVE = R"(Cannot move the image "%1" to "%2".)";
     static inline const QString ERR_IMAGE_WONT_LINK = R"(Cannot create a symbolic link from "%1" to "%2".)";
     static inline const QString ERR_CANT_MAKE_DIR = R"(Could not create the image directory "%1". Make sure you have write permissions at that location.)";
-
-    // XML
-    static inline const QString XML_EXT = ".xml";
-    static inline const QString XML_ROOT_ELEMENT = "LaunchBox";
-    static inline const QString MODIFIED_FILE_EXT = ".obk";
 
     // Reversion Errors
     static inline const QString ERR_REVERT_CANT_REMOVE_XML = R"(Cannot remove the XML file "%1". It may need to be deleted and have its backup restored manually.)";
@@ -276,17 +66,17 @@ public:
 private:
     // Files and directories
     QDir mRootDirectory;
+    QDir mDataDirectory;
     QDir mPlatformsDirectory;
     QDir mPlaylistsDirectory;
     QDir mPlatformImagesDirectory;
 
     // XML Information
-    QSet<QString> mExistingPlatforms;
-    QSet<QString> mExistingPlaylists;
+    QSet<Xml::DataDocHandle> mExistingDocuments;
 
     // XML Interaction
     QList<QString> mModifiedXMLDocuments;
-    QSet<XMLHandle> mLeasedHandles;
+    QSet<Xml::DataDocHandle> mLeasedHandles;
 
     // Other trackers
     QList<QString> mPurgableImages;
@@ -303,28 +93,34 @@ private:
 
 public:
    static bool pathIsValidInstall(QString installPath);
-   static QString populateErrorWithTarget(QString error, XMLHandle target);
+   static QString makeFileNameLBKosher(QString fileName);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 private:
-   QString transferImage(ImageMode imageOption, QDir sourceDir, QString destinationSubPath, const LB::Game& game);
+   QString transferImage(ImageModeL imageOption, QDir sourceDir, QString destinationSubPath, const LB::Game& game);
+   Qx::XmlStreamReaderError openDataDocument(Xml::DataDoc* docToOpen, Xml::DataDocReader* docReader);
+   bool saveDataDocument(QString& errorMessage, Xml::DataDoc* docToSave, Xml::DataDocWriter* docWriter);
+   QSet<QString> getExistingDocs(QString type) const;
 
 public:
-   Qx::IOOpReport populateExistingItems();
+   Qx::IOOpReport populateExistingDocs();
 
-   Qx::XmlStreamReaderError openXMLDocument(std::unique_ptr<XMLDocLegacy>& returnBuffer, XMLHandle requestHandle, UpdateOptions updateOptions);
-   bool saveXMLDocument(QString& errorMessage, std::unique_ptr<XMLDocLegacy> document);
+   Qx::XmlStreamReaderError openPlatformDoc(std::unique_ptr<Xml::Platform>& returnBuffer, QString name, UpdateOptions updateOptions);
+   Qx::XmlStreamReaderError openPlaylistDoc(std::unique_ptr<Xml::Playlist>& returnBuffer, QString name, UpdateOptions updateOptions);
+   bool savePlatformDoc(QString& errorMessage, std::unique_ptr<Xml::Platform> document);
+   bool savePlaylistDoc(QString& errorMessage, std::unique_ptr<Xml::Playlist> document);
+
    bool ensureImageDirectories(QString& errorMessage, QString platform);
-   bool transferLogo(QString& errorMessage, ImageMode imageOption, QDir logoSourceDir, const LB::Game& game);
-   bool transferScreenshot(QString& errorMessage, ImageMode imageOption, QDir screenshotSourceDir, const LB::Game& game);
+   bool transferLogo(QString& errorMessage, ImageModeL imageOption, QDir logoSourceDir, const LB::Game& game);
+   bool transferScreenshot(QString& errorMessage, ImageModeL imageOption, QDir screenshotSourceDir, const LB::Game& game);
 
    int revertNextChange(QString& errorMessage, bool skipOnFail);
    void softReset();
 
    QString getPath() const;
+   int getRevertQueueCount() const;
    QSet<QString> getExistingPlatforms() const;
    QSet<QString> getExistingPlaylists() const;
-   int getRevertQueueCount() const;
 
 };
 

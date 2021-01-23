@@ -9,6 +9,7 @@
 #include <QWinTaskbarProgress>
 #include "version.h"
 #include "launchboxinstall.h"
+#include "launchboxxml.h"
 #include "flashpointinstall.h"
 #include "importworker.h"
 #include "qx-io.h"
@@ -186,8 +187,8 @@ private:
     QSet<QString> getSelectedPlatforms(bool fileNameLegal = false) const;
     QSet<QString> getSelectedPlaylists(bool fileNameLegal = false) const;
     LB::Install::GeneralOptions getSelectedGeneralOptions() const;
-    LB::Install::UpdateOptions getSelectedUpdateOptions() const;
-    LB::Install::ImageMode getSelectedImageOption() const;
+    LB::UpdateOptions getSelectedUpdateOptions() const;
+    LB::Install::ImageModeL getSelectedImageOption() const;
     void prepareImport();
     void revertAllLaunchBoxChanges();
     void standaloneCLIFpDeploy();
