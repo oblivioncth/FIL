@@ -8,10 +8,10 @@
 #include <QWinTaskbarButton>
 #include <QWinTaskbarProgress>
 #include "version.h"
-#include "launchboxinstall.h"
-#include "launchboxxml.h"
-#include "flashpointinstall.h"
-#include "importworker.h"
+#include "launchbox-install.h"
+#include "launchbox-xml.h"
+#include "flashpoint-install.h"
+#include "import-worker.h"
 #include "qx-io.h"
 
 

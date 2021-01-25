@@ -3,8 +3,8 @@
 
 #include <QObject>
 #include <QMessageBox>
-#include "flashpointinstall.h"
-#include "launchboxinstall.h"
+#include "flashpoint-install.h"
+#include "launchbox-install.h"
 
 class ImportWorker : public QObject
 {

@@ -11,13 +11,57 @@ namespace LB
 {
 
 //-Class Forward Declarations---------------------------------------------------------------------------------------
+class Item;
+template <typename B, typename T, ENABLE_IF(std::is_base_of<Item, T>)> class ItemBuilder;
+class ThingBuilder;
 class GameBuilder;
 class AddAppBuilder;
 class PlaylistHeaderBuilder;
 class PlaylistGameBuilder;
 
 //-Namespace Global Classes-----------------------------------------------------------------------------------------
-class Game
+class Item
+{
+    template <typename B, typename T, ENABLE_IF2(std::is_base_of<Item, T>)>
+    friend class ItemBuilder;
+//-Instance Variables-----------------------------------------------------------------------------------------------
+private:
+    QHash<QString, QString> mOtherFields;
+
+//-Constructor-------------------------------------------------------------------------------------------------
+public:
+    Item();
+
+    QHash<QString, QString>& getOtherFields();
+    const QHash<QString, QString>& getOtherFields() const;
+
+//-Instance Functions------------------------------------------------------------------------------------------
+public:
+    void transferOtherFields(QHash<QString, QString>& otherFields);
+};
+
+template <typename B, typename T, ENABLE_IF2(std::is_base_of<Item, T>)>
+class ItemBuilder
+{
+//-Instance Variables------------------------------------------------------------------------------------------
+protected:
+    T mItemBlueprint;
+
+//-Constructor-------------------------------------------------------------------------------------------------
+protected:
+    ItemBuilder() {}
+
+//-Instance Functions------------------------------------------------------------------------------------------
+public:
+    B& wOtherField(QPair<QString, QString> otherField)
+    {
+        mItemBlueprint.mOtherFields[otherField.first] = otherField.second;
+        return static_cast<B&>(*this);
+    }
+    T build() { return mItemBlueprint; }
+};
+
+class Game : public Item
 {
     friend class GameBuilder;
 
@@ -48,7 +92,6 @@ private:
     QDateTime mReleaseDate;
     QString mVersion;
     QString mReleaseType;
-    QHash<QString, QString> mOtherFields;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -77,18 +120,10 @@ public:
     QDateTime getReleaseDate() const;
     QString getVersion() const;
     QString getReleaseType() const;
-    QHash<QString, QString>& getOtherFields();
-    const QHash<QString, QString>& getOtherFields() const;
-
-    void transferOtherFields(QHash<QString, QString>& otherFields);
 };
 
-class GameBuilder
+class GameBuilder : public ItemBuilder<GameBuilder, Game>
 {
-//-Instance Variables------------------------------------------------------------------------------------------
-private:
-    Game mGameBlueprint;
-
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
     GameBuilder();
@@ -115,12 +150,9 @@ public:
     GameBuilder& wReleaseDate(QString rawReleaseDate);
     GameBuilder& wVersion(QString version);
     GameBuilder& wReleaseType(QString releaseType);
-    GameBuilder& wOtherField(QPair<QString, QString> otherField);
-
-    Game build();
 };
 
-class AddApp
+class AddApp : public Item
 {
     friend class AddAppBuilder;
 
@@ -133,7 +165,6 @@ private:
     bool mAutorunBefore;
     QString mName;
     bool mWaitForExit;
-    QHash<QString, QString> mOtherFields;
 
 //-Constructor------------------------------------------------------------------------------------------------------
 public:
@@ -149,18 +180,10 @@ public:
     bool isAutorunBefore() const;
     QString getName() const;
     bool isWaitForExit() const;
-    QHash<QString, QString>& getOtherFields();
-    const QHash<QString, QString>& getOtherFields() const;
-
-    void transferOtherFields(QHash<QString, QString>& otherFields);
 };
 
-class AddAppBuilder
+class AddAppBuilder : public ItemBuilder<AddAppBuilder, AddApp>
 {
-//-Instance Variables------------------------------------------------------------------------------------------
-private:
-    AddApp mAddAppBlueprint;
-
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
     AddAppBuilder();
@@ -174,12 +197,9 @@ public:
     AddAppBuilder& wAutorunBefore(QString rawAutorunBefore);
     AddAppBuilder& wName(QString name);
     AddAppBuilder& wWaitForExit(QString rawWaitForExit);
-    AddAppBuilder& wOtherField(QPair<QString, QString> otherField);
-
-    AddApp build();
 };
 
-class PlaylistHeader
+class PlaylistHeader : public Item
 {
     friend class PlaylistHeaderBuilder;
 
@@ -189,7 +209,6 @@ private:
     QString mName;
     QString mNestedName;
     QString mNotes;
-    QHash<QString, QString> mOtherFields;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -202,18 +221,10 @@ public:
     QString getName() const;
     QString getNestedName() const;
     QString getNotes() const;
-    QHash<QString, QString>& getOtherFields();
-    const QHash<QString, QString>& getOtherFields() const;
-
-    void transferOtherFields(QHash<QString, QString>& otherFields);
 };
 
-class PlaylistHeaderBuilder
+class PlaylistHeaderBuilder : public ItemBuilder<PlaylistHeaderBuilder, PlaylistHeader>
 {
-//-Instance Variables------------------------------------------------------------------------------------------
-private:
-    PlaylistHeader mPlaylistHeaderBlueprint;
-
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
     PlaylistHeaderBuilder();
@@ -224,12 +235,9 @@ public:
     PlaylistHeaderBuilder& wName(QString name);
     PlaylistHeaderBuilder& wNestedName(QString nestedName);
     PlaylistHeaderBuilder& wNotes(QString notes);
-    PlaylistHeaderBuilder& wOtherField(QPair<QString, QString> otherField);
-
-    PlaylistHeader build();
 };
 
-class PlaylistGame
+class PlaylistGame : public Item
 {
     friend class PlaylistGameBuilder;
 
@@ -250,7 +258,6 @@ private:
     QString mGameFileName;
     QString mGamePlatform;
     int mManualOrder;
-    QHash<QString, QString> mOtherFields;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -265,19 +272,12 @@ public:
     QString getGameFileName() const;
     QString getGamePlatform() const;
     int getManualOrder() const;
-    QHash<QString, QString>& getOtherFields();
-    const QHash<QString, QString>& getOtherFields() const;
 
-    void transferOtherFields(QHash<QString, QString>& otherFields);
     void setLBDatabaseID(int lbDBID);
 };
 
-class PlaylistGameBuilder
+class PlaylistGameBuilder : public ItemBuilder<PlaylistGameBuilder, PlaylistGame>
 {
-//-Instance Variables------------------------------------------------------------------------------------------
-private:
-    PlaylistGame mPlaylistGameBlueprint;
-
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
     PlaylistGameBuilder();
@@ -290,9 +290,51 @@ public:
     PlaylistGameBuilder& wGameFileName(QString gameFileName);
     PlaylistGameBuilder& wGamePlatform(QString gamePlatform);
     PlaylistGameBuilder& wManualOrder(QString rawManualOrder);
-    PlaylistGameBuilder& wOtherField(QPair<QString, QString> otherField);
+};
 
-    PlaylistGame build();
+class Platform  : public Item
+{
+    friend class PlatformBuilder;
+
+//-Instance Variables-----------------------------------------------------------------------------------------------
+
+//-Constructor------------------------------------------------------------------------------------------------------
+public:
+    Platform();
+
+//-Instance Functions------------------------------------------------------------------------------------------------------
+};
+
+class PlatformBuilder : public ItemBuilder<PlatformBuilder, Platform>
+{
+//-Constructor-------------------------------------------------------------------------------------------------
+public:
+    PlatformBuilder();
+
+//-Instance Functions------------------------------------------------------------------------------------------
+};
+
+
+class PlatformCategory  : public Item
+{
+    friend class PlatformCategoryBuilder;
+
+//-Instance Variables-----------------------------------------------------------------------------------------------
+
+//-Constructor------------------------------------------------------------------------------------------------------
+public:
+    PlatformCategory();
+
+//-Instance Functions------------------------------------------------------------------------------------------------------
+};
+
+class PlatformCategoryBuilder
+{
+//-Constructor-------------------------------------------------------------------------------------------------
+public:
+    PlatformCategoryBuilder();
+
+//-Instance Functions------------------------------------------------------------------------------------------
 };
 
 

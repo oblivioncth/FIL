@@ -1,4 +1,4 @@
-#include "importworker.h"
+#include "import-worker.h"
 
 //===============================================================================================================
 // CORE IMPORT WORKER
@@ -147,8 +147,8 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         emit progressStepChanged(STEP_IMPORTING_PLATFORM_GAMES.arg(currentPlatformGameResult.source));
 
         // Open LB platform doc
-        LB::Xml::DataDocHandle docRequest = {LB::Xml::Platform::TYPE_NAME, currentPlatformGameResult.source};
-        std::unique_ptr<LB::Xml::Platform> currentPlatformXML;
+        LB::Xml::DataDocHandle docRequest = {LB::Xml::PlatformDoc::TYPE_NAME, currentPlatformGameResult.source};
+        std::unique_ptr<LB::Xml::PlatformDoc> currentPlatformXML;
         Qx::XmlStreamReaderError platformReadError = mLaunchBoxInstall->openPlatformDoc(currentPlatformXML, docRequest.docName, mOptionSet.updateOptions);
 
         // Stop import if error occured
@@ -314,8 +314,8 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         emit progressStepChanged(STEP_IMPORTING_PLAYLIST_GAMES.arg(currentPlaylist.getTitle()));
 
         // Open LB playlist doc
-        LB::Xml::DataDocHandle docRequest = {LB::Xml::Playlist::TYPE_NAME, currentPlaylist.getTitle()};
-        std::unique_ptr<LB::Xml::Playlist> currentPlaylistXML;
+        LB::Xml::DataDocHandle docRequest = {LB::Xml::PlaylistDoc::TYPE_NAME, currentPlaylist.getTitle()};
+        std::unique_ptr<LB::Xml::PlaylistDoc> currentPlaylistXML;
         Qx::XmlStreamReaderError playlistReadError = mLaunchBoxInstall->openPlaylistDoc(currentPlaylistXML, docRequest.docName, mOptionSet.updateOptions);
 
         // Stop import if error occured

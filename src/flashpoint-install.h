@@ -1,5 +1,5 @@
-#ifndef FLASHPOINTINSTALL_H
-#define FLASHPOINTINSTALL_H
+#ifndef FLASHPOINT-INSTALL_H
+#define FLASHPOINT-INSTALL_H
 
 #include <QString>
 #include <QDir>
@@ -389,4 +389,4 @@ public:
 
 
 
-#endif // FLASHPOINTINSTALL_H
+#endif // FLASHPOINT-INSTALL_H

@@ -1,4 +1,4 @@
-#include "launchboxxml.h"
+#include "launchbox-xml.h"
 
 namespace LB
 {
@@ -60,18 +60,18 @@ Xml::DataDocWriter::DataDocWriter() {}
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-Xml::Platform::Platform(std::unique_ptr<QFile> xmlFile, QString docName, UpdateOptions updateOptions, const Key&)
+Xml::PlatformDoc::PlatformDoc(std::unique_ptr<QFile> xmlFile, QString docName, UpdateOptions updateOptions, const Key&)
     : DataDoc(std::move(xmlFile), DataDocHandle{TYPE_NAME, docName}), mUpdateOptions(updateOptions) {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-const QHash<QUuid, Game>& Xml::Platform::getFinalGames() const { return mGamesFinal; }
-const QHash<QUuid, AddApp>& Xml::Platform::getFinalAddApps() const { return mAddAppsFinal; }
+const QHash<QUuid, Game>& Xml::PlatformDoc::getFinalGames() const { return mGamesFinal; }
+const QHash<QUuid, AddApp>& Xml::PlatformDoc::getFinalAddApps() const { return mAddAppsFinal; }
 
-bool Xml::Platform::containsGame(QUuid gameID) const { return mGamesFinal.contains(gameID) || mGamesExisting.contains(gameID); }
-bool Xml::Platform::containsAddApp(QUuid addAppId) const { return mAddAppsFinal.contains(addAppId) || mAddAppsExisting.contains(addAppId); }
+bool Xml::PlatformDoc::containsGame(QUuid gameID) const { return mGamesFinal.contains(gameID) || mGamesExisting.contains(gameID); }
+bool Xml::PlatformDoc::containsAddApp(QUuid addAppId) const { return mAddAppsFinal.contains(addAppId) || mAddAppsExisting.contains(addAppId); }
 
-void Xml::Platform::addGame(Game game)
+void Xml::PlatformDoc::addGame(Game game)
 {
     QUuid key = game.getID();
 
@@ -96,7 +96,7 @@ void Xml::Platform::addGame(Game game)
         mGamesFinal[key] = game;
 }
 
-void Xml::Platform::addAddApp(AddApp app)
+void Xml::PlatformDoc::addAddApp(AddApp app)
 {
     QUuid key = app.getID();
 
@@ -121,7 +121,7 @@ void Xml::Platform::addAddApp(AddApp app)
         mAddAppsFinal[key] = app;
 }
 
-void Xml::Platform::finalize()
+void Xml::PlatformDoc::finalize()
 {
     // Copy items to final list if obsolete entries are to be kept
     if(!mUpdateOptions.removeObsolete)
@@ -141,13 +141,13 @@ void Xml::Platform::finalize()
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-Xml::PlatformReader::PlatformReader(Platform* targetDoc)
+Xml::PlatformDocReader::PlatformDocReader(PlatformDoc* targetDoc)
     : mTargetDocument(targetDoc) {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Public:
 
-Qx::XmlStreamReaderError Xml::PlatformReader::readInto()
+Qx::XmlStreamReaderError Xml::PlatformDocReader::readInto()
 {
     // Hook reader to document handle
     mStreamReader.setDevice(mTargetDocument->mDocumentFile.get());
@@ -169,7 +169,7 @@ Qx::XmlStreamReaderError Xml::PlatformReader::readInto()
 }
 
 //Private:
-Qx::XmlStreamReaderError Xml::PlatformReader::readPlatformDoc()
+Qx::XmlStreamReaderError Xml::PlatformDocReader::readPlatformDoc()
 {
     while(mStreamReader.readNextStartElement())
     {
@@ -193,7 +193,7 @@ Qx::XmlStreamReaderError Xml::PlatformReader::readPlatformDoc()
         return Qx::XmlStreamReaderError();
 }
 
-void Xml::PlatformReader::parseGame()
+void Xml::PlatformDocReader::parseGame()
 {
     // Game to build
     GameBuilder gb;
@@ -250,7 +250,7 @@ void Xml::PlatformReader::parseGame()
     mTargetDocument->mGamesExisting[existingGame.getID()] = existingGame;
 }
 
-void Xml::PlatformReader::parseAddApp()
+void Xml::PlatformDocReader::parseAddApp()
 {
     // Additional App to Build
     AddAppBuilder aab;
@@ -288,12 +288,12 @@ void Xml::PlatformReader::parseAddApp()
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-Xml::PlatformWriter::PlatformWriter(Platform* sourceDoc)
+Xml::PlatformDocWriter::PlatformDocWriter(PlatformDoc* sourceDoc)
     : mSourceDocument(sourceDoc) {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Public:
-QString Xml::PlatformWriter::writeOutOf()
+QString Xml::PlatformDocWriter::writeOutOf()
 {
     // Hook writer to document handle
     mStreamWriter.setDevice(mSourceDocument->mDocumentFile.get());
@@ -322,7 +322,7 @@ QString Xml::PlatformWriter::writeOutOf()
 }
 
 //Private:
-bool Xml::PlatformWriter::writePlatformDoc()
+bool Xml::PlatformDocWriter::writePlatformDoc()
 {
     // Write all games
     for(const Game& game : mSourceDocument->getFinalGames())
@@ -342,7 +342,7 @@ bool Xml::PlatformWriter::writePlatformDoc()
     return true;
 }
 
-bool Xml::PlatformWriter::writeGame(const Game& game)
+bool Xml::PlatformDocWriter::writeGame(const Game& game)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Element_Game::NAME);
@@ -396,7 +396,7 @@ bool Xml::PlatformWriter::writeGame(const Game& game)
     return true;
 }
 
-bool Xml::PlatformWriter::writeAddApp(const AddApp& addApp)
+bool Xml::PlatformDocWriter::writeAddApp(const AddApp& addApp)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Element_AddApp::NAME);
@@ -435,24 +435,24 @@ bool Xml::PlatformWriter::writeAddApp(const AddApp& addApp)
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-Xml::Playlist::Playlist(std::unique_ptr<QFile> xmlFile, QString docName, UpdateOptions updateOptions, Qx::FreeIndexTracker<int>* lbDBFIDT, const Key&)
-    : DataDoc(std::move(xmlFile), DataDocHandle{Xml::Playlist::TYPE_NAME, docName}), mUpdateOptions(updateOptions), mPlaylistGameFreeLBDBIDTracker(lbDBFIDT) {}
+Xml::PlaylistDoc::PlaylistDoc(std::unique_ptr<QFile> xmlFile, QString docName, UpdateOptions updateOptions, Qx::FreeIndexTracker<int>* lbDBFIDT, const Key&)
+    : DataDoc(std::move(xmlFile), DataDocHandle{Xml::PlaylistDoc::TYPE_NAME, docName}), mUpdateOptions(updateOptions), mPlaylistGameFreeLBDBIDTracker(lbDBFIDT) {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-const PlaylistHeader& Xml::Playlist::getPlaylistHeader() const { return mPlaylistHeader; }
-const QHash<QUuid, PlaylistGame>& Xml::Playlist::getFinalPlaylistGames() const { return mPlaylistGamesFinal; }
+const PlaylistHeader& Xml::PlaylistDoc::getPlaylistHeader() const { return mPlaylistHeader; }
+const QHash<QUuid, PlaylistGame>& Xml::PlaylistDoc::getFinalPlaylistGames() const { return mPlaylistGamesFinal; }
 
-bool Xml::Playlist::containsPlaylistGame(QUuid gameID) const { return mPlaylistGamesFinal.contains(gameID) || mPlaylistGamesExisting.contains(gameID); }
+bool Xml::PlaylistDoc::containsPlaylistGame(QUuid gameID) const { return mPlaylistGamesFinal.contains(gameID) || mPlaylistGamesExisting.contains(gameID); }
 
 
-void Xml::Playlist::setPlaylistHeader(PlaylistHeader header)
+void Xml::PlaylistDoc::setPlaylistHeader(PlaylistHeader header)
 {
     header.transferOtherFields(mPlaylistHeader.getOtherFields());
     mPlaylistHeader = header;
 }
 
-void Xml::Playlist::addPlaylistGame(PlaylistGame playlistGame)
+void Xml::PlaylistDoc::addPlaylistGame(PlaylistGame playlistGame)
 {
     QUuid key = playlistGame.getGameID();
 
@@ -481,7 +481,7 @@ void Xml::Playlist::addPlaylistGame(PlaylistGame playlistGame)
     }
 }
 
-void Xml::Playlist::finalize()
+void Xml::PlaylistDoc::finalize()
 {
     // Copy items to final list if obsolete entries are to be kept
     if(!mUpdateOptions.removeObsolete)
@@ -497,12 +497,12 @@ void Xml::Playlist::finalize()
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-Xml::PlaylistReader::PlaylistReader(Playlist* targetDoc)
+Xml::PlaylistDocReader::PlaylistDocReader(PlaylistDoc* targetDoc)
     : mTargetDocument(targetDoc) {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Public:
-Qx::XmlStreamReaderError Xml::PlaylistReader::readInto()
+Qx::XmlStreamReaderError Xml::PlaylistDocReader::readInto()
 {
     // Hook reader to document handle
     mStreamReader.setDevice(mTargetDocument->mDocumentFile.get());
@@ -524,7 +524,7 @@ Qx::XmlStreamReaderError Xml::PlaylistReader::readInto()
 }
 
 //Private:
-Qx::XmlStreamReaderError Xml::PlaylistReader::readPlaylistDoc()
+Qx::XmlStreamReaderError Xml::PlaylistDocReader::readPlaylistDoc()
 {
     while(mStreamReader.readNextStartElement())
     {
@@ -548,7 +548,7 @@ Qx::XmlStreamReaderError Xml::PlaylistReader::readPlaylistDoc()
         return Qx::XmlStreamReaderError();
 }
 
-void Xml::PlaylistReader::parsePlaylistHeader()
+void Xml::PlaylistDocReader::parsePlaylistHeader()
 {
     // Playlist Header to Build
     PlaylistHeaderBuilder phb;
@@ -573,7 +573,7 @@ void Xml::PlaylistReader::parsePlaylistHeader()
 
 }
 
-void Xml::PlaylistReader::parsePlaylistGame()
+void Xml::PlaylistDocReader::parsePlaylistGame()
 {
     // Playlist Game to Build
     PlaylistGameBuilder pgb;
@@ -618,12 +618,12 @@ void Xml::PlaylistReader::parsePlaylistGame()
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-Xml::PlaylistWriter::PlaylistWriter(Playlist* sourceDoc)
+Xml::PlaylistDocWriter::PlaylistDocWriter(PlaylistDoc* sourceDoc)
     : mSourceDocument(sourceDoc) {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Public:
-QString Xml::PlaylistWriter::writeOutOf()
+QString Xml::PlaylistDocWriter::writeOutOf()
 {
     // Hook writer to document handle
     mStreamWriter.setDevice(mSourceDocument->mDocumentFile.get());
@@ -652,7 +652,7 @@ QString Xml::PlaylistWriter::writeOutOf()
 }
 
 //Private:
-bool Xml::PlaylistWriter::writePlaylistDoc()
+bool Xml::PlaylistDocWriter::writePlaylistDoc()
 {
     // Write playlist header
     if(!writePlaylistHeader(mSourceDocument->getPlaylistHeader()))
@@ -669,7 +669,7 @@ bool Xml::PlaylistWriter::writePlaylistDoc()
     return true;
 }
 
-bool Xml::PlaylistWriter::writePlaylistHeader(const PlaylistHeader& playlistHeader)
+bool Xml::PlaylistDocWriter::writePlaylistHeader(const PlaylistHeader& playlistHeader)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Element_PlaylistHeader::NAME);
@@ -699,7 +699,7 @@ bool Xml::PlaylistWriter::writePlaylistHeader(const PlaylistHeader& playlistHead
     return true;
 }
 
-bool Xml::PlaylistWriter::writePlaylistGame(const PlaylistGame& playlistGame)
+bool Xml::PlaylistDocWriter::writePlaylistGame(const PlaylistGame& playlistGame)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Element_PlaylistGame::NAME);

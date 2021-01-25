@@ -1,4 +1,4 @@
-#include "launchboxinstall.h"
+#include "launchbox-install.h"
 #include <QFileInfo>
 #include <QDir>
 #include <qhashfunctions.h>
@@ -289,13 +289,13 @@ Qx::IOOpReport Install::populateExistingDocs()
     Qx::IOOpReport existingCheck = Qx::getDirFileList(existingList, mPlatformsDirectory, {XML_EXT}, QDirIterator::Subdirectories);
     if(existingCheck.wasSuccessful())
         for(QString platformPath : existingList)
-            mExistingDocuments.insert(Xml::DataDocHandle{Xml::Platform::TYPE_NAME, QFileInfo(platformPath).baseName()});
+            mExistingDocuments.insert(Xml::DataDocHandle{Xml::PlatformDoc::TYPE_NAME, QFileInfo(platformPath).baseName()});
 
     // Check for playlists
     existingCheck = Qx::getDirFileList(existingList, mPlaylistsDirectory, {XML_EXT}, QDirIterator::Subdirectories);
     if(existingCheck.wasSuccessful())
         for(QString playlistPath : existingList)
-            mExistingDocuments.insert(Xml::DataDocHandle{Xml::Playlist::TYPE_NAME, QFileInfo(playlistPath).baseName()});
+            mExistingDocuments.insert(Xml::DataDocHandle{Xml::PlaylistDoc::TYPE_NAME, QFileInfo(playlistPath).baseName()});
 
     // Check for config docs
 
@@ -303,16 +303,16 @@ Qx::IOOpReport Install::populateExistingDocs()
 }
 
 
-Qx::XmlStreamReaderError Install::openPlatformDoc(std::unique_ptr<Xml::Platform>& returnBuffer, QString name, UpdateOptions updateOptions)
+Qx::XmlStreamReaderError Install::openPlatformDoc(std::unique_ptr<Xml::PlatformDoc>& returnBuffer, QString name, UpdateOptions updateOptions)
 {
     // Create doc file reference
     std::unique_ptr<QFile> docFile = std::make_unique<QFile>(mPlatformsDirectory.absolutePath() + '/' + makeFileNameLBKosher(name) + XML_EXT);
 
     // Construct unopened document
-    returnBuffer = std::make_unique<Xml::Platform>(std::move(docFile), name, updateOptions, Xml::Platform::Key{});
+    returnBuffer = std::make_unique<Xml::PlatformDoc>(std::move(docFile), name, updateOptions, Xml::PlatformDoc::Key{});
 
     // Construct doc reader
-    Xml::PlatformReader docReader(returnBuffer.get());
+    Xml::PlatformDocReader docReader(returnBuffer.get());
 
     // Open document
     Qx::XmlStreamReaderError readErrorStatus = openDataDocument(returnBuffer.get(), &docReader);
@@ -325,16 +325,16 @@ Qx::XmlStreamReaderError Install::openPlatformDoc(std::unique_ptr<Xml::Platform>
     return readErrorStatus;
 }
 
-Qx::XmlStreamReaderError Install::openPlaylistDoc(std::unique_ptr<Xml::Playlist>& returnBuffer, QString name, UpdateOptions updateOptions)
+Qx::XmlStreamReaderError Install::openPlaylistDoc(std::unique_ptr<Xml::PlaylistDoc>& returnBuffer, QString name, UpdateOptions updateOptions)
 {
     // Create doc file reference
     std::unique_ptr<QFile> docFile = std::make_unique<QFile>(mPlaylistsDirectory.absolutePath() + '/' + makeFileNameLBKosher(name) + XML_EXT);
 
     // Construct unopened document
-    returnBuffer = std::make_unique<Xml::Playlist>(std::move(docFile), name, updateOptions, &mLBDatabaseIDTracker, Xml::Playlist::Key{});
+    returnBuffer = std::make_unique<Xml::PlaylistDoc>(std::move(docFile), name, updateOptions, &mLBDatabaseIDTracker, Xml::PlaylistDoc::Key{});
 
     // Construct doc reader
-    Xml::PlaylistReader docReader(returnBuffer.get());
+    Xml::PlaylistDocReader docReader(returnBuffer.get());
 
     // Open document
     Qx::XmlStreamReaderError readErrorStatus = openDataDocument(returnBuffer.get(), &docReader);
@@ -347,10 +347,10 @@ Qx::XmlStreamReaderError Install::openPlaylistDoc(std::unique_ptr<Xml::Playlist>
     return readErrorStatus;
 }
 
-bool Install::savePlatformDoc(QString& errorMessage, std::unique_ptr<Xml::Platform> document)
+bool Install::savePlatformDoc(QString& errorMessage, std::unique_ptr<Xml::PlatformDoc> document)
 {
     // Prepare writer
-    Xml::PlatformWriter docWriter(document.get());
+    Xml::PlatformDocWriter docWriter(document.get());
 
     // Write
     bool writeErrorStatus = saveDataDocument(errorMessage, document.get(), &docWriter);
@@ -362,10 +362,10 @@ bool Install::savePlatformDoc(QString& errorMessage, std::unique_ptr<Xml::Platfo
     return writeErrorStatus;
 }
 
-bool Install::savePlaylistDoc(QString& errorMessage, std::unique_ptr<Xml::Playlist> document)
+bool Install::savePlaylistDoc(QString& errorMessage, std::unique_ptr<Xml::PlaylistDoc> document)
 {
     // Prepare writer
-    Xml::PlaylistWriter docWriter(document.get());
+    Xml::PlaylistDocWriter docWriter(document.get());
 
     // Write
     bool writeErrorStatus = saveDataDocument(errorMessage, document.get(), &docWriter);
@@ -501,8 +501,8 @@ QString Install::getPath() const { return mRootDirectory.absolutePath(); }
 
 int Install::getRevertQueueCount() const { return mModifiedXMLDocuments.size() + mPurgableImages.size() + mLinksToReverse.size(); }
 
-QSet<QString> Install::getExistingPlatforms() const { return getExistingDocs(Xml::Platform::TYPE_NAME); }
+QSet<QString> Install::getExistingPlatforms() const { return getExistingDocs(Xml::PlatformDoc::TYPE_NAME); }
 
-QSet<QString> Install::getExistingPlaylists() const { return getExistingDocs(Xml::Playlist::TYPE_NAME); }
+QSet<QString> Install::getExistingPlaylists() const { return getExistingDocs(Xml::PlaylistDoc::TYPE_NAME); }
 
 }

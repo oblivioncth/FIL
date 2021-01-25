@@ -25,10 +25,10 @@ class Xml
 {
 //-Class Forward Declarations--------------------------------------------------------------------------------------
 public:
-    class PlatformReader;
-    class PlatformWriter;
-    class PlaylistReader;
-    class PlaylistWriter;
+    class PlatformDocReader;
+    class PlatformDocWriter;
+    class PlaylistDocReader;
+    class PlaylistDocWriter;
 
 //-Class Structs---------------------------------------------------------------------------------------------------
 public:
@@ -108,6 +108,22 @@ public:
         static inline const QString ELEMENT_LB_DB_ID = "LaunchBoxDbId";
     };
 
+    class Element_Platform
+    {
+    public:
+        static inline const QString NAME = "Platform";
+    };
+
+    class Element_PlatformFolder
+    {
+    public:
+        static inline const QString NAME = "PlatformFolder";
+
+        static inline const QString ELEMENT_MEDIA_TYPE = "MediaType";
+        static inline const QString ELEMENT_FOLDER_PATH = "FolderPath";
+        static inline const QString ELEMENT_PLATFORM = "Platform";
+    };
+
     class DataDoc
     {
         friend class Install;
@@ -157,10 +173,10 @@ public:
         virtual QString writeOutOf() = 0;
     };
 
-    class Platform : public DataDoc
+    class PlatformDoc : public DataDoc
     {
-        friend class PlatformReader;
-        friend class PlatformWriter;
+        friend class PlatformDocReader;
+        friend class PlatformDocWriter;
         friend class Install;
     //-Inner Classes----------------------------------------------------------------------------------------------------
     public:
@@ -187,7 +203,7 @@ public:
 
     //-Constructor--------------------------------------------------------------------------------------------------------
     public:
-        explicit Platform(std::unique_ptr<QFile> xmlFile, QString docName, UpdateOptions updateOptions, const Key&);
+        explicit PlatformDoc(std::unique_ptr<QFile> xmlFile, QString docName, UpdateOptions updateOptions, const Key&);
 
     //-Instance Functions--------------------------------------------------------------------------------------------------
     public:
@@ -203,14 +219,14 @@ public:
         void finalize();
     };
 
-    class PlatformReader : public DataDocReader
+    class PlatformDocReader : public DataDocReader
     {
     //-Instance Variables--------------------------------------------------------------------------------------------------
     protected:
-        Platform* mTargetDocument;
+        PlatformDoc* mTargetDocument;
     //-Constructor--------------------------------------------------------------------------------------------------------
     public:
-        PlatformReader(Platform* targetDoc);
+        PlatformDocReader(PlatformDoc* targetDoc);
 
     //-Instance Functions-------------------------------------------------------------------------------------------------
     public:
@@ -222,15 +238,15 @@ public:
         void parseAddApp();
     };
 
-    class PlatformWriter : public DataDocWriter
+    class PlatformDocWriter : public DataDocWriter
     {
         //-Instance Variables--------------------------------------------------------------------------------------------------
         private:
-            Platform* mSourceDocument;
+            PlatformDoc* mSourceDocument;
 
         //-Constructor--------------------------------------------------------------------------------------------------------
         public:
-            PlatformWriter(Platform* sourceDoc);
+            PlatformDocWriter(PlatformDoc* sourceDoc);
 
         //-Instance Functions-------------------------------------------------------------------------------------------------
         public:
@@ -242,10 +258,10 @@ public:
             bool writeAddApp(const AddApp& addApp);
     };
 
-    class Playlist : public DataDoc
+    class PlaylistDoc : public DataDoc
     {
-        friend class PlaylistReader;
-        friend class PlaylistWriter;
+        friend class PlaylistDocReader;
+        friend class PlaylistDocWriter;
         friend class Install;
 
     //-Inner Classes----------------------------------------------------------------------------------------------------
@@ -273,7 +289,7 @@ public:
 
     //-Constructor--------------------------------------------------------------------------------------------------------
     public:
-        explicit Playlist(std::unique_ptr<QFile> xmlFile, QString docName, UpdateOptions updateOptions, Qx::FreeIndexTracker<int>* lbDBFIDT, const Key&);
+        explicit PlaylistDoc(std::unique_ptr<QFile> xmlFile, QString docName, UpdateOptions updateOptions, Qx::FreeIndexTracker<int>* lbDBFIDT, const Key&);
 
     //-Instance Functions--------------------------------------------------------------------------------------------------
     public:
@@ -288,15 +304,15 @@ public:
         void finalize();
     };
 
-    class PlaylistReader : public DataDocReader
+    class PlaylistDocReader : public DataDocReader
     {
     //-Instance Variables--------------------------------------------------------------------------------------------------
     private:
-        Playlist* mTargetDocument;
+        PlaylistDoc* mTargetDocument;
 
     //-Constructor--------------------------------------------------------------------------------------------------------
     public:
-        PlaylistReader(Playlist* targetDoc);
+        PlaylistDocReader(PlaylistDoc* targetDoc);
 
     //-Instance Functions-------------------------------------------------------------------------------------------------
     public:
@@ -308,15 +324,15 @@ public:
         void parsePlaylistGame();
     };
 
-    class PlaylistWriter : public DataDocWriter
+    class PlaylistDocWriter : public DataDocWriter
     {
         //-Instance Variables--------------------------------------------------------------------------------------------------
         private:
-            Playlist* mSourceDocument;
+            PlaylistDoc* mSourceDocument;
 
         //-Constructor--------------------------------------------------------------------------------------------------------
         public:
-            PlaylistWriter(Playlist* sourceDoc);
+            PlaylistDocWriter(PlaylistDoc* sourceDoc);
 
         //-Instance Functions-------------------------------------------------------------------------------------------------
         public:

@@ -1,5 +1,5 @@
-#ifndef LAUNCHBOXINSTALL_H
-#define LAUNCHBOXINSTALL_H
+#ifndef LAUNCHBOX-INSTALL_H
+#define LAUNCHBOX-INSTALL_H
 
 #include <QString>
 #include <QDir>
@@ -8,7 +8,7 @@
 #include "qx-io.h"
 #include "qx-xml.h"
 #include "launchbox.h"
-#include "launchboxxml.h"
+#include "launchbox-xml.h"
 
 namespace LB {
 
@@ -105,10 +105,10 @@ private:
 public:
    Qx::IOOpReport populateExistingDocs();
 
-   Qx::XmlStreamReaderError openPlatformDoc(std::unique_ptr<Xml::Platform>& returnBuffer, QString name, UpdateOptions updateOptions);
-   Qx::XmlStreamReaderError openPlaylistDoc(std::unique_ptr<Xml::Playlist>& returnBuffer, QString name, UpdateOptions updateOptions);
-   bool savePlatformDoc(QString& errorMessage, std::unique_ptr<Xml::Platform> document);
-   bool savePlaylistDoc(QString& errorMessage, std::unique_ptr<Xml::Playlist> document);
+   Qx::XmlStreamReaderError openPlatformDoc(std::unique_ptr<Xml::PlatformDoc>& returnBuffer, QString name, UpdateOptions updateOptions);
+   Qx::XmlStreamReaderError openPlaylistDoc(std::unique_ptr<Xml::PlaylistDoc>& returnBuffer, QString name, UpdateOptions updateOptions);
+   bool savePlatformDoc(QString& errorMessage, std::unique_ptr<Xml::PlatformDoc> document);
+   bool savePlaylistDoc(QString& errorMessage, std::unique_ptr<Xml::PlaylistDoc> document);
 
    bool ensureImageDirectories(QString& errorMessage, QString platform);
    bool transferLogo(QString& errorMessage, ImageModeL imageOption, QDir logoSourceDir, const LB::Game& game);
@@ -125,4 +125,4 @@ public:
 };
 
 }
-#endif // LAUNCHBOXINSTALL_H
+#endif // LAUNCHBOX-INSTALL_H

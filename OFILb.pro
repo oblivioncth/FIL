@@ -18,22 +18,22 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    src/flashpoint-install.cpp \
     src/flashpoint.cpp \
-    src/flashpointinstall.cpp \
-    src/importworker.cpp \
+    src/import-worker.cpp \
+    src/launchbox-install.cpp \
+    src/launchbox-xml.cpp \
     src/launchbox.cpp \
-    src/launchboxinstall.cpp \
-    src/launchboxxml.cpp \
     src/main.cpp \
     src/mainwindow.cpp
 
 HEADERS += \
+    src/flashpoint-install.h \
     src/flashpoint.h \
-    src/flashpointinstall.h \
-    src/importworker.h \
+    src/import-worker.h \
+    src/launchbox-install.h \
+    src/launchbox-xml.h \
     src/launchbox.h \
-    src/launchboxinstall.h \
-    src/launchboxxml.h \
     src/mainwindow.h \
     src/version.h
 
@@ -49,16 +49,16 @@ RC_FILE = resources.rc
 
 LIBS += Version.lib # TODO: See if this can be removed with a static build of Qx
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/lib/ -lQx_static64_0-0-2-11_Qt_5-15-0
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/lib/ -lQx_static64_0-0-2-11_Qt_5-15-0d
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/lib/ -lQx_static64_0-0-2-12_Qt_5-15-0
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/lib/ -lQx_static64_0-0-2-12_Qt_5-15-0d
 
 INCLUDEPATH += $$PWD/include
 DEPENDPATH += $$PWD/include
 
-win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/libQx_static64_0-0-2-11_Qt_5-15-0.a
-else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/libQx_static64_0-0-2-11_Qt_5-15-0d.a
-else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/Qx_static64_0-0-2-11_Qt_5-15-0.lib
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/Qx_static64_0-0-2-11_Qt_5-15-0d.lib
+win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/libQx_static64_0-0-2-12_Qt_5-15-0.a
+else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/libQx_static64_0-0-2-12_Qt_5-15-0d.a
+else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/Qx_static64_0-0-2-12_Qt_5-15-0.lib
+else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/Qx_static64_0-0-2-12_Qt_5-15-0d.lib
 
 RESOURCES += \
     resources.qrc

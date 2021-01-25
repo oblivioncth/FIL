@@ -1,9 +1,37 @@
 #include "launchbox.h"
-#include "flashpointinstall.h"
+#include "flashpoint-install.h"
 #include "qx-io.h"
 
 namespace LB
 {
+
+//===============================================================================================================
+// ITEM
+//===============================================================================================================
+
+//-Constructor------------------------------------------------------------------------------------------------
+//Public:
+Item::Item() {}
+
+//-Instance Functions------------------------------------------------------------------------------------------------
+//Public:
+QHash<QString, QString>& Item::getOtherFields() { return mOtherFields; }
+const QHash<QString, QString>& Item::getOtherFields() const { return mOtherFields; }
+
+void Item::transferOtherFields(QHash<QString, QString>& otherFields) { mOtherFields = std::move(otherFields); }
+
+//===============================================================================================================
+// ITEM BUILDER
+//===============================================================================================================
+
+//-Constructor------------------------------------------------------------------------------------------------
+//Public:
+//ItemBuilder::ItemBuilder() { defined in .h }
+
+//-Instance Functions------------------------------------------------------------------------------------------------
+//Public:
+//B& wOtherField(QPair<QString, QString> otherField) { defined in .h }
+//T build() { defined in .h }
 
 //===============================================================================================================
 // GAME
@@ -58,10 +86,6 @@ QString Game::getCommandLine() const { return mCommandLine; }
 QDateTime Game::getReleaseDate() const { return mReleaseDate; }
 QString Game::getVersion() const { return mVersion; }
 QString Game::getReleaseType() const { return mReleaseType; }
-QHash<QString, QString>& Game::getOtherFields() { return mOtherFields; }
-const QHash<QString, QString>& Game::getOtherFields() const { return mOtherFields; }
-
-void Game::transferOtherFields(QHash<QString, QString>& otherFields) { mOtherFields = std::move(otherFields); }
 
 //===============================================================================================================
 // GAME BUILDER
@@ -73,51 +97,43 @@ GameBuilder::GameBuilder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-GameBuilder& GameBuilder::wID(QString rawID) { mGameBlueprint.mID = QUuid(rawID); return *this; }
-GameBuilder& GameBuilder::wTitle(QString title) { mGameBlueprint.mTitle = title; return *this; }
-GameBuilder& GameBuilder::wSeries(QString series) { mGameBlueprint.mSeries = series; return *this; }
-GameBuilder& GameBuilder::wDeveloper(QString developer) { mGameBlueprint.mDeveloper = developer; return *this; }
-GameBuilder& GameBuilder::wPublisher(QString publisher) { mGameBlueprint.mPublisher = publisher; return *this; }
-GameBuilder& GameBuilder::wPlatform(QString platform) { mGameBlueprint.mPlatform = platform; return *this; }
-GameBuilder& GameBuilder::wSortTitle(QString sortTitle) { mGameBlueprint.mSortTitle = sortTitle; return *this; }
+GameBuilder& GameBuilder::wID(QString rawID) { mItemBlueprint.mID = QUuid(rawID); return *this; }
+GameBuilder& GameBuilder::wTitle(QString title) { mItemBlueprint.mTitle = title; return *this; }
+GameBuilder& GameBuilder::wSeries(QString series) { mItemBlueprint.mSeries = series; return *this; }
+GameBuilder& GameBuilder::wDeveloper(QString developer) { mItemBlueprint.mDeveloper = developer; return *this; }
+GameBuilder& GameBuilder::wPublisher(QString publisher) { mItemBlueprint.mPublisher = publisher; return *this; }
+GameBuilder& GameBuilder::wPlatform(QString platform) { mItemBlueprint.mPlatform = platform; return *this; }
+GameBuilder& GameBuilder::wSortTitle(QString sortTitle) { mItemBlueprint.mSortTitle = sortTitle; return *this; }
 
 GameBuilder& GameBuilder::wDateAdded(QString rawDateAdded)
 {
-    mGameBlueprint.mDateAdded = QDateTime::fromString(rawDateAdded, Qt::ISODateWithMs);
+    mItemBlueprint.mDateAdded = QDateTime::fromString(rawDateAdded, Qt::ISODateWithMs);
     return *this;
 }
 
 GameBuilder& GameBuilder::wDateModified(QString rawDateModified)
 {
-    mGameBlueprint.mDateModified = QDateTime::fromString(rawDateModified, Qt::ISODateWithMs);
+    mItemBlueprint.mDateModified = QDateTime::fromString(rawDateModified, Qt::ISODateWithMs);
     return *this;
 }
 
-GameBuilder& GameBuilder::wBroken(QString rawBroken) { mGameBlueprint.mBroken = rawBroken.toInt() != 0; return *this; }
-GameBuilder& GameBuilder::wPlayMode(QString playMode) { mGameBlueprint.mPlayMode = playMode; return *this; }
-GameBuilder& GameBuilder::wStatus(QString status) { mGameBlueprint.mStatus = status; return *this; }
-GameBuilder& GameBuilder::wRegion(QString region) { mGameBlueprint.mRegion = region; return *this; }
-GameBuilder& GameBuilder::wNotes(QString notes) { mGameBlueprint.mNotes = notes; return *this; }
-GameBuilder& GameBuilder::wSource(QString source) { mGameBlueprint.mSource = source; return *this; }
-GameBuilder& GameBuilder::wAppPath(QString appPath) { mGameBlueprint.mAppPath = appPath; return *this; }
-GameBuilder& GameBuilder::wCommandLine(QString commandLine) { mGameBlueprint.mCommandLine = commandLine; return *this; }
+GameBuilder& GameBuilder::wBroken(QString rawBroken) { mItemBlueprint.mBroken = rawBroken.toInt() != 0; return *this; }
+GameBuilder& GameBuilder::wPlayMode(QString playMode) { mItemBlueprint.mPlayMode = playMode; return *this; }
+GameBuilder& GameBuilder::wStatus(QString status) { mItemBlueprint.mStatus = status; return *this; }
+GameBuilder& GameBuilder::wRegion(QString region) { mItemBlueprint.mRegion = region; return *this; }
+GameBuilder& GameBuilder::wNotes(QString notes) { mItemBlueprint.mNotes = notes; return *this; }
+GameBuilder& GameBuilder::wSource(QString source) { mItemBlueprint.mSource = source; return *this; }
+GameBuilder& GameBuilder::wAppPath(QString appPath) { mItemBlueprint.mAppPath = appPath; return *this; }
+GameBuilder& GameBuilder::wCommandLine(QString commandLine) { mItemBlueprint.mCommandLine = commandLine; return *this; }
 
 GameBuilder& GameBuilder::wReleaseDate(QString rawReleaseDate)
 {
-    mGameBlueprint.mReleaseDate = QDateTime::fromString(rawReleaseDate, Qt::ISODateWithMs);
+    mItemBlueprint.mReleaseDate = QDateTime::fromString(rawReleaseDate, Qt::ISODateWithMs);
     return *this;
 }
 
-GameBuilder& GameBuilder::wVersion(QString version) { mGameBlueprint.mVersion = version; return *this; }
-GameBuilder& GameBuilder::wReleaseType(QString releaseType) { mGameBlueprint.mReleaseType = releaseType; return *this; }
-
-GameBuilder& GameBuilder::wOtherField(QPair<QString, QString> otherField)
-{
-    mGameBlueprint.mOtherFields[otherField.first] = otherField.second;
-    return *this;
-}
-
-Game GameBuilder::build() { return mGameBlueprint; }
+GameBuilder& GameBuilder::wVersion(QString version) { mItemBlueprint.mVersion = version; return *this; }
+GameBuilder& GameBuilder::wReleaseType(QString releaseType) { mItemBlueprint.mReleaseType = releaseType; return *this; }
 
 //===============================================================================================================
 // ADD APP
@@ -145,9 +161,6 @@ QString AddApp::getCommandLine() const { return mCommandLine; }
 bool AddApp::isAutorunBefore() const { return mAutorunBefore; }
 QString AddApp::getName() const { return mName; }
 bool AddApp::isWaitForExit() const { return mWaitForExit; }
-QHash<QString, QString>& AddApp::getOtherFields() { return mOtherFields; }
-const QHash<QString, QString>& AddApp::getOtherFields() const { return mOtherFields; }
-void AddApp::transferOtherFields(QHash<QString, QString>& otherFields) { mOtherFields = std::move(otherFields); }
 
 //===============================================================================================================
 // ADD APP BUILDER
@@ -159,20 +172,13 @@ AddAppBuilder::AddAppBuilder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-AddAppBuilder& AddAppBuilder::wID(QString rawID) { mAddAppBlueprint.mID = QUuid(rawID); return *this; }
-AddAppBuilder& AddAppBuilder::wGameID(QString rawGameID) { mAddAppBlueprint.mGameID = QUuid(rawGameID); return *this; }
-AddAppBuilder& AddAppBuilder::wAppPath(QString appPath) { mAddAppBlueprint.mAppPath = appPath; return *this; }
-AddAppBuilder& AddAppBuilder::wCommandLine(QString commandLine) { mAddAppBlueprint.mCommandLine = commandLine; return *this; }
-AddAppBuilder& AddAppBuilder::wAutorunBefore(QString rawAutorunBefore) { mAddAppBlueprint.mAutorunBefore = rawAutorunBefore != "0"; return *this; }
-AddAppBuilder& AddAppBuilder::wName(QString name) { mAddAppBlueprint.mName = name; return *this; }
-AddAppBuilder& AddAppBuilder::wWaitForExit(QString rawWaitForExit) { mAddAppBlueprint.mWaitForExit = rawWaitForExit != "0"; return *this; }
-AddAppBuilder& AddAppBuilder::wOtherField(QPair<QString, QString> otherField)
-{
-    mAddAppBlueprint.mOtherFields[otherField.first] = otherField.second;
-    return *this;
-}
-
-AddApp AddAppBuilder::build() { return mAddAppBlueprint; }
+AddAppBuilder& AddAppBuilder::wID(QString rawID) { mItemBlueprint.mID = QUuid(rawID); return *this; }
+AddAppBuilder& AddAppBuilder::wGameID(QString rawGameID) { mItemBlueprint.mGameID = QUuid(rawGameID); return *this; }
+AddAppBuilder& AddAppBuilder::wAppPath(QString appPath) { mItemBlueprint.mAppPath = appPath; return *this; }
+AddAppBuilder& AddAppBuilder::wCommandLine(QString commandLine) { mItemBlueprint.mCommandLine = commandLine; return *this; }
+AddAppBuilder& AddAppBuilder::wAutorunBefore(QString rawAutorunBefore) { mItemBlueprint.mAutorunBefore = rawAutorunBefore != "0"; return *this; }
+AddAppBuilder& AddAppBuilder::wName(QString name) { mItemBlueprint.mName = name; return *this; }
+AddAppBuilder& AddAppBuilder::wWaitForExit(QString rawWaitForExit) { mItemBlueprint.mWaitForExit = rawWaitForExit != "0"; return *this; }
 
 //===============================================================================================================
 // PLAYLIST HEADER
@@ -194,9 +200,6 @@ QUuid PlaylistHeader::getPlaylistID() const { return mPlaylistID; }
 QString PlaylistHeader::getName() const { return mName; }
 QString PlaylistHeader::getNestedName() const { return mNestedName; }
 QString PlaylistHeader::getNotes() const { return mNotes; }
-QHash<QString, QString>& PlaylistHeader::getOtherFields() { return mOtherFields; }
-const QHash<QString, QString>& PlaylistHeader::getOtherFields() const { return mOtherFields; }
-void PlaylistHeader::transferOtherFields(QHash<QString, QString>& otherFields) { mOtherFields = std::move(otherFields); }
 
 //===============================================================================================================
 // PLAYLIST HEADER BUILDER
@@ -208,19 +211,10 @@ PlaylistHeaderBuilder::PlaylistHeaderBuilder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-PlaylistHeaderBuilder& PlaylistHeaderBuilder::wPlaylistID(QString rawPlaylistID) { mPlaylistHeaderBlueprint.mPlaylistID = QUuid(rawPlaylistID); return *this; }
-PlaylistHeaderBuilder& PlaylistHeaderBuilder::wName(QString name) { mPlaylistHeaderBlueprint.mName = name; return *this;}
-PlaylistHeaderBuilder& PlaylistHeaderBuilder::wNestedName(QString nestedName) { mPlaylistHeaderBlueprint.mNestedName = nestedName; return *this;}
-PlaylistHeaderBuilder& PlaylistHeaderBuilder::wNotes(QString notes) { mPlaylistHeaderBlueprint.mNotes = notes; return *this;}
-
-PlaylistHeaderBuilder& PlaylistHeaderBuilder::wOtherField(QPair<QString, QString> otherField)
-{
-    mPlaylistHeaderBlueprint.mOtherFields[otherField.first] = otherField.second;
-    return *this;
-}
-
-PlaylistHeader PlaylistHeaderBuilder::build() { return mPlaylistHeaderBlueprint; }
-
+PlaylistHeaderBuilder& PlaylistHeaderBuilder::wPlaylistID(QString rawPlaylistID) { mItemBlueprint.mPlaylistID = QUuid(rawPlaylistID); return *this; }
+PlaylistHeaderBuilder& PlaylistHeaderBuilder::wName(QString name) { mItemBlueprint.mName = name; return *this;}
+PlaylistHeaderBuilder& PlaylistHeaderBuilder::wNestedName(QString nestedName) { mItemBlueprint.mNestedName = nestedName; return *this;}
+PlaylistHeaderBuilder& PlaylistHeaderBuilder::wNotes(QString notes) { mItemBlueprint.mNotes = notes; return *this;}
 
 //===============================================================================================================
 // PLAYLIST GAME
@@ -246,10 +240,7 @@ QString PlaylistGame::getGameTitle() const { return mGameTitle; }
 QString PlaylistGame::getGameFileName() const { return mGameFileName; }
 QString PlaylistGame::getGamePlatform() const { return mGamePlatform; }
 int PlaylistGame::getManualOrder() const { return mManualOrder; }
-QHash<QString, QString>& PlaylistGame::getOtherFields() { return mOtherFields; }
-const QHash<QString, QString>& PlaylistGame::getOtherFields() const { return mOtherFields; }
 
-void PlaylistGame::transferOtherFields(QHash<QString, QString>& otherFields) { mOtherFields = std::move(otherFields); }
 void PlaylistGame::setLBDatabaseID(int lbDBID) { mLBDatabaseID = lbDBID; }
 
 //===============================================================================================================
@@ -262,35 +253,60 @@ PlaylistGameBuilder::PlaylistGameBuilder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-PlaylistGameBuilder& PlaylistGameBuilder::wGameID(QString rawGameID) { mPlaylistGameBlueprint.mGameID = QUuid(rawGameID); return *this; }
+PlaylistGameBuilder& PlaylistGameBuilder::wGameID(QString rawGameID) { mItemBlueprint.mGameID = QUuid(rawGameID); return *this; }
 
 PlaylistGameBuilder& PlaylistGameBuilder::wLBDatabaseID(QString rawLBDatabaseID)
 {
     bool validInt = false;
-    mPlaylistGameBlueprint.mLBDatabaseID = rawLBDatabaseID.toInt(&validInt);
+    mItemBlueprint.mLBDatabaseID = rawLBDatabaseID.toInt(&validInt);
     if(!validInt)
-        mPlaylistGameBlueprint.mLBDatabaseID = -1;
+        mItemBlueprint.mLBDatabaseID = -1;
     return *this;
 }
 
-PlaylistGameBuilder& PlaylistGameBuilder::wGameTitle(QString gameTitle) { mPlaylistGameBlueprint.mGameTitle = gameTitle; return *this; }
-PlaylistGameBuilder& PlaylistGameBuilder::wGameFileName(QString gameFileName) { mPlaylistGameBlueprint.mGameFileName = gameFileName; return *this; }
-PlaylistGameBuilder& PlaylistGameBuilder::wGamePlatform(QString gamePlatform) { mPlaylistGameBlueprint.mGamePlatform = gamePlatform; return *this; }
+PlaylistGameBuilder& PlaylistGameBuilder::wGameTitle(QString gameTitle) { mItemBlueprint.mGameTitle = gameTitle; return *this; }
+PlaylistGameBuilder& PlaylistGameBuilder::wGameFileName(QString gameFileName) { mItemBlueprint.mGameFileName = gameFileName; return *this; }
+PlaylistGameBuilder& PlaylistGameBuilder::wGamePlatform(QString gamePlatform) { mItemBlueprint.mGamePlatform = gamePlatform; return *this; }
 
 PlaylistGameBuilder& PlaylistGameBuilder::wManualOrder(QString rawManualOrder)
 {
     bool validInt = false;
-    mPlaylistGameBlueprint.mManualOrder = rawManualOrder.toInt(&validInt);
+    mItemBlueprint.mManualOrder = rawManualOrder.toInt(&validInt);
     if(!validInt)
-        mPlaylistGameBlueprint.mManualOrder = -1;
+        mItemBlueprint.mManualOrder = -1;
     return *this;
 }
 
-PlaylistGameBuilder& PlaylistGameBuilder::wOtherField(QPair<QString, QString> otherField)
-{
-    mPlaylistGameBlueprint.mOtherFields[otherField.first] = otherField.second;
-    return *this;
-}
+//===============================================================================================================
+// PLATFORM
+//===============================================================================================================
 
-PlaylistGame PlaylistGameBuilder::build() { return mPlaylistGameBlueprint; }
+//-Constructor-------------------------------------------------------------------------------------------------
+//Public:
+Platform::Platform() {}
+
+//===============================================================================================================
+// PLATFORM BUILDER
+//===============================================================================================================
+
+//-Constructor-------------------------------------------------------------------------------------------------
+//Public:
+PlatformBuilder::PlatformBuilder() {}
+
+//===============================================================================================================
+// PLATFORM CATEGORY
+//===============================================================================================================
+
+//-Constructor-------------------------------------------------------------------------------------------------
+//Public:
+PlatformCategory::PlatformCategory() {}
+
+//===============================================================================================================
+// PLATFORM CATEGORY BUILDER
+//===============================================================================================================
+
+//-Constructor-------------------------------------------------------------------------------------------------
+//Public:
+PlatformCategoryBuilder::PlatformCategoryBuilder() {}
+
 }
