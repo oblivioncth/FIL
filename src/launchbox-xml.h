@@ -1,5 +1,5 @@
-#ifndef XML_H
-#define XML_H
+#ifndef LAUNCHBOX_XML_H
+#define LAUNCHBOX_XML_H
 
 #include <QString>
 #include <QFile>
@@ -363,4 +363,4 @@ public:
 };
 
 }
-#endif // XML_H
+#endif // LAUNCHBOX_XML_H

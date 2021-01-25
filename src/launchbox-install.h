@@ -1,5 +1,5 @@
-#ifndef LAUNCHBOX-INSTALL_H
-#define LAUNCHBOX-INSTALL_H
+#ifndef LAUNCHBOX_INSTALL_H
+#define LAUNCHBOX_INSTALL_H
 
 #include <QString>
 #include <QDir>
@@ -125,4 +125,4 @@ public:
 };
 
 }
-#endif // LAUNCHBOX-INSTALL_H
+#endif // LAUNCHBOX_INSTALL_H
