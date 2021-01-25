@@ -25,10 +25,14 @@ class Xml
 {
 //-Class Forward Declarations--------------------------------------------------------------------------------------
 public:
+    class DataDocReader;
+    class DataDocWriter;
     class PlatformDocReader;
     class PlatformDocWriter;
     class PlaylistDocReader;
     class PlaylistDocWriter;
+    class PlatformConfigDocReader;
+    class PlatformConfigDocWriter;
 
 //-Class Structs---------------------------------------------------------------------------------------------------
 public:
@@ -124,9 +128,27 @@ public:
         static inline const QString ELEMENT_PLATFORM = "Platform";
     };
 
+    class Element_PlatformCategory
+    {
+    public:
+        static inline const QString NAME = "PlatformCategory";
+    };
+
     class DataDoc
     {
+        friend class DataDocReader;
+        friend class DataDocWriter;
         friend class Install;
+    //-Inner Classes----------------------------------------------------------------------------------------------------
+    public:
+        class Key
+        {
+            friend class Install;
+        private:
+            Key() {};
+            Key(const Key&) = default;
+        };
+
     //-Instance Variables--------------------------------------------------------------------------------------------------
     protected:
         std::unique_ptr<QFile> mDocumentFile;
@@ -147,30 +169,38 @@ public:
     {
     //-Instance Variables--------------------------------------------------------------------------------------------------
     protected:
+        DataDoc* mTargetDocument;
         QXmlStreamReader mStreamReader;
 
     //-Constructor--------------------------------------------------------------------------------------------------------
     public:
-        DataDocReader();
+        DataDocReader(DataDoc* targetDoc);
 
     //-Instance Functions-------------------------------------------------------------------------------------------------
     public:
-        virtual Qx::XmlStreamReaderError readInto() = 0;
+        Qx::XmlStreamReaderError readInto();
+
+    private:
+        virtual Qx::XmlStreamReaderError readTargetDoc() = 0;
     };
 
     class DataDocWriter
     {
     //-Instance Variables--------------------------------------------------------------------------------------------------
     protected:
+        DataDoc* mSourceDocument;
         QXmlStreamWriter mStreamWriter;
 
     //-Constructor--------------------------------------------------------------------------------------------------------
     public:
-        DataDocWriter();
+        DataDocWriter(DataDoc* sourceDoc);
 
     //-Instance Functions-------------------------------------------------------------------------------------------------
     public:
-        virtual QString writeOutOf() = 0;
+        QString writeOutOf();
+
+    private:
+        virtual bool writeSourceDoc() = 0;
     };
 
     class PlatformDoc : public DataDoc
@@ -178,15 +208,6 @@ public:
         friend class PlatformDocReader;
         friend class PlatformDocWriter;
         friend class Install;
-    //-Inner Classes----------------------------------------------------------------------------------------------------
-    public:
-        class Key
-        {
-            friend class Install;
-        private:
-            Key() {};
-            Key(const Key&) = default;
-        };
 
     //-Class Variables-----------------------------------------------------------------------------------------------------
     public:
@@ -221,9 +242,6 @@ public:
 
     class PlatformDocReader : public DataDocReader
     {
-    //-Instance Variables--------------------------------------------------------------------------------------------------
-    protected:
-        PlatformDoc* mTargetDocument;
     //-Constructor--------------------------------------------------------------------------------------------------------
     public:
         PlatformDocReader(PlatformDoc* targetDoc);
@@ -233,29 +251,22 @@ public:
         Qx::XmlStreamReaderError readInto();
 
     private:
-        Qx::XmlStreamReaderError readPlatformDoc();
+        Qx::XmlStreamReaderError readTargetDoc();
         void parseGame();
         void parseAddApp();
     };
 
     class PlatformDocWriter : public DataDocWriter
     {
-        //-Instance Variables--------------------------------------------------------------------------------------------------
-        private:
-            PlatformDoc* mSourceDocument;
+    //-Constructor--------------------------------------------------------------------------------------------------------
+    public:
+        PlatformDocWriter(PlatformDoc* sourceDoc);
 
-        //-Constructor--------------------------------------------------------------------------------------------------------
-        public:
-            PlatformDocWriter(PlatformDoc* sourceDoc);
-
-        //-Instance Functions-------------------------------------------------------------------------------------------------
-        public:
-            QString writeOutOf();
-
-        private:
-            bool writePlatformDoc();
-            bool writeGame(const Game& game);
-            bool writeAddApp(const AddApp& addApp);
+    //-Instance Functions--------------------------------------------------------------------------------------------------
+    private:
+        bool writeSourceDoc();
+        bool writeGame(const Game& game);
+        bool writeAddApp(const AddApp& addApp);
     };
 
     class PlaylistDoc : public DataDoc
@@ -263,16 +274,6 @@ public:
         friend class PlaylistDocReader;
         friend class PlaylistDocWriter;
         friend class Install;
-
-    //-Inner Classes----------------------------------------------------------------------------------------------------
-    public:
-        class Key
-        {
-            friend class Install;
-        private:
-            Key() {};
-            Key(const Key&) = default;
-        };
 
     //-Class Variables-----------------------------------------------------------------------------------------------------
     public:
@@ -306,10 +307,6 @@ public:
 
     class PlaylistDocReader : public DataDocReader
     {
-    //-Instance Variables--------------------------------------------------------------------------------------------------
-    private:
-        PlaylistDoc* mTargetDocument;
-
     //-Constructor--------------------------------------------------------------------------------------------------------
     public:
         PlaylistDocReader(PlaylistDoc* targetDoc);
@@ -319,31 +316,80 @@ public:
         Qx::XmlStreamReaderError readInto();
 
     private:
-        Qx::XmlStreamReaderError readPlaylistDoc();
+        Qx::XmlStreamReaderError readTargetDoc();
         void parsePlaylistHeader();
         void parsePlaylistGame();
     };
 
     class PlaylistDocWriter : public DataDocWriter
     {
-        //-Instance Variables--------------------------------------------------------------------------------------------------
-        private:
-            PlaylistDoc* mSourceDocument;
+    //-Constructor--------------------------------------------------------------------------------------------------------
+    public:
+        PlaylistDocWriter(PlaylistDoc* sourceDoc);
 
-        //-Constructor--------------------------------------------------------------------------------------------------------
-        public:
-            PlaylistDocWriter(PlaylistDoc* sourceDoc);
-
-        //-Instance Functions-------------------------------------------------------------------------------------------------
-        public:
-            QString writeOutOf();
-
-        private:
-            bool writePlaylistDoc();
-            bool writePlaylistHeader(const PlaylistHeader& playlistHeader);
-            bool writePlaylistGame(const PlaylistGame& playlistGame);
+    //-Instance Functions-------------------------------------------------------------------------------------------------
+    private:
+        bool writeSourceDoc();
+        bool writePlaylistHeader(const PlaylistHeader& playlistHeader);
+        bool writePlaylistGame(const PlaylistGame& playlistGame);
     };
 
+    class PlatformConfigDoc : public DataDoc
+    {
+        friend class PlatformConfigDocReader;
+        friend class PlatformConfigDocWriter;
+        friend class Install;
+
+    //-Class Variables-----------------------------------------------------------------------------------------------------
+    public:
+        static inline const QString TYPE_NAME = "Config";
+        static inline const QString STD_NAME = "Platforms";
+
+    //-Instance Variables--------------------------------------------------------------------------------------------------
+    private:
+        QSet<Platform> mPlatforms;
+        QSet<PlatformCategory> mPlatformCategories;
+        QHash<QString, QHash<QString, QString>> mPlatformFolders;
+
+    //-Constructor--------------------------------------------------------------------------------------------------------
+    public:
+        explicit PlatformConfigDoc(std::unique_ptr<QFile> xmlFile, const Key&);
+
+    //-Instance Functions--------------------------------------------------------------------------------------------------
+    public:
+        void setMediaFolder(QString platform, QString mediaType, QString folderPath);
+    };
+
+    class PlatformConfigDocReader : public DataDocReader
+    {
+    //-Constructor--------------------------------------------------------------------------------------------------------
+    public:
+        PlatformConfigDocReader(PlatformConfigDoc* targetDoc);
+
+    //-Instance Functions-------------------------------------------------------------------------------------------------
+    public:
+        Qx::XmlStreamReaderError readInto();
+
+    private:
+        Qx::XmlStreamReaderError readTargetDoc();
+        void parsePlatform();
+        void parsePlatformFolder();
+        void parsePlatformCategory();
+    };
+
+    class PlatformConfigDocWriter : public DataDocWriter
+    {
+    //-Constructor--------------------------------------------------------------------------------------------------------
+    public:
+        PlatformConfigDocWriter(PlatformConfigDoc* sourceDoc);
+
+    //-Instance Functions-------------------------------------------------------------------------------------------------
+    private:
+        bool writeSourceDoc();
+        bool writePlatform(const Platform& platform);
+        bool writePlatformFolder(const QString& platform, const QString& mediaType, const QString& folderPath);
+        bool writePlatformCategory(const PlatformCategory& platformCategory);
+    };
 
 //-Class Variables--------------------------------------------------------------------------------------------------
 public:

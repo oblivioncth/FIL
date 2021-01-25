@@ -44,7 +44,28 @@ void Xml::DataDoc::clearFile() { mDocumentFile->resize(0); }
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-Xml::DataDocReader::DataDocReader() {}
+Xml::DataDocReader::DataDocReader(Xml::DataDoc* targetDoc) : mTargetDocument(targetDoc) {}
+
+Qx::XmlStreamReaderError Xml::DataDocReader::readInto()
+{
+    // Hook reader to document handle
+    mStreamReader.setDevice(mTargetDocument->mDocumentFile.get());
+
+    // Prepare error return instance
+    Qx::XmlStreamReaderError readError;
+
+    if(mStreamReader.readNextStartElement())
+    {
+        if(mStreamReader.name() == XML_ROOT_ELEMENT)
+            readError = readTargetDoc();
+        else
+            readError = Qx::XmlStreamReaderError(formatDataDocError(ERR_NOT_LB_DOC, mTargetDocument->mHandleTarget));
+    }
+    else
+        readError = Qx::XmlStreamReaderError(mStreamReader.error());
+
+    return readError;
+}
 
 //===============================================================================================================
 // Xml::DataDocWriter
@@ -52,10 +73,41 @@ Xml::DataDocReader::DataDocReader() {}
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-Xml::DataDocWriter::DataDocWriter() {}
+Xml::DataDocWriter::DataDocWriter(DataDoc* sourceDoc)
+    : mSourceDocument(sourceDoc) {}
+
+//-Instance Functions-------------------------------------------------------------------------------------------------
+//Public:
+QString Xml::DataDocWriter::writeOutOf()
+{
+    // Hook writer to document handle
+    mStreamWriter.setDevice(mSourceDocument->mDocumentFile.get());
+
+    // Enable auto formating
+    mStreamWriter.setAutoFormatting(true);
+
+    // Write standard XML header
+    mStreamWriter.writeStartDocument();
+
+    // Write main LaunchBox tag
+    mStreamWriter.writeStartElement(XML_ROOT_ELEMENT);
+
+    // Write main body
+    if(!writeSourceDoc())
+        return mStreamWriter.device()->errorString();
+
+    // Close main LaunchBox tag
+    mStreamWriter.writeEndElement();
+
+    // Finish document
+    mStreamWriter.writeEndDocument();
+
+    // Return null string on success
+    return QString();
+}
 
 //===============================================================================================================
-// Xml::Platform
+// Xml::PlatformDoc
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
@@ -136,40 +188,17 @@ void Xml::PlatformDoc::finalize()
 }
 
 //===============================================================================================================
-// Xml::PlatformReader
+// Xml::PlatformDocReader
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
 Xml::PlatformDocReader::PlatformDocReader(PlatformDoc* targetDoc)
-    : mTargetDocument(targetDoc) {}
+    : DataDocReader(targetDoc) {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
-//Public:
-
-Qx::XmlStreamReaderError Xml::PlatformDocReader::readInto()
-{
-    // Hook reader to document handle
-    mStreamReader.setDevice(mTargetDocument->mDocumentFile.get());
-
-    // Prepare error return instance
-    Qx::XmlStreamReaderError readError;
-
-    if(mStreamReader.readNextStartElement())
-    {
-        if(mStreamReader.name() == XML_ROOT_ELEMENT)
-            readError = readPlatformDoc();
-        else
-            readError = Qx::XmlStreamReaderError(formatDataDocError(ERR_NOT_LB_DOC, mTargetDocument->mHandleTarget));
-    }
-    else
-        readError = Qx::XmlStreamReaderError(mStreamReader.error());
-
-    return readError;
-}
-
 //Private:
-Qx::XmlStreamReaderError Xml::PlatformDocReader::readPlatformDoc()
+Qx::XmlStreamReaderError Xml::PlatformDocReader::readTargetDoc()
 {
     while(mStreamReader.readNextStartElement())
     {
@@ -247,7 +276,7 @@ void Xml::PlatformDocReader::parseGame()
 
     // Build Game and add to document
     LB::Game existingGame = gb.build();
-    mTargetDocument->mGamesExisting[existingGame.getID()] = existingGame;
+    static_cast<PlatformDoc*>(mTargetDocument)->mGamesExisting[existingGame.getID()] = existingGame;
 }
 
 void Xml::PlatformDocReader::parseAddApp()
@@ -278,61 +307,32 @@ void Xml::PlatformDocReader::parseAddApp()
 
     // Build Additional App and add to document
     LB::AddApp existingAddApp = aab.build();
-    mTargetDocument->mAddAppsExisting[existingAddApp.getID()] = existingAddApp;
+    static_cast<PlatformDoc*>(mTargetDocument)->mAddAppsExisting[existingAddApp.getID()] = existingAddApp;
 
 }
 
 //===============================================================================================================
-// Xml::PlatformWriter
+// Xml::PlatformDocWriter
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
 Xml::PlatformDocWriter::PlatformDocWriter(PlatformDoc* sourceDoc)
-    : mSourceDocument(sourceDoc) {}
+    : DataDocWriter(sourceDoc) {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
-//Public:
-QString Xml::PlatformDocWriter::writeOutOf()
-{
-    // Hook writer to document handle
-    mStreamWriter.setDevice(mSourceDocument->mDocumentFile.get());
-
-    // Enable auto formating
-    mStreamWriter.setAutoFormatting(true);
-
-    // Write standard XML header
-    mStreamWriter.writeStartDocument();
-
-    // Write main LaunchBox tag
-    mStreamWriter.writeStartElement(XML_ROOT_ELEMENT);
-
-    // Write main body
-    if(!writePlatformDoc())
-        return mStreamWriter.device()->errorString();
-
-    // Close main LaunchBox tag
-    mStreamWriter.writeEndElement();
-
-    // Finish document
-    mStreamWriter.writeEndDocument();
-
-    // Return null string on success
-    return QString();
-}
-
 //Private:
-bool Xml::PlatformDocWriter::writePlatformDoc()
+bool Xml::PlatformDocWriter::writeSourceDoc()
 {
     // Write all games
-    for(const Game& game : mSourceDocument->getFinalGames())
+    for(const Game& game : static_cast<PlatformDoc*>(mSourceDocument)->getFinalGames())
     {
         if(!writeGame(game))
             return false;
     }
 
     // Write all additional apps
-    for(const AddApp& addApp : mSourceDocument->getFinalAddApps())
+    for(const AddApp& addApp : static_cast<PlatformDoc*>(mSourceDocument)->getFinalAddApps())
     {
         if(!writeAddApp(addApp))
             return false;
@@ -430,7 +430,7 @@ bool Xml::PlatformDocWriter::writeAddApp(const AddApp& addApp)
 }
 
 //===============================================================================================================
-// Xml::Playlist
+// Xml::PlaylistDoc
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
@@ -492,39 +492,220 @@ void Xml::PlaylistDoc::finalize()
 }
 
 //===============================================================================================================
-// Xml::PlaylistReader
+// Xml::PlaylistDocReader
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-Xml::PlaylistDocReader::PlaylistDocReader(PlaylistDoc* targetDoc)
-    : mTargetDocument(targetDoc) {}
+Xml::PlaylistDocReader::PlaylistDocReader(PlaylistDoc* targetDoc) : DataDocReader(targetDoc) {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
-//Public:
-Qx::XmlStreamReaderError Xml::PlaylistDocReader::readInto()
+//Private:
+Qx::XmlStreamReaderError Xml::PlaylistDocReader::readTargetDoc()
 {
-    // Hook reader to document handle
-    mStreamReader.setDevice(mTargetDocument->mDocumentFile.get());
-
-    // Prepare error return instance
-    Qx::XmlStreamReaderError readError;
-
-    if(mStreamReader.readNextStartElement())
+    while(mStreamReader.readNextStartElement())
     {
-        if(mStreamReader.name() == XML_ROOT_ELEMENT)
-            readError = readPlaylistDoc();
+        if(mStreamReader.name() == Element_PlaylistHeader::NAME)
+            parsePlaylistHeader();
+        else if(mStreamReader.name() == Element_PlaylistGame::NAME)
+            parsePlaylistGame();
         else
-            readError = Qx::XmlStreamReaderError(formatDataDocError(ERR_NOT_LB_DOC, mTargetDocument->mHandleTarget));
+            mStreamReader.skipCurrentElement();
+    }
+
+    // Return no error on success
+    if(mStreamReader.hasError())
+    {
+        if(mStreamReader.error() == QXmlStreamReader::CustomError)
+            return Qx::XmlStreamReaderError(mStreamReader.errorString());
+        else
+            return Qx::XmlStreamReaderError(mStreamReader.error());
     }
     else
-        readError = Qx::XmlStreamReaderError(mStreamReader.error());
-
-    return readError;
+        return Qx::XmlStreamReaderError();
 }
 
+void Xml::PlaylistDocReader::parsePlaylistHeader()
+{
+    // Playlist Header to Build
+    PlaylistHeaderBuilder phb;
+
+    // Cover all children
+    while(mStreamReader.readNextStartElement())
+    {
+        if(mStreamReader.name() == Element_PlaylistHeader::ELEMENT_ID)
+            phb.wPlaylistID(mStreamReader.readElementText());
+        else if(mStreamReader.name() == Element_PlaylistHeader::ELEMENT_NAME)
+            phb.wName(mStreamReader.readElementText());
+        else if(mStreamReader.name() == Element_PlaylistHeader::ELEMENT_NESTED_NAME)
+            phb.wNestedName(mStreamReader.readElementText());
+        else if(mStreamReader.name() == Element_PlaylistHeader::ELEMENT_NOTES)
+            phb.wNotes(mStreamReader.readElementText());
+        else
+            phb.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
+    }
+
+    // Build Playlist Header and add to document
+    static_cast<PlaylistDoc*>(mTargetDocument)->mPlaylistHeader = phb.build();
+
+}
+
+void Xml::PlaylistDocReader::parsePlaylistGame()
+{
+    // Playlist Game to Build
+    PlaylistGameBuilder pgb;
+
+    // Cover all children
+    while(mStreamReader.readNextStartElement())
+    {
+        if(mStreamReader.name() == Element_PlaylistGame::ELEMENT_ID)
+            pgb.wGameID(mStreamReader.readElementText());
+        else if(mStreamReader.name() == Element_PlaylistGame::ELEMENT_GAME_TITLE)
+            pgb.wGameTitle(mStreamReader.readElementText());
+        else if(mStreamReader.name() == Element_PlaylistGame::ELEMENT_GAME_FILE_NAME)
+            pgb.wGameFileName(mStreamReader.readElementText());
+        else if(mStreamReader.name() == Element_PlaylistGame::ELEMENT_GAME_PLATFORM)
+            pgb.wGamePlatform(mStreamReader.readElementText());
+        else if(mStreamReader.name() == Element_PlaylistGame::ELEMENT_MANUAL_ORDER)
+            pgb.wManualOrder(mStreamReader.readElementText());
+        else if(mStreamReader.name() == Element_PlaylistGame::ELEMENT_LB_DB_ID)
+            pgb.wLBDatabaseID(mStreamReader.readElementText());
+        else
+            pgb.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
+    }
+
+    // Build Playlist Game
+    LB::PlaylistGame existingPlaylistGame = pgb.build();
+
+    // Correct LB ID if it is invalid and then add it to tracker
+    if(existingPlaylistGame.getLBDatabaseID() < 0)
+        existingPlaylistGame.setLBDatabaseID(static_cast<PlaylistDoc*>(mTargetDocument)->mPlaylistGameFreeLBDBIDTracker->reserveFirstFree());
+    else
+        static_cast<PlaylistDoc*>(mTargetDocument)->mPlaylistGameFreeLBDBIDTracker->release(existingPlaylistGame.getLBDatabaseID());
+
+    // Add to document
+    static_cast<PlaylistDoc*>(mTargetDocument)->mPlaylistGamesExisting[existingPlaylistGame.getGameID()] = existingPlaylistGame;
+}
+
+
+
+//===============================================================================================================
+// Xml::PlaylistDocWriter
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Public:
+Xml::PlaylistDocWriter::PlaylistDocWriter(PlaylistDoc* sourceDoc)
+    : DataDocWriter(sourceDoc) {}
+
+//-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-Qx::XmlStreamReaderError Xml::PlaylistDocReader::readPlaylistDoc()
+bool Xml::PlaylistDocWriter::writeSourceDoc()
+{
+    // Write playlist header
+    if(!writePlaylistHeader(static_cast<PlaylistDoc*>(mSourceDocument)->getPlaylistHeader()))
+        return false;
+
+    // Write all playlist games
+    for(const PlaylistGame& playlistGame : static_cast<PlaylistDoc*>(mSourceDocument)->getFinalPlaylistGames())
+    {
+        if(!writePlaylistGame(playlistGame))
+            return false;
+    }
+
+    // Return true on success
+    return true;
+}
+
+bool Xml::PlaylistDocWriter::writePlaylistHeader(const PlaylistHeader& playlistHeader)
+{
+    // Write opening tag
+    mStreamWriter.writeStartElement(Element_PlaylistHeader::NAME);
+
+    // Write known tags
+    mStreamWriter.writeTextElement(Element_PlaylistHeader::ELEMENT_ID, playlistHeader.getPlaylistID().toString(QUuid::WithoutBraces));
+    mStreamWriter.writeTextElement(Element_PlaylistHeader::ELEMENT_NAME, playlistHeader.getName());
+    mStreamWriter.writeTextElement(Element_PlaylistHeader::ELEMENT_NESTED_NAME, playlistHeader.getNestedName());
+    mStreamWriter.writeTextElement(Element_PlaylistHeader::ELEMENT_NOTES, playlistHeader.getNotes());
+
+    if(mStreamWriter.hasError())
+        return false;
+
+    // Write other tags
+    for(QHash<QString, QString>::const_iterator i = playlistHeader.getOtherFields().constBegin(); i != playlistHeader.getOtherFields().constEnd(); ++i)
+    {
+        mStreamWriter.writeTextElement(i.key(), i.value());
+
+        if(mStreamWriter.hasError())
+            return false;
+    }
+
+    // Close game tag
+    mStreamWriter.writeEndElement();
+
+    // Return true on success
+    return true;
+}
+
+bool Xml::PlaylistDocWriter::writePlaylistGame(const PlaylistGame& playlistGame)
+{
+    // Write opening tag
+    mStreamWriter.writeStartElement(Element_PlaylistGame::NAME);
+
+    // Write known tags
+    mStreamWriter.writeTextElement(Element_PlaylistGame::ELEMENT_ID, playlistGame.getGameID().toString(QUuid::WithoutBraces));
+    mStreamWriter.writeTextElement(Element_PlaylistGame::ELEMENT_GAME_TITLE, playlistGame.getGameTitle());
+    mStreamWriter.writeTextElement(Element_PlaylistGame::ELEMENT_GAME_PLATFORM, playlistGame.getGamePlatform());
+    mStreamWriter.writeTextElement(Element_PlaylistGame::ELEMENT_MANUAL_ORDER, QString::number(playlistGame.getManualOrder()));
+    mStreamWriter.writeTextElement(Element_PlaylistGame::ELEMENT_LB_DB_ID, QString::number(playlistGame.getLBDatabaseID()));
+
+    if(mStreamWriter.hasError())
+        return false;
+
+    // Write other tags
+    for(QHash<QString, QString>::const_iterator i = playlistGame.getOtherFields().constBegin(); i != playlistGame.getOtherFields().constEnd(); ++i)
+    {
+        mStreamWriter.writeTextElement(i.key(), i.value());
+
+        if(mStreamWriter.hasError())
+            return false;
+    }
+
+    // Close game tag
+    mStreamWriter.writeEndElement();
+
+    // Return true on success
+    return true;
+}
+
+//===============================================================================================================
+// Xml::PlatformConfigDoc
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Public:
+Xml::PlatformConfigDoc::PlatformConfigDoc(std::unique_ptr<QFile> xmlFile, const Key&)
+    : DataDoc(std::move(xmlFile), DataDocHandle{Xml::PlatformConfigDoc::TYPE_NAME, Xml::PlatformConfigDoc::STD_NAME}) {}
+
+//-Instance Functions--------------------------------------------------------------------------------------------------
+//Public:
+void Xml::PlatformConfigDoc::setMediaFolder(QString platform, QString mediaType, QString folderPath)
+{
+    mPlatformFolders[platform][mediaType] = folderPath;
+}
+
+//===============================================================================================================
+// Xml::PlatformConfigDocReader
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Public:
+Xml::PlatformConfigDocReader::PlatformConfigDocReader(Xml::PlatformConfigDoc* targetDoc)
+    : DataDocReader(targetDoc) {}
+
+//-Instance Functions-------------------------------------------------------------------------------------------------
+//Private:
+Qx::XmlStreamReaderError Xml::PlatformConfigDocReader::readTargetDoc()
 {
     while(mStreamReader.readNextStartElement())
     {
@@ -610,125 +791,6 @@ void Xml::PlaylistDocReader::parsePlaylistGame()
     mTargetDocument->mPlaylistGamesExisting[existingPlaylistGame.getGameID()] = existingPlaylistGame;
 }
 
-
-
-//===============================================================================================================
-// Xml::PlaylistWriter
-//===============================================================================================================
-
-//-Constructor--------------------------------------------------------------------------------------------------------
-//Public:
-Xml::PlaylistDocWriter::PlaylistDocWriter(PlaylistDoc* sourceDoc)
-    : mSourceDocument(sourceDoc) {}
-
-//-Instance Functions-------------------------------------------------------------------------------------------------
-//Public:
-QString Xml::PlaylistDocWriter::writeOutOf()
-{
-    // Hook writer to document handle
-    mStreamWriter.setDevice(mSourceDocument->mDocumentFile.get());
-
-    // Enable auto formating
-    mStreamWriter.setAutoFormatting(true);
-
-    // Write standard XML header
-    mStreamWriter.writeStartDocument();
-
-    // Write main LaunchBox tag
-    mStreamWriter.writeStartElement(XML_ROOT_ELEMENT);
-
-    // Write main body
-    if(!writePlaylistDoc())
-        return mStreamWriter.device()->errorString();
-
-    // Close main LaunchBox tag
-    mStreamWriter.writeEndElement();
-
-    // Finish document
-    mStreamWriter.writeEndDocument();
-
-    // Return null string on success
-    return QString();
-}
-
-//Private:
-bool Xml::PlaylistDocWriter::writePlaylistDoc()
-{
-    // Write playlist header
-    if(!writePlaylistHeader(mSourceDocument->getPlaylistHeader()))
-        return false;
-
-    // Write all playlist games
-    for(const PlaylistGame& playlistGame : mSourceDocument->getFinalPlaylistGames())
-    {
-        if(!writePlaylistGame(playlistGame))
-            return false;
-    }
-
-    // Return true on success
-    return true;
-}
-
-bool Xml::PlaylistDocWriter::writePlaylistHeader(const PlaylistHeader& playlistHeader)
-{
-    // Write opening tag
-    mStreamWriter.writeStartElement(Element_PlaylistHeader::NAME);
-
-    // Write known tags
-    mStreamWriter.writeTextElement(Element_PlaylistHeader::ELEMENT_ID, playlistHeader.getPlaylistID().toString(QUuid::WithoutBraces));
-    mStreamWriter.writeTextElement(Element_PlaylistHeader::ELEMENT_NAME, playlistHeader.getName());
-    mStreamWriter.writeTextElement(Element_PlaylistHeader::ELEMENT_NESTED_NAME, playlistHeader.getNestedName());
-    mStreamWriter.writeTextElement(Element_PlaylistHeader::ELEMENT_NOTES, playlistHeader.getNotes());
-
-    if(mStreamWriter.hasError())
-        return false;
-
-    // Write other tags
-    for(QHash<QString, QString>::const_iterator i = playlistHeader.getOtherFields().constBegin(); i != playlistHeader.getOtherFields().constEnd(); ++i)
-    {
-        mStreamWriter.writeTextElement(i.key(), i.value());
-
-        if(mStreamWriter.hasError())
-            return false;
-    }
-
-    // Close game tag
-    mStreamWriter.writeEndElement();
-
-    // Return true on success
-    return true;
-}
-
-bool Xml::PlaylistDocWriter::writePlaylistGame(const PlaylistGame& playlistGame)
-{
-    // Write opening tag
-    mStreamWriter.writeStartElement(Element_PlaylistGame::NAME);
-
-    // Write known tags
-    mStreamWriter.writeTextElement(Element_PlaylistGame::ELEMENT_ID, playlistGame.getGameID().toString(QUuid::WithoutBraces));
-    mStreamWriter.writeTextElement(Element_PlaylistGame::ELEMENT_GAME_TITLE, playlistGame.getGameTitle());
-    mStreamWriter.writeTextElement(Element_PlaylistGame::ELEMENT_GAME_PLATFORM, playlistGame.getGamePlatform());
-    mStreamWriter.writeTextElement(Element_PlaylistGame::ELEMENT_MANUAL_ORDER, QString::number(playlistGame.getManualOrder()));
-    mStreamWriter.writeTextElement(Element_PlaylistGame::ELEMENT_LB_DB_ID, QString::number(playlistGame.getLBDatabaseID()));
-
-    if(mStreamWriter.hasError())
-        return false;
-
-    // Write other tags
-    for(QHash<QString, QString>::const_iterator i = playlistGame.getOtherFields().constBegin(); i != playlistGame.getOtherFields().constEnd(); ++i)
-    {
-        mStreamWriter.writeTextElement(i.key(), i.value());
-
-        if(mStreamWriter.hasError())
-            return false;
-    }
-
-    // Close game tag
-    mStreamWriter.writeEndElement();
-
-    // Return true on success
-    return true;
-}
 
 //===============================================================================================================
 // Xml

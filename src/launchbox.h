@@ -13,7 +13,6 @@ namespace LB
 //-Class Forward Declarations---------------------------------------------------------------------------------------
 class Item;
 template <typename B, typename T, ENABLE_IF(std::is_base_of<Item, T>)> class ItemBuilder;
-class ThingBuilder;
 class GameBuilder;
 class AddAppBuilder;
 class PlaylistHeaderBuilder;
