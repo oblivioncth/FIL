@@ -367,9 +367,6 @@ public:
         PlatformConfigDocReader(PlatformConfigDoc* targetDoc);
 
     //-Instance Functions-------------------------------------------------------------------------------------------------
-    public:
-        Qx::XmlStreamReaderError readInto();
-
     private:
         Qx::XmlStreamReaderError readTargetDoc();
         void parsePlatform();
