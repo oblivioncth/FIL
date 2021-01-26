@@ -284,7 +284,6 @@ PlaylistGameBuilder& PlaylistGameBuilder::wManualOrder(QString rawManualOrder)
 //-Constructor-------------------------------------------------------------------------------------------------
 //Public:
 Platform::Platform() {}
-
 //===============================================================================================================
 // PLATFORM BUILDER
 //===============================================================================================================
@@ -292,6 +291,34 @@ Platform::Platform() {}
 //-Constructor-------------------------------------------------------------------------------------------------
 //Public:
 PlatformBuilder::PlatformBuilder() {}
+
+//===============================================================================================================
+// PLATFORM FOLDER
+//===============================================================================================================
+
+//-Constructor-------------------------------------------------------------------------------------------------
+//Public:
+//PlatformFolder::PlatformFolder() {}
+
+//-Instance Functions------------------------------------------------------------------------------------------
+//Public:
+//QString PlatformFolder::getMediaType() { return mMediaType; }
+//QString PlatformFolder::getFolderPath() { return mFolderPath; }
+//QString PlatformFolder::getPlatform() { return mPlatform; }
+
+//===============================================================================================================
+// PLATFORM FOLDER BUILDER
+//===============================================================================================================
+
+//-Constructor-------------------------------------------------------------------------------------------------
+//Public:
+//PlatformFolderBuilder::PlatformFolderBuilder() {}
+
+//-Instance Functions------------------------------------------------------------------------------------------
+//Public:
+//PlatformFolderBuilder& PlatformFolderBuilder::wMediaType(QString mediaType) { mItemBlueprint.mMediaType = mediaType; return *this; }
+//PlatformFolderBuilder& PlatformFolderBuilder::wFolderPath(QString folderPath) { mItemBlueprint.mFolderPath = folderPath; return *this; }
+//PlatformFolderBuilder& PlatformFolderBuilder::wPlatform(QString platform) { mItemBlueprint.mMediaType = platform; return *this; }
 
 //===============================================================================================================
 // PLATFORM CATEGORY

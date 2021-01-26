@@ -13,10 +13,6 @@ namespace LB
 //-Class Forward Declarations---------------------------------------------------------------------------------------
 class Item;
 template <typename B, typename T, ENABLE_IF(std::is_base_of<Item, T>)> class ItemBuilder;
-class GameBuilder;
-class AddAppBuilder;
-class PlaylistHeaderBuilder;
-class PlaylistGameBuilder;
 
 //-Namespace Global Classes-----------------------------------------------------------------------------------------
 class Item
@@ -300,7 +296,6 @@ class Platform  : public Item
 //-Constructor------------------------------------------------------------------------------------------------------
 public:
     Platform();
-
 //-Instance Functions------------------------------------------------------------------------------------------------------
 };
 
@@ -313,6 +308,38 @@ public:
 //-Instance Functions------------------------------------------------------------------------------------------
 };
 
+//class PlatformFolder  : public Item
+//{
+//    friend class PlatformFolderBuilder;
+
+////-Instance Variables-----------------------------------------------------------------------------------------------
+//private:
+//    QString mMediaType;
+//    QString mFolderPath;
+//    QString mPlatform;
+
+////-Constructor------------------------------------------------------------------------------------------------------
+//public:
+//    PlatformFolder();
+
+////-Instance Functions------------------------------------------------------------------------------------------------------
+//    QString getMediaType();
+//    QString getFolderPath();
+//    QString getPlatform();
+//};
+
+//class PlatformFolderBuilder : public ItemBuilder<PlatformFolderBuilder, PlatformFolder>
+//{
+////-Constructor-------------------------------------------------------------------------------------------------
+//public:
+//    PlatformFolderBuilder();
+
+////-Instance Functions------------------------------------------------------------------------------------------
+//public:
+//    PlatformFolderBuilder& wMediaType(QString mediaType);
+//    PlatformFolderBuilder& wFolderPath(QString folderPath);
+//    PlatformFolderBuilder& wPlatform(QString platform);
+//};
 
 class PlatformCategory  : public Item
 {
@@ -327,8 +354,11 @@ public:
 //-Instance Functions------------------------------------------------------------------------------------------------------
 };
 
-class PlatformCategoryBuilder
+class PlatformCategoryBuilder : public ItemBuilder<PlatformCategoryBuilder, PlatformCategory>
 {
+//-Instance Variables-----------------------------------------------------------------------------------------------
+
+
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
     PlatformCategoryBuilder();

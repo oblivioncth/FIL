@@ -160,7 +160,6 @@ public:
 
     //-Instance Functions--------------------------------------------------------------------------------------------------
     public:
-        QString getDocType() const;
         DataDocHandle getHandleTarget() const;
         void clearFile();
     };
@@ -181,7 +180,7 @@ public:
         Qx::XmlStreamReaderError readInto();
 
     private:
-        virtual Qx::XmlStreamReaderError readTargetDoc() = 0;
+        virtual bool readTargetDoc() = 0;
     };
 
     class DataDocWriter
@@ -251,7 +250,7 @@ public:
         Qx::XmlStreamReaderError readInto();
 
     private:
-        Qx::XmlStreamReaderError readTargetDoc();
+        bool readTargetDoc();
         void parseGame();
         void parseAddApp();
     };
@@ -316,7 +315,7 @@ public:
         Qx::XmlStreamReaderError readInto();
 
     private:
-        Qx::XmlStreamReaderError readTargetDoc();
+        bool readTargetDoc();
         void parsePlaylistHeader();
         void parsePlaylistGame();
     };
@@ -347,9 +346,9 @@ public:
 
     //-Instance Variables--------------------------------------------------------------------------------------------------
     private:
-        QSet<Platform> mPlatforms;
-        QSet<PlatformCategory> mPlatformCategories;
-        QHash<QString, QHash<QString, QString>> mPlatformFolders;
+        QList<Platform> mPlatforms;
+        QList<PlatformCategory> mPlatformCategories;
+        QMap<QString, QMap<QString, QString>> mPlatformFolders;
 
     //-Constructor--------------------------------------------------------------------------------------------------------
     public:
@@ -357,6 +356,10 @@ public:
 
     //-Instance Functions--------------------------------------------------------------------------------------------------
     public:
+        const QList<Platform>& getPlatforms() const;
+        const QMap<QString, QMap<QString, QString>>& getPlatformFolders() const;
+        const QList<PlatformCategory>& getPlatformCategories() const;
+
         void setMediaFolder(QString platform, QString mediaType, QString folderPath);
     };
 
@@ -368,7 +371,7 @@ public:
 
     //-Instance Functions-------------------------------------------------------------------------------------------------
     private:
-        Qx::XmlStreamReaderError readTargetDoc();
+        bool readTargetDoc();
         void parsePlatform();
         void parsePlatformFolder();
         void parsePlatformCategory();

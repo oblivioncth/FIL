@@ -57,7 +57,18 @@ Qx::XmlStreamReaderError Xml::DataDocReader::readInto()
     if(mStreamReader.readNextStartElement())
     {
         if(mStreamReader.name() == XML_ROOT_ELEMENT)
-            readError = readTargetDoc();
+        {
+            // Return no error on success
+            if(!readTargetDoc())
+            {
+                if(mStreamReader.error() == QXmlStreamReader::CustomError)
+                    return Qx::XmlStreamReaderError(mStreamReader.errorString());
+                else
+                    return Qx::XmlStreamReaderError(mStreamReader.error());
+            }
+            else
+                return Qx::XmlStreamReaderError();
+        }
         else
             readError = Qx::XmlStreamReaderError(formatDataDocError(ERR_NOT_LB_DOC, mTargetDocument->mHandleTarget));
     }
@@ -198,7 +209,7 @@ Xml::PlatformDocReader::PlatformDocReader(PlatformDoc* targetDoc)
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-Qx::XmlStreamReaderError Xml::PlatformDocReader::readTargetDoc()
+bool Xml::PlatformDocReader::readTargetDoc()
 {
     while(mStreamReader.readNextStartElement())
     {
@@ -210,16 +221,8 @@ Qx::XmlStreamReaderError Xml::PlatformDocReader::readTargetDoc()
             mStreamReader.skipCurrentElement();
     }
 
-    // Return no error on success
-    if(mStreamReader.hasError())
-    {
-        if(mStreamReader.error() == QXmlStreamReader::CustomError)
-            return Qx::XmlStreamReaderError(mStreamReader.errorString());
-        else
-            return Qx::XmlStreamReaderError(mStreamReader.error());
-    }
-    else
-        return Qx::XmlStreamReaderError();
+    // Return status
+    return mStreamReader.hasError();
 }
 
 void Xml::PlatformDocReader::parseGame()
@@ -501,7 +504,7 @@ Xml::PlaylistDocReader::PlaylistDocReader(PlaylistDoc* targetDoc) : DataDocReade
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-Qx::XmlStreamReaderError Xml::PlaylistDocReader::readTargetDoc()
+bool Xml::PlaylistDocReader::readTargetDoc()
 {
     while(mStreamReader.readNextStartElement())
     {
@@ -513,16 +516,8 @@ Qx::XmlStreamReaderError Xml::PlaylistDocReader::readTargetDoc()
             mStreamReader.skipCurrentElement();
     }
 
-    // Return no error on success
-    if(mStreamReader.hasError())
-    {
-        if(mStreamReader.error() == QXmlStreamReader::CustomError)
-            return Qx::XmlStreamReaderError(mStreamReader.errorString());
-        else
-            return Qx::XmlStreamReaderError(mStreamReader.error());
-    }
-    else
-        return Qx::XmlStreamReaderError();
+    // Return status
+    return mStreamReader.hasError();
 }
 
 void Xml::PlaylistDocReader::parsePlaylistHeader()
@@ -689,6 +684,10 @@ Xml::PlatformConfigDoc::PlatformConfigDoc(std::unique_ptr<QFile> xmlFile, const 
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
+const QList<Platform>& Xml::PlatformConfigDoc::getPlatforms() const { return mPlatforms; }
+const QMap<QString, QMap<QString, QString>>& Xml::PlatformConfigDoc::getPlatformFolders() const { return mPlatformFolders; }
+const QList<PlatformCategory>& Xml::PlatformConfigDoc::getPlatformCategories() const { return mPlatformCategories; }
+
 void Xml::PlatformConfigDoc::setMediaFolder(QString platform, QString mediaType, QString folderPath)
 {
     mPlatformFolders[platform][mediaType] = folderPath;
@@ -705,92 +704,193 @@ Xml::PlatformConfigDocReader::PlatformConfigDocReader(Xml::PlatformConfigDoc* ta
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-Qx::XmlStreamReaderError Xml::PlatformConfigDocReader::readTargetDoc()
+bool Xml::PlatformConfigDocReader::readTargetDoc()
 {
     while(mStreamReader.readNextStartElement())
     {
-        if(mStreamReader.name() == Element_PlaylistHeader::NAME)
-            parsePlaylistHeader();
-        else if(mStreamReader.name() == Element_PlaylistGame::NAME)
-            parsePlaylistGame();
+        if(mStreamReader.name() == Element_Platform::NAME)
+            parsePlatform();
+        else if(mStreamReader.name() == Element_PlatformFolder::NAME)
+            parsePlatformFolder();
+        else if (mStreamReader.name() == Element_PlatformCategory::NAME)
+            parsePlatformCategory();
         else
             mStreamReader.skipCurrentElement();
     }
 
-    // Return no error on success
-    if(mStreamReader.hasError())
-    {
-        if(mStreamReader.error() == QXmlStreamReader::CustomError)
-            return Qx::XmlStreamReaderError(mStreamReader.errorString());
-        else
-            return Qx::XmlStreamReaderError(mStreamReader.error());
-    }
-    else
-        return Qx::XmlStreamReaderError();
+    // Return status
+    return mStreamReader.hasError();
 }
 
-void Xml::PlaylistDocReader::parsePlaylistHeader()
+void Xml::PlatformConfigDocReader::parsePlatform()
 {
-    // Playlist Header to Build
-    PlaylistHeaderBuilder phb;
+    // Platform Config Doc to Build
+    PlatformBuilder pb;
 
     // Cover all children
     while(mStreamReader.readNextStartElement())
     {
-        if(mStreamReader.name() == Element_PlaylistHeader::ELEMENT_ID)
-            phb.wPlaylistID(mStreamReader.readElementText());
-        else if(mStreamReader.name() == Element_PlaylistHeader::ELEMENT_NAME)
-            phb.wName(mStreamReader.readElementText());
-        else if(mStreamReader.name() == Element_PlaylistHeader::ELEMENT_NESTED_NAME)
-            phb.wNestedName(mStreamReader.readElementText());
-        else if(mStreamReader.name() == Element_PlaylistHeader::ELEMENT_NOTES)
-            phb.wNotes(mStreamReader.readElementText());
-        else
-            phb.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
+        // No specific elements are of interest for now
+        pb.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
     }
 
     // Build Playlist Header and add to document
-    mTargetDocument->mPlaylistHeader = phb.build();
-
+   static_cast<PlatformConfigDoc*>(mTargetDocument)->mPlatforms.append(pb.build());
 }
 
-void Xml::PlaylistDocReader::parsePlaylistGame()
+void Xml::PlatformConfigDocReader::parsePlatformFolder()
 {
-    // Playlist Game to Build
-    PlaylistGameBuilder pgb;
+    // Platform Folder to Build
+    QString platform;
+    QString mediaType;
+    QString folderPath;
 
     // Cover all children
     while(mStreamReader.readNextStartElement())
     {
-        if(mStreamReader.name() == Element_PlaylistGame::ELEMENT_ID)
-            pgb.wGameID(mStreamReader.readElementText());
-        else if(mStreamReader.name() == Element_PlaylistGame::ELEMENT_GAME_TITLE)
-            pgb.wGameTitle(mStreamReader.readElementText());
-        else if(mStreamReader.name() == Element_PlaylistGame::ELEMENT_GAME_FILE_NAME)
-            pgb.wGameFileName(mStreamReader.readElementText());
-        else if(mStreamReader.name() == Element_PlaylistGame::ELEMENT_GAME_PLATFORM)
-            pgb.wGamePlatform(mStreamReader.readElementText());
-        else if(mStreamReader.name() == Element_PlaylistGame::ELEMENT_MANUAL_ORDER)
-            pgb.wManualOrder(mStreamReader.readElementText());
-        else if(mStreamReader.name() == Element_PlaylistGame::ELEMENT_LB_DB_ID)
-            pgb.wLBDatabaseID(mStreamReader.readElementText());
+        if(mStreamReader.name() == Element_PlatformFolder::ELEMENT_MEDIA_TYPE)
+            mediaType = mStreamReader.readElementText();
+        else if(mStreamReader.name() == Element_PlatformFolder::ELEMENT_FOLDER_PATH)
+            folderPath = mStreamReader.readElementText();
+        else if(mStreamReader.name() == Element_PlatformFolder::ELEMENT_PLATFORM)
+            platform = mStreamReader.readElementText();
         else
-            pgb.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
+            mStreamReader.raiseError(formatDataDocError(ERR_DOC_TYPE_MISMATCH, mTargetDocument->getHandleTarget()));
     }
 
-    // Build Playlist Game
-    LB::PlaylistGame existingPlaylistGame = pgb.build();
-
-    // Correct LB ID if it is invalid and then add it to tracker
-    if(existingPlaylistGame.getLBDatabaseID() < 0)
-        existingPlaylistGame.setLBDatabaseID(mTargetDocument->mPlaylistGameFreeLBDBIDTracker->reserveFirstFree());
-    else
-        mTargetDocument->mPlaylistGameFreeLBDBIDTracker->release(existingPlaylistGame.getLBDatabaseID());
-
     // Add to document
-    mTargetDocument->mPlaylistGamesExisting[existingPlaylistGame.getGameID()] = existingPlaylistGame;
+    static_cast<PlatformConfigDoc*>(mTargetDocument)->mPlatformFolders[platform][mediaType] = folderPath;
 }
 
+void Xml::PlatformConfigDocReader::parsePlatformCategory()
+{
+    // Platform Config Doc to Build
+    PlatformCategoryBuilder pcb;
+
+    // Cover all children
+    while(mStreamReader.readNextStartElement())
+    {
+        // No specific elements are of interest for now
+        pcb.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
+    }
+
+    // Build Playlist Header and add to document
+   static_cast<PlatformConfigDoc*>(mTargetDocument)->mPlatformCategories.append(pcb.build());
+}
+
+//===============================================================================================================
+// Xml::PlatformConfigDocWriter
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Public:
+Xml::PlatformConfigDocWriter::PlatformConfigDocWriter(PlatformConfigDoc* sourceDoc)
+    : DataDocWriter(sourceDoc) {}
+
+//-Instance Functions-------------------------------------------------------------------------------------------------
+//Private:
+bool Xml::PlatformConfigDocWriter::writeSourceDoc()
+{
+    // Write all platforms
+    for(const Platform& platform : static_cast<PlatformConfigDoc*>(mSourceDocument)->getPlatforms())
+    {
+        if(!writePlatform(platform))
+            return false;
+    }
+
+    // Write all platform folders
+    const QMap<QString, QMap<QString, QString>>& platformFolderMap = static_cast<PlatformConfigDoc*>(mSourceDocument)->getPlatformFolders();
+    QMap<QString, QMap<QString, QString>>::const_iterator i;
+    for(i = platformFolderMap.constBegin(); i != platformFolderMap.constEnd(); i++)
+    {
+         QMap<QString, QString>::const_iterator j;
+         for(j = i.value().constBegin(); j != i.value().constEnd(); j++)
+             if(!writePlatformFolder(i.key(), j.key(), j.value()))
+                 return false;
+    }
+
+    // Write all platform categories
+    for(const PlatformCategory& platformCategory : static_cast<PlatformConfigDoc*>(mSourceDocument)->getPlatformCategories())
+    {
+        if(!writePlatformCategory(platformCategory))
+            return false;
+    }
+
+    // Return true on success
+    return true;
+}
+
+bool Xml::PlatformConfigDocWriter::writePlatform(const Platform& platform)
+{
+    // Write opening tag
+    mStreamWriter.writeStartElement(Element_Platform::NAME);
+
+    // Write known tags
+    // None for now...
+    if(mStreamWriter.hasError())
+        return false;
+
+    // Write other tags //TODO: Try to make this step generic for all Items
+    for(QHash<QString, QString>::const_iterator i = platform.getOtherFields().constBegin(); i != platform.getOtherFields().constEnd(); ++i)
+    {
+        mStreamWriter.writeTextElement(i.key(), i.value());
+
+        if(mStreamWriter.hasError())
+            return false;
+    }
+
+    // Close game tag
+    mStreamWriter.writeEndElement();
+
+    // Return true on success
+    return true;
+}
+
+bool Xml::PlatformConfigDocWriter::writePlatformFolder(const QString& platform, const QString& mediaType, const QString& folderPath)
+{
+    // Write opening tag
+    mStreamWriter.writeStartElement(Element_PlatformFolder::NAME);
+
+    // Write known tags
+    mStreamWriter.writeTextElement(Element_PlatformFolder::ELEMENT_MEDIA_TYPE, platform);
+    mStreamWriter.writeTextElement(Element_PlatformFolder::ELEMENT_FOLDER_PATH, mediaType);
+    mStreamWriter.writeTextElement(Element_PlatformFolder::ELEMENT_PLATFORM, folderPath);
+
+    if(mStreamWriter.hasError())
+        return false;
+
+    // Close game tag
+    mStreamWriter.writeEndElement();
+
+    // Return true on success
+    return true;
+}
+
+bool Xml::PlatformConfigDocWriter::writePlatformCategory(const PlatformCategory& platformCategory)
+{
+    // Write opening tag
+    mStreamWriter.writeStartElement(Element_PlatformCategory::NAME);
+
+    // Write known tags
+    // None for now...
+    if(mStreamWriter.hasError())
+        return false;
+
+    // Write other tags //TODO: Try to make this step generic for all Items
+    for(QHash<QString, QString>::const_iterator i = platformCategory.getOtherFields().constBegin(); i != platformCategory.getOtherFields().constEnd(); ++i)
+    {
+        mStreamWriter.writeTextElement(i.key(), i.value());
+
+        if(mStreamWriter.hasError())
+            return false;
+    }
+
+    // Close game tag
+    mStreamWriter.writeEndElement();
+
+    // Return true on success
+    return true;
+}
 
 //===============================================================================================================
 // Xml
