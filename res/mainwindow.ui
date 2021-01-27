@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout_3">
+   <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0,0,0,0">
     <item>
      <widget class="QGroupBox" name="groupBox_appPathInputs">
       <property name="sizePolicy">
@@ -701,15 +701,15 @@
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
         <horstretch>0</horstretch>
-        <verstretch>3</verstretch>
+        <verstretch>2</verstretch>
        </sizepolicy>
       </property>
       <property name="title">
        <string>Image Mode</string>
       </property>
-      <layout class="QGridLayout" name="gridLayout_5" rowstretch="1,1,1" columnstretch="6,1,2">
+      <layout class="QGridLayout" name="gridLayout_5" rowstretch="1,1,0" columnstretch="6,1,2">
        <item row="0" column="0">
-        <widget class="QRadioButton" name="radioButton_launchBoxCopy">
+        <widget class="QRadioButton" name="radioButton_copy">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
            <horstretch>0</horstretch>
@@ -717,20 +717,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>LaunchBox Copy</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QRadioButton" name="radioButton_flashpointLink">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>Flashpoint Symlink</string>
+          <string>Copy</string>
          </property>
         </widget>
        </item>
@@ -739,7 +726,7 @@
          <property name="sizePolicy">
           <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
            <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
+           <verstretch>1</verstretch>
           </sizepolicy>
          </property>
          <property name="minimumSize">
@@ -777,7 +764,7 @@
         </spacer>
        </item>
        <item row="1" column="0">
-        <widget class="QRadioButton" name="radioButton_launchBoxLink">
+        <widget class="QRadioButton" name="radioButton_reference">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
            <horstretch>0</horstretch>
@@ -785,7 +772,23 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>LaunchBox Symlink (Recommended)</string>
+          <string>Reference</string>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QRadioButton" name="radioButton_link">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Symlink (Recommended) </string>
          </property>
          <property name="checked">
           <bool>true</bool>
@@ -909,7 +912,7 @@
     <bool>true</bool>
    </property>
    <property name="checked">
-    <bool>true</bool>
+    <bool>false</bool>
    </property>
    <property name="text">
     <string>Include Extreme/Adult Games</string>

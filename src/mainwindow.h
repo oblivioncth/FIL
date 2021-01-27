@@ -31,7 +31,10 @@ private:
 //-Class Variables--------------------------------------------------------------------------------------------
 private:
     // Constants
-    static const int IMPORT_UI_UPD_INTERVAL = 17; // Workaround update tick speed in ms
+    //static const int IMPORT_UI_UPD_INTERVAL = 17; // Workaround update tick speed in ms
+
+    // UI Text
+    static inline const QString REQUIRE_ELEV = " [Run as Admin or enable Dev Mode]";
 
     // Messages - General
     static inline const QString MSG_FATAL_NO_INTERNAL_CLIFP_VER = "Failed to get version information from the internal copy of CLIFp.exe!\n"
@@ -49,17 +52,22 @@ private:
                                                        "remove any existing Extreme games in your collection, for the select platforms, if you have the <b>%4</b> option unselected.";
 
     static inline const QString MSG_IMAGE_MODE_HELP = "<b>%1</b> - All relevant images from Flashpoint will be fully copied into your LaunchBox installation. This causes zero overhead but will require additional storage space proportional to "
-                                                      "the number of games you end up importing, up to double if all platforms are selected. The images will still work in Flashpoint.<br>"
+                                                      "the number of games you end up importing, up to double if all platforms are selected.<br>"
+                                                      "<b>Space Consumption:</b> High<br>"
+                                                      "<b>Import Speed:</b> Very Slow<br>"
+                                                      "<b>Image Cache Build Speed:</b> Fast<br>"
                                                       "<br>"
-                                                      "<b>%2</b>* - A symbolic link to each relavent image from Flashpoint will be created in your LaunchBox installation. These appear like the real files to LaunchBox, adding only a miniscle "
-                                                      "amount of overhead it loads images and require almost no extra disk space to store. The images will still work in Flashpoint.<br>"
+                                                      "<b>%2</b> - Your LaunchBox platform configuration will be altered so that the relavent image folders within Flashpoint are directly referenced by LaunchBox's media scanner, requiring no "
+                                                      "extra space and causing no overhead.<br>"
+                                                      "<b>Space Consumption:</b> None<br>"
+                                                      "<b>Import Speed:</b> Fast<br>"
+                                                      "<b>Image Cache Build Speed:</b> Very Slow<br>"
                                                       "<br>"
-                                                      "<b>%3</b>* - All relavent images from Flashpoint will be moved into your LaunchBox installation and a symbolic link will be left in its place within your Flashpoint directory. Effectively "
-                                                      "the same as above except that Flashpoint inherits the insignificant overhead while reading the images and this can be useful if LaunchBox is on a different drive than Flashpoint that can "
-                                                      "more easily accommodate the large space they require. The images will still work in Flashpoint; however, once the process is finished while using this option, if the image now within your "
-                                                      "LaunchBox install is ever deleted, the only way to get it back is to redownload Flashpoint and restore it manually or re-run the import tool again.<br>"
-                                                      "<br>"
-                                                      "<b>*</b> Requires running this tool as an administrator or enabling Windows's developer mode.";
+                                                      "<b>%3</b> - A symbolic link to each relavent image from Flashpoint will be created in your LaunchBox installation. These appear like the real files to LaunchBox, adding only a miniscle "
+                                                      "amount of overhead when it loads images and require almost no extra disk space to store.<br>"
+                                                      "<b>Space Consumption:</b> Near-zero<br>"
+                                                      "<b>Import Speed:</b> Slow<br>"
+                                                      "<b>Image Cache Build Speed:</b> Fast<br>";
 
     // Messages - Input
     static inline const QString MSG_LB_INSTALL_INVALID = "The specified directory either doesn't contain a valid LaunchBox install, or it contains a version that is incompatible with this tool.";
@@ -149,6 +157,9 @@ private:
     bool mHasLinkPermissions = false;
     bool mAlteringListWidget = false;
 
+    QString mArgedUpdateModeHelp;
+    QString mArgedImageModeHelp;
+
     // Process monitoring
     std::unique_ptr<QProgressDialog> mImportProgressDialog;
     QWinTaskbarButton* mWindowTaskbarButton; // TODO: Remove for Qt6
@@ -188,7 +199,7 @@ private:
     QSet<QString> getSelectedPlaylists(bool fileNameLegal = false) const;
     LB::Install::GeneralOptions getSelectedGeneralOptions() const;
     LB::UpdateOptions getSelectedUpdateOptions() const;
-    LB::Install::ImageModeL getSelectedImageOption() const;
+    LB::Install::ImageMode getSelectedImageOption() const;
     void prepareImport();
     void revertAllLaunchBoxChanges();
     void standaloneCLIFpDeploy();

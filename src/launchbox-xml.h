@@ -12,7 +12,6 @@ namespace LB {
 
 //-Enums----------------------------------------------------------------------------------------------------------
 enum ImportMode {OnlyNew, NewAndExisting};
-enum ImageMode {LB_Copy, LB_Link, FP_Link};
 
 //-Structs---------------------------------------------------------------------------------------------------------
 struct UpdateOptions
@@ -31,8 +30,8 @@ public:
     class PlatformDocWriter;
     class PlaylistDocReader;
     class PlaylistDocWriter;
-    class PlatformConfigDocReader;
-    class PlatformConfigDocWriter;
+    class PlatformsDocReader;
+    class PlatformsDocWriter;
 
 //-Class Structs---------------------------------------------------------------------------------------------------
 public:
@@ -116,6 +115,8 @@ public:
     {
     public:
         static inline const QString NAME = "Platform";
+
+        static inline const QString ELEMENT_NAME = "Name";
     };
 
     class Element_PlatformFolder
@@ -176,11 +177,11 @@ public:
         DataDocReader(DataDoc* targetDoc);
 
     //-Instance Functions-------------------------------------------------------------------------------------------------
-    public:
-        Qx::XmlStreamReaderError readInto();
-
     private:
         virtual bool readTargetDoc() = 0;
+
+    public:
+        Qx::XmlStreamReaderError readInto();
     };
 
     class DataDocWriter
@@ -195,11 +196,12 @@ public:
         DataDocWriter(DataDoc* sourceDoc);
 
     //-Instance Functions-------------------------------------------------------------------------------------------------
+    protected:
+        virtual bool writeSourceDoc() = 0;
+        void writeEmptyCheckedTextElement(const QString &qualifiedName, const QString &text);
+
     public:
         QString writeOutOf();
-
-    private:
-        virtual bool writeSourceDoc() = 0;
     };
 
     class PlatformDoc : public DataDoc
@@ -333,10 +335,10 @@ public:
         bool writePlaylistGame(const PlaylistGame& playlistGame);
     };
 
-    class PlatformConfigDoc : public DataDoc
+    class PlatformsDoc : public DataDoc
     {
-        friend class PlatformConfigDocReader;
-        friend class PlatformConfigDocWriter;
+        friend class PlatformsDocReader;
+        friend class PlatformsDocWriter;
         friend class Install;
 
     //-Class Variables-----------------------------------------------------------------------------------------------------
@@ -346,28 +348,33 @@ public:
 
     //-Instance Variables--------------------------------------------------------------------------------------------------
     private:
-        QList<Platform> mPlatforms;
-        QList<PlatformCategory> mPlatformCategories;
+        QHash<QString, Platform> mPlatforms;
         QMap<QString, QMap<QString, QString>> mPlatformFolders;
+        QList<PlatformCategory> mPlatformCategories;
 
     //-Constructor--------------------------------------------------------------------------------------------------------
     public:
-        explicit PlatformConfigDoc(std::unique_ptr<QFile> xmlFile, const Key&);
+        explicit PlatformsDoc(std::unique_ptr<QFile> xmlFile, const Key&);
 
     //-Instance Functions--------------------------------------------------------------------------------------------------
     public:
-        const QList<Platform>& getPlatforms() const;
+        const QHash<QString, Platform>& getPlatforms() const;
         const QMap<QString, QMap<QString, QString>>& getPlatformFolders() const;
         const QList<PlatformCategory>& getPlatformCategories() const;
 
+        bool containsPlatform(QString name);
+
+        void addPlatform(Platform platform);
+
         void setMediaFolder(QString platform, QString mediaType, QString folderPath);
+
     };
 
-    class PlatformConfigDocReader : public DataDocReader
+    class PlatformsDocReader : public DataDocReader
     {
     //-Constructor--------------------------------------------------------------------------------------------------------
     public:
-        PlatformConfigDocReader(PlatformConfigDoc* targetDoc);
+        PlatformsDocReader(PlatformsDoc* targetDoc);
 
     //-Instance Functions-------------------------------------------------------------------------------------------------
     private:
@@ -377,11 +384,11 @@ public:
         void parsePlatformCategory();
     };
 
-    class PlatformConfigDocWriter : public DataDocWriter
+    class PlatformsDocWriter : public DataDocWriter
     {
     //-Constructor--------------------------------------------------------------------------------------------------------
     public:
-        PlatformConfigDocWriter(PlatformConfigDoc* sourceDoc);
+        PlatformsDocWriter(PlatformsDoc* sourceDoc);
 
     //-Instance Functions-------------------------------------------------------------------------------------------------
     private:

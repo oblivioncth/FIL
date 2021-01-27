@@ -21,7 +21,7 @@ public:
 
 //-Class Enums---------------------------------------------------------------------------------------------------
 public:
-    enum ImageModeL {LB_CopyL, LB_LinkL, FP_LinkL};
+    enum ImageMode {Copy, Reference, Link};
 
 //-Class Structs----------------------------------------------------------------------------------------------------
 public:
@@ -58,7 +58,7 @@ public:
 
     // Reversion Errors
     static inline const QString ERR_REVERT_CANT_REMOVE_XML = R"(Cannot remove the XML file "%1". It may need to be deleted and have its backup restored manually.)";
-    static inline const QString ERR_REVERT_CANT_RESTORE_EXML = R"(Cannot restore the XML backup "%1". It may need to be renamed manually.)";
+    static inline const QString ERR_REVERT_CANT_RESTORE_XML = R"(Cannot restore the XML backup "%1". It may need to be renamed manually.)";
     static inline const QString ERR_REVERT_CANT_REMOVE_IMAGE = R"(Cannot remove the image file "%1". It may need to be deleted manually.)";
     static inline const QString ERR_REVERT_CANT_MOVE_IMAGE = R"(Cannot move the image file "%1" to its original location. It may need to be moved manually.)";
 
@@ -97,7 +97,7 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 private:
-   QString transferImage(ImageModeL imageOption, QDir sourceDir, QString destinationSubPath, const LB::Game& game);
+   QString transferImage(ImageMode imageMode, QDir sourceDir, QString destinationSubPath, const LB::Game& game);
    Qx::XmlStreamReaderError openDataDocument(Xml::DataDoc* docToOpen, Xml::DataDocReader* docReader);
    bool saveDataDocument(QString& errorMessage, Xml::DataDoc* docToSave, Xml::DataDocWriter* docWriter);
    QSet<QString> getExistingDocs(QString type) const;
@@ -107,12 +107,14 @@ public:
 
    Qx::XmlStreamReaderError openPlatformDoc(std::unique_ptr<Xml::PlatformDoc>& returnBuffer, QString name, UpdateOptions updateOptions);
    Qx::XmlStreamReaderError openPlaylistDoc(std::unique_ptr<Xml::PlaylistDoc>& returnBuffer, QString name, UpdateOptions updateOptions);
+   Qx::XmlStreamReaderError openPlatformsDoc(std::unique_ptr<Xml::PlatformsDoc>& returnBuffer);
    bool savePlatformDoc(QString& errorMessage, std::unique_ptr<Xml::PlatformDoc> document);
    bool savePlaylistDoc(QString& errorMessage, std::unique_ptr<Xml::PlaylistDoc> document);
+   bool savePlatformsDoc(QString& errorMessage, std::unique_ptr<Xml::PlatformsDoc> document);
 
    bool ensureImageDirectories(QString& errorMessage, QString platform);
-   bool transferLogo(QString& errorMessage, ImageModeL imageOption, QDir logoSourceDir, const LB::Game& game);
-   bool transferScreenshot(QString& errorMessage, ImageModeL imageOption, QDir screenshotSourceDir, const LB::Game& game);
+   bool transferLogo(QString& errorMessage, ImageMode imageMode, QDir logoSourceDir, const LB::Game& game);
+   bool transferScreenshot(QString& errorMessage, ImageMode imageMode, QDir screenshotSourceDir, const LB::Game& game);
 
    int revertNextChange(QString& errorMessage, bool skipOnFail);
    void softReset();

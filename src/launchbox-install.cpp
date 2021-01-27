@@ -91,7 +91,7 @@ bool Install::pathIsValidInstall(QString installPath)
 
 //-Instance Functions----------------------------------------------------------------------------------------------
 //Private:
-QString Install::transferImage(ImageModeL imageOption, QDir sourceDir, QString destinationSubPath, const LB::Game& game)
+QString Install::transferImage(ImageMode imageMode, QDir sourceDir, QString destinationSubPath, const LB::Game& game)
 {
     // Parse to paths
     QString gameIDString = game.getID().toString(QUuid::WithoutBraces);
@@ -102,12 +102,12 @@ QString Install::transferImage(ImageModeL imageOption, QDir sourceDir, QString d
     QFileInfo destinationInfo(destinationPath);
     QFileInfo sourceInfo(sourcePath);
     bool destinationOccupied = destinationInfo.exists() && (destinationInfo.isFile() || destinationInfo.isSymLink());
-    bool sourceAvailable = sourceInfo.exists() && !sourceInfo.isSymLink();
+    bool sourceAvailable = sourceInfo.exists();
 
     // Return if image is already up-to-date
     if(sourceAvailable && destinationOccupied)
     {
-        if(destinationInfo.isSymLink() && imageOption == LB_LinkL)
+        if(destinationInfo.isSymLink() && imageMode == Link)
             return QString();
         else
         {
@@ -137,9 +137,9 @@ QString Install::transferImage(ImageModeL imageOption, QDir sourceDir, QString d
     // Handle transfer if source is available
     if(sourceAvailable)
     {
-        switch(imageOption)
+        switch(imageMode)
         {
-            case LB_CopyL:
+            case Copy:
                 if(!QFile::copy(sourcePath, destinationPath))
                 {
                     QFile::rename(backupPath, destinationPath); // Restore Backup
@@ -151,7 +151,7 @@ QString Install::transferImage(ImageModeL imageOption, QDir sourceDir, QString d
                     mPurgableImages.append(destinationPath); // Only queue image to be removed on failure if its new, so existing images arent deleted on revert
                 break;
 
-            case LB_LinkL:
+            case Link:
                 std::filesystem::create_symlink(sourcePath.toStdString(), destinationPath.toStdString(), linkError);
                 if(linkError)
                 {
@@ -164,26 +164,8 @@ QString Install::transferImage(ImageModeL imageOption, QDir sourceDir, QString d
                     mPurgableImages.append(destinationPath); // Only queue image to be removed on failure if its new, so existing images arent deleted on revert
                 break;
 
-            case FP_LinkL:
-                if(!QFile::rename(sourcePath, destinationPath))
-                {
-                    QFile::rename(backupPath, destinationPath); // Restore Backup
-                    return ERR_IMAGE_WONT_MOVE.arg(sourcePath, destinationPath);
-                }
-                else
-                {
-                    std::filesystem::create_symlink(destinationPath.toStdString(), sourcePath.toStdString(), linkError);
-                    if(linkError)
-                    {
-                        QFile::rename(destinationPath, sourcePath); // Revert move
-                        QFile::rename(backupPath, destinationPath); // Restore Backup
-                        return ERR_IMAGE_WONT_LINK.arg(destinationPath, sourcePath);
-                    }
-                    else if(QFile::exists(backupPath))
-                        QFile::remove(backupPath);
-                    else
-                        mLinksToReverse[sourcePath] = destinationPath; // Only queue image to be removed on failure if its new, so existing images arent deleted on revert
-                }
+            case Reference:
+                throw std::runtime_error("transferImage() should not be called with imageMode Reference!");
                 break;
         }
     }
@@ -215,12 +197,12 @@ Qx::XmlStreamReaderError Install::openDataDocument(Xml::DataDoc* docToOpen, Xml:
                     return Qx::XmlStreamReaderError(Xml::formatDataDocError(Xml::ERR_BAK_WONT_DEL, docToOpen->getHandleTarget()));
             }
 
-            if(!QFile::copy(targetInfo.absolutePath(), backupPath))
+            if(!QFile::copy(targetInfo.absoluteFilePath(), backupPath))
                 return Qx::XmlStreamReaderError(Xml::formatDataDocError(Xml::ERR_CANT_MAKE_BAK, docToOpen->getHandleTarget()));
         }
 
         // Add file to modified list
-        mModifiedXMLDocuments.append(targetInfo.absolutePath());
+        mModifiedXMLDocuments.append(targetInfo.absoluteFilePath());
 
         // Open File
         if(docToOpen->mDocumentFile->open(QFile::ReadWrite)) // Ensures that empty file is created if the target doesn't exist
@@ -269,7 +251,7 @@ QSet<QString> Install::getExistingDocs(QString type) const
 {
     QSet<QString> nameList;
 
-    for (Xml::DataDocHandle doc : mExistingDocuments)
+    for (const Xml::DataDocHandle& doc : mExistingDocuments)
         if(doc.docType == type)
             nameList.insert(doc.docName);
 
@@ -288,16 +270,20 @@ Qx::IOOpReport Install::populateExistingDocs()
     // Check for platforms
     Qx::IOOpReport existingCheck = Qx::getDirFileList(existingList, mPlatformsDirectory, {XML_EXT}, QDirIterator::Subdirectories);
     if(existingCheck.wasSuccessful())
-        for(QString platformPath : existingList)
+        for(const QString& platformPath : existingList)
             mExistingDocuments.insert(Xml::DataDocHandle{Xml::PlatformDoc::TYPE_NAME, QFileInfo(platformPath).baseName()});
 
     // Check for playlists
     existingCheck = Qx::getDirFileList(existingList, mPlaylistsDirectory, {XML_EXT}, QDirIterator::Subdirectories);
     if(existingCheck.wasSuccessful())
-        for(QString playlistPath : existingList)
+        for(const QString& playlistPath : existingList)
             mExistingDocuments.insert(Xml::DataDocHandle{Xml::PlaylistDoc::TYPE_NAME, QFileInfo(playlistPath).baseName()});
 
     // Check for config docs
+    existingCheck = Qx::getDirFileList(existingList, mDataDirectory, {XML_EXT});
+    if(existingCheck.wasSuccessful())
+        for(const QString& configDocPath : existingList)
+            mExistingDocuments.insert(Xml::DataDocHandle{Xml::PlatformsDoc::TYPE_NAME, QFileInfo(configDocPath).baseName()}); //TODO: Possibly make ConfigDoc a decendent type of DataDoc so that this string reference is more generic
 
     return existingCheck;
 }
@@ -347,6 +333,28 @@ Qx::XmlStreamReaderError Install::openPlaylistDoc(std::unique_ptr<Xml::PlaylistD
     return readErrorStatus;
 }
 
+Qx::XmlStreamReaderError Install::openPlatformsDoc(std::unique_ptr<Xml::PlatformsDoc> &returnBuffer)
+{
+    // Create doc file reference
+    std::unique_ptr<QFile> docFile = std::make_unique<QFile>(mDataDirectory.absolutePath() + '/' + Xml::PlatformsDoc::STD_NAME + XML_EXT);
+
+    // Construct unopened document
+    returnBuffer = std::make_unique<Xml::PlatformsDoc>(std::move(docFile), Xml::PlatformsDoc::Key{});
+
+    // Construct doc reader
+    Xml::PlatformsDocReader docReader(returnBuffer.get());
+
+    // Open document
+    Qx::XmlStreamReaderError readErrorStatus = openDataDocument(returnBuffer.get(), &docReader);
+
+    // Set return null on failure
+    if(readErrorStatus.isValid())
+        returnBuffer.reset();
+
+    // Return status
+    return readErrorStatus;
+}
+
 bool Install::savePlatformDoc(QString& errorMessage, std::unique_ptr<Xml::PlatformDoc> document)
 {
     // Prepare writer
@@ -366,6 +374,21 @@ bool Install::savePlaylistDoc(QString& errorMessage, std::unique_ptr<Xml::Playli
 {
     // Prepare writer
     Xml::PlaylistDocWriter docWriter(document.get());
+
+    // Write
+    bool writeErrorStatus = saveDataDocument(errorMessage, document.get(), &docWriter);
+
+    // Ensure document is cleared
+    document.reset();
+
+    // Return write status and let document ptr auto delete
+    return writeErrorStatus;
+}
+
+bool Install::savePlatformsDoc(QString &errorMessage, std::unique_ptr<Xml::PlatformsDoc> document)
+{
+    // Prepare writer
+    Xml::PlatformsDocWriter docWriter(document.get());
 
     // Write
     bool writeErrorStatus = saveDataDocument(errorMessage, document.get(), &docWriter);
@@ -401,15 +424,15 @@ bool Install::ensureImageDirectories(QString& errorMessage,QString platform)
     return true;
 }
 
-bool Install::transferLogo(QString& errorMessage, ImageModeL imageOption, QDir logoSourceDir, const LB::Game& game)
+bool Install::transferLogo(QString& errorMessage, ImageMode imageMode, QDir logoSourceDir, const LB::Game& game)
 {
-    errorMessage = transferImage(imageOption, logoSourceDir, LOGO_PATH, game);
+    errorMessage = transferImage(imageMode, logoSourceDir, LOGO_PATH, game);
     return errorMessage.isNull();
 }
 
-bool Install::transferScreenshot(QString& errorMessage, ImageModeL imageOption, QDir screenshotSourceDir, const LB::Game& game)
+bool Install::transferScreenshot(QString& errorMessage, ImageMode imageMode, QDir screenshotSourceDir, const LB::Game& game)
 {
-    errorMessage = transferImage(imageOption, screenshotSourceDir, SCREENSHOT_PATH, game);
+    errorMessage = transferImage(imageMode, screenshotSourceDir, SCREENSHOT_PATH, game);
     return errorMessage.isNull();
 }
 
@@ -419,7 +442,7 @@ int Install::revertNextChange(QString& errorMessage, bool skipOnFail)
     errorMessage = QString();
 
     // Get operation count for return
-    int operationsLeft = mModifiedXMLDocuments.size() + mPurgableImages.size() + mLinksToReverse.size();
+    int operationsLeft = mModifiedXMLDocuments.size() + mPurgableImages.size();
 
     // Delete new XML files and restore backups if present
     if(!mModifiedXMLDocuments.isEmpty())
@@ -437,7 +460,7 @@ int Install::revertNextChange(QString& errorMessage, bool skipOnFail)
 
         if(!QFile::exists(currentDoc) && QFile::exists(backupPath) && !QFile::rename(backupPath, currentDoc) && !skipOnFail)
         {
-            errorMessage = ERR_REVERT_CANT_RESTORE_EXML.arg(backupPath);
+            errorMessage = ERR_REVERT_CANT_RESTORE_XML.arg(backupPath);
             return operationsLeft;
         }
 
@@ -462,29 +485,6 @@ int Install::revertNextChange(QString& errorMessage, bool skipOnFail)
         return operationsLeft - 1;
     }
 
-    // Revert FP links
-    if(!mLinksToReverse.isEmpty())
-    {
-        QString currentLink = mLinksToReverse.firstKey();
-        QString curerntOriginal = mLinksToReverse.first();
-
-        if(QFile::exists(currentLink) && !QFile::remove(currentLink) && !skipOnFail)
-        {
-            errorMessage = ERR_REVERT_CANT_REMOVE_IMAGE.arg(currentLink);
-            return operationsLeft;
-        }
-
-        if(!QFile::exists(currentLink) && !QFile::rename(curerntOriginal, currentLink) && !skipOnFail)
-        {
-            errorMessage = ERR_REVERT_CANT_MOVE_IMAGE.arg(curerntOriginal);
-            return operationsLeft;
-        }
-
-        // Remove entry on success
-        mLinksToReverse.remove(mLinksToReverse.firstKey());
-        return operationsLeft - 1;
-    }
-
     // Return 0 if all empty (shouldn't be reached if function is used correctly)
     return 0;
 }
@@ -493,13 +493,12 @@ void Install::softReset()
 {
     mModifiedXMLDocuments.clear();
     mPurgableImages.clear();
-    mLinksToReverse.clear();
     mLBDatabaseIDTracker = Qx::FreeIndexTracker<int>(0, -1);
 }
 
 QString Install::getPath() const { return mRootDirectory.absolutePath(); }
 
-int Install::getRevertQueueCount() const { return mModifiedXMLDocuments.size() + mPurgableImages.size() + mLinksToReverse.size(); }
+int Install::getRevertQueueCount() const { return mModifiedXMLDocuments.size() + mPurgableImages.size(); }
 
 QSet<QString> Install::getExistingPlatforms() const { return getExistingDocs(Xml::PlatformDoc::TYPE_NAME); }
 

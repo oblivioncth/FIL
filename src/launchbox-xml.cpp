@@ -96,9 +96,10 @@ QString Xml::DataDocWriter::writeOutOf()
 
     // Enable auto formating
     mStreamWriter.setAutoFormatting(true);
+    mStreamWriter.setAutoFormattingIndent(2);
 
     // Write standard XML header
-    mStreamWriter.writeStartDocument();
+    mStreamWriter.writeStartDocument("1.0", true);
 
     // Write main LaunchBox tag
     mStreamWriter.writeStartElement(XML_ROOT_ELEMENT);
@@ -115,6 +116,14 @@ QString Xml::DataDocWriter::writeOutOf()
 
     // Return null string on success
     return QString();
+}
+
+void Xml::DataDocWriter::writeEmptyCheckedTextElement(const QString& qualifiedName, const QString& text)
+{
+    if(text.isEmpty())
+        mStreamWriter.writeEmptyElement(qualifiedName);
+    else
+        mStreamWriter.writeTextElement(qualifiedName, text);
 }
 
 //===============================================================================================================
@@ -351,34 +360,34 @@ bool Xml::PlatformDocWriter::writeGame(const Game& game)
     mStreamWriter.writeStartElement(Element_Game::NAME);
 
     // Write known tags
-    mStreamWriter.writeTextElement(Element_Game::ELEMENT_ID, game.getID().toString(QUuid::WithoutBraces));
-    mStreamWriter.writeTextElement(Element_Game::ELEMENT_TITLE, game.getTitle());
-    mStreamWriter.writeTextElement(Element_Game::ELEMENT_SERIES, game.getSeries());
-    mStreamWriter.writeTextElement(Element_Game::ELEMENT_DEVELOPER, game.getDeveloper());
-    mStreamWriter.writeTextElement(Element_Game::ELEMENT_PUBLISHER, game.getPublisher());
-    mStreamWriter.writeTextElement(Element_Game::ELEMENT_PLATFORM, game.getPlatform());
-    mStreamWriter.writeTextElement(Element_Game::ELEMENT_SORT_TITLE, game.getSortTitle());
+    writeEmptyCheckedTextElement(Element_Game::ELEMENT_ID, game.getID().toString(QUuid::WithoutBraces));
+    writeEmptyCheckedTextElement(Element_Game::ELEMENT_TITLE, game.getTitle());
+    writeEmptyCheckedTextElement(Element_Game::ELEMENT_SERIES, game.getSeries());
+    writeEmptyCheckedTextElement(Element_Game::ELEMENT_DEVELOPER, game.getDeveloper());
+    writeEmptyCheckedTextElement(Element_Game::ELEMENT_PUBLISHER, game.getPublisher());
+    writeEmptyCheckedTextElement(Element_Game::ELEMENT_PLATFORM, game.getPlatform());
+    writeEmptyCheckedTextElement(Element_Game::ELEMENT_SORT_TITLE, game.getSortTitle());
 
     if(game.getDateAdded().isValid()) // LB is picky with dates
-        mStreamWriter.writeTextElement(Element_Game::ELEMENT_DATE_ADDED, game.getDateAdded().toString(Qt::ISODateWithMs));
+        writeEmptyCheckedTextElement(Element_Game::ELEMENT_DATE_ADDED, game.getDateAdded().toString(Qt::ISODateWithMs));
 
     if(game.getDateModified().isValid())// LB is picky with dates
-        mStreamWriter.writeTextElement(Element_Game::ELEMENT_DATE_MODIFIED, game.getDateModified().toString(Qt::ISODateWithMs));
+        writeEmptyCheckedTextElement(Element_Game::ELEMENT_DATE_MODIFIED, game.getDateModified().toString(Qt::ISODateWithMs));
 
-    mStreamWriter.writeTextElement(Element_Game::ELEMENT_BROKEN, game.isBroken() ? "true" : "false");
-    mStreamWriter.writeTextElement(Element_Game::ELEMENT_PLAYMODE, game.getPlayMode());
-    mStreamWriter.writeTextElement(Element_Game::ELEMENT_STATUS, game.getStatus());
-    mStreamWriter.writeTextElement(Element_Game::ELEMENT_REGION, game.getRegion());
-    mStreamWriter.writeTextElement(Element_Game::ELEMENT_NOTES, game.getNotes());
-    mStreamWriter.writeTextElement(Element_Game::ELEMENT_SOURCE, game.getSource());
-    mStreamWriter.writeTextElement(Element_Game::ELEMENT_APP_PATH, game.getAppPath());
-    mStreamWriter.writeTextElement(Element_Game::ELEMENT_COMMAND_LINE, game.getCommandLine());
+    writeEmptyCheckedTextElement(Element_Game::ELEMENT_BROKEN, game.isBroken() ? "true" : "false");
+    writeEmptyCheckedTextElement(Element_Game::ELEMENT_PLAYMODE, game.getPlayMode());
+    writeEmptyCheckedTextElement(Element_Game::ELEMENT_STATUS, game.getStatus());
+    writeEmptyCheckedTextElement(Element_Game::ELEMENT_REGION, game.getRegion());
+    writeEmptyCheckedTextElement(Element_Game::ELEMENT_NOTES, game.getNotes());
+    writeEmptyCheckedTextElement(Element_Game::ELEMENT_SOURCE, game.getSource());
+    writeEmptyCheckedTextElement(Element_Game::ELEMENT_APP_PATH, game.getAppPath());
+    writeEmptyCheckedTextElement(Element_Game::ELEMENT_COMMAND_LINE, game.getCommandLine());
 
     if(game.getReleaseDate().isValid()) // LB is picky with dates
-        mStreamWriter.writeTextElement(Element_Game::ELEMENT_RELEASE_DATE, game.getReleaseDate().toString(Qt::ISODateWithMs));
+        writeEmptyCheckedTextElement(Element_Game::ELEMENT_RELEASE_DATE, game.getReleaseDate().toString(Qt::ISODateWithMs));
 
-    mStreamWriter.writeTextElement(Element_Game::ELEMENT_VERSION, game.getVersion());
-    mStreamWriter.writeTextElement(Element_Game::ELEMENT_RELEASE_TYPE, game.getReleaseType());
+    writeEmptyCheckedTextElement(Element_Game::ELEMENT_VERSION, game.getVersion());
+    writeEmptyCheckedTextElement(Element_Game::ELEMENT_RELEASE_TYPE, game.getReleaseType());
 
     if(mStreamWriter.hasError())
         return false;
@@ -386,7 +395,7 @@ bool Xml::PlatformDocWriter::writeGame(const Game& game)
     // Write other tags
     for(QHash<QString, QString>::const_iterator i = game.getOtherFields().constBegin(); i != game.getOtherFields().constEnd(); ++i)
     {
-        mStreamWriter.writeTextElement(i.key(), i.value());
+        writeEmptyCheckedTextElement(i.key(), i.value());
 
         if(mStreamWriter.hasError())
             return false;
@@ -405,13 +414,13 @@ bool Xml::PlatformDocWriter::writeAddApp(const AddApp& addApp)
     mStreamWriter.writeStartElement(Element_AddApp::NAME);
 
     // Write known tags
-    mStreamWriter.writeTextElement(Element_AddApp::ELEMENT_ID, addApp.getID().toString(QUuid::WithoutBraces));
-    mStreamWriter.writeTextElement(Element_AddApp::ELEMENT_GAME_ID, addApp.getGameID().toString(QUuid::WithoutBraces));
-    mStreamWriter.writeTextElement(Element_AddApp::ELEMENT_APP_PATH, addApp.getAppPath());
-    mStreamWriter.writeTextElement(Element_AddApp::ELEMENT_COMMAND_LINE, addApp.getCommandLine());
-    mStreamWriter.writeTextElement(Element_AddApp::ELEMENT_AUTORUN_BEFORE, addApp.isAutorunBefore() ? "true" : "false");
-    mStreamWriter.writeTextElement(Element_AddApp::ELEMENT_NAME, addApp.getName());
-    mStreamWriter.writeTextElement(Element_AddApp::ELEMENT_WAIT_FOR_EXIT, addApp.isWaitForExit() ? "true" : "false");
+    writeEmptyCheckedTextElement(Element_AddApp::ELEMENT_ID, addApp.getID().toString(QUuid::WithoutBraces));
+    writeEmptyCheckedTextElement(Element_AddApp::ELEMENT_GAME_ID, addApp.getGameID().toString(QUuid::WithoutBraces));
+    writeEmptyCheckedTextElement(Element_AddApp::ELEMENT_APP_PATH, addApp.getAppPath());
+    writeEmptyCheckedTextElement(Element_AddApp::ELEMENT_COMMAND_LINE, addApp.getCommandLine());
+    writeEmptyCheckedTextElement(Element_AddApp::ELEMENT_AUTORUN_BEFORE, addApp.isAutorunBefore() ? "true" : "false");
+    writeEmptyCheckedTextElement(Element_AddApp::ELEMENT_NAME, addApp.getName());
+    writeEmptyCheckedTextElement(Element_AddApp::ELEMENT_WAIT_FOR_EXIT, addApp.isWaitForExit() ? "true" : "false");
 
     if(mStreamWriter.hasError())
         return false;
@@ -419,7 +428,7 @@ bool Xml::PlatformDocWriter::writeAddApp(const AddApp& addApp)
     // Write other tags
     for(QHash<QString, QString>::const_iterator i = addApp.getOtherFields().constBegin(); i != addApp.getOtherFields().constEnd(); ++i)
     {
-        mStreamWriter.writeTextElement(i.key(), i.value());
+        writeEmptyCheckedTextElement(i.key(), i.value());
 
         if(mStreamWriter.hasError())
             return false;
@@ -618,10 +627,10 @@ bool Xml::PlaylistDocWriter::writePlaylistHeader(const PlaylistHeader& playlistH
     mStreamWriter.writeStartElement(Element_PlaylistHeader::NAME);
 
     // Write known tags
-    mStreamWriter.writeTextElement(Element_PlaylistHeader::ELEMENT_ID, playlistHeader.getPlaylistID().toString(QUuid::WithoutBraces));
-    mStreamWriter.writeTextElement(Element_PlaylistHeader::ELEMENT_NAME, playlistHeader.getName());
-    mStreamWriter.writeTextElement(Element_PlaylistHeader::ELEMENT_NESTED_NAME, playlistHeader.getNestedName());
-    mStreamWriter.writeTextElement(Element_PlaylistHeader::ELEMENT_NOTES, playlistHeader.getNotes());
+    writeEmptyCheckedTextElement(Element_PlaylistHeader::ELEMENT_ID, playlistHeader.getPlaylistID().toString(QUuid::WithoutBraces));
+    writeEmptyCheckedTextElement(Element_PlaylistHeader::ELEMENT_NAME, playlistHeader.getName());
+    writeEmptyCheckedTextElement(Element_PlaylistHeader::ELEMENT_NESTED_NAME, playlistHeader.getNestedName());
+    writeEmptyCheckedTextElement(Element_PlaylistHeader::ELEMENT_NOTES, playlistHeader.getNotes());
 
     if(mStreamWriter.hasError())
         return false;
@@ -629,7 +638,7 @@ bool Xml::PlaylistDocWriter::writePlaylistHeader(const PlaylistHeader& playlistH
     // Write other tags
     for(QHash<QString, QString>::const_iterator i = playlistHeader.getOtherFields().constBegin(); i != playlistHeader.getOtherFields().constEnd(); ++i)
     {
-        mStreamWriter.writeTextElement(i.key(), i.value());
+        writeEmptyCheckedTextElement(i.key(), i.value());
 
         if(mStreamWriter.hasError())
             return false;
@@ -648,11 +657,11 @@ bool Xml::PlaylistDocWriter::writePlaylistGame(const PlaylistGame& playlistGame)
     mStreamWriter.writeStartElement(Element_PlaylistGame::NAME);
 
     // Write known tags
-    mStreamWriter.writeTextElement(Element_PlaylistGame::ELEMENT_ID, playlistGame.getGameID().toString(QUuid::WithoutBraces));
-    mStreamWriter.writeTextElement(Element_PlaylistGame::ELEMENT_GAME_TITLE, playlistGame.getGameTitle());
-    mStreamWriter.writeTextElement(Element_PlaylistGame::ELEMENT_GAME_PLATFORM, playlistGame.getGamePlatform());
-    mStreamWriter.writeTextElement(Element_PlaylistGame::ELEMENT_MANUAL_ORDER, QString::number(playlistGame.getManualOrder()));
-    mStreamWriter.writeTextElement(Element_PlaylistGame::ELEMENT_LB_DB_ID, QString::number(playlistGame.getLBDatabaseID()));
+    writeEmptyCheckedTextElement(Element_PlaylistGame::ELEMENT_ID, playlistGame.getGameID().toString(QUuid::WithoutBraces));
+    writeEmptyCheckedTextElement(Element_PlaylistGame::ELEMENT_GAME_TITLE, playlistGame.getGameTitle());
+    writeEmptyCheckedTextElement(Element_PlaylistGame::ELEMENT_GAME_PLATFORM, playlistGame.getGamePlatform());
+    writeEmptyCheckedTextElement(Element_PlaylistGame::ELEMENT_MANUAL_ORDER, QString::number(playlistGame.getManualOrder()));
+    writeEmptyCheckedTextElement(Element_PlaylistGame::ELEMENT_LB_DB_ID, QString::number(playlistGame.getLBDatabaseID()));
 
     if(mStreamWriter.hasError())
         return false;
@@ -660,7 +669,7 @@ bool Xml::PlaylistDocWriter::writePlaylistGame(const PlaylistGame& playlistGame)
     // Write other tags
     for(QHash<QString, QString>::const_iterator i = playlistGame.getOtherFields().constBegin(); i != playlistGame.getOtherFields().constEnd(); ++i)
     {
-        mStreamWriter.writeTextElement(i.key(), i.value());
+        writeEmptyCheckedTextElement(i.key(), i.value());
 
         if(mStreamWriter.hasError())
             return false;
@@ -674,37 +683,41 @@ bool Xml::PlaylistDocWriter::writePlaylistGame(const PlaylistGame& playlistGame)
 }
 
 //===============================================================================================================
-// Xml::PlatformConfigDoc
+// Xml::PlatformsDoc
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-Xml::PlatformConfigDoc::PlatformConfigDoc(std::unique_ptr<QFile> xmlFile, const Key&)
-    : DataDoc(std::move(xmlFile), DataDocHandle{Xml::PlatformConfigDoc::TYPE_NAME, Xml::PlatformConfigDoc::STD_NAME}) {}
+Xml::PlatformsDoc::PlatformsDoc(std::unique_ptr<QFile> xmlFile, const Key&)
+    : DataDoc(std::move(xmlFile), DataDocHandle{Xml::PlatformsDoc::TYPE_NAME, Xml::PlatformsDoc::STD_NAME}) {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-const QList<Platform>& Xml::PlatformConfigDoc::getPlatforms() const { return mPlatforms; }
-const QMap<QString, QMap<QString, QString>>& Xml::PlatformConfigDoc::getPlatformFolders() const { return mPlatformFolders; }
-const QList<PlatformCategory>& Xml::PlatformConfigDoc::getPlatformCategories() const { return mPlatformCategories; }
+const QHash<QString, Platform>& Xml::PlatformsDoc::getPlatforms() const { return mPlatforms; }
+const QMap<QString, QMap<QString, QString>>& Xml::PlatformsDoc::getPlatformFolders() const { return mPlatformFolders; }
+const QList<PlatformCategory>& Xml::PlatformsDoc::getPlatformCategories() const { return mPlatformCategories; }
 
-void Xml::PlatformConfigDoc::setMediaFolder(QString platform, QString mediaType, QString folderPath)
+bool Xml::PlatformsDoc::containsPlatform(QString name) { return mPlatforms.contains(name); }
+
+void Xml::PlatformsDoc::addPlatform(Platform platform) { mPlatforms[platform.getName()] = platform; }
+
+void Xml::PlatformsDoc::setMediaFolder(QString platform, QString mediaType, QString folderPath)
 {
     mPlatformFolders[platform][mediaType] = folderPath;
 }
 
 //===============================================================================================================
-// Xml::PlatformConfigDocReader
+// Xml::PlatformsDocReader
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-Xml::PlatformConfigDocReader::PlatformConfigDocReader(Xml::PlatformConfigDoc* targetDoc)
+Xml::PlatformsDocReader::PlatformsDocReader(Xml::PlatformsDoc* targetDoc)
     : DataDocReader(targetDoc) {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-bool Xml::PlatformConfigDocReader::readTargetDoc()
+bool Xml::PlatformsDocReader::readTargetDoc()
 {
     while(mStreamReader.readNextStartElement())
     {
@@ -722,7 +735,7 @@ bool Xml::PlatformConfigDocReader::readTargetDoc()
     return mStreamReader.hasError();
 }
 
-void Xml::PlatformConfigDocReader::parsePlatform()
+void Xml::PlatformsDocReader::parsePlatform()
 {
     // Platform Config Doc to Build
     PlatformBuilder pb;
@@ -730,15 +743,18 @@ void Xml::PlatformConfigDocReader::parsePlatform()
     // Cover all children
     while(mStreamReader.readNextStartElement())
     {
-        // No specific elements are of interest for now
-        pb.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
+        if(mStreamReader.name() == Element_Platform::ELEMENT_NAME)
+            pb.wName(mStreamReader.readElementText());
+        else
+            pb.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
     }
 
-    // Build Playlist Header and add to document
-   static_cast<PlatformConfigDoc*>(mTargetDocument)->mPlatforms.append(pb.build());
+    // Build Platform and add to document
+    LB::Platform existingPlatform = pb.build();
+   static_cast<PlatformsDoc*>(mTargetDocument)->mPlatforms.insert(existingPlatform.getName(), existingPlatform);
 }
 
-void Xml::PlatformConfigDocReader::parsePlatformFolder()
+void Xml::PlatformsDocReader::parsePlatformFolder()
 {
     // Platform Folder to Build
     QString platform;
@@ -759,10 +775,10 @@ void Xml::PlatformConfigDocReader::parsePlatformFolder()
     }
 
     // Add to document
-    static_cast<PlatformConfigDoc*>(mTargetDocument)->mPlatformFolders[platform][mediaType] = folderPath;
+    static_cast<PlatformsDoc*>(mTargetDocument)->mPlatformFolders[platform][mediaType] = folderPath;
 }
 
-void Xml::PlatformConfigDocReader::parsePlatformCategory()
+void Xml::PlatformsDocReader::parsePlatformCategory()
 {
     // Platform Config Doc to Build
     PlatformCategoryBuilder pcb;
@@ -775,31 +791,31 @@ void Xml::PlatformConfigDocReader::parsePlatformCategory()
     }
 
     // Build Playlist Header and add to document
-   static_cast<PlatformConfigDoc*>(mTargetDocument)->mPlatformCategories.append(pcb.build());
+   static_cast<PlatformsDoc*>(mTargetDocument)->mPlatformCategories.append(pcb.build());
 }
 
 //===============================================================================================================
-// Xml::PlatformConfigDocWriter
+// Xml::PlatformsDocWriter
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-Xml::PlatformConfigDocWriter::PlatformConfigDocWriter(PlatformConfigDoc* sourceDoc)
+Xml::PlatformsDocWriter::PlatformsDocWriter(PlatformsDoc* sourceDoc)
     : DataDocWriter(sourceDoc) {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-bool Xml::PlatformConfigDocWriter::writeSourceDoc()
+bool Xml::PlatformsDocWriter::writeSourceDoc()
 {
     // Write all platforms
-    for(const Platform& platform : static_cast<PlatformConfigDoc*>(mSourceDocument)->getPlatforms())
+    for(const Platform& platform : static_cast<PlatformsDoc*>(mSourceDocument)->getPlatforms())
     {
         if(!writePlatform(platform))
             return false;
     }
 
     // Write all platform folders
-    const QMap<QString, QMap<QString, QString>>& platformFolderMap = static_cast<PlatformConfigDoc*>(mSourceDocument)->getPlatformFolders();
+    const QMap<QString, QMap<QString, QString>>& platformFolderMap = static_cast<PlatformsDoc*>(mSourceDocument)->getPlatformFolders();
     QMap<QString, QMap<QString, QString>>::const_iterator i;
     for(i = platformFolderMap.constBegin(); i != platformFolderMap.constEnd(); i++)
     {
@@ -810,7 +826,7 @@ bool Xml::PlatformConfigDocWriter::writeSourceDoc()
     }
 
     // Write all platform categories
-    for(const PlatformCategory& platformCategory : static_cast<PlatformConfigDoc*>(mSourceDocument)->getPlatformCategories())
+    for(const PlatformCategory& platformCategory : static_cast<PlatformsDoc*>(mSourceDocument)->getPlatformCategories())
     {
         if(!writePlatformCategory(platformCategory))
             return false;
@@ -820,20 +836,21 @@ bool Xml::PlatformConfigDocWriter::writeSourceDoc()
     return true;
 }
 
-bool Xml::PlatformConfigDocWriter::writePlatform(const Platform& platform)
+bool Xml::PlatformsDocWriter::writePlatform(const Platform& platform)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Element_Platform::NAME);
 
     // Write known tags
-    // None for now...
+    writeEmptyCheckedTextElement(Element_Platform::ELEMENT_NAME, platform.getName());
+
     if(mStreamWriter.hasError())
         return false;
 
     // Write other tags //TODO: Try to make this step generic for all Items
     for(QHash<QString, QString>::const_iterator i = platform.getOtherFields().constBegin(); i != platform.getOtherFields().constEnd(); ++i)
     {
-        mStreamWriter.writeTextElement(i.key(), i.value());
+        writeEmptyCheckedTextElement(i.key(), i.value());
 
         if(mStreamWriter.hasError())
             return false;
@@ -846,15 +863,15 @@ bool Xml::PlatformConfigDocWriter::writePlatform(const Platform& platform)
     return true;
 }
 
-bool Xml::PlatformConfigDocWriter::writePlatformFolder(const QString& platform, const QString& mediaType, const QString& folderPath)
+bool Xml::PlatformsDocWriter::writePlatformFolder(const QString& platform, const QString& mediaType, const QString& folderPath)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Element_PlatformFolder::NAME);
 
     // Write known tags
-    mStreamWriter.writeTextElement(Element_PlatformFolder::ELEMENT_MEDIA_TYPE, platform);
-    mStreamWriter.writeTextElement(Element_PlatformFolder::ELEMENT_FOLDER_PATH, mediaType);
-    mStreamWriter.writeTextElement(Element_PlatformFolder::ELEMENT_PLATFORM, folderPath);
+    writeEmptyCheckedTextElement(Element_PlatformFolder::ELEMENT_MEDIA_TYPE, mediaType);
+    writeEmptyCheckedTextElement(Element_PlatformFolder::ELEMENT_FOLDER_PATH, folderPath);
+    writeEmptyCheckedTextElement(Element_PlatformFolder::ELEMENT_PLATFORM, platform);
 
     if(mStreamWriter.hasError())
         return false;
@@ -866,7 +883,7 @@ bool Xml::PlatformConfigDocWriter::writePlatformFolder(const QString& platform, 
     return true;
 }
 
-bool Xml::PlatformConfigDocWriter::writePlatformCategory(const PlatformCategory& platformCategory)
+bool Xml::PlatformsDocWriter::writePlatformCategory(const PlatformCategory& platformCategory)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Element_PlatformCategory::NAME);
@@ -879,7 +896,7 @@ bool Xml::PlatformConfigDocWriter::writePlatformCategory(const PlatformCategory&
     // Write other tags //TODO: Try to make this step generic for all Items
     for(QHash<QString, QString>::const_iterator i = platformCategory.getOtherFields().constBegin(); i != platformCategory.getOtherFields().constEnd(); ++i)
     {
-        mStreamWriter.writeTextElement(i.key(), i.value());
+        writeEmptyCheckedTextElement(i.key(), i.value());
 
         if(mStreamWriter.hasError())
             return false;

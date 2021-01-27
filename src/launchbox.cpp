@@ -58,7 +58,7 @@ Game::Game(FP::Game flashpointGame, QString fullOFLIbPath)
       // Some entries have a typo and since mRegion is used in folder creation the field must be kosher
       mNotes(flashpointGame.getOriginalDescription() + "\n\n" + flashpointGame.getNotes()),
       mSource(flashpointGame.getSource()),
-      mAppPath(fullOFLIbPath),
+      mAppPath(QDir::toNativeSeparators(fullOFLIbPath)),
       mCommandLine(FP::Install::CLIFp::parametersFromStandard(flashpointGame.getAppPath(), flashpointGame.getLaunchCommand())),
       mReleaseDate(flashpointGame.getReleaseDate()),
       mVersion(flashpointGame.getVersion()),
@@ -144,7 +144,7 @@ GameBuilder& GameBuilder::wReleaseType(QString releaseType) { mItemBlueprint.mRe
 AddApp::AddApp(FP::AddApp flashpointAddApp, QString fullOFLIbPath)
     : mID(flashpointAddApp.getID()),
       mGameID(flashpointAddApp.getParentID()),
-      mAppPath(fullOFLIbPath),
+      mAppPath(QDir::toNativeSeparators(fullOFLIbPath)),
       mCommandLine(FP::Install::CLIFp::parametersFromStandard(flashpointAddApp.getAppPath(), flashpointAddApp.getLaunchCommand())),
       mAutorunBefore(flashpointAddApp.isAutorunBefore()),
       mName(flashpointAddApp.getName()),
@@ -284,6 +284,11 @@ PlaylistGameBuilder& PlaylistGameBuilder::wManualOrder(QString rawManualOrder)
 //-Constructor-------------------------------------------------------------------------------------------------
 //Public:
 Platform::Platform() {}
+
+//-Instance Functions------------------------------------------------------------------------------------------
+//Public:
+QString Platform::getName() const { return mName; }
+
 //===============================================================================================================
 // PLATFORM BUILDER
 //===============================================================================================================
@@ -291,6 +296,10 @@ Platform::Platform() {}
 //-Constructor-------------------------------------------------------------------------------------------------
 //Public:
 PlatformBuilder::PlatformBuilder() {}
+
+//-Instance Functions------------------------------------------------------------------------------------------
+//Public:
+PlatformBuilder& PlatformBuilder::wName(QString name) { mItemBlueprint.mName = name; return *this; }
 
 //===============================================================================================================
 // PLATFORM FOLDER

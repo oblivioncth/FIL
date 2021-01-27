@@ -218,31 +218,34 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
                 *blockingErrorResponse = QMessageBox::NoToAll; // Default to choice "NoToAll" incase the signal is not correctly connected using Qt::BlockingQueuedConnection
                 bool skipAllImages = false; // NoToAll response tracker
 
-                // Transfer game images
-                while(!skipAllImages && !mLaunchBoxInstall->transferLogo(imageTransferError, mOptionSet.imageMode, mFlashpointInstall->getLogosDirectory(), builtGame))
+                // Transfer game images if applicable
+                if(mOptionSet.imageMode != LB::Install::Reference)
                 {
-                    // Notify GUI Thread of error
-                    emit blockingErrorOccured(blockingErrorResponse, Qx::GenericError(Qx::GenericError::Error, imageTransferError, "Retry?", QString(), CAPTION_IMAGE_ERR),
-                                              QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
+                    while(!skipAllImages && !mLaunchBoxInstall->transferLogo(imageTransferError, mOptionSet.imageMode, mFlashpointInstall->getLogosDirectory(), builtGame))
+                    {
+                        // Notify GUI Thread of error
+                        emit blockingErrorOccured(blockingErrorResponse, Qx::GenericError(Qx::GenericError::Error, imageTransferError, "Retry?", QString(), CAPTION_IMAGE_ERR),
+                                                  QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
 
-                    // Check response
-                    if(*blockingErrorResponse == QMessageBox::No)
-                       break;
-                    else if(*blockingErrorResponse == QMessageBox::NoToAll)
-                       skipAllImages = true;
-                }
+                        // Check response
+                        if(*blockingErrorResponse == QMessageBox::No)
+                           break;
+                        else if(*blockingErrorResponse == QMessageBox::NoToAll)
+                           skipAllImages = true;
+                    }
 
-                while(!skipAllImages && !mLaunchBoxInstall->transferScreenshot(imageTransferError, mOptionSet.imageMode, mFlashpointInstall->getScrenshootsDirectory(), builtGame))
-                {
-                    // Notify GUI Thread of error
-                    emit blockingErrorOccured(blockingErrorResponse, Qx::GenericError(Qx::GenericError::Error, imageTransferError, "Retry?", QString(), CAPTION_IMAGE_ERR),
-                                              QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
+                    while(!skipAllImages && !mLaunchBoxInstall->transferScreenshot(imageTransferError, mOptionSet.imageMode, mFlashpointInstall->getScrenshootsDirectory(), builtGame))
+                    {
+                        // Notify GUI Thread of error
+                        emit blockingErrorOccured(blockingErrorResponse, Qx::GenericError(Qx::GenericError::Error, imageTransferError, "Retry?", QString(), CAPTION_IMAGE_ERR),
+                                                  QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
 
-                    // Check response
-                    if(*blockingErrorResponse == QMessageBox::No)
-                       break;
-                    else if(*blockingErrorResponse == QMessageBox::NoToAll)
-                       skipAllImages = true;
+                        // Check response
+                        if(*blockingErrorResponse == QMessageBox::No)
+                           break;
+                        else if(*blockingErrorResponse == QMessageBox::NoToAll)
+                           skipAllImages = true;
+                    }
                 }
            }
 
@@ -302,6 +305,50 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
             return Failed;
         }
 
+    }
+
+    // Set image references if applicable
+    if(mOptionSet.imageMode == LB::Install::Reference)
+    {
+        // Open platforms document
+        std::unique_ptr<LB::Xml::PlatformsDoc> platformConfigXML;
+        LB::Xml::DataDocHandle requestHandle = {LB::Xml::PlatformsDoc::TYPE_NAME, LB::Xml::PlatformsDoc::STD_NAME}; // For errors only
+        Qx::XmlStreamReaderError platformConfigReadError = mLaunchBoxInstall->openPlatformsDoc(platformConfigXML);
+
+        // Stop import if error occured
+        if(platformConfigReadError.isValid())
+        {
+            // Emit import failure
+            errorReport = Qx::GenericError(Qx::GenericError::Critical, LB::Xml::formatDataDocError(MSG_LB_XML_UNEXPECTED_ERROR, requestHandle),
+                                           platformConfigReadError.getText());
+            return Failed;
+        }
+
+        // Set media folder paths and ensure document contains platform or else image paths will be ignored
+        for(const QString& platform : mImportSelections.platforms)
+        {
+            platformConfigXML->setMediaFolder(platform, LB::Install::LOGO_PATH, QDir::toNativeSeparators(mFlashpointInstall->getLogosDirectory().absolutePath()));
+            platformConfigXML->setMediaFolder(platform, LB::Install::SCREENSHOT_PATH,  QDir::toNativeSeparators(mFlashpointInstall->getScrenshootsDirectory().absolutePath()));
+
+            if(!platformConfigXML->containsPlatform(platform))
+            {
+                LB::PlatformBuilder pb;
+                pb.wName(platform);
+                platformConfigXML->addPlatform(pb.build());
+            }
+        }
+
+        // Ensure document contains platform or else image paths will be ignored
+
+
+        // Save platforms document
+        QString saveError;
+        if(!mLaunchBoxInstall->savePlatformsDoc(saveError, std::move(platformConfigXML)))
+        {
+            errorReport = Qx::GenericError(Qx::GenericError::Critical,
+                                           LB::Xml::formatDataDocError(LB::Xml::ERR_WRITE_FAILED, requestHandle), saveError);
+            return Failed;
+        }
     }
 
     // Process playlists

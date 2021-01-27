@@ -49,8 +49,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     // General setup
     ui->setupUi(this);
     QApplication::setApplicationName(VER_PRODUCTNAME_STR);
-    setWindowTitle(VER_PRODUCTNAME_STR);
     mHasLinkPermissions = testForLinkPermissions();
+    setWindowTitle(VER_PRODUCTNAME_STR);
     initializeForms();
 
     // Setup UI update workaround timer
@@ -92,7 +92,6 @@ bool MainWindow::testForLinkPermissions()
     return false;
 }
 
-
 void MainWindow::initializeForms()
 {
     // Capture existing item color from label for use in platform/playlist selection lists
@@ -101,11 +100,22 @@ void MainWindow::initializeForms()
     // Add CLIFp version to deploy option
     ui->action_deployCLIFp->setText(ui->action_deployCLIFp->text() +  " " + mInternalCLIFpVersion.toString(Qx::MMRB::StringFormat::NoTrailRBZero));
 
+    // Prepare help messages
+    mArgedUpdateModeHelp = MSG_UPDATE_MODE_HELP.arg(ui->radioButton_onlyAdd->text(),
+                                                    ui->radioButton_updateExisting->text(),
+                                                    ui->checkBox_removeMissing->text(),
+                                                    ui->action_includeExtreme->text());
+
+    mArgedImageModeHelp = MSG_IMAGE_MODE_HELP.arg((ui->radioButton_copy->text(),
+                                                   ui->radioButton_reference->text(),
+                                                   ui->radioButton_link->text()));
+
     // Setup main forms
-    ui->radioButton_launchBoxLink->setEnabled(mHasLinkPermissions);
-    ui->radioButton_flashpointLink->setEnabled(mHasLinkPermissions);
-    ui->radioButton_launchBoxLink->setChecked(mHasLinkPermissions);
-    ui->radioButton_launchBoxCopy->setChecked(!mHasLinkPermissions);
+    ui->radioButton_link->setEnabled(mHasLinkPermissions);
+    ui->radioButton_link->setChecked(mHasLinkPermissions);
+    if(!mHasLinkPermissions)
+        ui->radioButton_link->setText(ui->radioButton_link->text().append(REQUIRE_ELEV));
+    ui->radioButton_reference->setChecked(!mHasLinkPermissions);
     setInputStage(InputStage::Paths);
 
     // TODO: THIS IS FOR DEBUG PURPOSES
@@ -534,9 +544,9 @@ LB::UpdateOptions MainWindow::getSelectedUpdateOptions() const
     return {ui->radioButton_onlyAdd->isChecked() ? LB::OnlyNew : LB::NewAndExisting, ui->checkBox_removeMissing->isChecked() };
 }
 
-LB::Install::ImageModeL MainWindow::getSelectedImageOption() const
+LB::Install::ImageMode MainWindow::getSelectedImageOption() const
 {
-    return ui->radioButton_launchBoxCopy->isChecked() ? LB::Install::LB_CopyL : ui->radioButton_launchBoxLink->isChecked() ? LB::Install::LB_LinkL : LB::Install::FP_LinkL;
+    return ui->radioButton_copy->isChecked() ? LB::Install::Copy : ui->radioButton_reference->isChecked() ? LB::Install::Reference : LB::Install::Link;
 }
 
 void MainWindow::prepareImport()
@@ -626,7 +636,7 @@ void MainWindow::revertAllLaunchBoxChanges()
     QString currentError;
     int retryChoice;
 
-    // Revert rrror Message
+    // Revert error Message
     QMessageBox revertError;
     revertError.setWindowTitle(CAPTION_REVERT_ERR);
     revertError.setInformativeText("Retry?");
@@ -795,14 +805,9 @@ void MainWindow::all_on_pushButton_clicked()
             ui->listWidget_playlistChoices->item(i)->setCheckState(Qt::Unchecked);
     }
     else if(senderPushButton == ui->pushButton_updateModeHelp)
-        QMessageBox::information(this, CAPTION_UPDATE_MODE_HELP, MSG_UPDATE_MODE_HELP.arg(ui->radioButton_onlyAdd->text(),
-                                                                                          ui->radioButton_updateExisting->text(),
-                                                                                          ui->checkBox_removeMissing->text(),
-                                                                                          ui->action_includeExtreme->text()));
+        QMessageBox::information(this, CAPTION_UPDATE_MODE_HELP, mArgedUpdateModeHelp);
     else if(senderPushButton == ui->pushButton_imageModeHelp)
-        QMessageBox::information(this, CAPTION_IMAGE_MODE_HELP, MSG_IMAGE_MODE_HELP.arg(ui->radioButton_launchBoxCopy->text(),
-                                                                                        ui->radioButton_launchBoxLink->text(),
-                                                                                        ui->radioButton_flashpointLink->text()));
+        QMessageBox::information(this, CAPTION_IMAGE_MODE_HELP, mArgedImageModeHelp);
     else if(senderPushButton == ui->pushButton_startImport)
         prepareImport();
     else if(senderPushButton == ui->pushButton_exit)

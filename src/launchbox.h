@@ -287,16 +287,19 @@ public:
     PlaylistGameBuilder& wManualOrder(QString rawManualOrder);
 };
 
-class Platform  : public Item
+class Platform : public Item
 {
     friend class PlatformBuilder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
+    QString mName;
 
 //-Constructor------------------------------------------------------------------------------------------------------
 public:
     Platform();
+
 //-Instance Functions------------------------------------------------------------------------------------------------------
+    QString getName() const;
 };
 
 class PlatformBuilder : public ItemBuilder<PlatformBuilder, Platform>
@@ -306,6 +309,8 @@ public:
     PlatformBuilder();
 
 //-Instance Functions------------------------------------------------------------------------------------------
+public:
+    PlatformBuilder& wName(QString name);
 };
 
 //class PlatformFolder  : public Item
