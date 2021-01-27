@@ -30,7 +30,7 @@ If applicable, add screenshots to help explain your problem.
 **Version (please complete the following information):**
 - OFILb version
 - CLIFp version (if different from the included version)
-- Flashpoint version
+- Flashpoint version (including whether you are using Ultimate or Infinity)
 
 **Additional context**
 Add any other context about the problem here.
