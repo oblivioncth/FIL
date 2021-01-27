@@ -26,7 +26,7 @@ public:
     {
         LB::UpdateOptions updateOptions;
         LB::Install::ImageMode imageMode;
-        LB::Install::GeneralOptions generalOptions;
+        FP::Install::InclusionOptions inclusionOptions;
     };
 
 //-Class Variables-----------------------------------------------------------------------------------------------

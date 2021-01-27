@@ -19,6 +19,12 @@ public:
 
 //-Class Structs-------------------------------------------------------------------------------------------------
 public:
+    struct InclusionOptions
+    {
+        bool includeExtreme;
+        bool includeAnimations;
+    };
+
     struct DBTableSpecs
     {
         QString name;
@@ -364,7 +370,7 @@ public:
     bool deployCLIFp(QString &errorMessage);
 
     // Queries - OFLIb
-    QSqlError initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QSet<QString> selectedPlatforms) const;
+    QSqlError initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QSet<QString> selectedPlatforms, InclusionOptions inclusionOptions) const;
     QSqlError initialAddAppQuery(DBQueryBuffer& resultBuffer) const;
     QSqlError initialPlaylistQuery(DBQueryBuffer& resultBuffer, QSet<QString> selectedPlaylists) const;
     QSqlError initialPlaylistGameQuery(QList<DBQueryBuffer>& resultBuffer, const QList<QUuid>& knownPlaylistsToQuery) const;

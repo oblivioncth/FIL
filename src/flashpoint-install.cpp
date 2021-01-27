@@ -563,7 +563,7 @@ QSqlError Install::checkDatabaseForRequiredColumns(QSet<QString> &missingColumsR
     // Ensure each table has the required columns
     QSet<QString> existingColumns;
 
-    for(DBTableSpecs tableAndColumns : DATABASE_SPECS_LIST)
+    for(const DBTableSpecs& tableAndColumns : DATABASE_SPECS_LIST)
     {
         // Clear previous data
         existingColumns.clear();
@@ -580,7 +580,7 @@ QSqlError Install::checkDatabaseForRequiredColumns(QSet<QString> &missingColumsR
             existingColumns.insert(columnQuery.value("name").toString());
 
         // Check for missing columns
-        for(QString column : tableAndColumns.columns)
+        for(const QString& column : tableAndColumns.columns)
             if(!existingColumns.contains(column))
                 missingColumsReturnBuffer.insert(tableAndColumns.name + ": " + column);
     }
@@ -662,7 +662,7 @@ bool Install::deployCLIFp(QString& errorMessage)
 
 }
 
-QSqlError Install::initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QSet<QString> selectedPlatforms) const
+QSqlError Install::initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QSet<QString> selectedPlatforms, InclusionOptions inclusionOptions) const
 {
     // Ensure return buffer is reset
     resultBuffer.clear();
@@ -675,11 +675,18 @@ QSqlError Install::initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QSet<QSt
         // Create platform query string
         QString placeholder = ":platform";
         QString baseQueryCommand = "SELECT %1 FROM " + DBTable_Game::NAME + " WHERE " +
-                DBTable_Game::COL_PLATFORM + " = " + placeholder + " AND " +
-                DBTable_Game::COL_LIBRARY + " = '" + DBTable_Game::ENTRY_GAME_LIBRARY + "'";
+                DBTable_Game::COL_PLATFORM + " = " + placeholder + " AND ";
 
-        QString mainQueryCommand = baseQueryCommand.arg("`" + DBTable_Game::COLUMN_LIST.join("`,`") + "`");
-        QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
+        // Handle filtering
+        QString filteredQueryCommand = baseQueryCommand.append(inclusionOptions.includeAnimations ? "(" + DBTable_Game::COL_LIBRARY + " = '" + DBTable_Game::ENTRY_GAME_LIBRARY + "' OR "
+                                                                                                         + DBTable_Game::COL_LIBRARY + " = '" + DBTable_Game::ENTRY_ANIM_LIBRARY + "')"
+                                                                                                   :  DBTable_Game::COL_LIBRARY + " = '" + DBTable_Game::ENTRY_GAME_LIBRARY + "'");
+
+        if(!inclusionOptions.includeExtreme)
+            filteredQueryCommand += DBTable_Game::COL_EXTREME + " = '0'";
+
+        QString mainQueryCommand = filteredQueryCommand.arg("`" + DBTable_Game::COLUMN_LIST.join("`,`") + "`");
+        QString sizeQueryCommand = filteredQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
 
         // Create main query and bind current platform
         QSqlQuery initialQuery(fpDB);

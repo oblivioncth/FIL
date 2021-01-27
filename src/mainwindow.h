@@ -197,7 +197,7 @@ private:
     void importSelectionReaction(QListWidgetItem* item, QWidget* parent);
     QSet<QString> getSelectedPlatforms(bool fileNameLegal = false) const;
     QSet<QString> getSelectedPlaylists(bool fileNameLegal = false) const;
-    LB::Install::GeneralOptions getSelectedGeneralOptions() const;
+    FP::Install::InclusionOptions getSelectedInclusionOptions() const;
     LB::UpdateOptions getSelectedUpdateOptions() const;
     LB::Install::ImageMode getSelectedImageOption() const;
     void prepareImport();

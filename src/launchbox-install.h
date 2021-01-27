@@ -23,14 +23,6 @@ public:
 public:
     enum ImageMode {Copy, Reference, Link};
 
-//-Class Structs----------------------------------------------------------------------------------------------------
-public:
-    struct GeneralOptions
-    {
-        bool includeExtreme;
-        // TODO: Add option to import animations
-    };
-
 //-Class Variables--------------------------------------------------------------------------------------------------
 public:
     //

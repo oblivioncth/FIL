@@ -847,6 +847,7 @@
     </property>
     <addaction name="separator"/>
     <addaction name="action_includeExtreme"/>
+    <addaction name="action_includeAnimations"/>
     <addaction name="separator"/>
     <addaction name="action_deployCLIFp"/>
    </widget>
@@ -916,6 +917,14 @@
    </property>
    <property name="text">
     <string>Include Extreme/Adult Games</string>
+   </property>
+  </action>
+  <action name="action_includeAnimations">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Include Animations</string>
    </property>
   </action>
  </widget>

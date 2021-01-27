@@ -534,9 +534,9 @@ QSet<QString> MainWindow::getSelectedPlaylists(bool fileNameLegal) const
     return selectedPlaylists;
 }
 
-LB::Install::GeneralOptions MainWindow::getSelectedGeneralOptions() const
+FP::Install::InclusionOptions MainWindow::getSelectedInclusionOptions() const
 {
-    return {ui->action_includeExtreme->isChecked()};
+    return {ui->action_includeExtreme->isChecked(), ui->action_includeAnimations->isChecked()};
 }
 
 LB::UpdateOptions MainWindow::getSelectedUpdateOptions() const
@@ -600,7 +600,7 @@ void MainWindow::prepareImport()
         // Setup import worker
         ImportWorker importWorker(mFlashpointInstall, mLaunchBoxInstall,
                                   {getSelectedPlatforms(), getSelectedPlaylists()},
-                                  {getSelectedUpdateOptions(), getSelectedImageOption(), getSelectedGeneralOptions()});
+                                  {getSelectedUpdateOptions(), getSelectedImageOption(), getSelectedInclusionOptions()});
 
         // Setup blocking error connection
         connect(&importWorker, &ImportWorker::blockingErrorOccured, this, &MainWindow::handleBlockingError);

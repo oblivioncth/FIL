@@ -36,7 +36,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     QList<FP::Install::DBQueryBuffer> playlistGameQueries;
 
     // Make initial game query
-    queryError = mFlashpointInstall->initialGameQuery(gameQueries, mImportSelections.platforms);
+    queryError = mFlashpointInstall->initialGameQuery(gameQueries, mImportSelections.platforms, mOptionSet.inclusionOptions);
     if(queryError.isValid())
     {
         errorReport = Qx::GenericError(Qx::GenericError::Critical, MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());
@@ -182,72 +182,68 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
             // Advance to next record
             currentPlatformGameResult.result.next();
 
-            // Check if game is extreme and only include if user ticked the option
-            if(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_EXTREME).toString() == "0" || mOptionSet.generalOptions.includeExtreme)
+            // Form game from record
+            FP::GameBuilder fpGb;
+            fpGb.wID(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ID).toString());
+            fpGb.wTitle(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_TITLE).toString());
+            fpGb.wSeries(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_SERIES).toString());
+            fpGb.wDeveloper(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_DEVELOPER).toString());
+            fpGb.wPublisher(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_PUBLISHER).toString());
+            fpGb.wDateAdded(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_DATE_ADDED).toString());
+            fpGb.wDateModified(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_DATE_MODIFIED).toString());
+            fpGb.wPlatform(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_PLATFORM).toString());
+            fpGb.wBroken(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_BROKEN).toString());
+            fpGb.wPlayMode(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_PLAY_MODE).toString());
+            fpGb.wStatus(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_STATUS).toString());
+            fpGb.wNotes(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_NOTES).toString());
+            fpGb.wSource(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_SOURCE).toString());
+            fpGb.wAppPath(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_APP_PATH).toString());
+            fpGb.wLaunchCommand(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_LAUNCH_COMMAND).toString());
+            fpGb.wReleaseDate(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_RELEASE_DATE).toString());
+            fpGb.wVersion(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_VERSION).toString());
+            fpGb.wOriginalDescription(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ORIGINAL_DESC).toString());
+            fpGb.wLanguage(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_LANGUAGE).toString());
+            fpGb.wOrderTitle(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ORDER_TITLE).toString());
+            fpGb.wLibrary(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_LIBRARY).toString());
+
+            // Convert and convert FP game to LB game and add to document
+            LB::Game builtGame = LB::Game(fpGb.build(), mFlashpointInstall->getCLIFpPath());
+            currentPlatformXML->addGame(builtGame);
+
+            // Setup for ensuring image sub-directories exist
+            QString imageTransferError; // Error return reference
+            *blockingErrorResponse = QMessageBox::NoToAll; // Default to choice "NoToAll" incase the signal is not correctly connected using Qt::BlockingQueuedConnection
+            bool skipAllImages = false; // NoToAll response tracker
+
+            // Transfer game images if applicable
+            if(mOptionSet.imageMode != LB::Install::Reference)
             {
-                // Form game from record
-                FP::GameBuilder fpGb;
-                fpGb.wID(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ID).toString());
-                fpGb.wTitle(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_TITLE).toString());
-                fpGb.wSeries(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_SERIES).toString());
-                fpGb.wDeveloper(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_DEVELOPER).toString());
-                fpGb.wPublisher(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_PUBLISHER).toString());
-                fpGb.wDateAdded(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_DATE_ADDED).toString());
-                fpGb.wDateModified(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_DATE_MODIFIED).toString());
-                fpGb.wPlatform(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_PLATFORM).toString());
-                fpGb.wBroken(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_BROKEN).toString());
-                fpGb.wPlayMode(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_PLAY_MODE).toString());
-                fpGb.wStatus(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_STATUS).toString());
-                fpGb.wNotes(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_NOTES).toString());
-                fpGb.wSource(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_SOURCE).toString());
-                fpGb.wAppPath(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_APP_PATH).toString());
-                fpGb.wLaunchCommand(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_LAUNCH_COMMAND).toString());
-                fpGb.wReleaseDate(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_RELEASE_DATE).toString());
-                fpGb.wVersion(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_VERSION).toString());
-                fpGb.wOriginalDescription(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ORIGINAL_DESC).toString());
-                fpGb.wLanguage(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_LANGUAGE).toString());
-                fpGb.wOrderTitle(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ORDER_TITLE).toString());
-                fpGb.wLibrary(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_LIBRARY).toString());
-
-                // Convert and convert FP game to LB game and add to document
-                LB::Game builtGame = LB::Game(fpGb.build(), mFlashpointInstall->getCLIFpPath());
-                currentPlatformXML->addGame(builtGame);
-
-                // Setup for ensuring image sub-directories exist
-                QString imageTransferError; // Error return reference
-                *blockingErrorResponse = QMessageBox::NoToAll; // Default to choice "NoToAll" incase the signal is not correctly connected using Qt::BlockingQueuedConnection
-                bool skipAllImages = false; // NoToAll response tracker
-
-                // Transfer game images if applicable
-                if(mOptionSet.imageMode != LB::Install::Reference)
+                while(!skipAllImages && !mLaunchBoxInstall->transferLogo(imageTransferError, mOptionSet.imageMode, mFlashpointInstall->getLogosDirectory(), builtGame))
                 {
-                    while(!skipAllImages && !mLaunchBoxInstall->transferLogo(imageTransferError, mOptionSet.imageMode, mFlashpointInstall->getLogosDirectory(), builtGame))
-                    {
-                        // Notify GUI Thread of error
-                        emit blockingErrorOccured(blockingErrorResponse, Qx::GenericError(Qx::GenericError::Error, imageTransferError, "Retry?", QString(), CAPTION_IMAGE_ERR),
-                                                  QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
+                    // Notify GUI Thread of error
+                    emit blockingErrorOccured(blockingErrorResponse, Qx::GenericError(Qx::GenericError::Error, imageTransferError, "Retry?", QString(), CAPTION_IMAGE_ERR),
+                                              QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
 
-                        // Check response
-                        if(*blockingErrorResponse == QMessageBox::No)
-                           break;
-                        else if(*blockingErrorResponse == QMessageBox::NoToAll)
-                           skipAllImages = true;
-                    }
-
-                    while(!skipAllImages && !mLaunchBoxInstall->transferScreenshot(imageTransferError, mOptionSet.imageMode, mFlashpointInstall->getScrenshootsDirectory(), builtGame))
-                    {
-                        // Notify GUI Thread of error
-                        emit blockingErrorOccured(blockingErrorResponse, Qx::GenericError(Qx::GenericError::Error, imageTransferError, "Retry?", QString(), CAPTION_IMAGE_ERR),
-                                                  QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
-
-                        // Check response
-                        if(*blockingErrorResponse == QMessageBox::No)
-                           break;
-                        else if(*blockingErrorResponse == QMessageBox::NoToAll)
-                           skipAllImages = true;
-                    }
+                    // Check response
+                    if(*blockingErrorResponse == QMessageBox::No)
+                       break;
+                    else if(*blockingErrorResponse == QMessageBox::NoToAll)
+                       skipAllImages = true;
                 }
-           }
+
+                while(!skipAllImages && !mLaunchBoxInstall->transferScreenshot(imageTransferError, mOptionSet.imageMode, mFlashpointInstall->getScrenshootsDirectory(), builtGame))
+                {
+                    // Notify GUI Thread of error
+                    emit blockingErrorOccured(blockingErrorResponse, Qx::GenericError(Qx::GenericError::Error, imageTransferError, "Retry?", QString(), CAPTION_IMAGE_ERR),
+                                              QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
+
+                    // Check response
+                    if(*blockingErrorResponse == QMessageBox::No)
+                       break;
+                    else if(*blockingErrorResponse == QMessageBox::NoToAll)
+                       skipAllImages = true;
+                }
+            }
 
             // Update progress dialog value
             if(mCanceled)
