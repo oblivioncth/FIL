@@ -283,7 +283,7 @@ Qx::IOOpReport Install::populateExistingDocs()
     existingCheck = Qx::getDirFileList(existingList, mDataDirectory, {XML_EXT});
     if(existingCheck.wasSuccessful())
         for(const QString& configDocPath : existingList)
-            mExistingDocuments.insert(Xml::DataDocHandle{Xml::PlatformsDoc::TYPE_NAME, QFileInfo(configDocPath).baseName()}); //TODO: Possibly make ConfigDoc a decendent type of DataDoc so that this string reference is more generic
+            mExistingDocuments.insert(Xml::DataDocHandle{Xml::ConfigDoc::TYPE_NAME, QFileInfo(configDocPath).baseName()});
 
     return existingCheck;
 }

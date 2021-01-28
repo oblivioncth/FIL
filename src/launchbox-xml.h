@@ -204,6 +204,17 @@ public:
         QString writeOutOf();
     };
 
+    class ConfigDoc : public DataDoc
+    {
+    //-Class Variables-----------------------------------------------------------------------------------------------------
+    public:
+        static inline const QString TYPE_NAME = "Config";
+
+    //-Constructor--------------------------------------------------------------------------------------------------------
+    protected:
+        explicit ConfigDoc(std::unique_ptr<QFile> xmlFile, DataDocHandle handle);
+    };
+
     class PlatformDoc : public DataDoc
     {
         friend class PlatformDocReader;
@@ -335,7 +346,7 @@ public:
         bool writePlaylistGame(const PlaylistGame& playlistGame);
     };
 
-    class PlatformsDoc : public DataDoc
+    class PlatformsDoc : public ConfigDoc
     {
         friend class PlatformsDocReader;
         friend class PlatformsDocWriter;
@@ -343,7 +354,6 @@ public:
 
     //-Class Variables-----------------------------------------------------------------------------------------------------
     public:
-        static inline const QString TYPE_NAME = "Config";
         static inline const QString STD_NAME = "Platforms";
 
     //-Instance Variables--------------------------------------------------------------------------------------------------

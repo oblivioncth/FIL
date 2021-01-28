@@ -127,6 +127,15 @@ void Xml::DataDocWriter::writeEmptyCheckedTextElement(const QString& qualifiedNa
 }
 
 //===============================================================================================================
+// Xml::ConfigDoc
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Public:
+Xml::ConfigDoc::ConfigDoc(std::unique_ptr<QFile> xmlFile, DataDocHandle handle)
+    : DataDoc(std::move(xmlFile), handle) {}
+
+//===============================================================================================================
 // Xml::PlatformDoc
 //===============================================================================================================
 
@@ -689,7 +698,7 @@ bool Xml::PlaylistDocWriter::writePlaylistGame(const PlaylistGame& playlistGame)
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
 Xml::PlatformsDoc::PlatformsDoc(std::unique_ptr<QFile> xmlFile, const Key&)
-    : DataDoc(std::move(xmlFile), DataDocHandle{Xml::PlatformsDoc::TYPE_NAME, Xml::PlatformsDoc::STD_NAME}) {}
+    : ConfigDoc(std::move(xmlFile), DataDocHandle{Xml::PlatformsDoc::TYPE_NAME, Xml::PlatformsDoc::STD_NAME}) {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
