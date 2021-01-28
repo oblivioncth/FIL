@@ -308,8 +308,9 @@ public:
                                                                         {DBTable_Playlist_Game::NAME, DBTable_Playlist_Game::COLUMN_LIST}};
     static inline const QString GENERAL_QUERY_SIZE_COMMAND = "COUNT(1)";
 
-    static inline const QString GAME_ONLY_FILTER = DBTable_Game::COL_LIBRARY + " == '" + DBTable_Game::ENTRY_GAME_LIBRARY + "'";
-    static inline const QString ANIM_ONLY_FILTER = DBTable_Game::COL_LIBRARY + " == '" + DBTable_Game::ENTRY_ANIM_LIBRARY + "'";
+    static inline const QString GAME_ONLY_FILTER = DBTable_Game::COL_LIBRARY + " = '" + DBTable_Game::ENTRY_GAME_LIBRARY + "'";
+    static inline const QString ANIM_ONLY_FILTER = DBTable_Game::COL_LIBRARY + " = '" + DBTable_Game::ENTRY_ANIM_LIBRARY + "'";
+    static inline const QString GAME_AND_ANIM_FILTER = "(" + GAME_ONLY_FILTER + " OR " + ANIM_ONLY_FILTER + ")";
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:

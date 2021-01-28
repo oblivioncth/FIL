@@ -106,9 +106,9 @@ void MainWindow::initializeForms()
                                                     ui->checkBox_removeMissing->text(),
                                                     ui->action_includeExtreme->text());
 
-    mArgedImageModeHelp = MSG_IMAGE_MODE_HELP.arg((ui->radioButton_copy->text(),
+    mArgedImageModeHelp = MSG_IMAGE_MODE_HELP.arg(ui->radioButton_copy->text(),
                                                    ui->radioButton_reference->text(),
-                                                   ui->radioButton_link->text()));
+                                                   ui->radioButton_link->text());
 
     // Setup main forms
     ui->radioButton_link->setEnabled(mHasLinkPermissions);

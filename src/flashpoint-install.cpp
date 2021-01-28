@@ -678,12 +678,10 @@ QSqlError Install::initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QSet<QSt
                 DBTable_Game::COL_PLATFORM + " = " + placeholder + " AND ";
 
         // Handle filtering
-        QString filteredQueryCommand = baseQueryCommand.append(inclusionOptions.includeAnimations ? "(" + DBTable_Game::COL_LIBRARY + " = '" + DBTable_Game::ENTRY_GAME_LIBRARY + "' OR "
-                                                                                                         + DBTable_Game::COL_LIBRARY + " = '" + DBTable_Game::ENTRY_ANIM_LIBRARY + "')"
-                                                                                                   :  DBTable_Game::COL_LIBRARY + " = '" + DBTable_Game::ENTRY_GAME_LIBRARY + "'");
+        QString filteredQueryCommand = baseQueryCommand.append(inclusionOptions.includeAnimations ? GAME_AND_ANIM_FILTER : GAME_ONLY_FILTER);
 
         if(!inclusionOptions.includeExtreme)
-            filteredQueryCommand += DBTable_Game::COL_EXTREME + " = '0'";
+            filteredQueryCommand += " AND " + DBTable_Game::COL_EXTREME + " = '0'";
 
         QString mainQueryCommand = filteredQueryCommand.arg("`" + DBTable_Game::COLUMN_LIST.join("`,`") + "`");
         QString sizeQueryCommand = filteredQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);

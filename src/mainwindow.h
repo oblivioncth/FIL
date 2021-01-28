@@ -34,7 +34,7 @@ private:
     //static const int IMPORT_UI_UPD_INTERVAL = 17; // Workaround update tick speed in ms
 
     // UI Text
-    static inline const QString REQUIRE_ELEV = " [Run as Admin or enable Dev Mode]";
+    static inline const QString REQUIRE_ELEV = " [Run as Admin/Dev Mode]";
 
     // Messages - General
     static inline const QString MSG_FATAL_NO_INTERNAL_CLIFP_VER = "Failed to get version information from the internal copy of CLIFp.exe!\n"

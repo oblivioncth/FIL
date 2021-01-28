@@ -288,7 +288,6 @@ Qx::IOOpReport Install::populateExistingDocs()
     return existingCheck;
 }
 
-
 Qx::XmlStreamReaderError Install::openPlatformDoc(std::unique_ptr<Xml::PlatformDoc>& returnBuffer, QString name, UpdateOptions updateOptions)
 {
     // Create doc file reference
@@ -493,6 +492,7 @@ void Install::softReset()
 {
     mModifiedXMLDocuments.clear();
     mPurgableImages.clear();
+    mLeasedHandles.clear();
     mLBDatabaseIDTracker = Qx::FreeIndexTracker<int>(0, -1);
 }
 
