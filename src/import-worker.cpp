@@ -306,6 +306,9 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     // Set image references if applicable
     if(mOptionSet.imageMode == LB::Install::Reference)
     {
+        // Update progress dialog label
+        emit progressStepChanged(STEP_SETTING_IMAGE_REFERENCES);
+
         // Open platforms document
         std::unique_ptr<LB::Xml::PlatformsDoc> platformConfigXML;
         LB::Xml::DataDocHandle requestHandle = {LB::Xml::PlatformsDoc::TYPE_NAME, LB::Xml::PlatformsDoc::STD_NAME}; // For errors only
@@ -413,6 +416,13 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
                                            LB::Xml::formatDataDocError(LB::Xml::ERR_WRITE_FAILED, docRequest), saveError);
             return Failed;
         }
+    }
+
+    // Check for final cancellation
+    if(mCanceled)
+    {
+        errorReport = Qx::GenericError();
+        return Canceled;
     }
 
     // Reset install

@@ -36,6 +36,7 @@ public:
     static inline const QString STEP_IMPORTING_PLATFORM_GAMES = "Importing games for platform %1...";
     static inline const QString STEP_IMPORTING_PLATFORM_ADD_APPS = "Importing additional apps for platform %1...";
     static inline const QString STEP_IMPORTING_PLAYLIST_GAMES = "Importing playlist %1...";
+    static inline const QString STEP_SETTING_IMAGE_REFERENCES = "Setting image references...";
 
     // Import Errors
     static inline const QString MSG_FP_DB_CANT_CONNECT = "Failed to establish a handle to the Flashpoint database:";
