@@ -421,7 +421,7 @@ bool MainWindow::isExistingPlaylistSelected()
     for(int i = 0; i < ui->listWidget_playlistChoices->count(); i++)
     {
         if(ui->listWidget_playlistChoices->item(i)->checkState() == Qt::Checked &&
-           mLaunchBoxInstall->getExistingPlaylists().contains(LB::Install::makeFileNameLBKosher(ui->listWidget_platformChoices->item(i)->text())))
+           mLaunchBoxInstall->getExistingPlaylists().contains(LB::Install::makeFileNameLBKosher(ui->listWidget_playlistChoices->item(i)->text())))
             return true;
     }
 
