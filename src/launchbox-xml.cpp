@@ -411,7 +411,7 @@ bool Xml::PlatformDocWriter::writeGame(const Game& game)
     mStreamWriter.writeEndElement();
 
     // Return error status
-    return mStreamWriter.hasError();
+    return !mStreamWriter.hasError();
 }
 
 bool Xml::PlatformDocWriter::writeAddApp(const AddApp& addApp)
@@ -435,7 +435,7 @@ bool Xml::PlatformDocWriter::writeAddApp(const AddApp& addApp)
     mStreamWriter.writeEndElement();
 
     // Return error status
-    return mStreamWriter.hasError();
+    return !mStreamWriter.hasError();
 }
 
 //===============================================================================================================
@@ -636,7 +636,7 @@ bool Xml::PlaylistDocWriter::writePlaylistHeader(const PlaylistHeader& playlistH
     mStreamWriter.writeEndElement();
 
     // Return error status
-    return mStreamWriter.hasError();
+    return !mStreamWriter.hasError();
 }
 
 bool Xml::PlaylistDocWriter::writePlaylistGame(const PlaylistGame& playlistGame)
@@ -658,7 +658,7 @@ bool Xml::PlaylistDocWriter::writePlaylistGame(const PlaylistGame& playlistGame)
     mStreamWriter.writeEndElement();
 
     // Return error status
-    return mStreamWriter.hasError();
+    return !mStreamWriter.hasError();
 }
 
 //===============================================================================================================
@@ -830,7 +830,7 @@ bool Xml::PlatformsDocWriter::writePlatform(const Platform& platform)
     mStreamWriter.writeEndElement();
 
     // Return error status
-    return mStreamWriter.hasError();
+    return !mStreamWriter.hasError();
 }
 
 bool Xml::PlatformsDocWriter::writePlatformFolder(const QString& platform, const QString& mediaType, const QString& folderPath)
@@ -847,7 +847,7 @@ bool Xml::PlatformsDocWriter::writePlatformFolder(const QString& platform, const
     mStreamWriter.writeEndElement();
 
     // Return error status
-    return mStreamWriter.hasError();
+    return !mStreamWriter.hasError();
 }
 
 bool Xml::PlatformsDocWriter::writePlatformCategory(const PlatformCategory& platformCategory)
@@ -867,7 +867,7 @@ bool Xml::PlatformsDocWriter::writePlatformCategory(const PlatformCategory& plat
     mStreamWriter.writeEndElement();
 
     // Return error status
-    return mStreamWriter.hasError();
+    return !mStreamWriter.hasError();
 }
 
 //===============================================================================================================
