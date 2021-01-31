@@ -544,7 +544,7 @@ void MainWindow::prepareImport()
     // Warn user if they are changing existing files
     if(mLaunchBoxInstall->getExistingPlatforms().intersects(getSelectedPlatforms(true)) ||
        mLaunchBoxInstall->getExistingPlaylists().intersects(getSelectedPlaylists(true)) ||
-       getSelectedPlaylistGameMode() == LB::Install::ForceAll)
+       (getSelectedPlaylistGameMode() == LB::Install::ForceAll && mLaunchBoxInstall->getExistingPlatforms().count() > 0))
         if(QMessageBox::warning(this, QApplication::applicationName(), MSG_PRE_EXISTING_IMPORT, QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel) == QMessageBox::Cancel)
             return;
 
