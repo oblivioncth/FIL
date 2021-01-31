@@ -348,7 +348,7 @@ ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& erro
             // Advance to next record
             currentPlaylistGameResult.result.next();
 
-            // Only process the playlist game if it was included in import (TODO: Possibly implement checking all other Platform xmls for presence of this game)
+            // Only process the playlist game if it was included in import
             if(mPlaylistGameDetailsCache.contains(QUuid(currentPlaylistGameResult.result.value(FP::Install::DBTable_Playlist_Game::COL_GAME_ID).toString())))
             {
                 // Form game from record

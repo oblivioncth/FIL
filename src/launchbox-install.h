@@ -14,11 +14,6 @@ namespace LB {
 
 class Install
 {
-//-Class Forward Declarations--------------------------------------------------------------------------------------
-public:
-    class XMLReaderLegacy; // TODO: Rework into genericized class child
-    class XMLWriterLegacy; // TODO: Rework into genericized class child
-
 //-Class Enums---------------------------------------------------------------------------------------------------
 public:
     enum ImageMode {Copy, Reference, Link};

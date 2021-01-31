@@ -126,6 +126,12 @@ void Xml::DataDocWriter::writeEmptyCheckedTextElement(const QString& qualifiedNa
         mStreamWriter.writeTextElement(qualifiedName, text);
 }
 
+void Xml::DataDocWriter::writeOtherFields(const QHash<QString, QString>& otherFields)
+{
+    for(QHash<QString, QString>::const_iterator i = otherFields.constBegin(); i != otherFields.constEnd(); ++i)
+        writeEmptyCheckedTextElement(i.key(), i.value());
+}
+
 //===============================================================================================================
 // Xml::ConfigDoc
 //===============================================================================================================
@@ -398,23 +404,14 @@ bool Xml::PlatformDocWriter::writeGame(const Game& game)
     writeEmptyCheckedTextElement(Element_Game::ELEMENT_VERSION, game.getVersion());
     writeEmptyCheckedTextElement(Element_Game::ELEMENT_RELEASE_TYPE, game.getReleaseType());
 
-    if(mStreamWriter.hasError())
-        return false;
-
     // Write other tags
-    for(QHash<QString, QString>::const_iterator i = game.getOtherFields().constBegin(); i != game.getOtherFields().constEnd(); ++i)
-    {
-        writeEmptyCheckedTextElement(i.key(), i.value());
-
-        if(mStreamWriter.hasError())
-            return false;
-    }
+    writeOtherFields(game.getOtherFields());
 
     // Close game tag
     mStreamWriter.writeEndElement();
 
-    // Return true on success
-    return true;
+    // Return error status
+    return mStreamWriter.hasError();
 }
 
 bool Xml::PlatformDocWriter::writeAddApp(const AddApp& addApp)
@@ -431,23 +428,14 @@ bool Xml::PlatformDocWriter::writeAddApp(const AddApp& addApp)
     writeEmptyCheckedTextElement(Element_AddApp::ELEMENT_NAME, addApp.getName());
     writeEmptyCheckedTextElement(Element_AddApp::ELEMENT_WAIT_FOR_EXIT, addApp.isWaitForExit() ? "true" : "false");
 
-    if(mStreamWriter.hasError())
-        return false;
-
     // Write other tags
-    for(QHash<QString, QString>::const_iterator i = addApp.getOtherFields().constBegin(); i != addApp.getOtherFields().constEnd(); ++i)
-    {
-        writeEmptyCheckedTextElement(i.key(), i.value());
-
-        if(mStreamWriter.hasError())
-            return false;
-    }
+    writeOtherFields(addApp.getOtherFields());
 
     // Close game tag
     mStreamWriter.writeEndElement();
 
-    // Return true on success
-    return true;
+    // Return error status
+    return mStreamWriter.hasError();
 }
 
 //===============================================================================================================
@@ -641,23 +629,14 @@ bool Xml::PlaylistDocWriter::writePlaylistHeader(const PlaylistHeader& playlistH
     writeEmptyCheckedTextElement(Element_PlaylistHeader::ELEMENT_NESTED_NAME, playlistHeader.getNestedName());
     writeEmptyCheckedTextElement(Element_PlaylistHeader::ELEMENT_NOTES, playlistHeader.getNotes());
 
-    if(mStreamWriter.hasError())
-        return false;
-
     // Write other tags
-    for(QHash<QString, QString>::const_iterator i = playlistHeader.getOtherFields().constBegin(); i != playlistHeader.getOtherFields().constEnd(); ++i)
-    {
-        writeEmptyCheckedTextElement(i.key(), i.value());
-
-        if(mStreamWriter.hasError())
-            return false;
-    }
+    writeOtherFields(playlistHeader.getOtherFields());
 
     // Close game tag
     mStreamWriter.writeEndElement();
 
-    // Return true on success
-    return true;
+    // Return error status
+    return mStreamWriter.hasError();
 }
 
 bool Xml::PlaylistDocWriter::writePlaylistGame(const PlaylistGame& playlistGame)
@@ -672,23 +651,14 @@ bool Xml::PlaylistDocWriter::writePlaylistGame(const PlaylistGame& playlistGame)
     writeEmptyCheckedTextElement(Element_PlaylistGame::ELEMENT_MANUAL_ORDER, QString::number(playlistGame.getManualOrder()));
     writeEmptyCheckedTextElement(Element_PlaylistGame::ELEMENT_LB_DB_ID, QString::number(playlistGame.getLBDatabaseID()));
 
-    if(mStreamWriter.hasError())
-        return false;
-
     // Write other tags
-    for(QHash<QString, QString>::const_iterator i = playlistGame.getOtherFields().constBegin(); i != playlistGame.getOtherFields().constEnd(); ++i)
-    {
-        writeEmptyCheckedTextElement(i.key(), i.value());
-
-        if(mStreamWriter.hasError())
-            return false;
-    }
+    writeOtherFields(playlistGame.getOtherFields());
 
     // Close game tag
     mStreamWriter.writeEndElement();
 
-    // Return true on success
-    return true;
+    // Return error status
+    return mStreamWriter.hasError();
 }
 
 //===============================================================================================================
@@ -853,23 +823,14 @@ bool Xml::PlatformsDocWriter::writePlatform(const Platform& platform)
     // Write known tags
     writeEmptyCheckedTextElement(Element_Platform::ELEMENT_NAME, platform.getName());
 
-    if(mStreamWriter.hasError())
-        return false;
-
-    // Write other tags //TODO: Try to make this step generic for all Items
-    for(QHash<QString, QString>::const_iterator i = platform.getOtherFields().constBegin(); i != platform.getOtherFields().constEnd(); ++i)
-    {
-        writeEmptyCheckedTextElement(i.key(), i.value());
-
-        if(mStreamWriter.hasError())
-            return false;
-    }
+    // Write other tags
+    writeOtherFields(platform.getOtherFields());
 
     // Close game tag
     mStreamWriter.writeEndElement();
 
-    // Return true on success
-    return true;
+    // Return error status
+    return mStreamWriter.hasError();
 }
 
 bool Xml::PlatformsDocWriter::writePlatformFolder(const QString& platform, const QString& mediaType, const QString& folderPath)
@@ -882,14 +843,11 @@ bool Xml::PlatformsDocWriter::writePlatformFolder(const QString& platform, const
     writeEmptyCheckedTextElement(Element_PlatformFolder::ELEMENT_FOLDER_PATH, folderPath);
     writeEmptyCheckedTextElement(Element_PlatformFolder::ELEMENT_PLATFORM, platform);
 
-    if(mStreamWriter.hasError())
-        return false;
-
     // Close game tag
     mStreamWriter.writeEndElement();
 
-    // Return true on success
-    return true;
+    // Return error status
+    return mStreamWriter.hasError();
 }
 
 bool Xml::PlatformsDocWriter::writePlatformCategory(const PlatformCategory& platformCategory)
@@ -902,20 +860,14 @@ bool Xml::PlatformsDocWriter::writePlatformCategory(const PlatformCategory& plat
     if(mStreamWriter.hasError())
         return false;
 
-    // Write other tags //TODO: Try to make this step generic for all Items
-    for(QHash<QString, QString>::const_iterator i = platformCategory.getOtherFields().constBegin(); i != platformCategory.getOtherFields().constEnd(); ++i)
-    {
-        writeEmptyCheckedTextElement(i.key(), i.value());
-
-        if(mStreamWriter.hasError())
-            return false;
-    }
+    // Write other tags
+    writeOtherFields(platformCategory.getOtherFields());
 
     // Close game tag
     mStreamWriter.writeEndElement();
 
-    // Return true on success
-    return true;
+    // Return error status
+    return mStreamWriter.hasError();
 }
 
 //===============================================================================================================

@@ -199,6 +199,7 @@ public:
     protected:
         virtual bool writeSourceDoc() = 0;
         void writeEmptyCheckedTextElement(const QString &qualifiedName, const QString &text);
+        void writeOtherFields(const QHash<QString, QString>& otherFields);
 
     public:
         QString writeOutOf();
