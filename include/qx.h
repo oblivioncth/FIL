@@ -300,10 +300,10 @@ public:
     {
         // Determine programatic limit if "type max" (-1) is specified
         if(maxIndex < 0)
-            maxIndex = std::numeric_limits<T>::max();
+            mMaxIndex = std::numeric_limits<T>::max();
 
         // Insure initial values are valid
-        assert(minIndex >= 0 && minIndex <= maxIndex && (reservedIndicies.isEmpty() ||
+        assert(mMinIndex >= 0 && mMinIndex <= mMaxIndex && (reservedIndicies.isEmpty() ||
                (*std::min_element(reservedIndicies.begin(), reservedIndicies.end())) >= 0));
 
         // Change bounds to match initial reserve list if they are mismatched

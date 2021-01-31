@@ -70,6 +70,8 @@ private:
     QList<QString> mPurgableImages;
     QMap<QString, QString> mLinksToReverse;
     Qx::FreeIndexTracker<int> mLBDatabaseIDTracker = Qx::FreeIndexTracker<int>(0, -1, {});
+    // TODO: Even though the playlist game IDs dont seem to matter, at some for for completeness scann all playlists when hooking an install to get the
+    // full list of in use IDs
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
