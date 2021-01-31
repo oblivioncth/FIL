@@ -26,6 +26,7 @@ public:
     {
         LB::UpdateOptions updateOptions;
         LB::Install::ImageMode imageMode;
+        LB::Install::PlaylistGameMode playlistMode;
         FP::Install::InclusionOptions inclusionOptions;
     };
 
@@ -34,7 +35,9 @@ public:
     // Import Steps
     static inline const QString STEP_ADD_APP_PRELOAD = "Pre-loading Additional Apps...";
     static inline const QString STEP_IMPORTING_PLATFORM_GAMES = "Importing games for platform %1...";
+    static inline const QString STEP_IMPORTING_PLAYLIST_SPEC_GAMES = "Importing playlist specific games for platform %1...";
     static inline const QString STEP_IMPORTING_PLATFORM_ADD_APPS = "Importing additional apps for platform %1...";
+    static inline const QString STEP_IMPORTING_PLAYLIST_SPEC_ADD_APPS = "Importing playlist specific additional apps for platform %1...";
     static inline const QString STEP_IMPORTING_PLAYLIST_GAMES = "Importing playlist %1...";
     static inline const QString STEP_SETTING_IMAGE_REFERENCES = "Setting image references...";
 
@@ -48,11 +51,28 @@ public:
 
 //-Instance Variables--------------------------------------------------------------------------------------------
 private:
+    // Install links
     std::shared_ptr<FP::Install> mFlashpointInstall;
     std::shared_ptr<LB::Install> mLaunchBoxInstall;
+
+    // Job details
     ImportSelections mImportSelections;
     OptionSet mOptionSet;
+
+    // Job Caches
+    QSet<FP::AddApp> mAddAppsCache;
+    QHash<QUuid, FP::Playlist> mPlaylistsCache;
+    QHash<QUuid, LB::PlaylistGame::EntryDetails> mPlaylistGameDetailsCache;
+
+    // Progress Tracking
+    int mCurrentProgressValue;
+    int mMaximumProgressValue;
+
+    // Cancel Status
     bool mCanceled = false;
+
+    // Error Tracking
+    std::shared_ptr<int> mBlockingErrorResponse = std::make_shared<int>();
 
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
@@ -62,6 +82,14 @@ public:
                  OptionSet optionSet);
 
 //-Instance Functions---------------------------------------------------------------------------------------------------------
+private:
+    const QList<QUuid> preloadPlaylists(FP::Install::DBQueryBuffer& playlistQuery);
+    const QList<QUuid> getPlaylistSpecificGameIDs(FP::Install::DBQueryBuffer& playlistGameIDQuery);
+    ImportResult preloadAddApps(Qx::GenericError& errorReport, FP::Install::DBQueryBuffer& addAppQuery);
+    ImportResult processGames(Qx::GenericError& errorReport, QList<FP::Install::DBQueryBuffer>& gameQueries, bool playlistSpecific);
+    ImportResult setImageReferences(Qx::GenericError& errorReport, QSet<QString> platforms);
+    ImportResult processPlaylists(Qx::GenericError& errorReport, QList<FP::Install::DBQueryBuffer>& playlistGameQueries);
+
 public:
     ImportResult doImport(Qx::GenericError& errorReport);
 

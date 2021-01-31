@@ -41,15 +41,21 @@ private:
                                                                   "\n"
                                                                   "Execution cannot continue.";
     // Messages - Help
+    static inline const QString MSG_PLAYLIST_GAME_MODE_HELP = "<b>%1</b> - Games found in the selected playlists that are not part of any selected platform will be excluded.<br>"
+                                                              "<br>"
+                                                              "<b>%2</b> - Unselected platforms that contain games from the selected playlists will be partially imported, so that they only contain said games. This guarantees that all games "
+                                                              "from each selected playlist will be present in your collection. <i>NOTE:</i> It's possible that this will include existing platforms so make sure you have your update options set as "
+                                                              "intended.";
+
     static inline const QString MSG_UPDATE_MODE_HELP = "<b>%1</b> - Only games not already present in your collection will be added, existing entries will be left completely untouched.<br>"
                                                        "<br>"
                                                        "<b>%2</b> - Games not already present in your collection will be added and existing entries will have their descriptive metadata (i.e. Title, Author, Images etc.) replaced by the "
-                                                       "the details present in the target Flashpoint version; however, personal metadata (i.e. Playcount, Acheivements, etc.) will be be altered.<br>"
+                                                       "the details present in the target Flashpoint version; however, personal metadata (i.e. Playcount, Acheivements, etc.) will not be altered.<br>"
                                                        "<br>"
-                                                       "<b>%3</b> - Games in your collection that are not present in the target version of Flashpoint will be removed (only for selected platforms). You will no longer be able to play such "
+                                                       "<b>%3</b> - Games in your collection that are not present in the target version of Flashpoint will be removed (only for selected items). You will no longer be able to play such "
                                                        "games if this option is unchecked, but this may be useful for archival purposes or incase you later want to revert to a previous version of Flashpoint and maintain the entries personal "
                                                        "metadata. Note that this option will still cause missing games to be removed even if you are going backwards to a previous version of FP, as implied above. Additionally, this option will "
-                                                       "remove any existing Extreme games in your collection, for the select platforms, if you have the <b>%4</b> option unselected.";
+                                                       "remove any existing Extreme games in your collection, for the select platforms, if you have the <i>%4</i> option unselected.";
 
     static inline const QString MSG_IMAGE_MODE_HELP = "<b>%1</b> - All relevant images from Flashpoint will be fully copied into your LaunchBox installation. This causes zero overhead but will require additional storage space proportional to "
                                                       "the number of games you end up importing, up to double if all platforms are selected.<br>"
@@ -78,7 +84,7 @@ private:
     static inline const QString MSG_INSTALL_CONTENTS_CHANGED = "The contents of your installs have been changed since the initial scan and therefore must be re-evaluated. You will need to make your selections again.";
 
     // Messages - General import procedure
-    static inline const QString MSG_PRE_EXISTING_IMPORT = "You have selected one or more Platform(s)/Playlist(s) that already exist in your collection. These will be altered even if they did not orignate from this program (i.e. if you "
+    static inline const QString MSG_PRE_EXISTING_IMPORT = "One or more existing Platforms/Playlists may be affected by this import. These will be altered even if they did not orignate from this program (i.e. if you "
                                                           "already happened to have a Platform/Playlist with the same name as one present in Flashpoint).\n"
                                                           "\n"
                                                           "Are you sure you want to proceed?";
@@ -129,6 +135,7 @@ private:
     static inline const QString CAPTION_GENERAL_FATAL_ERROR = "Fatal Error!";
     static inline const QString CAPTION_LAUNCHBOX_BROWSE = "Select the root directory of your LaunchBox install...";
     static inline const QString CAPTION_FLASHPOINT_BROWSE = "Select the root directory of your Flashpoint install...";
+    static inline const QString CAPTION_PLAYLIST_GAME_MODE_HELP = "Playlist game mode options";
     static inline const QString CAPTION_UPDATE_MODE_HELP = "Update mode options";
     static inline const QString CAPTION_IMAGE_MODE_HELP = "Image mode options";\
     static inline const QString CAPTION_REVERT = "Reverting changes...";
@@ -145,6 +152,7 @@ private:
 //-Instance Variables--------------------------------------------------------------------------------------------
 private:
     Ui::MainWindow *ui;
+    QHash<QWidget*, std::function<bool(void)>> mWidgetEnableConditionMap;
     QColor mExistingItemColor;
 
     std::shared_ptr<LB::Install> mLaunchBoxInstall;
@@ -154,9 +162,12 @@ private:
     int mLineEdit_launchBoxPath_blocker = 0; // Required due to an oversight with QLineEdit::editingFinished()
     int mLineEdit_flashpointPath_blocker = 0; // Required due to an oversight with QLineEdit::editingFinished()
 
-    bool mHasLinkPermissions = false;
-    bool mAlteringListWidget = false;
+    QHash<QListWidgetItem*,Qt::CheckState> mPlatformItemCheckStates;
+    QHash<QListWidgetItem*,Qt::CheckState> mPlaylistItemCheckStates;
 
+    bool mHasLinkPermissions = false;
+
+    QString mArgedPlaylistGameModeHelp;
     QString mArgedUpdateModeHelp;
     QString mArgedImageModeHelp;
 
@@ -178,8 +189,7 @@ public:
 private:
     bool testForLinkPermissions();
     void initializeForms();
-    void setInputStage(InputStage stage);
-    void customSetUpdateGroupEnabled(bool enabled);
+    void initializeWidgetEnableConditionMap();
     void checkManualInstallInput(Install install);
     void validateInstall(QString installPath, Install install);
     void gatherInstallInfo();
@@ -189,17 +199,24 @@ private:
     bool installsHaveChanged();
     void redoInputChecks();
 
+    void clearListWidgets();
+    bool isExistingPlatformSelected();
+    bool isExistingPlaylistSelected();
+
     void postSqlError(QString mainText, QSqlError sqlError);
     void postListError(QString mainText, QStringList detailedItems);
     void postIOError(QString mainText, Qx::IOOpReport report);
     int postGenericError(Qx::GenericError error, QMessageBox::StandardButtons choices);
 
-    void importSelectionReaction(QListWidgetItem* item, QWidget* parent);
+    void refreshWidgetEnableStates();
+
     QSet<QString> getSelectedPlatforms(bool fileNameLegal = false) const;
     QSet<QString> getSelectedPlaylists(bool fileNameLegal = false) const;
     FP::Install::InclusionOptions getSelectedInclusionOptions() const;
     LB::UpdateOptions getSelectedUpdateOptions() const;
-    LB::Install::ImageMode getSelectedImageOption() const;
+    LB::Install::ImageMode getSelectedImageMode() const;
+    LB::Install::PlaylistGameMode getSelectedPlaylistGameMode() const;
+
     void prepareImport();
     void revertAllLaunchBoxChanges();
     void standaloneCLIFpDeploy();
@@ -216,6 +233,7 @@ private slots:
     void all_on_lineEdit_returnPressed();
     void all_on_pushButton_clicked();
     void all_on_listWidget_itemChanged(QListWidgetItem* item);
+    void all_on_radioButton_clicked();
 
     // Workaround update
     //void resetUpdateTimer();

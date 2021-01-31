@@ -735,6 +735,21 @@ public:
     static QString fromByteArrayHex(QByteArray data);
     static QString fromByteArrayHex(QByteArray data, QChar separator, Endian::Endianness endianness);
     static QString stripToHexOnly(QString string);
+
+    template<typename T, typename F>
+    static QString join(QList<T> list, QString separator, F&& toStringFunc)
+    {
+        QString conjuction;
+
+        for(int i = 0; i < list.length(); i++)
+        {
+            conjuction += toStringFunc(list.at(i));
+            if(i < list.length() - 1)
+                conjuction += separator;
+        }
+
+        return conjuction;
+    }
 };
 
 }

@@ -51,6 +51,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     QApplication::setApplicationName(VER_PRODUCTNAME_STR);
     mHasLinkPermissions = testForLinkPermissions();
     setWindowTitle(VER_PRODUCTNAME_STR);
+    initializeWidgetEnableConditionMap();
     initializeForms();
 
     // Setup UI update workaround timer
@@ -101,6 +102,9 @@ void MainWindow::initializeForms()
     ui->action_deployCLIFp->setText(ui->action_deployCLIFp->text() +  " " + mInternalCLIFpVersion.toString(Qx::MMRB::StringFormat::NoTrailRBZero));
 
     // Prepare help messages
+    mArgedPlaylistGameModeHelp = MSG_PLAYLIST_GAME_MODE_HELP.arg(ui->radioButton_selectedPlatformsOnly->text(),
+                                                                 ui->radioButton_forceAll->text());
+
     mArgedUpdateModeHelp = MSG_UPDATE_MODE_HELP.arg(ui->radioButton_onlyAdd->text(),
                                                     ui->radioButton_updateExisting->text(),
                                                     ui->checkBox_removeMissing->text(),
@@ -116,42 +120,24 @@ void MainWindow::initializeForms()
     if(!mHasLinkPermissions)
         ui->radioButton_link->setText(ui->radioButton_link->text().append(REQUIRE_ELEV));
     ui->radioButton_reference->setChecked(!mHasLinkPermissions);
-    setInputStage(InputStage::Paths);
+    refreshWidgetEnableStates();
 
     // TODO: THIS IS FOR DEBUG PURPOSES
     //checkLaunchBoxInput("C:/Users/Player/Desktop/LBTest/LaunchBox");
     //checkFlashpointInput("D:/FP/Flashpoint 8.1 Ultimate");
 }
 
-void MainWindow::setInputStage(InputStage stage)
+void MainWindow::initializeWidgetEnableConditionMap()
 {
-    switch(stage)
-    {
-        case InputStage::Paths:
-            ui->groupBox_importSelection->setEnabled(false);
-            mAlteringListWidget = true;
-            ui->listWidget_platformChoices->clear();
-            ui->listWidget_playlistChoices->clear();
-            mAlteringListWidget = false;
-            customSetUpdateGroupEnabled(false);
-            ui->groupBox_imageMode->setEnabled(false);
-            ui->pushButton_startImport->setEnabled(false);
-        break;
-
-        case InputStage::Imports:
-            ui->groupBox_importSelection->setEnabled(true);
-            ui->groupBox_imageMode->setEnabled(true);
-        break;
-    }
-}
-
-void MainWindow::customSetUpdateGroupEnabled(bool enabled)
-{
-    ui->radioButton_onlyAdd->setEnabled(enabled);
-    ui->radioButton_updateExisting->setEnabled(enabled);
-    ui->checkBox_removeMissing->setEnabled(enabled);
-    ui->pushButton_updateModeHelp->setEnabled(enabled);
-    ui->radioButton_onlyAdd->setEnabled(enabled);
+    // Populate hashmap of ui element enable conditions
+    mWidgetEnableConditionMap[ui->groupBox_importSelection] = [&](){ return mLaunchBoxInstall && mFlashpointInstall; };
+    mWidgetEnableConditionMap[ui->groupBox_playlistGameMode] = [&](){ return getSelectedPlaylists().count() > 0; };
+    mWidgetEnableConditionMap[ui->groupBox_updateMode] = [&](){ return isExistingPlatformSelected() ||
+                                                                       isExistingPlaylistSelected() ||
+                                                                       getSelectedPlaylistGameMode() ==  LB::Install::ForceAll;};
+    mWidgetEnableConditionMap[ui->groupBox_imageMode] = [&](){ return mLaunchBoxInstall && mFlashpointInstall; };
+    mWidgetEnableConditionMap[ui->pushButton_startImport] = [&](){ return getSelectedPlatforms().count() > 0 ||
+                                                                          (getSelectedPlaylistGameMode() == LB::Install::ForceAll && getSelectedPlaylists().count() > 0); };
 }
 
 void MainWindow::checkManualInstallInput(Install install)
@@ -162,11 +148,13 @@ void MainWindow::checkManualInstallInput(Install install)
     switch(install)
     {
         case Install::LaunchBox:
+            mLaunchBoxInstall.reset(); // Detach from previous install if present
             pathSource = ui->lineEdit_launchBoxPath;
             installStatusIcon = ui->icon_launchBox_install_status;
             break;
 
         case Install::Flashpoint:
+            mFlashpointInstall.reset(); // Detach from previous install if present
             pathSource = ui->lineEdit_flashpointPath;
             installStatusIcon = ui->icon_flashpoint_install_status;
             break;
@@ -178,7 +166,8 @@ void MainWindow::checkManualInstallInput(Install install)
     else
     {
         installStatusIcon->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-        setInputStage(InputStage::Paths);
+        clearListWidgets();
+        refreshWidgetEnableStates();
     }
 }
 
@@ -187,6 +176,7 @@ void MainWindow::validateInstall(QString installPath, Install install)
     switch(install)
     {
         case Install::LaunchBox:
+            mLaunchBoxInstall.reset(); // Detach from previous install if present
             if(LB::Install::pathIsValidInstall(installPath))
             {
                 mLaunchBoxInstall = std::make_shared<LB::Install>(installPath);
@@ -195,13 +185,14 @@ void MainWindow::validateInstall(QString installPath, Install install)
             else
             {
                 ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-                mLaunchBoxInstall.reset();
-                setInputStage(InputStage::Paths);
+                clearListWidgets();
+                refreshWidgetEnableStates();
                 QMessageBox::critical(this, QApplication::applicationName(), MSG_LB_INSTALL_INVALID);
             }
             break;
 
         case Install::Flashpoint:
+            mFlashpointInstall.reset(); // Detach from previous install if present
             FP::Install::ValidityReport fpValidity = FP::Install::checkInstallValidity(installPath, FP::Install::CompatLevel::Full);
             if(fpValidity.installValid)
             {
@@ -218,8 +209,8 @@ void MainWindow::validateInstall(QString installPath, Install install)
             else
             {
                 ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-                mFlashpointInstall.reset();
-                setInputStage(InputStage::Paths);
+                clearListWidgets();
+                refreshWidgetEnableStates();
                 postGenericError(Qx::GenericError(Qx::GenericError::Critical, MSG_FP_INSTALL_INVALID, fpValidity.details), QMessageBox::Ok);
             }
             break;
@@ -236,33 +227,33 @@ void MainWindow::gatherInstallInfo()
     {
         if(parseLaunchBoxData())
         {
-            // Show selections
+            // Show selection options
             populateImportSelectionBoxes();
 
             // Advance to next input stage
-            setInputStage(InputStage::Imports);
+            refreshWidgetEnableStates();
         }
         else
         {
             mLaunchBoxInstall.reset();
             ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-            setInputStage(InputStage::Paths);
+            clearListWidgets();
+            refreshWidgetEnableStates();
         }
     }
     else
     {
         mFlashpointInstall.reset();
         ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-        setInputStage(InputStage::Paths);
+        clearListWidgets();
+        refreshWidgetEnableStates();
     }
 }
 
 void MainWindow::populateImportSelectionBoxes()
 {
     // Populate import selection boxes
-    mAlteringListWidget = true;
-    ui->listWidget_platformChoices->clear();
-    ui->listWidget_playlistChoices->clear();
+    clearListWidgets();
     ui->listWidget_platformChoices->addItems(mFlashpointInstall->getPlatformList());
     ui->listWidget_playlistChoices->addItems(mFlashpointInstall->getPlaylistList());
 
@@ -289,10 +280,8 @@ void MainWindow::populateImportSelectionBoxes()
             currentItem->setBackground(QBrush(mExistingItemColor));
     }
 
-    mAlteringListWidget = false;
-
     // Disable update mode box and import start button since no items will be selected after this operation
-    customSetUpdateGroupEnabled(false);
+    ui->groupBox_updateMode->setEnabled(false);
     ui->pushButton_startImport->setEnabled(false);
 }
 
@@ -399,13 +388,45 @@ void MainWindow::redoInputChecks()
     QString launchBoxPath = mLaunchBoxInstall->getPath();
     QString flashpointPath = mFlashpointInstall->getPath();
 
-    // Clear existing installs
-    mLaunchBoxInstall.reset();
-    mFlashpointInstall.reset();
-
     // Check them again
     validateInstall(launchBoxPath, Install::LaunchBox);
     validateInstall(flashpointPath, Install::Flashpoint);
+}
+
+void MainWindow::clearListWidgets()
+{
+    ui->listWidget_platformChoices->clear();
+    ui->listWidget_playlistChoices->clear();
+    mPlatformItemCheckStates.clear();
+    mPlaylistItemCheckStates.clear();
+}
+
+bool MainWindow::isExistingPlatformSelected()
+{
+    // Check platform choices
+    for(int i = 0; i < ui->listWidget_platformChoices->count(); i++)
+    {
+        if(ui->listWidget_platformChoices->item(i)->checkState() == Qt::Checked &&
+           mLaunchBoxInstall->getExistingPlatforms().contains(LB::Install::makeFileNameLBKosher(ui->listWidget_platformChoices->item(i)->text())))
+            return true;
+    }
+
+    // Return false if no match
+    return false;
+}
+
+bool MainWindow::isExistingPlaylistSelected()
+{
+    // Check platform choices
+    for(int i = 0; i < ui->listWidget_playlistChoices->count(); i++)
+    {
+        if(ui->listWidget_playlistChoices->item(i)->checkState() == Qt::Checked &&
+           mLaunchBoxInstall->getExistingPlaylists().contains(LB::Install::makeFileNameLBKosher(ui->listWidget_platformChoices->item(i)->text())))
+            return true;
+    }
+
+    // Return false if no match
+    return false;
 }
 
 void MainWindow::postSqlError(QString mainText, QSqlError sqlError)
@@ -459,55 +480,11 @@ int MainWindow::postGenericError(Qx::GenericError error, QMessageBox::StandardBu
     return genericErrorMessage.exec();
 }
 
-void MainWindow::importSelectionReaction(QListWidgetItem* item, QWidget* parent)
+void MainWindow::refreshWidgetEnableStates()
 {
-    // TODO: Some code here is leftover from when playlist selection could trigger this function. Possibly no longer needed
-    if(item->checkState() == Qt::Checked)
-    {
-        ui->pushButton_startImport->setEnabled(true);
-        if(parent == ui->listWidget_platformChoices &&
-                mLaunchBoxInstall->getExistingPlatforms().contains(LB::Install::makeFileNameLBKosher(item->text())))
-            customSetUpdateGroupEnabled(true);
-//        customSetUpdateGroupEnabled((parent == ui->listWidget_platformChoices && mLaunchBoxInstall->getExistingPlatforms().contains(item->text())) ||
-//                                            (parent == ui->listWidget_playlistChoices && mLaunchBoxInstall->getExistingPlaylists().contains(item->text())));
-    }
-    else
-    {
-        bool keepUpdateGroupEnabled = false;
-        bool keepStartButtonEnabled = false;
-
-        // Check platform choices
-        for(int i = 0; i < ui->listWidget_platformChoices->count(); i++)
-        {
-            if(ui->listWidget_platformChoices->item(i)->checkState() == Qt::Checked)
-            {
-                keepStartButtonEnabled = true;
-
-                if(mLaunchBoxInstall->getExistingPlatforms().contains(LB::Install::makeFileNameLBKosher(ui->listWidget_platformChoices->item(i)->text())))
-                    keepUpdateGroupEnabled = true;
-            }
-        }
-
-//        // Check playlist choices if needed
-//        if(!keepUpdateGroupEnabled || !keepStartButtonEnabled)
-//        {
-//            for(int i = 0; i < ui->listWidget_playlistChoices->count(); i++)
-//            {
-//                if(ui->listWidget_playlistChoices->item(i)->checkState() == Qt::Checked)
-//                {
-//                    keepStartButtonEnabled = true;
-
-//                    if(mLaunchBoxInstall->getExistingPlaylists().contains(ui->listWidget_playlistChoices->item(i)->text()))
-//                        keepUpdateGroupEnabled = true;
-//                }
-//            }
-//        }
-
-        // Apply state changes
-        customSetUpdateGroupEnabled(keepUpdateGroupEnabled);
-        ui->pushButton_startImport->setEnabled(keepStartButtonEnabled);
-    }
-
+    QHash<QWidget*, std::function<bool(void)>>::const_iterator i;
+    for(i = mWidgetEnableConditionMap.begin(); i != mWidgetEnableConditionMap.end(); i++)
+        i.key()->setEnabled(i.value()());
 }
 
 QSet<QString> MainWindow::getSelectedPlatforms(bool fileNameLegal) const
@@ -544,9 +521,14 @@ LB::UpdateOptions MainWindow::getSelectedUpdateOptions() const
     return {ui->radioButton_onlyAdd->isChecked() ? LB::OnlyNew : LB::NewAndExisting, ui->checkBox_removeMissing->isChecked() };
 }
 
-LB::Install::ImageMode MainWindow::getSelectedImageOption() const
+LB::Install::ImageMode MainWindow::getSelectedImageMode() const
 {
     return ui->radioButton_copy->isChecked() ? LB::Install::Copy : ui->radioButton_reference->isChecked() ? LB::Install::Reference : LB::Install::Link;
+}
+
+LB::Install::PlaylistGameMode MainWindow::getSelectedPlaylistGameMode() const
+{
+    return ui->radioButton_selectedPlatformsOnly->isChecked() ? LB::Install::SelectedPlatform : LB::Install::ForceAll;
 }
 
 void MainWindow::prepareImport()
@@ -560,7 +542,9 @@ void MainWindow::prepareImport()
     }
 
     // Warn user if they are changing existing files
-    if(mLaunchBoxInstall->getExistingPlatforms().intersects(getSelectedPlatforms(true)) || mLaunchBoxInstall->getExistingPlaylists().intersects(getSelectedPlaylists(true)))
+    if(mLaunchBoxInstall->getExistingPlatforms().intersects(getSelectedPlatforms(true)) ||
+       mLaunchBoxInstall->getExistingPlaylists().intersects(getSelectedPlaylists(true)) ||
+       getSelectedPlaylistGameMode() == LB::Install::ForceAll)
         if(QMessageBox::warning(this, QApplication::applicationName(), MSG_PRE_EXISTING_IMPORT, QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel) == QMessageBox::Cancel)
             return;
 
@@ -600,7 +584,7 @@ void MainWindow::prepareImport()
         // Setup import worker
         ImportWorker importWorker(mFlashpointInstall, mLaunchBoxInstall,
                                   {getSelectedPlatforms(), getSelectedPlaylists()},
-                                  {getSelectedUpdateOptions(), getSelectedImageOption(), getSelectedInclusionOptions()});
+                                  {getSelectedUpdateOptions(), getSelectedImageMode(), getSelectedPlaylistGameMode(), getSelectedInclusionOptions()});
 
         // Setup blocking error connection
         connect(&importWorker, &ImportWorker::blockingErrorOccured, this, &MainWindow::handleBlockingError);
@@ -804,6 +788,8 @@ void MainWindow::all_on_pushButton_clicked()
         for(int i = 0; i < ui->listWidget_playlistChoices->count(); i++)
             ui->listWidget_playlistChoices->item(i)->setCheckState(Qt::Unchecked);
     }
+    else if(senderPushButton == ui->pushButton_playlistGameModeHelp)
+        QMessageBox::information(this, CAPTION_PLAYLIST_GAME_MODE_HELP, mArgedPlaylistGameModeHelp);
     else if(senderPushButton == ui->pushButton_updateModeHelp)
         QMessageBox::information(this, CAPTION_UPDATE_MODE_HELP, mArgedUpdateModeHelp);
     else if(senderPushButton == ui->pushButton_imageModeHelp)
@@ -889,25 +875,53 @@ void MainWindow::all_on_lineEdit_returnPressed() // Required due to an oversight
 void MainWindow::all_on_listWidget_itemChanged(QListWidgetItem* item) // Proxy for "onItemChecked"
 {
     // Get the object that called this slot
-    QListWidget* senderListWidget = qobject_cast<QListWidget *>(sender());
+    QListWidget* senderListWidget = qobject_cast<QListWidget*>(sender());
 
     // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
     if(senderListWidget == nullptr)
-        throw std::runtime_error("Pointer conversion to line edit failed");
+        throw std::runtime_error("Pointer conversion to list widget failed");
 
     if(senderListWidget == ui->listWidget_platformChoices)
     {
-        if(!mAlteringListWidget)
-            importSelectionReaction(item, ui->listWidget_platformChoices);
+        // Check if change was change in check state
+        if(mPlatformItemCheckStates.contains(item) && item->checkState() != mPlatformItemCheckStates.value(item))
+            refreshWidgetEnableStates();
+
+        // Add/update check state
+        mPlatformItemCheckStates[item] = item->checkState();
     }
-//    else if(senderListWidget == ui->listWidget_playlistChoices && !mAlteringListWidget) TODO: Playlists currently only get games from selected platforms,
-//        importSelectionReaction(item, ui->listWidget_playlistChoices);                        so triggering this here is no longer required. Possibly remove
+    else if(senderListWidget == ui->listWidget_playlistChoices)
+    {
+        // Check if change was change in check state
+        if(mPlaylistItemCheckStates.contains(item) && item->checkState() != mPlaylistItemCheckStates.value(item))
+            refreshWidgetEnableStates();
+
+        // Add/update check state
+        mPlaylistItemCheckStates[item] = item->checkState();
+    }
     else
         throw std::runtime_error("Unhandled use of all_on_listWidget_itemChanged() slot");
 }
 
 //void MainWindow::resetUpdateTimer() { mUIUpdateWorkaroundTimer.start(); }
 //void MainWindow::updateUI() { QApplication::processEvents(); }
+
+void MainWindow::all_on_radioButton_clicked()
+{
+    // Get the object that called this slot
+    QRadioButton* senderRadioButton = qobject_cast<QRadioButton*>(sender());
+
+    // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
+    if(senderRadioButton == nullptr)
+        throw std::runtime_error("Pointer conversion to radio button failed");
+
+    if(senderRadioButton == ui->radioButton_selectedPlatformsOnly)
+        refreshWidgetEnableStates();
+    else if(senderRadioButton == ui->radioButton_forceAll)
+        refreshWidgetEnableStates();
+    else
+        throw std::runtime_error("Unhandled use of all_on_radioButton_clicked() slot");
+}
 
 void MainWindow::handleBlockingError(std::shared_ptr<int> response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices)
 {

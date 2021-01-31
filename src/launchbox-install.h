@@ -22,6 +22,7 @@ public:
 //-Class Enums---------------------------------------------------------------------------------------------------
 public:
     enum ImageMode {Copy, Reference, Link};
+    enum PlaylistGameMode {SelectedPlatform, ForceAll};
 
 //-Class Variables--------------------------------------------------------------------------------------------------
 public:

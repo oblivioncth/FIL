@@ -35,7 +35,7 @@ public:
     {
         QString source;
         QSqlQuery result;
-        int size;
+        int size = 0;
     };
 
     struct Config
@@ -371,10 +371,12 @@ public:
     bool deployCLIFp(QString &errorMessage);
 
     // Queries - OFLIb
-    QSqlError initialGameQuery(QList<DBQueryBuffer>& resultBuffer, QSet<QString> selectedPlatforms, InclusionOptions inclusionOptions) const;
-    QSqlError initialAddAppQuery(DBQueryBuffer& resultBuffer) const;
-    QSqlError initialPlaylistQuery(DBQueryBuffer& resultBuffer, QSet<QString> selectedPlaylists) const;
-    QSqlError initialPlaylistGameQuery(QList<DBQueryBuffer>& resultBuffer, const QList<QUuid>& knownPlaylistsToQuery) const;
+    QSqlError queryGamesByPlatform(QList<DBQueryBuffer>& resultBuffer, QSet<QString> platforms, InclusionOptions inclusionOptions,
+                                   const QList<QUuid>& idFilter = {}) const;
+    QSqlError queryAllAddApps(DBQueryBuffer& resultBuffer) const;
+    QSqlError queryPlaylistsByName(DBQueryBuffer& resultBuffer, QSet<QString> playlists) const;
+    QSqlError queryPlaylistGamesByPlaylist(QList<DBQueryBuffer>& resultBuffer, const QList<QUuid>& playlistIDs) const;
+    QSqlError queryPlaylistGameIDs(DBQueryBuffer& resultBuffer, const QList<QUuid>& playlistIDs) const;
 
     // Queries - CLIFp
     QSqlError queryEntryByID(DBQueryBuffer& resultBuffer, QUuid appID) const;
