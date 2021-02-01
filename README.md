@@ -59,6 +59,7 @@ Currently the following fields in LaunchBox will be populated for each game, whi
 - Source
 - Release Date
 - Version
+- Library
 
 ## Usage
 ### Primary Usage
