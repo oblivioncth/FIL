@@ -35,7 +35,7 @@ Each release of this application targets a specific version or versions of BlueM
 | 0.1.1          | 0.1.1                 | 8.2 ("Approaching Planet Nine") |
 | 0.1.2, 0.1.2.1 | 0.3                   | 8.2 ("Approaching Planet Nine") |
 | 0.1.3          | 0.3.2                 | 9.0 ("Glorious Sunset")         |
-| 0.3            | 0.4                   | 9.0 ("Glorious Sunset")         |
+| 0.3, 0.3.0.1   | 0.4                   | 9.0 ("Glorious Sunset")         |
 
 Using a version of OFILb that does not target the version of Flashpoint you wish to use it with is highly discouraged as some features may not work correctly or at all and in some cases the utility may fail to function entirely or even damage the Flashpoint install it is used with.
 
