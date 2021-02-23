@@ -93,7 +93,7 @@ private:
    QSet<QString> getExistingDocs(QString type) const;
 
 public:
-   Qx::IOOpReport populateExistingDocs();
+   Qx::IOOpReport populateExistingDocs(QStringList platformMatches, QStringList playlistMatches);
 
    Qx::XmlStreamReaderError openPlatformDoc(std::unique_ptr<Xml::PlatformDoc>& returnBuffer, QString name, UpdateOptions updateOptions);
    Qx::XmlStreamReaderError openPlaylistDoc(std::unique_ptr<Xml::PlaylistDoc>& returnBuffer, QString name, UpdateOptions updateOptions);

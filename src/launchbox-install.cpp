@@ -259,7 +259,7 @@ QSet<QString> Install::getExistingDocs(QString type) const
 }
 
 //Public:
-Qx::IOOpReport Install::populateExistingDocs()
+Qx::IOOpReport Install::populateExistingDocs(QStringList platformMatches, QStringList playlistMatches)
 {
     // Clear existing
     mExistingDocuments.clear();
@@ -271,16 +271,22 @@ Qx::IOOpReport Install::populateExistingDocs()
     Qx::IOOpReport existingCheck = Qx::getDirFileList(existingList, mPlatformsDirectory, {XML_EXT}, QDirIterator::Subdirectories);
     if(existingCheck.wasSuccessful())
         for(const QString& platformPath : existingList)
-            mExistingDocuments.insert(Xml::DataDocHandle{Xml::PlatformDoc::TYPE_NAME, QFileInfo(platformPath).baseName()});
+            for(const QString& possibleMatch : platformMatches)
+                if(QFileInfo(platformPath).baseName() == makeFileNameLBKosher(possibleMatch))
+                    mExistingDocuments.insert(Xml::DataDocHandle{Xml::PlatformDoc::TYPE_NAME, possibleMatch});
 
     // Check for playlists
-    existingCheck = Qx::getDirFileList(existingList, mPlaylistsDirectory, {XML_EXT}, QDirIterator::Subdirectories);
+    if(existingCheck.wasSuccessful())
+        existingCheck = Qx::getDirFileList(existingList, mPlaylistsDirectory, {XML_EXT}, QDirIterator::Subdirectories);
     if(existingCheck.wasSuccessful())
         for(const QString& playlistPath : existingList)
-            mExistingDocuments.insert(Xml::DataDocHandle{Xml::PlaylistDoc::TYPE_NAME, QFileInfo(playlistPath).baseName()});
+            for(const QString& possibleMatch : playlistMatches)
+                if(QFileInfo(playlistPath).baseName() == makeFileNameLBKosher(possibleMatch))
+                    mExistingDocuments.insert(Xml::DataDocHandle{Xml::PlaylistDoc::TYPE_NAME, possibleMatch});
 
     // Check for config docs
-    existingCheck = Qx::getDirFileList(existingList, mDataDirectory, {XML_EXT});
+    if(existingCheck.wasSuccessful())
+        existingCheck = Qx::getDirFileList(existingList, mDataDirectory, {XML_EXT});
     if(existingCheck.wasSuccessful())
         for(const QString& configDocPath : existingList)
             mExistingDocuments.insert(Xml::DataDocHandle{Xml::ConfigDoc::TYPE_NAME, QFileInfo(configDocPath).baseName()});
