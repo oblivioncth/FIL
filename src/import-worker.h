@@ -18,8 +18,8 @@ public:
 public:
     struct ImportSelections
     {
-        QSet<QString> platforms;
-        QSet<QString> playlists;
+        QStringList platforms;
+        QStringList playlists;
     };
 
     struct OptionSet
@@ -87,7 +87,7 @@ private:
     const QList<QUuid> getPlaylistSpecificGameIDs(FP::Install::DBQueryBuffer& playlistGameIDQuery);
     ImportResult preloadAddApps(Qx::GenericError& errorReport, FP::Install::DBQueryBuffer& addAppQuery);
     ImportResult processGames(Qx::GenericError& errorReport, QList<FP::Install::DBQueryBuffer>& gameQueries, bool playlistSpecific);
-    ImportResult setImageReferences(Qx::GenericError& errorReport, QSet<QString> platforms);
+    ImportResult setImageReferences(Qx::GenericError& errorReport, QStringList platforms);
     ImportResult processPlaylists(Qx::GenericError& errorReport, QList<FP::Install::DBQueryBuffer>& playlistGameQueries);
 
 public:

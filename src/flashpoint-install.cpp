@@ -662,7 +662,7 @@ bool Install::deployCLIFp(QString& errorMessage)
 
 }
 
-QSqlError Install::queryGamesByPlatform(QList<DBQueryBuffer>& resultBuffer, QSet<QString> platforms, InclusionOptions inclusionOptions,
+QSqlError Install::queryGamesByPlatform(QList<DBQueryBuffer>& resultBuffer, QStringList platforms, InclusionOptions inclusionOptions,
                                         const QList<QUuid>& idFilter) const
 {
     // Ensure return buffer is reset
@@ -742,7 +742,7 @@ QSqlError Install::queryAllAddApps(DBQueryBuffer& resultBuffer) const
     return makeNonBindQuery(resultBuffer, &fpDB, mainQueryCommand, sizeQueryCommand);
 }
 
-QSqlError Install::queryPlaylistsByName(DBQueryBuffer& resultBuffer, QSet<QString> playlists) const
+QSqlError Install::queryPlaylistsByName(DBQueryBuffer& resultBuffer, QStringList playlists) const
 {
     // Return blank result if no playlists are selected
     if(playlists.isEmpty())

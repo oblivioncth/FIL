@@ -487,24 +487,24 @@ void MainWindow::refreshWidgetEnableStates()
         i.key()->setEnabled(i.value()());
 }
 
-QSet<QString> MainWindow::getSelectedPlatforms() const
+QStringList MainWindow::getSelectedPlatforms() const
 {
-    QSet<QString> selectedPlatforms;
+    QStringList selectedPlatforms;
 
     for(int i = 0; i < ui->listWidget_platformChoices->count(); i++)
         if(ui->listWidget_platformChoices->item(i)->checkState() == Qt::Checked)
-            selectedPlatforms.insert(ui->listWidget_platformChoices->item(i)->text());
+            selectedPlatforms.append(ui->listWidget_platformChoices->item(i)->text());
 
     return selectedPlatforms;
 }
 
-QSet<QString> MainWindow::getSelectedPlaylists() const
+QStringList MainWindow::getSelectedPlaylists() const
 {
-    QSet<QString> selectedPlaylists;
+    QStringList selectedPlaylists;
 
     for(int i = 0; i < ui->listWidget_playlistChoices->count(); i++)
         if(ui->listWidget_playlistChoices->item(i)->checkState() == Qt::Checked)
-            selectedPlaylists.insert(ui->listWidget_playlistChoices->item(i)->text());
+            selectedPlaylists.append(ui->listWidget_playlistChoices->item(i)->text());
 
     return selectedPlaylists;
 }
@@ -540,8 +540,11 @@ void MainWindow::prepareImport()
     }
 
     // Warn user if they are changing existing files
-    if(mLaunchBoxInstall->getExistingPlatforms().intersects(getSelectedPlatforms()) ||
-       mLaunchBoxInstall->getExistingPlaylists().intersects(getSelectedPlaylists()) ||
+    QStringList selPlatforms = getSelectedPlatforms();
+    QStringList selPlaylists = getSelectedPlaylists();
+
+    if(mLaunchBoxInstall->getExistingPlatforms().intersects(QSet<QString>(selPlatforms.begin(), selPlatforms.end())) ||
+       mLaunchBoxInstall->getExistingPlaylists().intersects(QSet<QString>(selPlaylists.begin(), selPlaylists.end())) ||
        (getSelectedPlaylistGameMode() == LB::Install::ForceAll && mLaunchBoxInstall->getExistingPlatforms().count() > 0))
         if(QMessageBox::warning(this, QApplication::applicationName(), MSG_PRE_EXISTING_IMPORT, QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel) == QMessageBox::Cancel)
             return;
@@ -581,7 +584,7 @@ void MainWindow::prepareImport()
 
         // Setup import worker
         ImportWorker importWorker(mFlashpointInstall, mLaunchBoxInstall,
-                                  {getSelectedPlatforms(), getSelectedPlaylists()},
+                                  {selPlatforms, selPlaylists},
                                   {getSelectedUpdateOptions(), getSelectedImageMode(), getSelectedPlaylistGameMode(), getSelectedInclusionOptions()});
 
         // Setup blocking error connection

@@ -272,7 +272,7 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
     return Successful;
 }
 
-ImportWorker::ImportResult ImportWorker::setImageReferences(Qx::GenericError& errorReport, QSet<QString> platforms)
+ImportWorker::ImportResult ImportWorker::setImageReferences(Qx::GenericError& errorReport, QStringList platforms)
 {
     // Open platforms document
     std::unique_ptr<LB::Xml::PlatformsDoc> platformConfigXML;
@@ -443,7 +443,9 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
 
         // Make unselected platforms list
         QStringList availablePlatforms = mFlashpointInstall->getPlatformList();
-        QSet<QString> unselectedPlatforms = QSet<QString>(availablePlatforms.begin(), availablePlatforms.end()).subtract(mImportSelections.platforms);
+        QStringList unselectedPlatforms = QStringList(availablePlatforms);
+        for(const QString& selPlatform : mImportSelections.platforms)
+            unselectedPlatforms.removeAll(selPlatform);
 
         // Make game query
         queryError = mFlashpointInstall->queryGamesByPlatform(playlistSpecGameQueries, unselectedPlatforms, mOptionSet.inclusionOptions, targetPlaylistGameIDs);
@@ -504,9 +506,9 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         emit progressStepChanged(STEP_SETTING_IMAGE_REFERENCES);
 
         // Create playlist pecific platforms set
-        QSet<QString> playlistSpecPlatforms;
+        QStringList playlistSpecPlatforms;
         for(const FP::Install::DBQueryBuffer& query : playlistSpecGameQueries)
-            playlistSpecPlatforms.insert(query.source);
+            playlistSpecPlatforms.append(query.source);
 
         if((importStepStatus = setImageReferences(errorReport, mImportSelections.platforms + playlistSpecPlatforms)) != Successful)
             return importStepStatus;

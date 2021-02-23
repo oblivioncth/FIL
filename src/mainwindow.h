@@ -210,8 +210,8 @@ private:
 
     void refreshWidgetEnableStates();
 
-    QSet<QString> getSelectedPlatforms() const;
-    QSet<QString> getSelectedPlaylists() const;
+    QStringList getSelectedPlatforms() const;
+    QStringList getSelectedPlaylists() const;
     FP::Install::InclusionOptions getSelectedInclusionOptions() const;
     LB::UpdateOptions getSelectedUpdateOptions() const;
     LB::Install::ImageMode getSelectedImageMode() const;

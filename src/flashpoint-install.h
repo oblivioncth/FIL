@@ -371,10 +371,10 @@ public:
     bool deployCLIFp(QString &errorMessage);
 
     // Queries - OFLIb
-    QSqlError queryGamesByPlatform(QList<DBQueryBuffer>& resultBuffer, QSet<QString> platforms, InclusionOptions inclusionOptions,
+    QSqlError queryGamesByPlatform(QList<DBQueryBuffer>& resultBuffer, QStringList platforms, InclusionOptions inclusionOptions,
                                    const QList<QUuid>& idFilter = {}) const;
     QSqlError queryAllAddApps(DBQueryBuffer& resultBuffer) const;
-    QSqlError queryPlaylistsByName(DBQueryBuffer& resultBuffer, QSet<QString> playlists) const;
+    QSqlError queryPlaylistsByName(DBQueryBuffer& resultBuffer, QStringList playlists) const;
     QSqlError queryPlaylistGamesByPlaylist(QList<DBQueryBuffer>& resultBuffer, const QList<QUuid>& playlistIDs) const;
     QSqlError queryPlaylistGameIDs(DBQueryBuffer& resultBuffer, const QList<QUuid>& playlistIDs) const;
 
