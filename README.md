@@ -19,7 +19,7 @@ You will still be able to use the standard Flashpoint launcher as normal after c
 This tool was made with the express purpose of using it with Flashpoint Ultimate (i.e. all games/animations pre-downloaded), but since the 0.2 rewrite of CLIFp it should work with Infinity as well. Just note that use with Infinity is less rigorously tested.
 
 ### General
-While testing for 100% compatibility is infeasible given the size of Flashpoint, OFILb was designed with full compatibility in mind; however, the importer itself only provides access to the games and their related playlists within Flashpoint, not the animations, since LaunchBox is primarily a games frontend.
+While testing for 100% compatibility is infeasible given the size of Flashpoint, OFILb was designed with full compatibility in mind.
 
 The ":message:" feature of Flashpoint, commonly used to automatically show usage instructions for some games before they are started, is supported. The entries that use it are added as additional-apps to their respective games as they once were when Flashpoint came packaged with LaunchBox. All messages are displayed in a pop-up dialog via CLIFp.
 
