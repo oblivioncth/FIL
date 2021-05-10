@@ -332,7 +332,7 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    Install(QString installPath);
+    Install(QString installPath, QString clifpSubPath = QString());
 
 //-Desctructor-------------------------------------------------------------------------------------------------
 public:
