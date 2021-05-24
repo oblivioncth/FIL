@@ -483,7 +483,7 @@ int MainWindow::postGenericError(Qx::GenericError error, QMessageBox::StandardBu
 void MainWindow::refreshWidgetEnableStates()
 {
     QHash<QWidget*, std::function<bool(void)>>::const_iterator i;
-    for(i = mWidgetEnableConditionMap.begin(); i != mWidgetEnableConditionMap.end(); i++)
+    for(i = mWidgetEnableConditionMap.constBegin(); i != mWidgetEnableConditionMap.constEnd(); i++)
         i.key()->setEnabled(i.value()());
 }
 

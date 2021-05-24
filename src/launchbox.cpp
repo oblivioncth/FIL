@@ -145,10 +145,13 @@ AddApp::AddApp(FP::AddApp flashpointAddApp, QString fullCLIFpPath)
     : mID(flashpointAddApp.getID()),
       mGameID(flashpointAddApp.getParentID()),
       mAppPath(QDir::toNativeSeparators(fullCLIFpPath)),
-      mCommandLine(FP::Install::CLIFp::parametersFromStandard(flashpointAddApp.getAppPath(), flashpointAddApp.getLaunchCommand())),
+      //mCommandLine(FP::Install::CLIFp::parametersFromStandard(flashpointAddApp.getAppPath(), flashpointAddApp.getLaunchCommand())),
       mAutorunBefore(flashpointAddApp.isAutorunBefore()),
       mName(flashpointAddApp.getName()),
-      mWaitForExit(flashpointAddApp.isWaitExit()) {}
+      mWaitForExit(flashpointAddApp.isWaitExit())
+{
+    // Handle command line
+}
 
 AddApp::AddApp() {}
 

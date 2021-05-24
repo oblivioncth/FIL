@@ -1067,7 +1067,7 @@ QSqlError Install::queryEntrySourceData(DBQueryBuffer& resultBuffer, QString app
     return makeNonBindQuery(resultBuffer, &fpDB, mainQueryCommand, sizeQueryCommand);
 }
 
-QSqlError Install::queryAllGameIDs(DBQueryBuffer& resultBuffer, LibraryFilter filter) const
+QSqlError Install::queryAllGameIDs(DBQueryBuffer& resultBuffer, LibraryFilter includeFilter) const
 {
     // Ensure return buffer is effectively null
     resultBuffer = DBQueryBuffer();
@@ -1078,7 +1078,7 @@ QSqlError Install::queryAllGameIDs(DBQueryBuffer& resultBuffer, LibraryFilter fi
     // Make query
     QString baseQueryCommand = "SELECT %2 FROM " + DBTable_Game::NAME + " WHERE " +
                                DBTable_Game::COL_STATUS + " != '" + DBTable_Game::ENTRY_NOT_WORK + "'%1";
-    baseQueryCommand = baseQueryCommand.arg(filter == LibraryFilter::Game ? " AND " + GAME_ONLY_FILTER : (filter == LibraryFilter::Anim ? " AND " + ANIM_ONLY_FILTER : ""));
+    baseQueryCommand = baseQueryCommand.arg(includeFilter == LibraryFilter::Game ? " AND " + GAME_ONLY_FILTER : (includeFilter == LibraryFilter::Anim ? " AND " + ANIM_ONLY_FILTER : ""));
     QString mainQueryCommand = baseQueryCommand.arg("`" + DBTable_Game::COL_ID + "`");
     QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
 
