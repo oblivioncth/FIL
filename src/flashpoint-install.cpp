@@ -366,6 +366,8 @@ QString Install::CLIFp::parametersFromStandard(QString originalAppPath, QString 
         return APP_ARG.arg(originalAppPath) + " " + PARAM_ARG.arg(originalAppParams) + " -q";
 }
 
+QString Install::CLIFp::parametersFromStandard(QUuid titleID) { return AUTO_ARG.arg(titleID.toString(QUuid::WithoutBraces)) + " -q"; }
+
 //===============================================================================================================
 // INSTALL
 //===============================================================================================================

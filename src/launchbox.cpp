@@ -41,7 +41,7 @@ void Item::transferOtherFields(QHash<QString, QString>& otherFields) { mOtherFie
 //Public:
 Game::Game() {}
 
-Game::Game(FP::Game flashpointGame, QString fullOFLIbPath)
+Game::Game(FP::Game flashpointGame, QString fullCLIFpPath)
     : mID(flashpointGame.getID()),
       mTitle(flashpointGame.getTitle()),
       mSeries(flashpointGame.getSeries()),
@@ -58,8 +58,8 @@ Game::Game(FP::Game flashpointGame, QString fullOFLIbPath)
       // Some entries have a typo and since mRegion is used in folder creation the field must be kosher
       mNotes(flashpointGame.getOriginalDescription() + "\n\n" + flashpointGame.getNotes()),
       mSource(flashpointGame.getSource()),
-      mAppPath(QDir::toNativeSeparators(fullOFLIbPath)),
-      mCommandLine(FP::Install::CLIFp::parametersFromStandard(flashpointGame.getAppPath(), flashpointGame.getLaunchCommand())),
+      mAppPath(QDir::toNativeSeparators(fullCLIFpPath)),
+      mCommandLine(FP::Install::CLIFp::parametersFromStandard(flashpointGame.getID())),
       mReleaseDate(flashpointGame.getReleaseDate()),
       mVersion(flashpointGame.getVersion()),
       mReleaseType(flashpointGame.getLibrary() == FP::Install::DBTable_Game::ENTRY_GAME_LIBRARY ? RELEASE_TYPE_GAME : RELEASE_TYPE_ANIM) {}
@@ -141,10 +141,10 @@ GameBuilder& GameBuilder::wReleaseType(QString releaseType) { mItemBlueprint.mRe
 
 //-Constructor---------------------------------------------------------------------------------------------------
 //Public:
-AddApp::AddApp(FP::AddApp flashpointAddApp, QString fullOFLIbPath)
+AddApp::AddApp(FP::AddApp flashpointAddApp, QString fullCLIFpPath)
     : mID(flashpointAddApp.getID()),
       mGameID(flashpointAddApp.getParentID()),
-      mAppPath(QDir::toNativeSeparators(fullOFLIbPath)),
+      mAppPath(QDir::toNativeSeparators(fullCLIFpPath)),
       mCommandLine(FP::Install::CLIFp::parametersFromStandard(flashpointAddApp.getAppPath(), flashpointAddApp.getLaunchCommand())),
       mAutorunBefore(flashpointAddApp.isAutorunBefore()),
       mName(flashpointAddApp.getName()),

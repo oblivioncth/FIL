@@ -72,5 +72,10 @@ contains(QT_ARCH, i386) {
     else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/Qx_static64_0-0-3-0_Qt_5-15-2d.lib
 }
 
+contains(QT_ARCH, i386) {
 RESOURCES += \
-    resources.qrc
+    resources_32.qrc
+} else {
+RESOURCES += \
+    resources_64.qrc
+}
