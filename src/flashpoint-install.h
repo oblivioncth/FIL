@@ -7,6 +7,8 @@
 #include <QtSql>
 #include "qx.h"
 
+//TODO: Make a generic JSON reader class and have all others be children, similar to XML in OFILb
+
 namespace FP
 {
 
@@ -40,9 +42,16 @@ public:
 
     struct Config
     {
-        QString imageFolderPath;
+        QString flashpointPath;
         bool startServer;
         QString server;
+    };
+
+    struct Preferences
+    {
+        QString imageFolderPath;
+        QString jsonFolderPath;
+        QString dataPacksFolderPath;
     };
 
     struct ServerDaemon
@@ -117,6 +126,25 @@ public:
         static inline const QString ENTRY_NOT_WORK = "Not Working";
     };
 
+    class DBTable_Game_Data
+    {
+    public:
+        static inline const QString NAME = "game_data";
+
+        static inline const QString COL_ID = "id";
+        static inline const QString COL_GAME_ID = "gameId";
+        static inline const QString COL_TITLE = "title";
+        static inline const QString COL_DATE_ADDED = "dateAdded";
+        static inline const QString COL_SHA256 = "sha256";
+        static inline const QString COL_CRC32 = "crc32";
+        static inline const QString COL_PRES_ON_DISK = "presentOnDisk";
+        static inline const QString COL_PATH = "path";
+        static inline const QString COL_SIZE = "size";
+        static inline const QString COL_PARAM = "parameters";
+
+        static inline const QStringList COLUMN_LIST = {COL_ID, COL_GAME_ID, COL_TITLE, COL_DATE_ADDED, COL_SHA256, COL_CRC32, COL_PRES_ON_DISK, COL_PATH, COL_SIZE, COL_PARAM};
+    };
+
     class DBTable_Add_App
     {
     public:
@@ -164,15 +192,52 @@ public:
         static inline const QStringList COLUMN_LIST = {COL_ID, COL_PLAYLIST_ID, COL_ORDER, COL_GAME_ID};
     };
 
-    class JSONObject_Config
+    class DBTable_Source
     {
     public:
-        static inline const QString KEY_IMAGE_FOLDER_PATH = "imageFolderPath";
+        static inline const QString NAME = "source";
+
+        static inline const QString COL_ID = "id";
+        static inline const QString COL_NAME = "name";
+        static inline const QString COL_DATE_ADDED = "dateAdded";
+        static inline const QString COL_LAST_UPDATED = "lastUpdated";
+        static inline const QString COL_SRC_FILE_URL = "sourceFileUrl";
+        static inline const QString COL_BASE_URL = "baseUrl";
+        static inline const QString COL_COUNT = "count";
+
+        static inline const QStringList COLUMN_LIST = {COL_ID, COL_NAME, COL_DATE_ADDED, COL_LAST_UPDATED, COL_SRC_FILE_URL, COL_BASE_URL, COL_COUNT};
+    };
+
+    class DBTable_Source_Data
+    {
+    public:
+        static inline const QString NAME = "source_data";
+
+        static inline const QString COL_ID = "id";
+        static inline const QString COL_SOURCE_ID = "sourceId";
+        static inline const QString COL_SHA256 = "sha256";
+        static inline const QString COL_URL_PATH = "urlPath";
+
+        static inline const QStringList COLUMN_LIST = {COL_ID, COL_SOURCE_ID, COL_SHA256, COL_URL_PATH};
+    };
+
+    class JsonObject_Config
+    {
+    public:
+        static inline const QString KEY_FLASHPOINT_PATH = "flashpointPath"; // Reading this value is current redundant and unused, but this may change in the future
         static inline const QString KEY_START_SERVER = "startServer";
         static inline const QString KEY_SERVER = "server";
     };
 
-    class JSONObject_Server
+    class JsonObject_Preferences
+    {
+    public:
+        static inline const QString KEY_IMAGE_FOLDER_PATH = "imageFolderPath";
+        static inline const QString KEY_JSON_FOLDER_PATH = "jsonFolderPath";
+        static inline const QString KEY_DATA_PACKS_FOLDER_PATH = "dataPacksFolderPath";
+    };
+
+    class JsonObject_Server
     {
     public:
         static inline const QString KEY_NAME = "name";
@@ -182,7 +247,7 @@ public:
         static inline const QString KEY_KILL = "kill";
     };
 
-    class JSONObject_StartStop
+    class JsonObject_StartStop
     {
     public:
         static inline const QString KEY_PATH = "path";
@@ -190,7 +255,7 @@ public:
         static inline const QString KEY_ARGUMENTS = "arguments";
     };
 
-    class JSONObject_Daemon
+    class JsonObject_Daemon
     {
     public:
         static inline const QString KEY_NAME = "name";
@@ -200,7 +265,7 @@ public:
         static inline const QString KEY_KILL = "kill";
     };
 
-    class JSONObject_Services
+    class JsonObject_Services
     {
     public:
         static inline const QString KEY_WATCH = "watch";
@@ -210,36 +275,7 @@ public:
         static inline const QString KEY_STOP = "stop";
     };
 
-    class JSONServicesReader
-    {
-    //-Class variables-----------------------------------------------------------------------------------------------------
-    public:
-        static inline const QString ERR_PARSING_JSON_DOC = "Error parsing JSON Document: %1";
-        static inline const QString ERR_JSON_UNEXP_FORMAT = "Unexpected document format";
-        static inline const QString MACRO_FP_PATH = "<fpPath>";
-
-    //-Instance Variables--------------------------------------------------------------------------------------------------
-    private:
-        const Install* mHostInstall;
-        Services* mTargetServices;
-        std::shared_ptr<QFile> mTargetJSONFile;
-
-    //-Constructor--------------------------------------------------------------------------------------------------------
-    public:
-        JSONServicesReader(const Install* hostInstall, Services* targetServices, std::shared_ptr<QFile> targetJSONFile);
-
-    //-Instance Functions-------------------------------------------------------------------------------------------------
-    private:
-        QString resolveFlashpointMacros(QString macroString);
-        Qx::GenericError parseServicesDocument(const QJsonDocument& servicesDoc);
-        Qx::GenericError parseServerDaemon(ServerDaemon& serverBuffer, const QJsonValue& jvServer);
-        Qx::GenericError parseStartStop(StartStop& startStopBuffer, const QJsonValue& jvStartStop);
-
-    public:
-        Qx::GenericError readInto();
-    };
-
-    class JSONConfigReader
+    class JsonConfigReader
     {
     //-Class variables-----------------------------------------------------------------------------------------------------
     public:
@@ -249,15 +285,67 @@ public:
     //-Instance Variables--------------------------------------------------------------------------------------------------
     private:
         Config* mTargetConfig;
-        std::shared_ptr<QFile> mTargetJSONFile;
+        std::shared_ptr<QFile> mTargetJsonFile;
 
     //-Constructor--------------------------------------------------------------------------------------------------------
     public:
-        JSONConfigReader(Config* targetServices, std::shared_ptr<QFile> targetJSONFile);
+        JsonConfigReader(Config* targetServices, std::shared_ptr<QFile> targetJsonFile);
 
     //-Instance Functions-------------------------------------------------------------------------------------------------
     private:
         Qx::GenericError parseConfigDocument(const QJsonDocument& configDoc);
+    public:
+        Qx::GenericError readInto();
+    };
+
+    class JsonPreferencesReader
+    {
+    //-Class variables-----------------------------------------------------------------------------------------------------
+    public:
+        static inline const QString ERR_PARSING_JSON_DOC = "Error parsing JSON Document: %1";
+        static inline const QString ERR_JSON_UNEXP_FORMAT = "Unexpected document format";
+
+    //-Instance Variables--------------------------------------------------------------------------------------------------
+    private:
+        Preferences* mTargetPreferences;
+        std::shared_ptr<QFile> mTargetJsonFile;
+
+    //-Constructor--------------------------------------------------------------------------------------------------------
+    public:
+        JsonPreferencesReader(Preferences* targetServices, std::shared_ptr<QFile> targetJsonFile);
+
+    //-Instance Functions-------------------------------------------------------------------------------------------------
+    private:
+        Qx::GenericError parsePreferencesDocument(const QJsonDocument& configDoc);
+    public:
+        Qx::GenericError readInto();
+    };
+
+    class JsonServicesReader
+    {
+    //-Class variables-----------------------------------------------------------------------------------------------------
+    public:
+        static inline const QString ERR_PARSING_JSON_DOC = "Error parsing JSON Document: %1";
+        static inline const QString ERR_JSON_UNEXP_FORMAT = "Unexpected document format";
+        static inline const QString MACRO_FP_PATH = "<fpPath>";
+
+    //-Instance Variables--------------------------------------------------------------------------------------------------
+    private:
+        QString mHostInstallPath;
+        Services* mTargetServices;
+        std::shared_ptr<QFile> mTargetJsonFile;
+
+    //-Constructor--------------------------------------------------------------------------------------------------------
+    public:
+        JsonServicesReader(const QString hostInstallPath, Services* targetServices, std::shared_ptr<QFile> targetJsonFile);
+
+    //-Instance Functions-------------------------------------------------------------------------------------------------
+    private:
+        QString resolveFlashpointMacros(QString macroString);
+        Qx::GenericError parseServicesDocument(const QJsonDocument& servicesDoc);
+        Qx::GenericError parseServerDaemon(ServerDaemon& serverBuffer, const QJsonValue& jvServer);
+        Qx::GenericError parseStartStop(StartStop& startStopBuffer, const QJsonValue& jvStartStop);
+
     public:
         Qx::GenericError readInto();
     };
@@ -283,22 +371,28 @@ private:
     static inline const QString FILE_DNE = "A required file does not exist: %1";
 
 public:
-    // Paths
-    static inline const QString MAIN_EXE_PATH = "Launcher/Flashpoint.exe";
+    // Static paths
+    static inline const QString LAUNCHER_PATH = "Launcher/Flashpoint.exe";
     static inline const QString DATABASE_PATH = "Data/flashpoint.sqlite";
-    static inline const QString SERVICES_JSON_PATH = "Data/services.json";
     static inline const QString CONFIG_JSON_PATH = "Launcher/config.json";
+    static inline const QString PREFERENCES_JSON_PATH = "preferences.json";
+    static inline const QString DATA_PACK_MOUNTER_PATH = "FPSoftware/fpmount/fpmount.exe";
     static inline const QString VER_TXT_PATH = "version.txt";
 
-    // Folders
+    // Dynamic path file names
+    static inline const QString SERVICES_JSON_NAME = "services.json";
+
+    // Static Folders
+    static inline const QString EXTRAS_PATH = "Extras";
+
+    // Dynamic path folder names
     static inline const QString LOGOS_FOLDER_NAME = "Logos";
     static inline const QString SCREENSHOTS_FOLDER_NAME = "Screenshots";
-    static inline const QString EXTRAS_FOLDER_NAME = "Extras";
 
     // Version check
-    static inline const QByteArray TARGET_EXE_SHA256 = Qx::ByteArray::RAWFromStringHex("6a598f6de11473c2a8a005646dcaff6cccc8d376b2f3f3953ba96dd6a362daa3");
-    static inline const QString TARGET_ULT_VER_STRING = R"(Flashpoint 9.0 Ultimate - "Glorious Sunset")";
-    static inline const QString TARGET_INF_VER_STRING = R"(Flashpoint 9.0 Infinity - "Glorious Sunset")";
+    static inline const QString TARGET_EXE_SHA256 = "4be65e6d17bfb1ad7299644f58fc6ad639e6b07c8493139447010aa301b47ba6";
+    static inline const QString TARGET_ULT_VER_STRING = R"(Flashpoint 10 Ultimate - "Absence")";
+    static inline const QString TARGET_INF_VER_STRING = R"(Flashpoint 10 Infinity - "Absence")";
 
     // Database
     static inline const QString DATABASE_CONNECTION_NAME = "Flashpoint Database";
@@ -319,12 +413,14 @@ private:
     QDir mLogosDirectory;
     QDir mScreenshotsDirectory;
     QDir mExtrasDirectory;
-    std::unique_ptr<QFile> mMainEXEFile;
-    std::unique_ptr<QFile> mCLIFpEXEFile;
+    std::unique_ptr<QFile> mLauncherFile;
+    std::unique_ptr<QFile> mCLIFpFile;
     std::unique_ptr<QFile> mDatabaseFile;
-    std::shared_ptr<QFile> mServicesJSONFile;
-    std::shared_ptr<QFile> mConfigJSONFile;
-    std::unique_ptr<QFile> mVersionTXTFile;
+    std::shared_ptr<QFile> mConfigJsonFile;
+    std::shared_ptr<QFile> mPreferencesJsonFile;
+    std::shared_ptr<QFile> mServicesJsonFile;
+    std::shared_ptr<QFile> mDataPackMounterFile;
+    std::unique_ptr<QFile> mVersionFile;
 
     // Database information
     QStringList mPlatformList;
@@ -359,8 +455,9 @@ public:
     bool databaseConnectionOpenInThisThread();
 
     // Support Application Checks
-    Qx::GenericError getConfig(Config& configBuffer);
-    Qx::GenericError getServices(Services& servicesBuffer);
+    Qx::GenericError getConfig(Config& configBuffer) const;
+    Qx::GenericError getPreferences(Preferences& preferencesBuffer) const;
+    Qx::GenericError getServices(Services& servicesBuffer) const;
 
     // Requirement Checking
     QSqlError checkDatabaseForRequiredTables(QSet<QString>& missingTablesBuffer) const;
@@ -380,9 +477,14 @@ public:
 
     // Queries - CLIFp
     QSqlError queryEntryByID(DBQueryBuffer& resultBuffer, QUuid appID) const;
+    QSqlError queryEntryDataByID(DBQueryBuffer& resultBuffer, QUuid appID) const;
     QSqlError queryEntryAddApps(DBQueryBuffer& resultBuffer, QUuid appID, bool playableOnly = false) const;
+    QSqlError queryEntrySource(DBQueryBuffer& resultBuffer) const;
+    QSqlError queryEntrySourceData(DBQueryBuffer& resultBuffer, QString appSha256Hex) const;
     QSqlError queryAllGameIDs(DBQueryBuffer& resultBuffer, LibraryFilter filter) const;
-//    QSqlError queryAllMainAddAppIDs(DBQueryBuffer& resultBuffer, LibraryFilter filter) const;
+
+    // Checks
+    QSqlError entryUsesDataPack(bool& resultBuffer, QUuid gameId) const;
 
     // Data access
     QString getPath() const;
@@ -392,6 +494,7 @@ public:
     QDir getScrenshootsDirectory() const;
     QDir getExtrasDirectory() const;
     QString getCLIFpPath() const;
+    QString getDataPackMounterPath() const;
 };
 
 }

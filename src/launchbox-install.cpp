@@ -113,12 +113,12 @@ QString Install::transferImage(ImageMode imageMode, QDir sourceDir, QString dest
         {
             QFile source(sourcePath);
             QFile destination(destinationPath);
-            QByteArray sourceChecksum;
-            QByteArray destinationChecksum;
+            QString sourceChecksum;
+            QString destinationChecksum;
 
             if(Qx::calculateFileChecksum(sourceChecksum, source, QCryptographicHash::Md5).wasSuccessful() &&
                Qx::calculateFileChecksum(destinationChecksum, destination, QCryptographicHash::Md5).wasSuccessful() &&
-               sourceChecksum == destinationChecksum)
+               sourceChecksum.compare(destinationChecksum, Qt::CaseInsensitive) == 0)
                 return QString();
         }
     }

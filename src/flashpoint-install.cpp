@@ -27,29 +27,137 @@ uint qHash(const Install::StartStop& key, uint seed) noexcept
 }
 
 //===============================================================================================================
-// INSTALL::JSONServicesReader
+// INSTALL::JsonConfigReader
 //===============================================================================================================
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-Install::JSONServicesReader::JSONServicesReader(const Install* hostInstall, Services* targetServices, std::shared_ptr<QFile> targetJSONFile)
-    : mHostInstall(hostInstall), mTargetServices(targetServices), mTargetJSONFile(targetJSONFile) {}
+Install::JsonConfigReader::JsonConfigReader(Config* targetConfig, std::shared_ptr<QFile> targetJsonFile)
+    : mTargetConfig(targetConfig), mTargetJsonFile(targetJsonFile) {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Private:
-QString Install::JSONServicesReader::resolveFlashpointMacros(QString macroString)
+Qx::GenericError Install::JsonConfigReader::parseConfigDocument(const QJsonDocument& configDoc)
+{
+    // Ensure top level container is object
+    if(!configDoc.isObject())
+        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJsonFile->fileName()), ERR_JSON_UNEXP_FORMAT);
+
+    // Get values
+    Qx::GenericError valueError;
+
+    if((valueError = Qx::Json::checkedKeyRetrieval(mTargetConfig->flashpointPath, configDoc.object(), JsonObject_Config::KEY_FLASHPOINT_PATH)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
+
+    if((valueError = Qx::Json::checkedKeyRetrieval(mTargetConfig->startServer, configDoc.object(), JsonObject_Config::KEY_START_SERVER)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);;
+
+    if((valueError = Qx::Json::checkedKeyRetrieval(mTargetConfig->server, configDoc.object(), JsonObject_Config::KEY_SERVER)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);;
+
+    // Return invalid error on success
+    return Qx::GenericError();
+
+}
+
+//Public:
+Qx::GenericError Install::JsonConfigReader::readInto()
+{
+    // Load original JSON file
+    QByteArray configData;
+    Qx::IOOpReport configLoadReport = Qx::readAllBytesFromFile(configData, *mTargetJsonFile);
+
+    if(!configLoadReport.wasSuccessful())
+        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJsonFile->fileName()), configLoadReport.getOutcomeInfo());
+
+    // Parse original JSON data
+    QJsonParseError parseError;
+    QJsonDocument configDocument = QJsonDocument::fromJson(configData, &parseError);
+
+    if(configDocument.isNull())
+        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJsonFile->fileName()), parseError.errorString());
+    else
+        return parseConfigDocument(configDocument);
+}
+
+//===============================================================================================================
+// INSTALL::JsonPreferencesReader
+//===============================================================================================================
+
+//-Constructor------------------------------------------------------------------------------------------------
+//Public:
+Install::JsonPreferencesReader::JsonPreferencesReader(Preferences* targetPreferences, std::shared_ptr<QFile> targetJsonFile)
+    : mTargetPreferences(targetPreferences), mTargetJsonFile(targetJsonFile) {}
+
+//-Instance Functions------------------------------------------------------------------------------------------------
+//Private:
+Qx::GenericError Install::JsonPreferencesReader::parsePreferencesDocument(const QJsonDocument& configDoc)
+{
+    // Ensure top level container is object
+    if(!configDoc.isObject())
+        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJsonFile->fileName()), ERR_JSON_UNEXP_FORMAT);
+
+    // Get values
+    Qx::GenericError valueError;
+
+    if((valueError = Qx::Json::checkedKeyRetrieval(mTargetPreferences->imageFolderPath, configDoc.object(), JsonObject_Preferences::KEY_IMAGE_FOLDER_PATH)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
+
+    if((valueError = Qx::Json::checkedKeyRetrieval(mTargetPreferences->jsonFolderPath, configDoc.object(), JsonObject_Preferences::KEY_JSON_FOLDER_PATH)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
+
+    if((valueError = Qx::Json::checkedKeyRetrieval(mTargetPreferences->dataPacksFolderPath, configDoc.object(), JsonObject_Preferences::KEY_DATA_PACKS_FOLDER_PATH)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);;
+
+    // Return invalid error on success
+    return Qx::GenericError();
+
+}
+
+//Public:
+Qx::GenericError Install::JsonPreferencesReader::readInto()
+{
+    // Load original JSON file
+    QByteArray preferencesData;
+    Qx::IOOpReport preferencesLoadReport = Qx::readAllBytesFromFile(preferencesData, *mTargetJsonFile);
+
+    if(!preferencesLoadReport.wasSuccessful())
+        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJsonFile->fileName()), preferencesLoadReport.getOutcomeInfo());
+
+    // Parse original JSON data
+    QJsonParseError parseError;
+    QJsonDocument preferencesDocument = QJsonDocument::fromJson(preferencesData, &parseError);
+
+    if(preferencesDocument.isNull())
+        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJsonFile->fileName()), parseError.errorString());
+    else
+        return parsePreferencesDocument(preferencesDocument);
+}
+
+//===============================================================================================================
+// INSTALL::JsonServicesReader
+//===============================================================================================================
+
+//-Constructor------------------------------------------------------------------------------------------------
+//Public:
+Install::JsonServicesReader::JsonServicesReader(const QString hostInstallPath, Services* targetServices, std::shared_ptr<QFile> targetJsonFile)
+    : mHostInstallPath(hostInstallPath), mTargetServices(targetServices), mTargetJsonFile(targetJsonFile) {}
+
+//-Instance Functions------------------------------------------------------------------------------------------------
+//Private:
+QString Install::JsonServicesReader::resolveFlashpointMacros(QString macroString)
 {
     // Resolve all known macros
-    macroString.replace(MACRO_FP_PATH, mHostInstall->getPath());
+    macroString.replace(MACRO_FP_PATH, mHostInstallPath);
 
     return macroString;
 }
 
-Qx::GenericError Install::JSONServicesReader::parseServicesDocument(const QJsonDocument& servicesDoc)
+Qx::GenericError Install::JsonServicesReader::parseServicesDocument(const QJsonDocument& servicesDoc)
 {
     // Ensure top level container is object
     if(!servicesDoc.isObject())
-        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJSONFile->fileName()), ERR_JSON_UNEXP_FORMAT);
+        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJsonFile->fileName()), ERR_JSON_UNEXP_FORMAT);
 
     // Value error checking buffer
     Qx::GenericError valueError;
@@ -59,8 +167,8 @@ Qx::GenericError Install::JSONServicesReader::parseServicesDocument(const QJsonD
 
     // Get servers
     QJsonArray jaServers;
-    if((valueError = Qx::Json::checkedKeyRetrieval(jaServers, servicesDoc.object(), JSONObject_Services::KEY_SERVER)).isValid())
-        return valueError;
+    if((valueError = Qx::Json::checkedKeyRetrieval(jaServers, servicesDoc.object(), JsonObject_Services::KEY_SERVER)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);;
 
     // Parse servers
     for(const QJsonValue& jvServer : jaServers)
@@ -74,8 +182,8 @@ Qx::GenericError Install::JSONServicesReader::parseServicesDocument(const QJsonD
 
     // Get daemons
     QJsonArray jaDaemons;
-    if((valueError = Qx::Json::checkedKeyRetrieval(jaDaemons, servicesDoc.object(), JSONObject_Services::KEY_DAEMON)).isValid())
-        return valueError;
+    if((valueError = Qx::Json::checkedKeyRetrieval(jaDaemons, servicesDoc.object(), JsonObject_Services::KEY_DAEMON)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);;
 
     // Parse daemons
     for(const QJsonValue& jvDaemon : jaDaemons)
@@ -89,8 +197,8 @@ Qx::GenericError Install::JSONServicesReader::parseServicesDocument(const QJsonD
 
     // Get starts
     QJsonArray jaStarts;
-    if((valueError = Qx::Json::checkedKeyRetrieval(jaStarts, servicesDoc.object(), JSONObject_Services::KEY_START)).isValid())
-        return valueError;
+    if((valueError = Qx::Json::checkedKeyRetrieval(jaStarts, servicesDoc.object(), JsonObject_Services::KEY_START)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);;
 
     // Parse starts
     for(const QJsonValue& jvStart : jaStarts)
@@ -104,8 +212,8 @@ Qx::GenericError Install::JSONServicesReader::parseServicesDocument(const QJsonD
 
     // Get stops
     QJsonArray jaStops;
-    if((valueError = Qx::Json::checkedKeyRetrieval(jaStops, servicesDoc.object(), JSONObject_Services::KEY_STOP)).isValid())
-        return valueError;
+    if((valueError = Qx::Json::checkedKeyRetrieval(jaStops, servicesDoc.object(), JsonObject_Services::KEY_STOP)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);;
 
     // Parse starts
     for(const QJsonValue& jvStop : jaStops)
@@ -121,11 +229,11 @@ Qx::GenericError Install::JSONServicesReader::parseServicesDocument(const QJsonD
     return Qx::GenericError();
 }
 
-Qx::GenericError Install::JSONServicesReader::parseServerDaemon(ServerDaemon& serverBuffer, const QJsonValue& jvServer)
+Qx::GenericError Install::JsonServicesReader::parseServerDaemon(ServerDaemon& serverBuffer, const QJsonValue& jvServer)
 {
     // Ensure array element is Object
     if(!jvServer.isObject())
-        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJSONFile->fileName()), ERR_JSON_UNEXP_FORMAT);
+        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJsonFile->fileName()), ERR_JSON_UNEXP_FORMAT);
 
     // Get server Object
     QJsonObject joServer = jvServer.toObject();
@@ -134,28 +242,28 @@ Qx::GenericError Install::JSONServicesReader::parseServerDaemon(ServerDaemon& se
     Qx::GenericError valueError;
 
     // Get direct values
-    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.name, joServer, JSONObject_Server::KEY_NAME)).isValid())
-        return valueError;
+    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.name, joServer, JsonObject_Server::KEY_NAME)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);;
 
-    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.path, joServer, JSONObject_Server::KEY_PATH)).isValid())
-        return valueError;
+    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.path, joServer, JsonObject_Server::KEY_PATH)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);;
 
-    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.filename, joServer, JSONObject_Server::KEY_FILENAME)).isValid())
-        return valueError;
+    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.filename, joServer, JsonObject_Server::KEY_FILENAME)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);;
 
-    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.kill, joServer, JSONObject_Server::KEY_KILL)).isValid())
-        return valueError;
+    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.kill, joServer, JsonObject_Server::KEY_KILL)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);;
 
     // Get arguments
     QJsonArray jaArgs;
-    if((valueError = Qx::Json::checkedKeyRetrieval(jaArgs, joServer, JSONObject_Server::KEY_ARGUMENTS)).isValid())
-        return valueError;
+    if((valueError = Qx::Json::checkedKeyRetrieval(jaArgs, joServer, JsonObject_Server::KEY_ARGUMENTS)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);;
 
     for(const QJsonValue& jvArg : jaArgs)
     {
         // Ensure array element is String
         if(!jvArg.isString())
-            return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJSONFile->fileName()), ERR_JSON_UNEXP_FORMAT);
+            return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJsonFile->fileName()), ERR_JSON_UNEXP_FORMAT);
 
         serverBuffer.arguments.append(jvArg.toString());
     }
@@ -173,14 +281,14 @@ Qx::GenericError Install::JSONServicesReader::parseServerDaemon(ServerDaemon& se
     return Qx::GenericError();
 }
 
-Qx::GenericError Install::JSONServicesReader::parseStartStop(StartStop& startStopBuffer, const QJsonValue& jvStartStop)
+Qx::GenericError Install::JsonServicesReader::parseStartStop(StartStop& startStopBuffer, const QJsonValue& jvStartStop)
 {
     // Ensure return buffer is null
     startStopBuffer = StartStop();
 
     // Ensure array element is Object
     if(!jvStartStop.isObject())
-        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJSONFile->fileName()), ERR_JSON_UNEXP_FORMAT);
+        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJsonFile->fileName()), ERR_JSON_UNEXP_FORMAT);
 
     // Get server Object
     QJsonObject joStartStop = jvStartStop.toObject();
@@ -189,22 +297,22 @@ Qx::GenericError Install::JSONServicesReader::parseStartStop(StartStop& startSto
     Qx::GenericError valueError;
 
     // Get direct values
-    if((valueError = Qx::Json::checkedKeyRetrieval(startStopBuffer.path, joStartStop , JSONObject_StartStop::KEY_PATH)).isValid())
-        return valueError;
+    if((valueError = Qx::Json::checkedKeyRetrieval(startStopBuffer.path, joStartStop , JsonObject_StartStop::KEY_PATH)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);;
 
-    if((valueError = Qx::Json::checkedKeyRetrieval(startStopBuffer.filename, joStartStop, JSONObject_StartStop::KEY_FILENAME)).isValid())
-        return valueError;
+    if((valueError = Qx::Json::checkedKeyRetrieval(startStopBuffer.filename, joStartStop, JsonObject_StartStop::KEY_FILENAME)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);;
 
     // Get arguments
     QJsonArray jaArgs;
-    if((valueError = Qx::Json::checkedKeyRetrieval(jaArgs, joStartStop, JSONObject_StartStop::KEY_ARGUMENTS)).isValid())
-        return valueError;
+    if((valueError = Qx::Json::checkedKeyRetrieval(jaArgs, joStartStop, JsonObject_StartStop::KEY_ARGUMENTS)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);;
 
     for(const QJsonValue& jvArg : jaArgs)
     {
         // Ensure array element is String
         if(!jvArg.isString())
-            return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJSONFile->fileName()), ERR_JSON_UNEXP_FORMAT);
+            return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJsonFile->fileName()), ERR_JSON_UNEXP_FORMAT);
 
         startStopBuffer.arguments.append(jvArg.toString());
     }
@@ -223,77 +331,23 @@ Qx::GenericError Install::JSONServicesReader::parseStartStop(StartStop& startSto
 }
 
 //Public:
-Qx::GenericError Install::JSONServicesReader::readInto()
+Qx::GenericError Install::JsonServicesReader::readInto()
 {
     // Load original JSON file
     QByteArray servicesData;
-    Qx::IOOpReport servicesLoadReport = Qx::readAllBytesFromFile(servicesData, *mTargetJSONFile);
+    Qx::IOOpReport servicesLoadReport = Qx::readAllBytesFromFile(servicesData, *mTargetJsonFile);
 
     if(!servicesLoadReport.wasSuccessful())
-        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJSONFile->fileName()), servicesLoadReport.getOutcomeInfo());
+        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJsonFile->fileName()), servicesLoadReport.getOutcomeInfo());
 
     // Parse original JSON data
     QJsonParseError parseError;
     QJsonDocument servicesDocument = QJsonDocument::fromJson(servicesData, &parseError);
 
     if(servicesDocument.isNull())
-        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJSONFile->fileName()), parseError.errorString());
+        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJsonFile->fileName()), parseError.errorString());
     else
         return parseServicesDocument(servicesDocument);
-}
-
-//===============================================================================================================
-// INSTALL::JSONConfigReader
-//===============================================================================================================
-
-//-Constructor------------------------------------------------------------------------------------------------
-//Public:
-Install::JSONConfigReader::JSONConfigReader(Config* targetConfig, std::shared_ptr<QFile> targetJSONFile)
-    : mTargetConfig(targetConfig), mTargetJSONFile(targetJSONFile) {}
-
-//-Instance Functions------------------------------------------------------------------------------------------------
-//Private:
-Qx::GenericError Install::JSONConfigReader::parseConfigDocument(const QJsonDocument& configDoc)
-{
-    // Ensure top level container is object
-    if(!configDoc.isObject())
-        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJSONFile->fileName()), ERR_JSON_UNEXP_FORMAT);
-
-    // Get values
-    Qx::GenericError valueError;
-
-    if((valueError = Qx::Json::checkedKeyRetrieval(mTargetConfig->imageFolderPath, configDoc.object(), JSONObject_Config::KEY_IMAGE_FOLDER_PATH)).isValid())
-        return valueError;
-
-    if((valueError = Qx::Json::checkedKeyRetrieval(mTargetConfig->startServer, configDoc.object(), JSONObject_Config::KEY_START_SERVER)).isValid())
-        return valueError;
-
-    if((valueError = Qx::Json::checkedKeyRetrieval(mTargetConfig->server, configDoc.object(), JSONObject_Config::KEY_SERVER)).isValid())
-        return valueError;
-
-    // Return invalid error on success
-    return Qx::GenericError();
-
-}
-
-//Public:
-Qx::GenericError Install::JSONConfigReader::readInto()
-{
-    // Load original JSON file
-    QByteArray configData;
-    Qx::IOOpReport configLoadReport = Qx::readAllBytesFromFile(configData, *mTargetJSONFile);
-
-    if(!configLoadReport.wasSuccessful())
-        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJSONFile->fileName()), configLoadReport.getOutcomeInfo());
-
-    // Parse original JSON data
-    QJsonParseError parseError;
-    QJsonDocument configDocument = QJsonDocument::fromJson(configData, &parseError);
-
-    if(configDocument.isNull())
-        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mTargetJSONFile->fileName()), parseError.errorString());
-    else
-        return parseConfigDocument(configDocument);
 }
 
 //===============================================================================================================
@@ -326,23 +380,25 @@ Install::Install(QString installPath, QString clifpSubPath)
 
     // Initialize static files and directories
     mRootDirectory = QDir(installPath);
-    mMainEXEFile = std::make_unique<QFile>(installPath + "/" + MAIN_EXE_PATH);
+    mLauncherFile = std::make_unique<QFile>(installPath + "/" + LAUNCHER_PATH);
     mDatabaseFile = std::make_unique<QFile>(installPath + "/" + DATABASE_PATH);
-    mServicesJSONFile = std::make_shared<QFile>(installPath + "/" + SERVICES_JSON_PATH);
-    mConfigJSONFile = std::make_shared<QFile>(installPath + "/" + CONFIG_JSON_PATH);
-    mVersionTXTFile = std::make_unique<QFile>(installPath + "/" + VER_TXT_PATH);
-    mExtrasDirectory = QDir(installPath + "/" + EXTRAS_FOLDER_NAME);
+    mConfigJsonFile = std::make_shared<QFile>(installPath + "/" + CONFIG_JSON_PATH);
+    mPreferencesJsonFile = std::make_shared<QFile>(installPath + "/" + PREFERENCES_JSON_PATH);
+    mDataPackMounterFile = std::make_shared<QFile>(installPath + "/" + DATA_PACK_MOUNTER_PATH);
+    mVersionFile = std::make_unique<QFile>(installPath + "/" + VER_TXT_PATH);
+    mExtrasDirectory = QDir(installPath + "/" + EXTRAS_PATH);
 
     // Initialize flexible files and directories
-    mCLIFpEXEFile = std::make_unique<QFile>(installPath + "/" + (clifpSubPath.isNull() ? "" : clifpSubPath + "/") + CLIFp::EXE_NAME); // Defaults to root
+    mCLIFpFile = std::make_unique<QFile>(installPath + "/" + (clifpSubPath.isNull() ? "" : clifpSubPath + "/") + CLIFp::EXE_NAME); // Defaults to root
 
-    // Get config
-    Config installConfig;
-    getConfig(installConfig); // Assume that config can be read since this is checked in checkInstallValidity()
+    // Get preferences
+    Preferences installPreferences;
+    getPreferences(installPreferences); // Assume that prefernces can be read since this is checked in checkInstallValidity()
 
     // Initialize config based files and directories
-    mLogosDirectory = QDir(installPath + "/" + installConfig.imageFolderPath + '/' + LOGOS_FOLDER_NAME);
-    mScreenshotsDirectory = QDir(installPath + "/" + installConfig.imageFolderPath + '/' + SCREENSHOTS_FOLDER_NAME);
+    mServicesJsonFile = std::make_shared<QFile>(installPath + "/" + installPreferences.jsonFolderPath + "/" + SERVICES_JSON_NAME);
+    mLogosDirectory = QDir(installPath + "/" + installPreferences.imageFolderPath + '/' + LOGOS_FOLDER_NAME);
+    mScreenshotsDirectory = QDir(installPath + "/" + installPreferences.imageFolderPath + '/' + SCREENSHOTS_FOLDER_NAME);
 
 }
 
@@ -357,49 +413,56 @@ Install::~Install()
 //Public:
 Install::ValidityReport Install::checkInstallValidity(QString installPath, CompatLevel compatLevel)
 {
-    QFileInfo mainEXE(installPath + "/" + MAIN_EXE_PATH);
+    //TODO: Try to disolve this function by simply attempting these steps in the constructor and check afterwards if the instance is valid via
+    // something like isNull(). There may be a catch to this as if recalled correctly this was considered before and abandonded because of a conflict
+    // with the approach, but otherwise this method would be much more preferable and less redundant
+
+    QFileInfo mainEXE(installPath + "/" + LAUNCHER_PATH);
     QFileInfo database(installPath + "/" + DATABASE_PATH);
-    QFileInfo services(installPath + "/" + SERVICES_JSON_PATH);
     QFileInfo config(installPath + "/" + CONFIG_JSON_PATH);
+    QFileInfo preferences(installPath + "/" + PREFERENCES_JSON_PATH);
     QFileInfo version(installPath + "/" + VER_TXT_PATH);
 
-    switch (compatLevel)
+    // Check common requirements
+    if(!database.exists() || !database.isFile())
+        return ValidityReport{false, FILE_DNE.arg(database.filePath())};
+    if(!config.exists() || !config.isFile())
+        return ValidityReport{false, FILE_DNE.arg(config.filePath())};
+
+    Config testConfig; // Check that config can be read
+    std::shared_ptr<QFile> configFile = std::make_shared<QFile>(config.filePath());
+    JsonConfigReader jsConfigReader(&testConfig, configFile);
+    Qx::GenericError configReadReport = jsConfigReader.readInto();
+
+    if(configReadReport.isValid())
+        return ValidityReport{false, configReadReport.primaryInfo() + " [" + configReadReport.secondaryInfo() + "]"};
+
+    Preferences testPreferences; // Check that preferences can be read
+    std::shared_ptr<QFile> preferencesFile = std::make_shared<QFile>(preferences.filePath());
+    JsonPreferencesReader jsPrefReader(&testPreferences, preferencesFile);
+    Qx::GenericError prefReadReport = jsPrefReader.readInto();
+
+    if(prefReadReport.isValid())
+        return ValidityReport{false, prefReadReport.primaryInfo() + " [" + prefReadReport.secondaryInfo() + "]"};
+
+    Services testServices; // Test that services can be read
+    std::shared_ptr<QFile> servicesFile = std::make_shared<QFile>(installPath + "/" + testPreferences.jsonFolderPath + "/" + SERVICES_JSON_NAME);
+    JsonServicesReader jsServicesReader(installPath, &testServices, servicesFile);
+    Qx::GenericError servicesReadReport = jsServicesReader.readInto();
+
+    if(servicesReadReport.isValid())
+        return ValidityReport{false, servicesReadReport.primaryInfo() + " [" + servicesReadReport.secondaryInfo() + "]"};
+
+    // Check full compat level requirements
+    if(compatLevel == CompatLevel::Full)
     {
-        case CompatLevel::Execution:
-            // Check for required existance
-            if(!database.exists() || !database.isFile())
-                return ValidityReport{false, FILE_DNE.arg(database.filePath())};
-            else if(!services.exists() || !services.isFile())
-                return ValidityReport{false, FILE_DNE.arg(services.filePath())};
-            else if(!config.exists() || !config.isFile())
-                return ValidityReport{false, FILE_DNE.arg(config.filePath())};
-            break;
-
-        case CompatLevel::Full:
-            // Check for required existance
-            if(!database.exists() || !database.isFile())
-                return ValidityReport{false, FILE_DNE.arg(database.filePath())};
-            else if(!services.exists() || !services.isFile())
-                return ValidityReport{false, FILE_DNE.arg(services.filePath())};
-            else if(!config.exists() || !config.isFile())
-                return ValidityReport{false, FILE_DNE.arg(config.filePath())};
-            else if(!mainEXE.exists() || !mainEXE.isFile())
-                return ValidityReport{false, FILE_DNE.arg(config.filePath())};
-            else if(!version.exists() || !version.isFile())
-                return ValidityReport{false, FILE_DNE.arg(version.filePath())};
-            break;
-
-            // Check that config can be read
-            Config testConfig;
-            std::shared_ptr<QFile> configFile = std::make_shared<QFile>(config.filePath());
-            JSONConfigReader jsReader(&testConfig, configFile);
-            Qx::GenericError configReadReport = jsReader.readInto();
-
-            if(configReadReport.isValid())
-                return ValidityReport{false, configReadReport.primaryInfo() + " [" + configReadReport.secondaryInfo() + "]"};
-            break;
+        if(!mainEXE.exists() || !mainEXE.isFile())
+            return ValidityReport{false, FILE_DNE.arg(config.filePath())};
+        if(!version.exists() || !version.isFile())
+            return ValidityReport{false, FILE_DNE.arg(version.filePath())};
     }
 
+    // Return valid pass
     return ValidityReport{true, QString()};
 }
 
@@ -456,19 +519,19 @@ QSqlError Install::makeNonBindQuery(DBQueryBuffer& resultBuffer, QSqlDatabase* d
 bool Install::matchesTargetVersion() const
 {    
     // Check exe checksum
-    mMainEXEFile->open(QFile::ReadOnly);
-    QByteArray mainEXEFileData = mMainEXEFile->readAll();
-    mMainEXEFile->close();
+    mLauncherFile->open(QFile::ReadOnly);
+    QByteArray mainEXEFileData = mLauncherFile->readAll();
+    mLauncherFile->close();
 
     if(Qx::Integrity::generateChecksum(mainEXEFileData, QCryptographicHash::Sha256) != TARGET_EXE_SHA256)
         return false;
 
     // Check version file
     QString readVersion;
-    if(!mVersionTXTFile->exists())
+    if(!mVersionFile->exists())
         return false;
 
-    if(!Qx::readTextFromFile(readVersion, *mVersionTXTFile, Qx::TextPos::START).wasSuccessful())
+    if(!Qx::readTextFromFile(readVersion, *mVersionFile, Qx::TextPos::START).wasSuccessful())
         return false;
 
     if(readVersion != TARGET_ULT_VER_STRING && readVersion != TARGET_INF_VER_STRING)
@@ -480,7 +543,7 @@ bool Install::matchesTargetVersion() const
 
 bool Install::hasCLIFp() const
 {
-    QFileInfo presentInfo(*mCLIFpEXEFile);
+    QFileInfo presentInfo(*mCLIFpFile);
     return presentInfo.exists() && presentInfo.isFile();
 }
 
@@ -489,7 +552,7 @@ Qx::MMRB Install::currentCLIFpVersion() const
     if(!hasCLIFp())
         return Qx::MMRB();
     else
-        return Qx::getFileDetails(mCLIFpEXEFile->fileName()).getFileVersion();
+        return Qx::getFileDetails(mCLIFpFile->fileName()).getFileVersion();
 }
 
 QSqlError Install::openThreadDatabaseConnection()
@@ -506,25 +569,37 @@ void Install::closeThreadedDatabaseConnection() { getThreadedDatabaseConnection(
 
 bool Install::databaseConnectionOpenInThisThread() { return getThreadedDatabaseConnection().isOpen(); }
 
-Qx::GenericError Install::getConfig(Config& configBuffer)
+Qx::GenericError Install::getConfig(Config& configBuffer) const
 {
     // Ensure return services is null
     configBuffer = Config();
 
     // Create reader instance
-    JSONConfigReader jsReader(&configBuffer, mConfigJSONFile);
+    JsonConfigReader jsReader(&configBuffer, mConfigJsonFile);
 
     // Read services file
     return jsReader.readInto();
 }
 
-Qx::GenericError Install::getServices(Services &servicesBuffer)
+Qx::GenericError Install::getPreferences(Preferences& preferencesBuffer) const
+{
+    // Ensure return services is null
+    preferencesBuffer = Preferences();
+
+    // Create reader instance
+    JsonPreferencesReader jsReader(&preferencesBuffer, mPreferencesJsonFile);
+
+    // Read services file
+    return jsReader.readInto();
+}
+
+Qx::GenericError Install::getServices(Services &servicesBuffer) const
 {
     // Ensure return services is null
     servicesBuffer = Services();
 
     // Create reader instance
-    JSONServicesReader jsReader(this, &servicesBuffer, mServicesJSONFile);
+    JsonServicesReader jsReader(getPath(), &servicesBuffer, mServicesJsonFile);
 
     // Read services file
     return jsReader.readInto();
@@ -639,25 +714,25 @@ bool Install::deployCLIFp(QString& errorMessage)
     errorMessage = QString();
 
     // Delete existing if present
-    if(QFile::exists(mCLIFpEXEFile->fileName()) && QFileInfo(mCLIFpEXEFile->fileName()).isFile())
+    if(QFile::exists(mCLIFpFile->fileName()) && QFileInfo(mCLIFpFile->fileName()).isFile())
     {
-        if(!mCLIFpEXEFile->remove())
+        if(!mCLIFpFile->remove())
         {
-            errorMessage = mCLIFpEXEFile->errorString();
+            errorMessage = mCLIFpFile->errorString();
             return false;
         }
     }
 
     // Deploy new
     QFile internalCLIFp(":/res/file/" + FP::Install::CLIFp::EXE_NAME);
-    if(!internalCLIFp.copy(mCLIFpEXEFile->fileName()))
+    if(!internalCLIFp.copy(mCLIFpFile->fileName()))
     {
         errorMessage = internalCLIFp.errorString();
         return false;
     }
 
     // Remove default read-only state
-    mCLIFpEXEFile->setPermissions(QFile::ReadOther | QFile::WriteOther);
+    mCLIFpFile->setPermissions(QFile::ReadOther | QFile::WriteOther);
 
     // Return true on
     return true;
@@ -891,7 +966,7 @@ QSqlError Install::queryEntryByID(DBQueryBuffer& resultBuffer, QUuid appID) cons
     if((queryError = makeNonBindQuery(resultBuffer, &fpDB, mainQueryCommand, sizeQueryCommand)).isValid())
         return queryError;
 
-    // Return result if one or more result were found (reciever handles situation in latter case)
+    // Return result if one or more results were found (reciever handles situation in latter case)
     if(resultBuffer.size >= 1)
         return QSqlError();
 
@@ -903,6 +978,27 @@ QSqlError Install::queryEntryByID(DBQueryBuffer& resultBuffer, QUuid appID) cons
 
     // Make query and return result regardless of outcome
     resultBuffer.source = DBTable_Add_App::NAME;
+    return makeNonBindQuery(resultBuffer, &fpDB, mainQueryCommand, sizeQueryCommand);
+}
+
+QSqlError Install::queryEntryDataByID(DBQueryBuffer& resultBuffer, QUuid appID) const
+{
+    // Ensure return buffer is effectively null
+    resultBuffer = DBQueryBuffer();
+
+    // Get database
+    QSqlDatabase fpDB = getThreadedDatabaseConnection();
+
+    // Setup ID query
+    QString baseQueryCommand = "SELECT %1 FROM " + DBTable_Game_Data::NAME + " WHERE " +
+            DBTable_Game_Data::COL_GAME_ID + " == '" + appID.toString(QUuid::WithoutBraces) + "'";
+    QString mainQueryCommand = baseQueryCommand.arg("`" + DBTable_Game_Data::COLUMN_LIST.join("`,`") + "`");
+    QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
+
+    // Make query
+    QSqlError queryError;
+    resultBuffer.source = DBTable_Game_Data::NAME;
+
     return makeNonBindQuery(resultBuffer, &fpDB, mainQueryCommand, sizeQueryCommand);
 }
 
@@ -928,6 +1024,47 @@ QSqlError Install::queryEntryAddApps(DBQueryBuffer& resultBuffer, QUuid appID, b
     return makeNonBindQuery(resultBuffer, &fpDB, mainQueryCommand, sizeQueryCommand);
 }
 
+QSqlError Install::queryEntrySource(DBQueryBuffer& resultBuffer) const
+{
+    // Ensure return buffer is effectively null
+    resultBuffer = DBQueryBuffer();
+
+    // Get database
+    QSqlDatabase fpDB = getThreadedDatabaseConnection();
+
+    // Setup ID query
+    QString baseQueryCommand = "SELECT %1 FROM " + DBTable_Source::NAME;
+    QString mainQueryCommand = baseQueryCommand.arg("`" + DBTable_Source::COLUMN_LIST.join("`,`") + "`");
+    QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
+
+    // Make query
+    QSqlError queryError;
+    resultBuffer.source = DBTable_Source::NAME;
+
+    return makeNonBindQuery(resultBuffer, &fpDB, mainQueryCommand, sizeQueryCommand);
+}
+
+QSqlError Install::queryEntrySourceData(DBQueryBuffer& resultBuffer, QString appSha256Hex) const
+{
+    // Ensure return buffer is effectively null
+    resultBuffer = DBQueryBuffer();
+
+    // Get database
+    QSqlDatabase fpDB = getThreadedDatabaseConnection();
+
+    // Setup ID query
+    QString baseQueryCommand = "SELECT %1 FROM " + DBTable_Source_Data::NAME + " WHERE " +
+            DBTable_Source_Data::COL_SHA256 + " == '" + appSha256Hex + "'";
+    QString mainQueryCommand = baseQueryCommand.arg("`" + DBTable_Source_Data::COLUMN_LIST.join("`,`") + "`");
+    QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
+
+    // Make query
+    QSqlError queryError;
+    resultBuffer.source = DBTable_Source_Data::NAME;
+
+    return makeNonBindQuery(resultBuffer, &fpDB, mainQueryCommand, sizeQueryCommand);
+}
+
 QSqlError Install::queryAllGameIDs(DBQueryBuffer& resultBuffer, LibraryFilter filter) const
 {
     // Ensure return buffer is effectively null
@@ -947,12 +1084,41 @@ QSqlError Install::queryAllGameIDs(DBQueryBuffer& resultBuffer, LibraryFilter fi
     return makeNonBindQuery(resultBuffer, &fpDB, mainQueryCommand, sizeQueryCommand);
 }
 
+QSqlError Install::entryUsesDataPack(bool& resultBuffer, QUuid gameId) const
+{
+    // Default return buffer to false
+    resultBuffer = false;
+
+    // Get database
+    QSqlDatabase fpDB = getThreadedDatabaseConnection();
+
+    // Make query
+    QString packCheckQueryCommand = "SELECT " + GENERAL_QUERY_SIZE_COMMAND + " FROM " + DBTable_Game_Data::NAME + " WHERE " +
+                                   DBTable_Game_Data::COL_GAME_ID + " == '" + gameId.toString(QUuid::WithoutBraces) + "'";
+
+    QSqlQuery packCheckQuery(fpDB);
+    packCheckQuery.setForwardOnly(true);
+    packCheckQuery.prepare(packCheckQueryCommand);
+
+    // Execute query and return if error occurs
+    if(!packCheckQuery.exec())
+        return packCheckQuery.lastError();
+
+    // Set buffer based on result
+    packCheckQuery.next();
+    resultBuffer = packCheckQuery.value(0).toInt() > 0;
+
+    // Return invalid SqlError
+    return QSqlError();
+}
+
 QString Install::getPath() const { return mRootDirectory.absolutePath(); }
 QStringList Install::getPlatformList() const { return mPlatformList; }
 QStringList Install::getPlaylistList() const { return mPlaylistList; }
 QDir Install::getLogosDirectory() const { return mLogosDirectory; }
 QDir Install::getScrenshootsDirectory() const { return mScreenshotsDirectory; }
 QDir Install::getExtrasDirectory() const { return mExtrasDirectory; }
-QString Install::getCLIFpPath() const { return mCLIFpEXEFile->fileName(); }
+QString Install::getCLIFpPath() const { return mCLIFpFile->fileName(); }
+QString Install::getDataPackMounterPath() const { return mDataPackMounterFile->fileName(); }
 
 }
