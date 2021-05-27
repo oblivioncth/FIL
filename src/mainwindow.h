@@ -13,6 +13,7 @@
 #include "flashpoint-install.h"
 #include "import-worker.h"
 #include "qx-io.h"
+#include "qx-widgets.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -149,6 +150,9 @@ private:
     static inline const QUrl URL_OFLIB_GITHUB =  QUrl("https://github.com/oblivioncth/OFILb");
     static inline const QUrl URL_LB_FORUMS =  QUrl("https://forums.launchbox-app.com/files/file/2652-obbys-flashpoint-importer-for-launchbox");
 
+    // User Roles
+    static inline const int USER_ROLE_TAG_ID = 0x200; // Value chosen arbitrarily (must be > 0x100)
+
 //-Instance Variables--------------------------------------------------------------------------------------------
 private:
     Ui::MainWindow *ui;
@@ -164,6 +168,7 @@ private:
 
     QHash<QListWidgetItem*,Qt::CheckState> mPlatformItemCheckStates;
     QHash<QListWidgetItem*,Qt::CheckState> mPlaylistItemCheckStates;
+    std::unique_ptr<Qx::StandardItemModelX> mTagSelectionModel;
 
     bool mHasLinkPermissions = false;
 
@@ -194,6 +199,7 @@ private:
     void validateInstall(QString installPath, Install install);
     void gatherInstallInfo();
     void populateImportSelectionBoxes();
+    void generateTagSelectionOptions();
     bool parseLaunchBoxData();
     bool parseFlashpointData();
     bool installsHaveChanged();
@@ -220,6 +226,8 @@ private:
     void prepareImport();
     void revertAllLaunchBoxChanges();
     void standaloneCLIFpDeploy();
+    void showTagSelectionDialog();
+    QSet<int> generateTagExlusionSet() const;
 
 protected:
     void showEvent(QShowEvent* event);

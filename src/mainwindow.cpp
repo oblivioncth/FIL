@@ -167,6 +167,7 @@ void MainWindow::checkManualInstallInput(Install install)
     {
         installStatusIcon->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
         clearListWidgets();
+        mTagSelectionModel.reset(); // Void tag selection model
         refreshWidgetEnableStates();
     }
 }
@@ -186,6 +187,7 @@ void MainWindow::validateInstall(QString installPath, Install install)
             {
                 ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
                 clearListWidgets();
+                mTagSelectionModel.reset(); // Void tag selection model
                 refreshWidgetEnableStates();
                 QMessageBox::critical(this, QApplication::applicationName(), MSG_LB_INSTALL_INVALID);
             }
@@ -210,6 +212,7 @@ void MainWindow::validateInstall(QString installPath, Install install)
             {
                 ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
                 clearListWidgets();
+                mTagSelectionModel.reset(); // Void tag selection model
                 refreshWidgetEnableStates();
                 postGenericError(Qx::GenericError(Qx::GenericError::Critical, MSG_FP_INSTALL_INVALID, fpValidity.details), QMessageBox::Ok);
             }
@@ -230,6 +233,9 @@ void MainWindow::gatherInstallInfo()
             // Show selection options
             populateImportSelectionBoxes();
 
+            // Generate tab selection model
+            generateTagSelectionOptions();
+
             // Advance to next input stage
             refreshWidgetEnableStates();
         }
@@ -238,6 +244,7 @@ void MainWindow::gatherInstallInfo()
             mLaunchBoxInstall.reset();
             ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
             clearListWidgets();
+            mTagSelectionModel.reset(); // Void tag selection model
             refreshWidgetEnableStates();
         }
     }
@@ -246,6 +253,7 @@ void MainWindow::gatherInstallInfo()
         mFlashpointInstall.reset();
         ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
         clearListWidgets();
+        mTagSelectionModel.reset(); // Void tag selection model
         refreshWidgetEnableStates();
     }
 }
@@ -283,6 +291,43 @@ void MainWindow::populateImportSelectionBoxes()
     // Disable update mode box and import start button since no items will be selected after this operation
     ui->groupBox_updateMode->setEnabled(false);
     ui->pushButton_startImport->setEnabled(false);
+}
+
+void MainWindow::generateTagSelectionOptions()
+{
+    // Ensure old options are dropped
+    mTagSelectionModel.reset();
+
+    // Get tag hiearchy
+    QMap<int, FP::Install::TagCategory> tagMap = mFlashpointInstall->getTags();
+
+    // Create new model
+    mTagSelectionModel = std::make_unique<Qx::StandardItemModelX>();
+    mTagSelectionModel->setAutoTristate(true);
+
+    // Populate model
+    QStandardItem* modelRoot = mTagSelectionModel->invisibleRootItem();
+    QMap<int, FP::Install::TagCategory>::const_iterator i;
+
+    // Add root tag categories
+    for(i = tagMap.constBegin(); i != tagMap.constEnd(); ++i)
+    {
+        QStandardItem* rootItem = new QStandardItem(QString(i->name));
+        rootItem->setCheckState(Qt::CheckState::Checked);
+        QMap<int, FP::Install::Tag>::const_iterator j;
+
+        // Add child tags
+        for(j = i->tags.constBegin(); j != i->tags.constBegin(); ++j)
+        {
+            QStandardItem* childItem = new QStandardItem(QString(j->primaryAlias));
+            childItem->setData(j->id, USER_ROLE_TAG_ID);
+            childItem->setCheckState(Qt::CheckState::Checked);
+
+            rootItem->appendRow(childItem);
+        }
+
+        modelRoot->appendRow(rootItem);
+    }
 }
 
 bool MainWindow::parseLaunchBoxData()
@@ -353,8 +398,18 @@ bool MainWindow::parseFlashpointData()
         return false;
     }
 
-    // Get list of available platforms and playlists
+    // Generate list of available platforms, playlists
     errorCheck = mFlashpointInstall->populateAvailableItems();
+
+    // SQL Error Check
+    if(errorCheck.isValid())
+    {
+        postSqlError(MSG_FP_DB_UNEXPECTED_ERROR, errorCheck);
+        return false;
+    }
+
+    // Generate list of available tags
+    errorCheck = mFlashpointInstall->populateTags();
 
     // SQL Error Check
     if(errorCheck.isValid())
@@ -511,7 +566,7 @@ QStringList MainWindow::getSelectedPlaylists() const
 
 FP::Install::InclusionOptions MainWindow::getSelectedInclusionOptions() const
 {
-    return {ui->action_includeExtreme->isChecked(), ui->action_includeAnimations->isChecked()};
+    return {generateTagExlusionSet(), ui->action_includeAnimations->isChecked()};
 }
 
 LB::UpdateOptions MainWindow::getSelectedUpdateOptions() const
@@ -690,7 +745,7 @@ void MainWindow::standaloneCLIFpDeploy()
             {
                 // Deploy exe
                 QString deployError;
-                while(!tempFlashpointInstall.deployCLIFp(deployError))
+                while(!tempFlashpointInstall.deployCLIFp(deployError, ":/CLIFp.exe"))
                     if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Retry) == QMessageBox::Cancel)
                         break;
             }
@@ -698,6 +753,40 @@ void MainWindow::standaloneCLIFpDeploy()
         else
             postGenericError(Qx::GenericError(Qx::GenericError::Critical, MSG_FP_INSTALL_INVALID, fpValidity.details), QMessageBox::Ok);
     }
+}
+void MainWindow::showTagSelectionDialog()
+{
+    // Ensure tags have been populated
+    assert(mTagSelectionModel);
+
+    // Cache current selection states
+    QHash<QStandardItem*,Qt::CheckState> originalCheckStates;
+    mTagSelectionModel->forEachItem([&](QStandardItem* item) { originalCheckStates[item] = item->checkState(); });
+
+    // Create dialog
+    Qx::TreeInputDialog tagSelectionDialog(this);
+    tagSelectionDialog.setModel(mTagSelectionModel.get());
+    connect(&tagSelectionDialog, &Qx::TreeInputDialog::selectNoneClicked, mTagSelectionModel.get(), &Qx::StandardItemModelX::selectNone);
+    connect(&tagSelectionDialog, &Qx::TreeInputDialog::selectAllClicked, mTagSelectionModel.get(), &Qx::StandardItemModelX::selectAll);
+
+    // Present dialog and capture commitment choice
+    int dc = tagSelectionDialog.exec();
+
+    // If new selections were canceled, restore previous ones
+    if(dc == QDialog::Rejected)
+        mTagSelectionModel->forEachItem([&](QStandardItem* item) { item->setCheckState(originalCheckStates[item]); });
+}
+
+QSet<int> MainWindow::generateTagExlusionSet() const
+{
+    QSet<int> exclusionSet;
+
+    mTagSelectionModel->forEachItem([&exclusionSet](QStandardItem* item){
+        if(item->checkState() == Qt::Unchecked)
+            exclusionSet.insert(item->data(USER_ROLE_TAG_ID).toInt());
+    });
+
+    return exclusionSet;
 }
 
 //Protected:
@@ -733,6 +822,8 @@ void MainWindow::all_on_action_triggered()
         QDesktopServices::openUrl(URL_OFLIB_GITHUB);
     else if(senderAction == ui->action_goToLBForums)
         QDesktopServices::openUrl(URL_LB_FORUMS);
+    else if(senderAction == ui->action_editTagFilter)
+        showTagSelectionDialog();
     else
         throw std::runtime_error("Unhandled use of all_on_action_triggered() slot");
 }
@@ -971,7 +1062,7 @@ void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx:
         if(willDeploy)
         {
             QString deployError;
-            while(!mFlashpointInstall->deployCLIFp(deployError))
+            while(!mFlashpointInstall->deployCLIFp(deployError, ":/CLIFp.exe"))
                 if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | QMessageBox::Ignore, QMessageBox::Retry) == QMessageBox::Ignore)
                     break;
         }

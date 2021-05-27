@@ -45,6 +45,23 @@ const QList<QUuid> ImportWorker::preloadPlaylists(FP::Install::DBQueryBuffer& pl
     return targetPlaylistIDs;
 }
 
+//const QMultiHash<QUuid, int> generateGameTagMap(FP::Install::DBQueryBuffer& gameTagsQuery)
+//{
+//    QMultiHash<QUuid, int> tagMap;
+
+//    for(int i = 0; i < gameTagsQuery.size; i++)
+//    {
+//        // Advance to next record
+//        gameTagsQuery.result.next();
+
+//        // Add game and tag ID to map
+//        tagMap.insert(QUuid(gameTagsQuery.result.value(FP::Install::DBTable_Game_Tags_Tag::COL_GAME_ID).toString()),
+//                      gameTagsQuery.result.value(FP::Install::DBTable_Game_Tags_Tag::COL_TAG_ID).toInt());
+//    }
+
+//    return tagMap;
+//}
+
 const QList<QUuid> ImportWorker::getPlaylistSpecificGameIDs(FP::Install::DBQueryBuffer& playlistGameIDQuery)
 {
     QList<QUuid> playlistSpecGameIDs;

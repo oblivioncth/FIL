@@ -75,7 +75,7 @@
           <string/>
          </property>
          <property name="pixmap">
-          <pixmap resource="../resources.qrc">:/res/icon/No_Install.png</pixmap>
+          <pixmap resource="../resources_cmn.qrc">:/res/icon/No_Install.png</pixmap>
          </property>
          <property name="scaledContents">
           <bool>true</bool>
@@ -121,7 +121,7 @@
           <enum>Qt::PlainText</enum>
          </property>
          <property name="pixmap">
-          <pixmap resource="../resources.qrc">:/res/icon/No_Install.png</pixmap>
+          <pixmap resource="../resources_cmn.qrc">:/res/icon/No_Install.png</pixmap>
          </property>
          <property name="scaledContents">
           <bool>true</bool>
@@ -437,7 +437,7 @@
           <string>Help</string>
          </property>
          <property name="icon">
-          <iconset resource="../resources.qrc">
+          <iconset resource="../resources_cmn.qrc">
            <normaloff>:/res/icon/Update_Mode_Info.png</normaloff>:/res/icon/Update_Mode_Info.png</iconset>
          </property>
         </widget>
@@ -529,7 +529,7 @@
           <string>Help</string>
          </property>
          <property name="icon">
-          <iconset resource="../resources.qrc">
+          <iconset resource="../resources_cmn.qrc">
            <normaloff>:/res/icon/Update_Mode_Info.png</normaloff>:/res/icon/Update_Mode_Info.png</iconset>
          </property>
         </widget>
@@ -783,7 +783,7 @@
           <string>Help</string>
          </property>
          <property name="icon">
-          <iconset resource="../resources.qrc">
+          <iconset resource="../resources_cmn.qrc">
            <normaloff>:/res/icon/Update_Mode_Info.png</normaloff>:/res/icon/Update_Mode_Info.png</iconset>
          </property>
         </widget>
@@ -884,7 +884,7 @@
      <string>Tools</string>
     </property>
     <addaction name="separator"/>
-    <addaction name="action_includeExtreme"/>
+    <addaction name="action_editTagFilter"/>
     <addaction name="action_includeAnimations"/>
     <addaction name="separator"/>
     <addaction name="action_deployCLIFp"/>
@@ -903,7 +903,7 @@
   </widget>
   <action name="action_exit">
    <property name="icon">
-    <iconset resource="../resources.qrc">
+    <iconset resource="../resources_cmn.qrc">
      <normaloff>:/res/icon/Exit.png</normaloff>:/res/icon/Exit.png</iconset>
    </property>
    <property name="text">
@@ -912,7 +912,7 @@
   </action>
   <action name="action_goToOFLIbGitHub">
    <property name="icon">
-    <iconset resource="../resources.qrc">
+    <iconset resource="../resources_cmn.qrc">
      <normaloff>:/res/icon/GitHub.png</normaloff>:/res/icon/GitHub.png</iconset>
    </property>
    <property name="text">
@@ -921,7 +921,7 @@
   </action>
   <action name="action_goToCLIFpGitHub">
    <property name="icon">
-    <iconset resource="../resources.qrc">
+    <iconset resource="../resources_cmn.qrc">
      <normaloff>:/res/icon/GitHub.png</normaloff>:/res/icon/GitHub.png</iconset>
    </property>
    <property name="text">
@@ -930,7 +930,7 @@
   </action>
   <action name="action_goToLBForums">
    <property name="icon">
-    <iconset resource="../resources.qrc">
+    <iconset resource="../resources_cmn.qrc">
      <normaloff>:/res/icon/LaunchBox.png</normaloff>:/res/icon/LaunchBox.png</iconset>
    </property>
    <property name="text">
@@ -939,7 +939,7 @@
   </action>
   <action name="action_deployCLIFp">
    <property name="icon">
-    <iconset resource="../resources.qrc">
+    <iconset resource="../resources_cmn.qrc">
      <normaloff>:/res/icon/CLIFp.png</normaloff>:/res/icon/CLIFp.png</iconset>
    </property>
    <property name="text">
@@ -965,9 +965,14 @@
     <string>Include Animations</string>
    </property>
   </action>
+  <action name="action_editTagFilter">
+   <property name="text">
+    <string>Edit Tag Filter</string>
+   </property>
+  </action>
  </widget>
  <resources>
-  <include location="../resources.qrc"/>
+  <include location="../resources_cmn.qrc"/>
  </resources>
  <connections>
   <connection>
@@ -1379,6 +1384,22 @@
     <hint type="sourcelabel">
      <x>219</x>
      <y>596</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>323</x>
+     <y>479</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>action_editTagFilter</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>all_on_action_triggered()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
     </hint>
     <hint type="destinationlabel">
      <x>323</x>

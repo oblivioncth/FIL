@@ -50,27 +50,30 @@ RC_FILE = resources.rc
 LIBS += Version.lib # TODO: See if this can be removed with a static build of Qx
 
 contains(QT_ARCH, i386) {
-    win32:CONFIG(release, debug|release): LIBS += -L$$PWD/lib/ -lQx_static32_0-0-3-0_Qt_5-15-2
-    else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/lib/ -lQx_static32_0-0-3-0_Qt_5-15-2d
+    win32:CONFIG(release, debug|release): LIBS += -L$$PWD/lib/ -lQx_static32_0-0-4-1_Qt_5-15-2
+    else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/lib/ -lQx_static32_0-0-4-1_Qt_5-15-2d
 } else {
-    win32:CONFIG(release, debug|release): LIBS += -L$$PWD/lib/ -lQx_static64_0-0-3-0_Qt_5-15-2
-    else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/lib/ -lQx_static64_0-0-3-0_Qt_5-15-2d
+    win32:CONFIG(release, debug|release): LIBS += -L$$PWD/lib/ -lQx_static64_0-0-4-1_Qt_5-15-2
+    else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/lib/ -lQx_static64_0-0-4-1_Qt_5-15-2d
 }
 
 INCLUDEPATH += $$PWD/include
 DEPENDPATH += $$PWD/include
 
 contains(QT_ARCH, i386) {
-    win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/libQx_static32_0-0-3-0_Qt_5-15-2.a
-    else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/libQx_static32_0-0-3-0_Qt_5-15-2d.a
-    else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/Qx_static32_0-0-3-0_Qt_5-15-2.lib
-    else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/Qx_static32_0-0-3-0_Qt_5-15-2d.lib
+    win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/libQx_static32_0-0-4-1_Qt_5-15-2.a
+    else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/libQx_static32_0-0-4-1_Qt_5-15-2d.a
+    else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/Qx_static32_0-0-4-1_Qt_5-15-2.lib
+    else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/Qx_static32_0-0-4-1_Qt_5-15-2d.lib
 } else {
-    win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/libQx_static64_0-0-3-0_Qt_5-15-2.a
-    else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/libQx_static64_0-0-3-0_Qt_5-15-2d.a
-    else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/Qx_static64_0-0-3-0_Qt_5-15-2.lib
-    else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/Qx_static64_0-0-3-0_Qt_5-15-2d.lib
+    win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/libQx_static64_0-0-4-1_Qt_5-15-2.a
+    else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/libQx_static64_0-0-4-1_Qt_5-15-2d.a
+    else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/Qx_static64_0-0-4-1_Qt_5-15-2.lib
+    else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/Qx_static64_0-0-4-1_Qt_5-15-2d.lib
 }
+
+RESOURCES += \
+    resources_cmn.qrc
 
 contains(QT_ARCH, i386) {
 RESOURCES += \

@@ -137,6 +137,7 @@ QString AddApp::getLaunchCommand() const { return mLaunchCommand; }
 QString AddApp::getName() const { return mName; }
 bool AddApp::isWaitExit() const { return mWaitExit; }
 QUuid AddApp::getParentID() const { return mParentID; }
+bool AddApp::isPlayable() const { return mAppPath != SPEC_PATH_EXTRA && mAppPath != SPEC_PATH_MSG && !mAutorunBefore; }
 
 //===============================================================================================================
 // ADD APP BUILDER

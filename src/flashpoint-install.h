@@ -23,7 +23,7 @@ public:
 public:
     struct InclusionOptions
     {
-        bool includeExtreme;
+        QSet<int> excludedTagIds;
         bool includeAnimations;
     };
 
@@ -85,6 +85,21 @@ public:
     {
         bool installValid;
         QString details;
+    };
+
+    struct Tag
+    {
+        int id;
+        QString primaryAlias;
+    };
+
+    struct TagCategory
+    {
+        QString name;
+        QColor color;
+        QMap<int, Tag> tags;
+
+        friend bool operator< (const TagCategory& lhs, const TagCategory& rhs) noexcept;
     };
 
 //-Inner Classes-------------------------------------------------------------------------------------------------
@@ -219,6 +234,54 @@ public:
         static inline const QString COL_URL_PATH = "urlPath";
 
         static inline const QStringList COLUMN_LIST = {COL_ID, COL_SOURCE_ID, COL_SHA256, COL_URL_PATH};
+    };
+
+    class DBTable_Game_Tags_Tag
+    {
+    public:
+        static inline const QString NAME = "game_tags_tag";
+
+        static inline const QString COL_GAME_ID = "gameId";
+        static inline const QString COL_TAG_ID = "tagId";
+
+        static inline const QStringList COLUMN_LIST = {COL_GAME_ID, COL_TAG_ID};
+    };
+
+    class DBTable_Tag
+    {
+    public:
+        static inline const QString NAME = "tag";
+
+        static inline const QString COL_ID = "id";
+        static inline const QString COL_PRIMARY_ALIAS_ID = "primaryAliasId";
+        static inline const QString COL_CATEGORY_ID = "categoryId";
+
+        static inline const QStringList COLUMN_LIST = {COL_ID, COL_PRIMARY_ALIAS_ID, COL_CATEGORY_ID};
+    };
+
+    class DBTable_Tag_Alias
+    {
+    public:
+        static inline const QString NAME = "tag_alias";
+
+        static inline const QString COL_ID = "id";
+        static inline const QString COL_TAG_ID = "tagId";
+        static inline const QString COL_NAME = "name";
+
+        static inline const QStringList COLUMN_LIST = {COL_ID, COL_TAG_ID, COL_NAME};
+    };
+
+    class DBTable_Tag_Category
+    {
+    public:
+        static inline const QString NAME = "tag_category";
+
+        static inline const QString COL_ID = "id";
+        static inline const QString COL_NAME = "name";
+        static inline const QString COL_COLOR = "color";
+
+        static inline const QStringList COLUMN_LIST = {COL_ID, COL_NAME, COL_COLOR};
+
     };
 
     class JsonObject_Config
@@ -427,6 +490,7 @@ private:
     // Database information
     QStringList mPlatformList;
     QStringList mPlaylistList;
+    QMap<int, TagCategory> mTagMap; // Order matters for display in tag selector
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -467,21 +531,23 @@ public:
 
     // Commands
     QSqlError populateAvailableItems();
-    bool deployCLIFp(QString &errorMessage);
+    QSqlError populateTags();
+    bool deployCLIFp(QString &errorMessage, QString sourcePath);
 
     // Queries - OFLIb
     QSqlError queryGamesByPlatform(QList<DBQueryBuffer>& resultBuffer, QStringList platforms, InclusionOptions inclusionOptions,
-                                   const QList<QUuid>& idFilter = {}) const;
+                                   const QList<QUuid>& idInclusionFilter = {}) const;
     QSqlError queryAllAddApps(DBQueryBuffer& resultBuffer) const;
     QSqlError queryPlaylistsByName(DBQueryBuffer& resultBuffer, QStringList playlists) const;
     QSqlError queryPlaylistGamesByPlaylist(QList<DBQueryBuffer>& resultBuffer, const QList<QUuid>& playlistIDs) const;
     QSqlError queryPlaylistGameIDs(DBQueryBuffer& resultBuffer, const QList<QUuid>& playlistIDs) const;
+    QSqlError queryAllEntryTags(DBQueryBuffer& resultBuffer) const;
 
     // Queries - CLIFp
     QSqlError queryEntryByID(DBQueryBuffer& resultBuffer, QUuid appID) const;
     QSqlError queryEntryDataByID(DBQueryBuffer& resultBuffer, QUuid appID) const;
     QSqlError queryEntryAddApps(DBQueryBuffer& resultBuffer, QUuid appID, bool playableOnly = false) const;
-    QSqlError queryEntrySource(DBQueryBuffer& resultBuffer) const;
+    QSqlError queryDataPackSource(DBQueryBuffer& resultBuffer) const;
     QSqlError queryEntrySourceData(DBQueryBuffer& resultBuffer, QString appSha256Hex) const;
     QSqlError queryAllGameIDs(DBQueryBuffer& resultBuffer, LibraryFilter filter) const;
 
@@ -497,6 +563,7 @@ public:
     QDir getExtrasDirectory() const;
     QString getCLIFpPath() const;
     QString getDataPackMounterPath() const;
+    QMap<int, TagCategory> getTags() const;
 };
 
 }

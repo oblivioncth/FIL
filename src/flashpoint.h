@@ -116,6 +116,10 @@ public:
 class AddApp
 {
     friend class AddAppBuilder;
+//-Class Variables-----------------------------------------------------------------------------------------------
+private:
+    QString SPEC_PATH_MSG = ":message:";
+    QString SPEC_PATH_EXTRA = ":extras:";
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -139,6 +143,8 @@ public:
 public:
     friend uint qHash(const AddApp& key, uint seed) noexcept;
 
+public:
+
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
     QUuid getID() const;
@@ -148,6 +154,7 @@ public:
     QString getName() const;
     bool isWaitExit() const;
     QUuid getParentID() const;
+    bool isPlayable() const;
 };
 
 class AddAppBuilder
