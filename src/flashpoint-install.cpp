@@ -529,11 +529,10 @@ QSqlError Install::makeNonBindQuery(DBQueryBuffer& resultBuffer, QSqlDatabase* d
 bool Install::matchesTargetVersion() const
 {    
     // Check exe checksum
-    mLauncherFile->open(QFile::ReadOnly);
-    QByteArray mainEXEFileData = mLauncherFile->readAll();
-    mLauncherFile->close();
+    QString launcherHash;
+    Qx::calculateFileChecksum(launcherHash, *mLauncherFile, QCryptographicHash::Sha256);
 
-    if(Qx::Integrity::generateChecksum(mainEXEFileData, QCryptographicHash::Sha256) != TARGET_EXE_SHA256)
+    if(launcherHash != TARGET_EXE_SHA256)
         return false;
 
     // Check version file
@@ -823,9 +822,9 @@ QSqlError Install::queryGamesByPlatform(QList<DBQueryBuffer>& resultBuffer, QStr
     if(!inclusionOptions.excludedTagIds.isEmpty())
     {
         // Make game tag sets query
-        QString tagIdCSV = Qx::String::join(inclusionOptions.excludedTagIds, "','", [](int tagId){return QString::number(tagId);});
+        QString tagIdCSV = Qx::String::join(inclusionOptions.excludedTagIds, [](int tagId){return QString::number(tagId);}, "','");
         QSqlQuery tagQuery("SELECT `" + DBTable_Game_Tags_Tag::COL_GAME_ID + "` FROM " + DBTable_Game_Tags_Tag::NAME +
-                           "WHERE " + DBTable_Game_Tags_Tag::COL_TAG_ID + " IN('" + tagIdCSV + "')", fpDB);
+                           " WHERE " + DBTable_Game_Tags_Tag::COL_TAG_ID + " IN('" + tagIdCSV + "')", fpDB);
 
         QSqlError tagQueryError = tagQuery.lastError();
         if(tagQueryError.isValid())
@@ -848,13 +847,13 @@ QSqlError Install::queryGamesByPlatform(QList<DBQueryBuffer>& resultBuffer, QStr
 
         if(!idExclusionFilter.isEmpty())
         {
-            QString gameIdCSV = Qx::String::join(idExclusionFilter, "','", [](QUuid id){return id.toString(QUuid::WithoutBraces);});
-            filteredQueryCommand += " AND " + DBTable_Game::COL_ID + "  NOT IN('" + gameIdCSV + "')";
+            QString gameIdCSV = Qx::String::join(idExclusionFilter, [](QUuid id){return id.toString(QUuid::WithoutBraces);}, "','");
+            filteredQueryCommand += " AND " + DBTable_Game::COL_ID + " NOT IN('" + gameIdCSV + "')";
         }
 
         if(!idInclusionFilter.isEmpty())
         {
-            QString gameIdCSV = Qx::String::join(idInclusionFilter, "','", [](QUuid id){return id.toString(QUuid::WithoutBraces);});
+            QString gameIdCSV = Qx::String::join(idInclusionFilter, [](QUuid id){return id.toString(QUuid::WithoutBraces);}, "','");
             filteredQueryCommand += " AND " + DBTable_Game::COL_ID + " IN('" + gameIdCSV + "')";
         }
 
@@ -1017,7 +1016,7 @@ QSqlError Install::queryPlaylistGameIDs(DBQueryBuffer& resultBuffer, const QList
     QSqlDatabase fpDB = getThreadedDatabaseConnection();
 
     // Create playlist ID query string
-    QString idCSV = Qx::String::join(playlistIDs, "','", [](QUuid id){return id.toString(QUuid::WithoutBraces);});
+    QString idCSV = Qx::String::join(playlistIDs, [](QUuid id){return id.toString(QUuid::WithoutBraces);}, "','");
 
     // Query all game IDs that fall under given the playlists
     QString baseQueryCommand = "SELECT %1 FROM " + DBTable_Playlist_Game::NAME + " WHERE " +

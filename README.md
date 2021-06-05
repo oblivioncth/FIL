@@ -36,6 +36,7 @@ Each release of this application targets a specific version or versions of BlueM
 | 0.1.2, 0.1.2.1 | 0.3                   | 8.2 ("Approaching Planet Nine") |
 | 0.1.3          | 0.3.2                 | 9.0 ("Glorious Sunset")         |
 | 0.3, 0.3.0.1   | 0.4                   | 9.0 ("Glorious Sunset")         |
+| 0.4            | 0.5.1                 | 10.0 ("Absence")                |
 
 Using a version of OFILb that does not target the version of Flashpoint you wish to use it with is highly discouraged as some features may not work correctly or at all and in some cases the utility may fail to function entirely or even damage the Flashpoint install it is used with.
 
@@ -88,11 +89,21 @@ The symbolic link related options for handling images require the importer to be
 
 ![OFILb Example Usage](https://i.imgur.com/OuKuThO.png)
 
+
+### Tag Filter
+In the **Tools** menu is an option to show the Tag Filter Editor, through which you can customize which titles will be imported based on their tags. 
+
+![Tag Filter](https://imgur.com/RiQXpR0.png)
+
+Tags are listed alphabetically, nested under their categories names so that you can select or unselect an entire category easily. Exclusions take precedence, so if a title features a single tag that you have unselected it will not be included in the import. 
+
+All tags are included by default.
+
 ### Other Features
- - If for whatever reason you want to only deploy or update CLIFp there is an option for doing so in the Tools menu
- - You can select whether or not you want to include "Explicit" games in each import session using the relevant check-able option in the Tools menu
+ - If for whatever reason you want to only deploy or update CLIFp there is an option for doing so in the **Tools** menu
  - Animations are not included by default since LaunchBox is more games oriented; however, you can choose to include them using the relevant check-able option in the Tools menu
  - The playlist import feature is "smart" in the sense that it won't include games that you aren't importing. So if you only want to import the Flash platform for example and a couple playlists, you wont have to worry about useless entries in the playlist that point to games from other platforms you didn't import. This of course does not apply if you are using the "Force All" playlist game mode.
+ 
  
 ## Limitations
  - Although general compatibility is quite high, compatibility with every single title cannot be assured. Issues with a title or group of titles will be fixed as they are discovered.
@@ -100,6 +111,6 @@ The symbolic link related options for handling images require the importer to be
 - If you are using Infinity you will be able to play any game that is imported, even if it hasn't been played yet in Flashpoint; images for the games however will not be present until they've been seen/loaded in Flashpoint at least once and require the importer to be ran again afterwards. The requirement to have the images load in Flashpoint's launcher first is one I can do nothing about, but I hope to eventually make it so you don't need to run the importer again if you're using the LaunchBox symlink option for images.
 
 ## Source
-This tool was written in C++ 17 along with Qt 5 and currently only targets Windows Vista and above; however, this tool can easily be ported to Linux with minimal changes, though to what end I am not sure since this is for a Windows application. The source includes an easy-to-use .pro file if you wish to build the application in Qt Creator and the available latest release was compiled in Qt Creator using MSVC 2019 and a static compilation of Qt 5.15.0. Other than a C++ 17 capable compiler and Qt 5.15.x+ all files required to compile this software are included, with the exception of a standard make file.
+This tool was written in C++ 17 along with Qt 5 and currently only targets Windows Vista and above; however, this tool can easily be ported to Linux with minimal changes, though to what end I am not sure since this is for a Windows application. The source includes an easy-to-use .pro file if you wish to build the application in Qt Creator and the available latest release was compiled in Qt Creator using MSVC 2019 and a static compilation of Qt 5.15.2. Other than a C++ 17 capable compiler and Qt 5.15.x+ all files required to compile this software are included, with the exception of a standard make file.
 
 All functions/variables under the "Qx" (QExtended) namespace belong to a small, personal library I maintain to always have access to frequently used functionality in my projects. A pre-compiled static version of this library is provided with the source for this tool. If anyone truly needs it, I can provide the source for this library as well.

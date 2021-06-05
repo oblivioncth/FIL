@@ -144,6 +144,7 @@ private:
     static inline const QString CAPTION_CLIFP_ERR = "Error deploying CLIFp";
     static inline const QString CAPTION_CLIFP_DOWNGRADE = "Downgrade CLIFp?";
     static inline const QString CAPTION_IMPORTING = "FP Import";
+    static inline const QString CAPTION_TAG_FILTER = "Tag Filter";
 
     // URLs
     static inline const QUrl URL_CLIFP_GITHUB = QUrl("https://github.com/oblivioncth/CLIFp");
@@ -156,7 +157,10 @@ private:
 //-Instance Variables--------------------------------------------------------------------------------------------
 private:
     Ui::MainWindow *ui;
+    bool mInitCompleted;
+
     QHash<QWidget*, std::function<bool(void)>> mWidgetEnableConditionMap;
+    QHash<QAction*, std::function<bool(void)>> mActionEnableConditionMap;
     QColor mExistingItemColor;
 
     std::shared_ptr<LB::Install> mLaunchBoxInstall;
@@ -194,7 +198,7 @@ public:
 private:
     bool testForLinkPermissions();
     void initializeForms();
-    void initializeWidgetEnableConditionMap();
+    void initializeEnableConditionMaps();
     void checkManualInstallInput(Install install);
     void validateInstall(QString installPath, Install install);
     void gatherInstallInfo();
@@ -214,7 +218,7 @@ private:
     void postIOError(QString mainText, Qx::IOOpReport report);
     int postGenericError(Qx::GenericError error, QMessageBox::StandardButtons choices);
 
-    void refreshWidgetEnableStates();
+    void refreshEnableStates();
 
     QStringList getSelectedPlatforms() const;
     QStringList getSelectedPlaylists() const;
@@ -231,6 +235,9 @@ private:
 
 protected:
     void showEvent(QShowEvent* event);
+
+public:
+    bool initCompleted();
 
 //-Slots---------------------------------------------------------------------------------------------------------
 private slots:

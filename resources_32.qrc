@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/">
+    <qresource prefix="/res/file">
         <file alias="CLIFp.exe">res/file/x32/CLIFp.exe</file>
     </qresource>
 </RCC>

@@ -43,7 +43,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     if(mInternalCLIFpVersion.isNull())
     {
         QMessageBox::critical(this, CAPTION_GENERAL_FATAL_ERROR, MSG_FATAL_NO_INTERNAL_CLIFP_VER);
-        QApplication::exit(1);
+        mInitCompleted = false;
+        return;
     }
 
     // General setup
@@ -51,7 +52,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     QApplication::setApplicationName(VER_PRODUCTNAME_STR);
     mHasLinkPermissions = testForLinkPermissions();
     setWindowTitle(VER_PRODUCTNAME_STR);
-    initializeWidgetEnableConditionMap();
+    initializeEnableConditionMaps();
     initializeForms();
 
     // Setup UI update workaround timer
@@ -61,6 +62,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     // Check if Flashpoint is running
     if(Qx::processIsRunning(QFileInfo(FP::Install::LAUNCHER_PATH).fileName()))
         QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_CLOSE_PROMPT);
+
+    mInitCompleted = true;
 }
 
 //-Destructor----------------------------------------------------------------------------------------------------
@@ -120,16 +123,16 @@ void MainWindow::initializeForms()
     if(!mHasLinkPermissions)
         ui->radioButton_link->setText(ui->radioButton_link->text().append(REQUIRE_ELEV));
     ui->radioButton_reference->setChecked(!mHasLinkPermissions);
-    refreshWidgetEnableStates();
+    refreshEnableStates();
 
     // TODO: THIS IS FOR DEBUG PURPOSES
     //checkLaunchBoxInput("C:/Users/Player/Desktop/LBTest/LaunchBox");
     //checkFlashpointInput("D:/FP/Flashpoint 8.1 Ultimate");
 }
 
-void MainWindow::initializeWidgetEnableConditionMap()
+void MainWindow::initializeEnableConditionMaps()
 {
-    // Populate hashmap of ui element enable conditions
+    // Populate hashmap of widget element enable conditions
     mWidgetEnableConditionMap[ui->groupBox_importSelection] = [&](){ return mLaunchBoxInstall && mFlashpointInstall; };
     mWidgetEnableConditionMap[ui->groupBox_playlistGameMode] = [&](){ return getSelectedPlaylists().count() > 0; };
     mWidgetEnableConditionMap[ui->groupBox_updateMode] = [&](){ return isExistingPlatformSelected() ||
@@ -138,6 +141,9 @@ void MainWindow::initializeWidgetEnableConditionMap()
     mWidgetEnableConditionMap[ui->groupBox_imageMode] = [&](){ return mLaunchBoxInstall && mFlashpointInstall; };
     mWidgetEnableConditionMap[ui->pushButton_startImport] = [&](){ return getSelectedPlatforms().count() > 0 ||
                                                                           (getSelectedPlaylistGameMode() == LB::Install::ForceAll && getSelectedPlaylists().count() > 0); };
+
+    // Populate hashmap of action element enable conditions
+    mActionEnableConditionMap[ui->action_editTagFilter] = [&](){ return mLaunchBoxInstall && mFlashpointInstall; };
 }
 
 void MainWindow::checkManualInstallInput(Install install)
@@ -168,7 +174,7 @@ void MainWindow::checkManualInstallInput(Install install)
         installStatusIcon->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
         clearListWidgets();
         mTagSelectionModel.reset(); // Void tag selection model
-        refreshWidgetEnableStates();
+        refreshEnableStates();
     }
 }
 
@@ -188,7 +194,7 @@ void MainWindow::validateInstall(QString installPath, Install install)
                 ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
                 clearListWidgets();
                 mTagSelectionModel.reset(); // Void tag selection model
-                refreshWidgetEnableStates();
+                refreshEnableStates();
                 QMessageBox::critical(this, QApplication::applicationName(), MSG_LB_INSTALL_INVALID);
             }
             break;
@@ -213,7 +219,7 @@ void MainWindow::validateInstall(QString installPath, Install install)
                 ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
                 clearListWidgets();
                 mTagSelectionModel.reset(); // Void tag selection model
-                refreshWidgetEnableStates();
+                refreshEnableStates();
                 postGenericError(Qx::GenericError(Qx::GenericError::Critical, MSG_FP_INSTALL_INVALID, fpValidity.details), QMessageBox::Ok);
             }
             break;
@@ -237,7 +243,7 @@ void MainWindow::gatherInstallInfo()
             generateTagSelectionOptions();
 
             // Advance to next input stage
-            refreshWidgetEnableStates();
+            refreshEnableStates();
         }
         else
         {
@@ -245,7 +251,7 @@ void MainWindow::gatherInstallInfo()
             ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
             clearListWidgets();
             mTagSelectionModel.reset(); // Void tag selection model
-            refreshWidgetEnableStates();
+            refreshEnableStates();
         }
     }
     else
@@ -254,7 +260,7 @@ void MainWindow::gatherInstallInfo()
         ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
         clearListWidgets();
         mTagSelectionModel.reset(); // Void tag selection model
-        refreshWidgetEnableStates();
+        refreshEnableStates();
     }
 }
 
@@ -304,6 +310,7 @@ void MainWindow::generateTagSelectionOptions()
     // Create new model
     mTagSelectionModel = std::make_unique<Qx::StandardItemModelX>();
     mTagSelectionModel->setAutoTristate(true);
+    mTagSelectionModel->setSortRole(Qt::DisplayRole);
 
     // Populate model
     QStandardItem* modelRoot = mTagSelectionModel->invisibleRootItem();
@@ -313,21 +320,28 @@ void MainWindow::generateTagSelectionOptions()
     for(i = tagMap.constBegin(); i != tagMap.constEnd(); ++i)
     {
         QStandardItem* rootItem = new QStandardItem(QString(i->name));
+        rootItem->setData(QBrush(i->color), Qt::BackgroundRole);
+        rootItem->setData(QBrush(Qx::Color::textColorFromBackgroundColor(i->color)), Qt::ForegroundRole);
         rootItem->setCheckState(Qt::CheckState::Checked);
+        rootItem->setCheckable(true);
         QMap<int, FP::Install::Tag>::const_iterator j;
 
         // Add child tags
-        for(j = i->tags.constBegin(); j != i->tags.constBegin(); ++j)
+        for(j = i->tags.constBegin(); j != i->tags.constEnd(); ++j)
         {
             QStandardItem* childItem = new QStandardItem(QString(j->primaryAlias));
             childItem->setData(j->id, USER_ROLE_TAG_ID);
             childItem->setCheckState(Qt::CheckState::Checked);
+            childItem->setCheckable(true);
 
             rootItem->appendRow(childItem);
         }
 
         modelRoot->appendRow(rootItem);
     }
+
+    // Sort
+    mTagSelectionModel->sort(0);
 }
 
 bool MainWindow::parseLaunchBoxData()
@@ -535,11 +549,15 @@ int MainWindow::postGenericError(Qx::GenericError error, QMessageBox::StandardBu
     return genericErrorMessage.exec();
 }
 
-void MainWindow::refreshWidgetEnableStates()
+void MainWindow::refreshEnableStates()
 {
     QHash<QWidget*, std::function<bool(void)>>::const_iterator i;
     for(i = mWidgetEnableConditionMap.constBegin(); i != mWidgetEnableConditionMap.constEnd(); i++)
         i.key()->setEnabled(i.value()());
+
+    QHash<QAction*, std::function<bool(void)>>::const_iterator j;
+    for(j = mActionEnableConditionMap.constBegin(); j != mActionEnableConditionMap.constEnd(); j++)
+        j.key()->setEnabled(j.value()());
 }
 
 QStringList MainWindow::getSelectedPlatforms() const
@@ -621,6 +639,7 @@ void MainWindow::prepareImport()
         mImportProgressDialog = std::make_unique<QProgressDialog>(STEP_FP_DB_INITIAL_QUERY, "Cancel", 0, 10000, this); // Arbitrarily high maximum so initial percentage is 0
         mImportProgressDialog->setWindowTitle(CAPTION_IMPORTING);
         mImportProgressDialog->setWindowModality(Qt::WindowModal);
+        mImportProgressDialog->setWindowFlags(mImportProgressDialog->windowFlags() & ~Qt::WindowContextHelpButtonHint);
         mImportProgressDialog->setAutoReset(false);
         mImportProgressDialog->setAutoClose(false);
         mImportProgressDialog->setMinimumDuration(0); // Always show pd
@@ -705,7 +724,7 @@ void MainWindow::revertAllLaunchBoxChanges()
                 tempSkip = true;
             else if(retryChoice == QMessageBox::NoToAll)
                 alwaysSkip = true;
-        }        
+        }
     }
 
     // Ensure progress dialog is closed
@@ -745,7 +764,7 @@ void MainWindow::standaloneCLIFpDeploy()
             {
                 // Deploy exe
                 QString deployError;
-                while(!tempFlashpointInstall.deployCLIFp(deployError, ":/CLIFp.exe"))
+                while(!tempFlashpointInstall.deployCLIFp(deployError, ":/res/file/CLIFp.exe"))
                     if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Retry) == QMessageBox::Cancel)
                         break;
             }
@@ -766,6 +785,8 @@ void MainWindow::showTagSelectionDialog()
     // Create dialog
     Qx::TreeInputDialog tagSelectionDialog(this);
     tagSelectionDialog.setModel(mTagSelectionModel.get());
+    tagSelectionDialog.setWindowFlags(tagSelectionDialog.windowFlags() & ~Qt::WindowContextHelpButtonHint);
+    tagSelectionDialog.setWindowTitle(CAPTION_TAG_FILTER);
     connect(&tagSelectionDialog, &Qx::TreeInputDialog::selectNoneClicked, mTagSelectionModel.get(), &Qx::StandardItemModelX::selectNone);
     connect(&tagSelectionDialog, &Qx::TreeInputDialog::selectAllClicked, mTagSelectionModel.get(), &Qx::StandardItemModelX::selectAll);
 
@@ -782,7 +803,7 @@ QSet<int> MainWindow::generateTagExlusionSet() const
     QSet<int> exclusionSet;
 
     mTagSelectionModel->forEachItem([&exclusionSet](QStandardItem* item){
-        if(item->checkState() == Qt::Unchecked)
+        if(item->data(USER_ROLE_TAG_ID).isValid() && item->checkState() == Qt::Unchecked)
             exclusionSet.insert(item->data(USER_ROLE_TAG_ID).toInt());
     });
 
@@ -799,6 +820,9 @@ void MainWindow::showEvent(QShowEvent* event)
     mWindowTaskbarButton = new QWinTaskbarButton(this);
     mWindowTaskbarButton->setWindow(this->windowHandle());
 }
+
+//Public:
+bool MainWindow::initCompleted() { return mInitCompleted; }
 
 //-Slots---------------------------------------------------------------------------------------------------------
 //Private:
@@ -977,7 +1001,7 @@ void MainWindow::all_on_listWidget_itemChanged(QListWidgetItem* item) // Proxy f
     {
         // Check if change was change in check state
         if(mPlatformItemCheckStates.contains(item) && item->checkState() != mPlatformItemCheckStates.value(item))
-            refreshWidgetEnableStates();
+            refreshEnableStates();
 
         // Add/update check state
         mPlatformItemCheckStates[item] = item->checkState();
@@ -986,7 +1010,7 @@ void MainWindow::all_on_listWidget_itemChanged(QListWidgetItem* item) // Proxy f
     {
         // Check if change was change in check state
         if(mPlaylistItemCheckStates.contains(item) && item->checkState() != mPlaylistItemCheckStates.value(item))
-            refreshWidgetEnableStates();
+            refreshEnableStates();
 
         // Add/update check state
         mPlaylistItemCheckStates[item] = item->checkState();
@@ -1008,9 +1032,9 @@ void MainWindow::all_on_radioButton_clicked()
         throw std::runtime_error("Pointer conversion to radio button failed");
 
     if(senderRadioButton == ui->radioButton_selectedPlatformsOnly)
-        refreshWidgetEnableStates();
+        refreshEnableStates();
     else if(senderRadioButton == ui->radioButton_forceAll)
-        refreshWidgetEnableStates();
+        refreshEnableStates();
     else
         throw std::runtime_error("Unhandled use of all_on_radioButton_clicked() slot");
 }
@@ -1062,7 +1086,7 @@ void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx:
         if(willDeploy)
         {
             QString deployError;
-            while(!mFlashpointInstall->deployCLIFp(deployError, ":/CLIFp.exe"))
+            while(!mFlashpointInstall->deployCLIFp(deployError, ":/res/file/CLIFp.exe"))
                 if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | QMessageBox::Ignore, QMessageBox::Retry) == QMessageBox::Ignore)
                     break;
         }

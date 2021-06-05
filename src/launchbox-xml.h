@@ -198,7 +198,7 @@ public:
     //-Instance Functions-------------------------------------------------------------------------------------------------
     protected:
         virtual bool writeSourceDoc() = 0;
-        void writeEmptyCheckedTextElement(const QString &qualifiedName, const QString &text);
+        void writeCleanTextElement(const QString &qualifiedName, const QString &text);
         void writeOtherFields(const QHash<QString, QString>& otherFields);
 
     public:

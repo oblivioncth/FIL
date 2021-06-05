@@ -118,18 +118,18 @@ QString Xml::DataDocWriter::writeOutOf()
     return QString();
 }
 
-void Xml::DataDocWriter::writeEmptyCheckedTextElement(const QString& qualifiedName, const QString& text)
+void Xml::DataDocWriter::writeCleanTextElement(const QString& qualifiedName, const QString& text)
 {
     if(text.isEmpty())
         mStreamWriter.writeEmptyElement(qualifiedName);
     else
-        mStreamWriter.writeTextElement(qualifiedName, text);
+        mStreamWriter.writeTextElement(qualifiedName, Qx::xmlSanitized(text));
 }
 
 void Xml::DataDocWriter::writeOtherFields(const QHash<QString, QString>& otherFields)
 {
     for(QHash<QString, QString>::const_iterator i = otherFields.constBegin(); i != otherFields.constEnd(); ++i)
-        writeEmptyCheckedTextElement(i.key(), i.value());
+        writeCleanTextElement(i.key(), i.value());
 }
 
 //===============================================================================================================
@@ -375,34 +375,34 @@ bool Xml::PlatformDocWriter::writeGame(const Game& game)
     mStreamWriter.writeStartElement(Element_Game::NAME);
 
     // Write known tags
-    writeEmptyCheckedTextElement(Element_Game::ELEMENT_ID, game.getID().toString(QUuid::WithoutBraces));
-    writeEmptyCheckedTextElement(Element_Game::ELEMENT_TITLE, game.getTitle());
-    writeEmptyCheckedTextElement(Element_Game::ELEMENT_SERIES, game.getSeries());
-    writeEmptyCheckedTextElement(Element_Game::ELEMENT_DEVELOPER, game.getDeveloper());
-    writeEmptyCheckedTextElement(Element_Game::ELEMENT_PUBLISHER, game.getPublisher());
-    writeEmptyCheckedTextElement(Element_Game::ELEMENT_PLATFORM, game.getPlatform());
-    writeEmptyCheckedTextElement(Element_Game::ELEMENT_SORT_TITLE, game.getSortTitle());
+    writeCleanTextElement(Element_Game::ELEMENT_ID, game.getID().toString(QUuid::WithoutBraces));
+    writeCleanTextElement(Element_Game::ELEMENT_TITLE, game.getTitle());
+    writeCleanTextElement(Element_Game::ELEMENT_SERIES, game.getSeries());
+    writeCleanTextElement(Element_Game::ELEMENT_DEVELOPER, game.getDeveloper());
+    writeCleanTextElement(Element_Game::ELEMENT_PUBLISHER, game.getPublisher());
+    writeCleanTextElement(Element_Game::ELEMENT_PLATFORM, game.getPlatform());
+    writeCleanTextElement(Element_Game::ELEMENT_SORT_TITLE, game.getSortTitle());
 
     if(game.getDateAdded().isValid()) // LB is picky with dates
-        writeEmptyCheckedTextElement(Element_Game::ELEMENT_DATE_ADDED, game.getDateAdded().toString(Qt::ISODateWithMs));
+        writeCleanTextElement(Element_Game::ELEMENT_DATE_ADDED, game.getDateAdded().toString(Qt::ISODateWithMs));
 
     if(game.getDateModified().isValid())// LB is picky with dates
-        writeEmptyCheckedTextElement(Element_Game::ELEMENT_DATE_MODIFIED, game.getDateModified().toString(Qt::ISODateWithMs));
+        writeCleanTextElement(Element_Game::ELEMENT_DATE_MODIFIED, game.getDateModified().toString(Qt::ISODateWithMs));
 
-    writeEmptyCheckedTextElement(Element_Game::ELEMENT_BROKEN, game.isBroken() ? "true" : "false");
-    writeEmptyCheckedTextElement(Element_Game::ELEMENT_PLAYMODE, game.getPlayMode());
-    writeEmptyCheckedTextElement(Element_Game::ELEMENT_STATUS, game.getStatus());
-    writeEmptyCheckedTextElement(Element_Game::ELEMENT_REGION, game.getRegion());
-    writeEmptyCheckedTextElement(Element_Game::ELEMENT_NOTES, game.getNotes());
-    writeEmptyCheckedTextElement(Element_Game::ELEMENT_SOURCE, game.getSource());
-    writeEmptyCheckedTextElement(Element_Game::ELEMENT_APP_PATH, game.getAppPath());
-    writeEmptyCheckedTextElement(Element_Game::ELEMENT_COMMAND_LINE, game.getCommandLine());
+    writeCleanTextElement(Element_Game::ELEMENT_BROKEN, game.isBroken() ? "true" : "false");
+    writeCleanTextElement(Element_Game::ELEMENT_PLAYMODE, game.getPlayMode());
+    writeCleanTextElement(Element_Game::ELEMENT_STATUS, game.getStatus());
+    writeCleanTextElement(Element_Game::ELEMENT_REGION, game.getRegion());
+    writeCleanTextElement(Element_Game::ELEMENT_NOTES, game.getNotes()); // Some titles have had notes with illegal xml
+    writeCleanTextElement(Element_Game::ELEMENT_SOURCE, game.getSource());
+    writeCleanTextElement(Element_Game::ELEMENT_APP_PATH, game.getAppPath());
+    writeCleanTextElement(Element_Game::ELEMENT_COMMAND_LINE, game.getCommandLine());
 
     if(game.getReleaseDate().isValid()) // LB is picky with dates
-        writeEmptyCheckedTextElement(Element_Game::ELEMENT_RELEASE_DATE, game.getReleaseDate().toString(Qt::ISODateWithMs));
+        writeCleanTextElement(Element_Game::ELEMENT_RELEASE_DATE, game.getReleaseDate().toString(Qt::ISODateWithMs));
 
-    writeEmptyCheckedTextElement(Element_Game::ELEMENT_VERSION, game.getVersion());
-    writeEmptyCheckedTextElement(Element_Game::ELEMENT_RELEASE_TYPE, game.getReleaseType());
+    writeCleanTextElement(Element_Game::ELEMENT_VERSION, game.getVersion());
+    writeCleanTextElement(Element_Game::ELEMENT_RELEASE_TYPE, game.getReleaseType());
 
     // Write other tags
     writeOtherFields(game.getOtherFields());
@@ -420,13 +420,13 @@ bool Xml::PlatformDocWriter::writeAddApp(const AddApp& addApp)
     mStreamWriter.writeStartElement(Element_AddApp::NAME);
 
     // Write known tags
-    writeEmptyCheckedTextElement(Element_AddApp::ELEMENT_ID, addApp.getID().toString(QUuid::WithoutBraces));
-    writeEmptyCheckedTextElement(Element_AddApp::ELEMENT_GAME_ID, addApp.getGameID().toString(QUuid::WithoutBraces));
-    writeEmptyCheckedTextElement(Element_AddApp::ELEMENT_APP_PATH, addApp.getAppPath());
-    writeEmptyCheckedTextElement(Element_AddApp::ELEMENT_COMMAND_LINE, addApp.getCommandLine());
-    writeEmptyCheckedTextElement(Element_AddApp::ELEMENT_AUTORUN_BEFORE, addApp.isAutorunBefore() ? "true" : "false");
-    writeEmptyCheckedTextElement(Element_AddApp::ELEMENT_NAME, addApp.getName());
-    writeEmptyCheckedTextElement(Element_AddApp::ELEMENT_WAIT_FOR_EXIT, addApp.isWaitForExit() ? "true" : "false");
+    writeCleanTextElement(Element_AddApp::ELEMENT_ID, addApp.getID().toString(QUuid::WithoutBraces));
+    writeCleanTextElement(Element_AddApp::ELEMENT_GAME_ID, addApp.getGameID().toString(QUuid::WithoutBraces));
+    writeCleanTextElement(Element_AddApp::ELEMENT_APP_PATH, addApp.getAppPath());
+    writeCleanTextElement(Element_AddApp::ELEMENT_COMMAND_LINE, addApp.getCommandLine());
+    writeCleanTextElement(Element_AddApp::ELEMENT_AUTORUN_BEFORE, addApp.isAutorunBefore() ? "true" : "false");
+    writeCleanTextElement(Element_AddApp::ELEMENT_NAME, addApp.getName());
+    writeCleanTextElement(Element_AddApp::ELEMENT_WAIT_FOR_EXIT, addApp.isWaitForExit() ? "true" : "false");
 
     // Write other tags
     writeOtherFields(addApp.getOtherFields());
@@ -624,10 +624,10 @@ bool Xml::PlaylistDocWriter::writePlaylistHeader(const PlaylistHeader& playlistH
     mStreamWriter.writeStartElement(Element_PlaylistHeader::NAME);
 
     // Write known tags
-    writeEmptyCheckedTextElement(Element_PlaylistHeader::ELEMENT_ID, playlistHeader.getPlaylistID().toString(QUuid::WithoutBraces));
-    writeEmptyCheckedTextElement(Element_PlaylistHeader::ELEMENT_NAME, playlistHeader.getName());
-    writeEmptyCheckedTextElement(Element_PlaylistHeader::ELEMENT_NESTED_NAME, playlistHeader.getNestedName());
-    writeEmptyCheckedTextElement(Element_PlaylistHeader::ELEMENT_NOTES, playlistHeader.getNotes());
+    writeCleanTextElement(Element_PlaylistHeader::ELEMENT_ID, playlistHeader.getPlaylistID().toString(QUuid::WithoutBraces));
+    writeCleanTextElement(Element_PlaylistHeader::ELEMENT_NAME, playlistHeader.getName());
+    writeCleanTextElement(Element_PlaylistHeader::ELEMENT_NESTED_NAME, playlistHeader.getNestedName());
+    writeCleanTextElement(Element_PlaylistHeader::ELEMENT_NOTES, playlistHeader.getNotes());
 
     // Write other tags
     writeOtherFields(playlistHeader.getOtherFields());
@@ -645,11 +645,11 @@ bool Xml::PlaylistDocWriter::writePlaylistGame(const PlaylistGame& playlistGame)
     mStreamWriter.writeStartElement(Element_PlaylistGame::NAME);
 
     // Write known tags
-    writeEmptyCheckedTextElement(Element_PlaylistGame::ELEMENT_ID, playlistGame.getGameID().toString(QUuid::WithoutBraces));
-    writeEmptyCheckedTextElement(Element_PlaylistGame::ELEMENT_GAME_TITLE, playlistGame.getGameTitle());
-    writeEmptyCheckedTextElement(Element_PlaylistGame::ELEMENT_GAME_PLATFORM, playlistGame.getGamePlatform());
-    writeEmptyCheckedTextElement(Element_PlaylistGame::ELEMENT_MANUAL_ORDER, QString::number(playlistGame.getManualOrder()));
-    writeEmptyCheckedTextElement(Element_PlaylistGame::ELEMENT_LB_DB_ID, QString::number(playlistGame.getLBDatabaseID()));
+    writeCleanTextElement(Element_PlaylistGame::ELEMENT_ID, playlistGame.getGameID().toString(QUuid::WithoutBraces));
+    writeCleanTextElement(Element_PlaylistGame::ELEMENT_GAME_TITLE, playlistGame.getGameTitle());
+    writeCleanTextElement(Element_PlaylistGame::ELEMENT_GAME_PLATFORM, playlistGame.getGamePlatform());
+    writeCleanTextElement(Element_PlaylistGame::ELEMENT_MANUAL_ORDER, QString::number(playlistGame.getManualOrder()));
+    writeCleanTextElement(Element_PlaylistGame::ELEMENT_LB_DB_ID, QString::number(playlistGame.getLBDatabaseID()));
 
     // Write other tags
     writeOtherFields(playlistGame.getOtherFields());
@@ -821,7 +821,7 @@ bool Xml::PlatformsDocWriter::writePlatform(const Platform& platform)
     mStreamWriter.writeStartElement(Element_Platform::NAME);
 
     // Write known tags
-    writeEmptyCheckedTextElement(Element_Platform::ELEMENT_NAME, platform.getName());
+    writeCleanTextElement(Element_Platform::ELEMENT_NAME, platform.getName());
 
     // Write other tags
     writeOtherFields(platform.getOtherFields());
@@ -839,9 +839,9 @@ bool Xml::PlatformsDocWriter::writePlatformFolder(const QString& platform, const
     mStreamWriter.writeStartElement(Element_PlatformFolder::NAME);
 
     // Write known tags
-    writeEmptyCheckedTextElement(Element_PlatformFolder::ELEMENT_MEDIA_TYPE, mediaType);
-    writeEmptyCheckedTextElement(Element_PlatformFolder::ELEMENT_FOLDER_PATH, folderPath);
-    writeEmptyCheckedTextElement(Element_PlatformFolder::ELEMENT_PLATFORM, platform);
+    writeCleanTextElement(Element_PlatformFolder::ELEMENT_MEDIA_TYPE, mediaType);
+    writeCleanTextElement(Element_PlatformFolder::ELEMENT_FOLDER_PATH, folderPath);
+    writeCleanTextElement(Element_PlatformFolder::ELEMENT_PLATFORM, platform);
 
     // Close game tag
     mStreamWriter.writeEndElement();

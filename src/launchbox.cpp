@@ -56,7 +56,8 @@ Game::Game(FP::Game flashpointGame, QString fullCLIFpPath)
       mStatus(flashpointGame.getStatus()),
       mRegion(Qx::kosherizeFileName(flashpointGame.getLanguage().replace(':',';'))),
       // Some entries have a typo and since mRegion is used in folder creation the field must be kosher
-      mNotes(flashpointGame.getOriginalDescription() + "\n\n" + flashpointGame.getNotes()),
+      mNotes(flashpointGame.getOriginalDescription() +
+             (!flashpointGame.getNotes().isEmpty() ? "\n\n" + flashpointGame.getNotes() : "")),
       mSource(flashpointGame.getSource()),
       mAppPath(QDir::toNativeSeparators(fullCLIFpPath)),
       mCommandLine(FP::Install::CLIFp::parametersFromStandard(flashpointGame.getID())),

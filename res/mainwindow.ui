@@ -966,6 +966,9 @@
    </property>
   </action>
   <action name="action_editTagFilter">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Edit Tag Filter</string>
    </property>

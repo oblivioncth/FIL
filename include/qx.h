@@ -267,6 +267,13 @@ public:
     static bool isHexNumber(QChar hexNum);
 };
 
+class Color
+{
+//-Class Functions----------------------------------------------------------------------------------------------
+public:
+    static QColor textColorFromBackgroundColor(QColor bgColor);
+};
+
 class DateTime
 {
 //-Class Variables----------------------------------------------------------------------------------------------
@@ -428,7 +435,7 @@ public:
 
 };
 
-class GenericError
+class GenericError //TODO - Have Qx functions that use this class return "default" error levels instead of undefined ones (document them once documentation starts
 {
 //-Class Enums-----------------------------------------------------------------------------------------------
 public:
@@ -459,14 +466,14 @@ public:
 
     Qx::GenericError& setErrorLevel(ErrorLevel errorLevel);
 
-    int exec(QMessageBox::StandardButtons choices);
+    int exec(QMessageBox::StandardButtons choices, QMessageBox::StandardButton defChoice = QMessageBox::NoButton);
 };
 
 class Integrity
 {
 //-Class Functions---------------------------------------------------------------------------------------------
 public:
-    static QByteArray generateChecksum(QByteArray &data, QCryptographicHash::Algorithm hashAlgorithm);
+    static QString generateChecksum(QByteArray &data, QCryptographicHash::Algorithm hashAlgorithm);
 };
 
 class Json
@@ -737,12 +744,13 @@ public:
     static QString stripToHexOnly(QString string);
 
     template<typename T, typename F>
-    static QString join(QList<T> list, QString separator, F&& toStringFunc)
+    static QString join(QList<T> list, F&& toStringFunc, QString separator = "", QString prefix = "")
     {
         QString conjuction;
 
         for(int i = 0; i < list.length(); ++i)
         {
+            conjuction += prefix;
             conjuction += toStringFunc(list.at(i));
             if(i < list.length() - 1)
                 conjuction += separator;
@@ -752,13 +760,14 @@ public:
     }
 
     template<typename T, typename F>
-    static QString join(QSet<T> set, QString separator, F&& toStringFunc)
+    static QString join(QSet<T> set, F&& toStringFunc, QString separator = "", QString prefix = "")
     {
         QString conjuction;
 
         QSet<T>::const_iterator i = set.constBegin();
         while(i != set.constEnd())
         {
+            conjuction += prefix;
             conjuction += toStringFunc(*i);
             if(++i != set.constEnd())
                 conjuction += separator;
