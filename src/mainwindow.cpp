@@ -135,9 +135,10 @@ void MainWindow::initializeEnableConditionMaps()
     // Populate hashmap of widget element enable conditions
     mWidgetEnableConditionMap[ui->groupBox_importSelection] = [&](){ return mLaunchBoxInstall && mFlashpointInstall; };
     mWidgetEnableConditionMap[ui->groupBox_playlistGameMode] = [&](){ return getSelectedPlaylists().count() > 0; };
-    mWidgetEnableConditionMap[ui->groupBox_updateMode] = [&](){ return isExistingPlatformSelected() ||
-                                                                       isExistingPlaylistSelected() ||
-                                                                       getSelectedPlaylistGameMode() ==  LB::Install::ForceAll;};
+    mWidgetEnableConditionMap[ui->groupBox_updateMode] = [&](){
+        return isExistingPlatformSelected() || isExistingPlaylistSelected() ||
+               (getSelectedPlaylistGameMode() ==  LB::Install::ForceAll && mLaunchBoxInstall->getExistingPlatforms().count() > 0);
+    };
     mWidgetEnableConditionMap[ui->groupBox_imageMode] = [&](){ return mLaunchBoxInstall && mFlashpointInstall; };
     mWidgetEnableConditionMap[ui->pushButton_startImport] = [&](){ return getSelectedPlatforms().count() > 0 ||
                                                                           (getSelectedPlaylistGameMode() == LB::Install::ForceAll && getSelectedPlaylists().count() > 0); };
