@@ -148,6 +148,21 @@ void MainWindow::initializeEnableConditionMaps()
     mActionEnableConditionMap[ui->action_editTagFilter] = [&](){ return mLaunchBoxInstall && mFlashpointInstall; };
 }
 
+bool MainWindow::installMatchesTargetVersion(const FP::Install& fpInstall)
+{
+    // Check exe checksum
+    if(fpInstall.launcherChecksum() != TARGET_EXE_SHA256)
+        return false;
+
+    // Check version file
+    QString versionString = fpInstall.versionString();
+    if(versionString != TARGET_ULT_VER_STRING && versionString != TARGET_INF_VER_STRING)
+        return false;
+
+    // Return true if all passes
+    return true;
+}
+
 void MainWindow::checkManualInstallInput(Install install)
 {
     QLineEdit* pathSource;
@@ -208,7 +223,7 @@ void MainWindow::validateInstall(QString installPath, Install install)
             {
                 mFlashpointInstall = std::make_shared<FP::Install>(installPath);
 
-                if(mFlashpointInstall->matchesTargetVersion())
+                if(installMatchesTargetVersion(*mFlashpointInstall))
                     ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
                 else
                 {
@@ -748,16 +763,16 @@ void MainWindow::standaloneCLIFpDeploy()
         {
             FP::Install tempFlashpointInstall(selectedDir);
 
-            if(!tempFlashpointInstall.matchesTargetVersion())
+            if(!installMatchesTargetVersion(tempFlashpointInstall))
                 QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_VER_NOT_TARGET);
 
             bool willDeploy = true;
 
             // Check for existing CLIFp
-            if(tempFlashpointInstall.hasCLIFp())
+            if(CLIFp::hasCLIFp(tempFlashpointInstall))
             {
                 // Notify user if this will be a downgrade
-                if(mInternalCLIFpVersion < tempFlashpointInstall.currentCLIFpVersion())
+                if(mInternalCLIFpVersion < CLIFp::currentCLIFpVersion(tempFlashpointInstall))
                     willDeploy = (QMessageBox::warning(this, CAPTION_CLIFP_DOWNGRADE, MSG_FP_CLFIP_WILL_DOWNGRADE, QMessageBox::Yes | QMessageBox::No, QMessageBox::No) ==  QMessageBox::Yes);
             }
 
@@ -766,7 +781,7 @@ void MainWindow::standaloneCLIFpDeploy()
             {
                 // Deploy exe
                 QString deployError;
-                while(!tempFlashpointInstall.deployCLIFp(deployError, ":/res/file/CLIFp.exe"))
+                while(!CLIFp::deployCLIFp(deployError, tempFlashpointInstall, ":/res/file/CLIFp.exe"))
                     if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Retry) == QMessageBox::Cancel)
                         break;
             }
@@ -1077,10 +1092,10 @@ void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx:
         bool willDeploy = true;
 
         // Check for existing CLIFp
-        if(mFlashpointInstall->hasCLIFp())
+        if(CLIFp::hasCLIFp(*mFlashpointInstall))
         {
             // Notify user if this will be a downgrade
-            if(mInternalCLIFpVersion < mFlashpointInstall->currentCLIFpVersion())
+            if(mInternalCLIFpVersion < CLIFp::currentCLIFpVersion(*mFlashpointInstall))
                 willDeploy = (QMessageBox::warning(this, CAPTION_CLIFP_DOWNGRADE, MSG_FP_CLFIP_WILL_DOWNGRADE, QMessageBox::Yes | QMessageBox::No, QMessageBox::No) ==  QMessageBox::Yes);
         }
 
@@ -1088,7 +1103,7 @@ void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx:
         if(willDeploy)
         {
             QString deployError;
-            while(!mFlashpointInstall->deployCLIFp(deployError, ":/res/file/CLIFp.exe"))
+            while(!CLIFp::deployCLIFp(deployError, *mFlashpointInstall, ":/res/file/CLIFp.exe"))
                 if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | QMessageBox::Ignore, QMessageBox::Retry) == QMessageBox::Ignore)
                     break;
         }

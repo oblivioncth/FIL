@@ -1,4 +1,5 @@
 #include "import-worker.h"
+#include "clifp.h"
 
 //===============================================================================================================
 // IMPORT WORKER
@@ -188,7 +189,7 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
             fpGb.wLibrary(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_LIBRARY).toString());
 
             // Convert and convert FP game to LB game and add to document
-            LB::Game builtGame = LB::Game(fpGb.build(), mFlashpointInstall->getCLIFpPath());
+            LB::Game builtGame = LB::Game(fpGb.build(), CLIFp::standardCLIFpPath(*mFlashpointInstall));
             currentPlatformXML->addGame(builtGame);
 
             // Setup for ensuring image sub-directories exist
@@ -245,7 +246,7 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
             // If the current platform doc contains the game this add app belongs to, convert and add it, then remove it from cache
             if (currentPlatformXML->containsGame((*j).getParentID()))
             {
-               currentPlatformXML->addAddApp(LB::AddApp(*j, mFlashpointInstall->getCLIFpPath()));
+               currentPlatformXML->addAddApp(LB::AddApp(*j, CLIFp::standardCLIFpPath(*mFlashpointInstall)));
                j = mAddAppsCache.erase(j);
 
                // Reduce progress dialog maximum by total iterations cut from future platforms
