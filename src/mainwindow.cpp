@@ -14,6 +14,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "version.h"
+#include "clifp.h"
 #include "qx-windows.h"
 
 
@@ -34,8 +35,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     if(tempDir.isValid())
     {
         // Create local copy of internal CLIFp.exe since internal path cannot be used with WinAPI
-        QString localCopyPath = tempDir.path() + '/' + FP::Install::CLIFp::EXE_NAME;
-        if(QFile::copy(":/res/file/" + FP::Install::CLIFp::EXE_NAME, localCopyPath))
+        QString localCopyPath = tempDir.path() + '/' + CLIFp::EXE_NAME;
+        if(QFile::copy(":/res/file/" + CLIFp::EXE_NAME, localCopyPath))
             mInternalCLIFpVersion = Qx::getFileDetails(localCopyPath).getFileVersion();
     }
 

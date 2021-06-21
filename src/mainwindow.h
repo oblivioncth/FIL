@@ -14,6 +14,7 @@
 #include "import-worker.h"
 #include "qx-io.h"
 #include "qx-widgets.h"
+#include "clifp.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -108,13 +109,13 @@ private:
     static inline const QString MSG_FP_DB_UNEXPECTED_ERROR = "An unexpected SQL error occured while reading the Flashpoint database:";
 
     // Messages - FP CLIFp
-    static inline const QString MSG_FP_CLFIP_WILL_DOWNGRADE = "The existing version of " + FP::Install::CLIFp::EXE_NAME +  " in your Flashpoint install is newer than the version package with this tool.\n"
+    static inline const QString MSG_FP_CLFIP_WILL_DOWNGRADE = "The existing version of " + CLIFp::EXE_NAME +  " in your Flashpoint install is newer than the version package with this tool.\n"
                                                               "\n"
                                                               "Replacing it with the packaged Version (downgrade) will likely cause compatability issues unless you are specifically re-importing are downgrading your Flashpoint install to a previous version.\n"
                                                               "\n"
-                                                              "Do you wish to downgrade " + FP::Install::CLIFp::EXE_NAME + "?";
+                                                              "Do you wish to downgrade " + CLIFp::EXE_NAME + "?";
 
-    static inline const QString MSG_FP_CANT_DEPLOY_CLIFP = "Failed to deploy " + FP::Install::CLIFp::EXE_NAME + " to the selected Flashpoint install.\n"
+    static inline const QString MSG_FP_CANT_DEPLOY_CLIFP = "Failed to deploy " + CLIFp::EXE_NAME + " to the selected Flashpoint install.\n"
                                                            "\n"
                                                            "%1\n"
                                                            "\n"

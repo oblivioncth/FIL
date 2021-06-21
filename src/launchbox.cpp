@@ -1,5 +1,6 @@
 #include "launchbox.h"
 #include "flashpoint-install.h"
+#include "clifp.h"
 #include "qx-io.h"
 
 namespace LB
@@ -60,7 +61,7 @@ Game::Game(FP::Game flashpointGame, QString fullCLIFpPath)
              (!flashpointGame.getNotes().isEmpty() ? "\n\n" + flashpointGame.getNotes() : "")),
       mSource(flashpointGame.getSource()),
       mAppPath(QDir::toNativeSeparators(fullCLIFpPath)),
-      mCommandLine(FP::Install::CLIFp::parametersFromStandard(flashpointGame.getID())),
+      mCommandLine(CLIFp::parametersFromStandard(flashpointGame.getID())),
       mReleaseDate(flashpointGame.getReleaseDate()),
       mVersion(flashpointGame.getVersion()),
       mReleaseType(flashpointGame.getLibrary() == FP::Install::DBTable_Game::ENTRY_GAME_LIBRARY ? RELEASE_TYPE_GAME : RELEASE_TYPE_ANIM) {}
@@ -146,8 +147,8 @@ AddApp::AddApp(FP::AddApp flashpointAddApp, QString fullCLIFpPath)
     : mID(flashpointAddApp.getID()),
       mGameID(flashpointAddApp.getParentID()),
       mAppPath(QDir::toNativeSeparators(fullCLIFpPath)),
-      mCommandLine(flashpointAddApp.isPlayable() ? FP::Install::CLIFp::parametersFromStandard(mID)
-                     : FP::Install::CLIFp::parametersFromStandard(flashpointAddApp.getAppPath(), flashpointAddApp.getLaunchCommand())),
+      mCommandLine(flashpointAddApp.isPlayable() ? CLIFp::parametersFromStandard(mID)
+                     : CLIFp::parametersFromStandard(flashpointAddApp.getAppPath(), flashpointAddApp.getLaunchCommand())),
       mAutorunBefore(false),
       mName(flashpointAddApp.getName()),
       mWaitForExit(flashpointAddApp.isWaitExit()) {}
