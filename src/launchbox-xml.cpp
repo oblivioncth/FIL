@@ -247,7 +247,7 @@ bool Xml::PlatformDocReader::readTargetDoc()
     }
 
     // Return status
-    return mStreamReader.hasError();
+    return !mStreamReader.hasError();
 }
 
 void Xml::PlatformDocReader::parseGame()
@@ -524,7 +524,7 @@ bool Xml::PlaylistDocReader::readTargetDoc()
     }
 
     // Return status
-    return mStreamReader.hasError();
+    return !mStreamReader.hasError();
 }
 
 void Xml::PlaylistDocReader::parsePlaylistHeader()
@@ -712,7 +712,7 @@ bool Xml::PlatformsDocReader::readTargetDoc()
     }
 
     // Return status
-    return mStreamReader.hasError();
+    return !mStreamReader.hasError();
 }
 
 void Xml::PlatformsDocReader::parsePlatform()
