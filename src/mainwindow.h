@@ -153,9 +153,9 @@ private:
     static inline const QUrl URL_LB_FORUMS =  QUrl("https://forums.launchbox-app.com/files/file/2652-obbys-flashpoint-importer-for-launchbox");
 
     // Flashpoint version check
-    static inline const QString TARGET_EXE_SHA256 = "4be65e6d17bfb1ad7299644f58fc6ad639e6b07c8493139447010aa301b47ba6";
-    static inline const QString TARGET_ULT_VER_STRING = R"(Flashpoint 10 Ultimate - "Absence")";
-    static inline const QString TARGET_INF_VER_STRING = R"(Flashpoint 10 Infinity - "Absence")";
+    static inline const QString TARGET_EXE_SHA256 = "ec90eee88448071eef65365604c16d437522f23fe1a5b21dd3dc972bc47cf9af";
+    static inline const QString TARGET_ULT_VER_STRING = R"(Flashpoint 10.1 Ultimate - "Absence II"")";
+    static inline const QString TARGET_INF_VER_STRING = R"(Flashpoint 10.1.0.1 Infinity - "Absence II")";
 
 
     // User Roles
