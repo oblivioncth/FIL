@@ -465,8 +465,7 @@ Qx::GenericError FP::Install::appInvolvesSecurePlayer(bool& involvesBuffer, QFil
         involvesBuffer = true;
         return Qx::GenericError();
     }
-
-    else if(appInfo.suffix().compare(".bat", Qt::CaseInsensitive) == 0)
+    else if(appInfo.suffix().compare("bat", Qt::CaseInsensitive) == 0)
     {
         // Check if bat uses secure player
         QFile batFile(appInfo.absoluteFilePath());
@@ -1052,6 +1051,9 @@ QSqlError Install::queryEntriesByTitle(DBQueryBuffer& resultBuffer, QString titl
 {
     // Ensure return buffer is effectively null
     resultBuffer = DBQueryBuffer();
+
+    // Escape title
+    title.replace(R"(')", R"('')");
 
     // Get database
     QSqlDatabase fpDB = getThreadedDatabaseConnection();
