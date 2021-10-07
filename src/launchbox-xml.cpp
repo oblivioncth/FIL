@@ -115,8 +115,7 @@ QString Xml::DataDocWriter::writeOutOf()
     mStreamWriter.writeEndDocument();
 
     // Return null string on success
-    return QString();
-    //TODO: Here, and in similar instances, check if stream writer has error and return proper status using device error string if so
+    return mStreamWriter.hasError() ? mStreamWriter.device()->errorString() : QString();
 }
 
 void Xml::DataDocWriter::writeCleanTextElement(const QString& qualifiedName, const QString& text)
