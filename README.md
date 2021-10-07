@@ -37,6 +37,7 @@ Each release of this application targets a specific version or versions of BlueM
 | 0.1.3          | 0.3.2                 | 9.0 ("Glorious Sunset")         |
 | 0.3, 0.3.0.1   | 0.4                   | 9.0 ("Glorious Sunset")         |
 | 0.4            | 0.5.1                 | 10.0 ("Absence")                |
+| 0.4.1          | 0.8                   | 10.1 ("Absence - II")           |
 
 Using a version of OFILb that does not target the version of Flashpoint you wish to use it with is highly discouraged as some features may not work correctly or at all and in some cases the utility may fail to function entirely or even damage the Flashpoint install it is used with.
 
@@ -103,7 +104,6 @@ All tags are included by default.
  - If for whatever reason you want to only deploy or update CLIFp there is an option for doing so in the **Tools** menu
  - Animations are not included by default since LaunchBox is more games oriented; however, you can choose to include them using the relevant check-able option in the Tools menu
  - The playlist import feature is "smart" in the sense that it won't include games that you aren't importing. So if you only want to import the Flash platform for example and a couple playlists, you wont have to worry about useless entries in the playlist that point to games from other platforms you didn't import. This of course does not apply if you are using the "Force All" playlist game mode.
- 
  
 ## Limitations
  - Although general compatibility is quite high, compatibility with every single title cannot be assured. Issues with a title or group of titles will be fixed as they are discovered.
