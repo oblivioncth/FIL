@@ -46,6 +46,8 @@ void Xml::DataDoc::clearFile() { mDocumentFile->resize(0); }
 //Public:
 Xml::DataDocReader::DataDocReader(Xml::DataDoc* targetDoc) : mTargetDocument(targetDoc) {}
 
+//-Instance Functions-------------------------------------------------------------------------------------------------
+//Public:
 Qx::XmlStreamReaderError Xml::DataDocReader::readInto()
 {
     // Hook reader to document handle
