@@ -270,7 +270,7 @@ Qx::IOOpReport Install::populateExistingDocs(QStringList platformMatches, QStrin
     // Check for platforms
     Qx::IOOpReport existingCheck = Qx::getDirFileList(existingList, mPlatformsDirectory, {XML_EXT}, QDirIterator::Subdirectories);
     if(existingCheck.wasSuccessful())
-        for(const QString& platformPath : existingList)
+        for(const QString& platformPath : qAsConst(existingList))
             for(const QString& possibleMatch : platformMatches)
                 if(QFileInfo(platformPath).baseName() == makeFileNameLBKosher(possibleMatch))
                     mExistingDocuments.insert(Xml::DataDocHandle{Xml::PlatformDoc::TYPE_NAME, possibleMatch});
@@ -279,7 +279,7 @@ Qx::IOOpReport Install::populateExistingDocs(QStringList platformMatches, QStrin
     if(existingCheck.wasSuccessful())
         existingCheck = Qx::getDirFileList(existingList, mPlaylistsDirectory, {XML_EXT}, QDirIterator::Subdirectories);
     if(existingCheck.wasSuccessful())
-        for(const QString& playlistPath : existingList)
+        for(const QString& playlistPath : qAsConst(existingList))
             for(const QString& possibleMatch : playlistMatches)
                 if(QFileInfo(playlistPath).baseName() == makeFileNameLBKosher(possibleMatch))
                     mExistingDocuments.insert(Xml::DataDocHandle{Xml::PlaylistDoc::TYPE_NAME, possibleMatch});
@@ -288,7 +288,7 @@ Qx::IOOpReport Install::populateExistingDocs(QStringList platformMatches, QStrin
     if(existingCheck.wasSuccessful())
         existingCheck = Qx::getDirFileList(existingList, mDataDirectory, {XML_EXT});
     if(existingCheck.wasSuccessful())
-        for(const QString& configDocPath : existingList)
+        for(const QString& configDocPath : qAsConst(existingList))
             mExistingDocuments.insert(Xml::DataDocHandle{Xml::ConfigDoc::TYPE_NAME, QFileInfo(configDocPath).baseName()});
 
     return existingCheck;

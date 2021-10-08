@@ -462,7 +462,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         // Make unselected platforms list
         QStringList availablePlatforms = mFlashpointInstall->getPlatformList();
         QStringList unselectedPlatforms = QStringList(availablePlatforms);
-        for(const QString& selPlatform : mImportSelections.platforms)
+        for(const QString& selPlatform : qAsConst(mImportSelections.platforms))
             unselectedPlatforms.removeAll(selPlatform);
 
         // Make game query
@@ -493,11 +493,11 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     // Determine workload
     mCurrentProgressValue = 0;
     mMaximumProgressValue = addAppQuery.size; // Additional App pre-load
-    for(const FP::Install::DBQueryBuffer& query : gameQueries) // All games
+    for(const FP::Install::DBQueryBuffer& query : qAsConst(gameQueries)) // All games
         mMaximumProgressValue += query.size;
-    for(const FP::Install::DBQueryBuffer& query : playlistSpecGameQueries) // All playlist specific games
+    for(const FP::Install::DBQueryBuffer& query : qAsConst(playlistSpecGameQueries)) // All playlist specific games
         mMaximumProgressValue += query.size;
-    for(const FP::Install::DBQueryBuffer& query : playlistGameQueries) // All playlist games
+    for(const FP::Install::DBQueryBuffer& query : qAsConst(playlistGameQueries)) // All playlist games
         mMaximumProgressValue += query.size;
     mMaximumProgressValue += addAppQuery.size * gameQueries.size() + addAppQuery.size * playlistSpecGameQueries.size(); // All checks of Additional Apps
 
@@ -525,7 +525,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
 
         // Create playlist pecific platforms set
         QStringList playlistSpecPlatforms;
-        for(const FP::Install::DBQueryBuffer& query : playlistSpecGameQueries)
+        for(const FP::Install::DBQueryBuffer& query : qAsConst(playlistSpecGameQueries))
             playlistSpecPlatforms.append(query.source);
 
         if((importStepStatus = setImageReferences(errorReport, mImportSelections.platforms + playlistSpecPlatforms)) != Successful)

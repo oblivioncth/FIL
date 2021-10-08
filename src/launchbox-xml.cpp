@@ -878,7 +878,7 @@ bool Xml::PlatformsDocWriter::writePlatformCategory(const PlatformCategory& plat
 //Public:
 QString Xml::formatDataDocError(QString errorTemplate, DataDocHandle docHandle)
 {
-    return errorTemplate.arg(docHandle.docType).arg(docHandle.docName);
+    return errorTemplate.arg(docHandle.docType, docHandle.docName);
 }
 
 
