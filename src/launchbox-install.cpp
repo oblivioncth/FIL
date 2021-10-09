@@ -18,11 +18,10 @@ namespace LB
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-Install::Install(QString installPath)
+Install::Install(QString installPath) :
+    mValid(false) // Path is invalid until proven otherwise
 {
-    // Ensure instance will be valid
-    if(!pathIsValidInstall(installPath))
-        assert("Cannot create a Install instance with an invalid installPath. Check first with Install::pathIsValidInstall(QString).");
+    QScopeGuard validityGuard([this](){ nullify(); }); // Automatically nullify on fail
 
     // Initialize files and directories;
     mRootDirectory = QDir(installPath);
@@ -30,6 +29,15 @@ Install::Install(QString installPath)
     mDataDirectory = QDir(installPath + '/' + DATA_PATH);
     mPlatformsDirectory = QDir(installPath + '/' + PLATFORMS_PATH);
     mPlaylistsDirectory = QDir(installPath + '/' + PLAYLISTS_PATH);
+
+    // Check validity
+    QFileInfo mainExe(installPath + "/" + MAIN_EXE_PATH);
+    if(!mainExe.exists() || !mainExe.isFile() || !mPlatformsDirectory.exists() || !mPlaylistsDirectory.exists())
+        return;
+
+    // Give the OK
+    mValid = true;
+    validityGuard.dismiss();
 }
 
 //-Class Functions------------------------------------------------------------------------------------------------
@@ -75,18 +83,6 @@ QString Install::makeFileNameLBKosher(QString fileName)
     fileName.replace('\'','_');
 
     return fileName;
-}
-
-//Public:
-bool Install::pathIsValidInstall(QString installPath)
-{
-    QFileInfo platformsFolder(installPath + "/" + PLATFORMS_PATH);
-    QFileInfo playlistsFolder(installPath + "/" + PLATFORMS_PATH);
-    QFileInfo mainEXE(installPath + "/" + MAIN_EXE_PATH);
-
-    return platformsFolder.exists() && platformsFolder.isDir() &&
-           playlistsFolder.exists() && playlistsFolder.isDir() &&
-           mainEXE.exists() && mainEXE.isExecutable();
 }
 
 //-Instance Functions----------------------------------------------------------------------------------------------

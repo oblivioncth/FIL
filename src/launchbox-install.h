@@ -52,6 +52,9 @@ public:
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
+    // Validity
+    bool mValid;
+
     // Files and directories
     QDir mRootDirectory;
     QDir mDataDirectory;
@@ -82,17 +85,18 @@ private:
     static void allowUserWriteOnXML(QString xmlPath);
 
 public:
-   static bool pathIsValidInstall(QString installPath);
    static QString makeFileNameLBKosher(QString fileName);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 private:
+   void nullify();
    QString transferImage(ImageMode imageMode, QDir sourceDir, QString destinationSubPath, const LB::Game& game);
    Qx::XmlStreamReaderError openDataDocument(Xml::DataDoc* docToOpen, Xml::DataDocReader* docReader);
    bool saveDataDocument(QString& errorMessage, Xml::DataDoc* docToSave, Xml::DataDocWriter* docWriter);
    QSet<QString> getExistingDocs(QString type) const;
 
 public:
+   bool isValid();
    Qx::IOOpReport populateExistingDocs(QStringList platformMatches, QStringList playlistMatches);
 
    Qx::XmlStreamReaderError openPlatformDoc(std::unique_ptr<Xml::PlatformDoc>& returnBuffer, QString name, UpdateOptions updateOptions);

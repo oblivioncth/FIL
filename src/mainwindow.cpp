@@ -200,12 +200,9 @@ void MainWindow::validateInstall(QString installPath, Install install)
     switch(install)
     {
         case Install::LaunchBox:
-            mLaunchBoxInstall.reset(); // Detach from previous install if present
-            if(LB::Install::pathIsValidInstall(installPath))
-            {
-                mLaunchBoxInstall = std::make_shared<LB::Install>(installPath);
+            mLaunchBoxInstall = std::make_shared<LB::Install>(installPath);
+            if(mLaunchBoxInstall->isValid())
                 ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
-            }
             else
             {
                 ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
