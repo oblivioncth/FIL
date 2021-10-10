@@ -87,6 +87,15 @@ QString Install::makeFileNameLBKosher(QString fileName)
 
 //-Instance Functions----------------------------------------------------------------------------------------------
 //Private:
+void Install::nullify()
+{
+    mRootDirectory = QDir();
+    mDataDirectory = QDir();
+    mPlatformsDirectory = QDir();
+    mPlaylistsDirectory = QDir();
+    mPlatformImagesDirectory = QDir();
+}
+
 QString Install::transferImage(ImageMode imageMode, QDir sourceDir, QString destinationSubPath, const LB::Game& game)
 {
     // Parse to paths
@@ -255,6 +264,8 @@ QSet<QString> Install::getExistingDocs(QString type) const
 }
 
 //Public:
+bool Install::isValid() { return mValid; }
+
 Qx::IOOpReport Install::populateExistingDocs(QStringList platformMatches, QStringList playlistMatches)
 {
     // Clear existing
