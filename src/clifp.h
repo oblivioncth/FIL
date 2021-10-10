@@ -2,7 +2,7 @@
 #define CLIFP_H
 
 #include <QUuid>
-#include "flashpoint-install.h"
+#include "flashpoint/fp-install.h"
 #include "qx.h"
 
 class CLIFp

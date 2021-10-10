@@ -4,7 +4,7 @@
 #include <QString>
 #include <QDateTime>
 #include <QSet>
-#include "../flashpoint.h"
+#include "../flashpoint/fp-items.h"
 #include "qx.h"
 
 namespace LB

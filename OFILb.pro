@@ -19,8 +19,11 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     src/clifp.cpp \
-    src/flashpoint-install.cpp \
-    src/flashpoint.cpp \
+    src/flashpoint/fp-db.cpp \
+    src/flashpoint/fp-install.cpp \
+    src/flashpoint/fp-items.cpp \
+    src/flashpoint/fp-json.cpp \
+    src/flashpoint/fp-macro.cpp \
     src/import-worker.cpp \
     src/launchbox/lb-install.cpp \
     src/launchbox/lb-xml.cpp \
@@ -30,8 +33,11 @@ SOURCES += \
 
 HEADERS += \
     src/clifp.h \
-    src/flashpoint-install.h \
-    src/flashpoint.h \
+    src/flashpoint/fp-db.h \
+    src/flashpoint/fp-install.h \
+    src/flashpoint/fp-items.h \
+    src/flashpoint/fp-json.h \
+    src/flashpoint/fp-macro.h \
     src/import-worker.h \
     src/launchbox/lb-install.h \
     src/launchbox/lb-xml.h \

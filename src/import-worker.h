@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QMessageBox>
-#include "flashpoint-install.h"
+#include "flashpoint/fp-install.h"
 #include "launchbox/lb-install.h"
 
 class ImportWorker : public QObject
@@ -27,7 +27,7 @@ public:
         LB::UpdateOptions updateOptions;
         LB::Install::ImageMode imageMode;
         LB::Install::PlaylistGameMode playlistMode;
-        FP::Install::InclusionOptions inclusionOptions;
+        FP::DB::InclusionOptions inclusionOptions;
     };
 
 //-Class Variables-----------------------------------------------------------------------------------------------
@@ -83,13 +83,13 @@ public:
 
 //-Instance Functions---------------------------------------------------------------------------------------------------------
 private:
-    const QList<QUuid> preloadPlaylists(FP::Install::DBQueryBuffer& playlistQuery);
-    //const QMultiHash<QUuid, int> generateGameTagMap(FP::Install::DBQueryBuffer& gameTagsQuery);
-    const QList<QUuid> getPlaylistSpecificGameIDs(FP::Install::DBQueryBuffer& playlistGameIDQuery);
-    ImportResult preloadAddApps(Qx::GenericError& errorReport, FP::Install::DBQueryBuffer& addAppQuery);
-    ImportResult processGames(Qx::GenericError& errorReport, QList<FP::Install::DBQueryBuffer>& gameQueries, bool playlistSpecific);
+    const QList<QUuid> preloadPlaylists(FP::DB::QueryBuffer& playlistQuery);
+    //const QMultiHash<QUuid, int> generateGameTagMap(FP::DB::QueryBuffer& gameTagsQuery);
+    const QList<QUuid> getPlaylistSpecificGameIDs(FP::DB::QueryBuffer& playlistGameIDQuery);
+    ImportResult preloadAddApps(Qx::GenericError& errorReport, FP::DB::QueryBuffer& addAppQuery);
+    ImportResult processGames(Qx::GenericError& errorReport, QList<FP::DB::QueryBuffer>& gameQueries, bool playlistSpecific);
     ImportResult setImageReferences(Qx::GenericError& errorReport, QStringList platforms);
-    ImportResult processPlaylists(Qx::GenericError& errorReport, QList<FP::Install::DBQueryBuffer>& playlistGameQueries);
+    ImportResult processPlaylists(Qx::GenericError& errorReport, QList<FP::DB::QueryBuffer>& playlistGameQueries);
 
 public:
     ImportResult doImport(Qx::GenericError& errorReport);
@@ -109,7 +109,7 @@ signals:
     void blockingErrorOccured(std::shared_ptr<int> response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices);
 
     // Finished
-    void importCompleted(ImportResult importResult, Qx::GenericError errorReport);
+    void importCompleted(ImportWorker::ImportResult importResult, Qx::GenericError errorReport);
 };
 
 //-Metatype declarations-------------------------------------------------------------------------------------------

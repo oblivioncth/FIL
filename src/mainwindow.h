@@ -10,7 +10,7 @@
 #include "version.h"
 #include "launchbox/lb-install.h"
 #include "launchbox/lb-xml.h"
-#include "flashpoint-install.h"
+#include "flashpoint/fp-install.h"
 #include "import-worker.h"
 #include "qx-io.h"
 #include "qx-widgets.h"
@@ -101,9 +101,6 @@ private:
     static inline const QString MSG_FP_CLOSE_PROMPT = "It is strongly recommended to close Flashpoint before proceeding as it can severely slow or interfer with the import process";
 
     // Messages - FP Database read
-    static inline const QString MSG_FP_DB_CANT_CONNECT = "Failed to establish a handle to the Flashpoint database:\n"
-                                                         "\n"
-                                                         "%1";
     static inline const QString MSG_FP_DB_MISSING_TABLE = "The Flashpoint database is missing tables critical to the import process.";
     static inline const QString MSG_FP_DB_TABLE_MISSING_COLUMN = "The Flashpoint database tables are missing columns critical to the import process.";
     static inline const QString MSG_FP_DB_UNEXPECTED_ERROR = "An unexpected SQL error occured while reading the Flashpoint database:";
@@ -213,7 +210,6 @@ private:
     void populateImportSelectionBoxes();
     void generateTagSelectionOptions();
     bool parseLaunchBoxData();
-    bool parseFlashpointData();
     bool installsHaveChanged();
     void redoInputChecks();
 
@@ -230,7 +226,7 @@ private:
 
     QStringList getSelectedPlatforms() const;
     QStringList getSelectedPlaylists() const;
-    FP::Install::InclusionOptions getSelectedInclusionOptions() const;
+    FP::DB::InclusionOptions getSelectedInclusionOptions() const;
     LB::UpdateOptions getSelectedUpdateOptions() const;
     LB::Install::ImageMode getSelectedImageMode() const;
     LB::Install::PlaylistGameMode getSelectedPlaylistGameMode() const;

@@ -214,12 +214,9 @@ void MainWindow::validateInstall(QString installPath, Install install)
             break;
 
         case Install::Flashpoint:
-            mFlashpointInstall.reset(); // Detach from previous install if present
-            FP::Install::ValidityReport fpValidity = FP::Install::checkInstallValidity(installPath, FP::Install::CompatLevel::Full);
-            if(fpValidity.installValid)
+            mFlashpointInstall = std::make_shared<FP::Install>(installPath);
+            if(mFlashpointInstall->isValid())
             {
-                mFlashpointInstall = std::make_shared<FP::Install>(installPath);
-
                 if(installMatchesTargetVersion(*mFlashpointInstall))
                     ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
                 else
@@ -234,7 +231,7 @@ void MainWindow::validateInstall(QString installPath, Install install)
                 clearListWidgets();
                 mTagSelectionModel.reset(); // Void tag selection model
                 refreshEnableStates();
-                postGenericError(Qx::GenericError(Qx::GenericError::Critical, MSG_FP_INSTALL_INVALID, fpValidity.details), QMessageBox::Ok);
+                postGenericError(mFlashpointInstall->error(), QMessageBox::Ok);
             }
             break;
     }
@@ -246,32 +243,21 @@ void MainWindow::validateInstall(QString installPath, Install install)
 void MainWindow::gatherInstallInfo()
 {
     // Get data in order but only continue if each step is successful
-    if(parseFlashpointData())
+    if(parseLaunchBoxData())
     {
-        if(parseLaunchBoxData())
-        {
-            // Show selection options
-            populateImportSelectionBoxes();
+        // Show selection options
+        populateImportSelectionBoxes();
 
-            // Generate tab selection model
-            generateTagSelectionOptions();
+        // Generate tab selection model
+        generateTagSelectionOptions();
 
-            // Advance to next input stage
-            refreshEnableStates();
-        }
-        else
-        {
-            mLaunchBoxInstall.reset();
-            ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-            clearListWidgets();
-            mTagSelectionModel.reset(); // Void tag selection model
-            refreshEnableStates();
-        }
+        // Advance to next input stage
+        refreshEnableStates();
     }
     else
     {
-        mFlashpointInstall.reset();
-        ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
+        mLaunchBoxInstall.reset();
+        ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
         clearListWidgets();
         mTagSelectionModel.reset(); // Void tag selection model
         refreshEnableStates();
@@ -282,8 +268,8 @@ void MainWindow::populateImportSelectionBoxes()
 {
     // Populate import selection boxes
     clearListWidgets();
-    ui->listWidget_platformChoices->addItems(mFlashpointInstall->getPlatformList());
-    ui->listWidget_playlistChoices->addItems(mFlashpointInstall->getPlaylistList());
+    ui->listWidget_platformChoices->addItems(mFlashpointInstall->database()->platformList());
+    ui->listWidget_playlistChoices->addItems(mFlashpointInstall->database()->playlistList());
 
     // Set item attributes
     QListWidgetItem* currentItem;
@@ -319,7 +305,7 @@ void MainWindow::generateTagSelectionOptions()
     mTagSelectionModel.reset();
 
     // Get tag hiearchy
-    QMap<int, FP::Install::TagCategory> tagMap = mFlashpointInstall->getTags();
+    QMap<int, FP::DB::TagCategory> tagMap = mFlashpointInstall->database()->tags();
 
     // Create new model
     mTagSelectionModel = std::make_unique<Qx::StandardItemModelX>();
@@ -328,7 +314,7 @@ void MainWindow::generateTagSelectionOptions()
 
     // Populate model
     QStandardItem* modelRoot = mTagSelectionModel->invisibleRootItem();
-    QMap<int, FP::Install::TagCategory>::const_iterator i;
+    QMap<int, FP::DB::TagCategory>::const_iterator i;
 
     // Add root tag categories
     for(i = tagMap.constBegin(); i != tagMap.constEnd(); ++i)
@@ -338,7 +324,7 @@ void MainWindow::generateTagSelectionOptions()
         rootItem->setData(QBrush(Qx::Color::textColorFromBackgroundColor(i->color)), Qt::ForegroundRole);
         rootItem->setCheckState(Qt::CheckState::Checked);
         rootItem->setCheckable(true);
-        QMap<int, FP::Install::Tag>::const_iterator j;
+        QMap<int, FP::DB::Tag>::const_iterator j;
 
         // Add child tags
         for(j = i->tags.constBegin(); j != i->tags.constEnd(); ++j)
@@ -364,7 +350,7 @@ bool MainWindow::parseLaunchBoxData()
     Qx::IOOpReport existingCheck;
 
     // Get list of existing platforms and playlists
-    existingCheck = mLaunchBoxInstall->populateExistingDocs(mFlashpointInstall->getPlatformList(), mFlashpointInstall->getPlaylistList());
+    existingCheck = mLaunchBoxInstall->populateExistingDocs(mFlashpointInstall->database()->platformList(), mFlashpointInstall->database()->playlistList());
 
     // IO Error Check
     if(!existingCheck.wasSuccessful())
@@ -372,80 +358,6 @@ bool MainWindow::parseLaunchBoxData()
 
     // Return true on success
     return existingCheck.wasSuccessful();
-}
-
-bool MainWindow::parseFlashpointData()
-{
-    // Get and open connection to Flashpoint SQLite database, check that it is valid and allow for retries
-    QSqlDatabase fpDB;
-
-    // General error holder
-    QSqlError errorCheck;
-
-    // Check that the connection is/can be opened and allow for retries
-    if(!mFlashpointInstall->databaseConnectionOpenInThisThread())
-    {
-        while((errorCheck = mFlashpointInstall->openThreadDatabaseConnection()).isValid())
-            if(QMessageBox::critical(this, QApplication::applicationName(), MSG_FP_DB_CANT_CONNECT.arg(errorCheck.text()),
-                                     QMessageBox::Retry | QMessageBox::Abort, QMessageBox::Retry) == QMessageBox::Abort)
-                return false;
-    }
-    // Ensure the database contains the required tables
-    QSet<QString> missingTables;
-    errorCheck = mFlashpointInstall->checkDatabaseForRequiredTables(missingTables);
-
-    // SQL Error Check
-    if(errorCheck.isValid())
-    {
-        postSqlError(MSG_FP_DB_UNEXPECTED_ERROR, errorCheck);
-        return false;
-    }
-
-    // Check if tables are missing
-    if(!missingTables.isEmpty())
-    {
-        postListError(MSG_FP_DB_MISSING_TABLE, QStringList(missingTables.begin(), missingTables.end()));
-        return false;
-    }
-
-    // Ensure the database contains the required columns
-    QSet<QString> missingColumns;
-    errorCheck = mFlashpointInstall->checkDatabaseForRequiredColumns(missingColumns);
-
-    // SQL Error Check
-    if(errorCheck.isValid())
-    {
-        postSqlError(MSG_FP_DB_UNEXPECTED_ERROR, errorCheck);
-        return false;
-    }
-
-    // Check if columns are missing
-    if(!missingColumns.isEmpty())
-    {
-        postListError(MSG_FP_DB_TABLE_MISSING_COLUMN, QStringList(missingColumns.begin(), missingColumns.end()));
-        return false;
-    }
-
-    // Generate list of available platforms, playlists
-    errorCheck = mFlashpointInstall->populateAvailableItems();
-
-    // SQL Error Check
-    if(errorCheck.isValid())
-    {
-        postSqlError(MSG_FP_DB_UNEXPECTED_ERROR, errorCheck);
-        return false;
-    }
-
-    // Generate list of available tags
-    errorCheck = mFlashpointInstall->populateTags();
-
-    // SQL Error Check
-    if(errorCheck.isValid())
-        postSqlError(MSG_FP_DB_UNEXPECTED_ERROR, errorCheck);
-
-    // Return true on success
-    return !errorCheck.isValid();
-
 }
 
 bool MainWindow::installsHaveChanged()
@@ -456,7 +368,7 @@ bool MainWindow::installsHaveChanged()
     QSet<QString> currentPlatforms = mLaunchBoxInstall->getExistingPlatforms();
     QSet<QString> currentPlaylists = mLaunchBoxInstall->getExistingPlaylists();
 
-    if(!mLaunchBoxInstall->populateExistingDocs(mFlashpointInstall->getPlatformList(), mFlashpointInstall->getPlaylistList()).wasSuccessful())
+    if(!mLaunchBoxInstall->populateExistingDocs(mFlashpointInstall->database()->platformList(), mFlashpointInstall->database()->playlistList()).wasSuccessful())
         return true;
 
     if(currentPlatforms != mLaunchBoxInstall->getExistingPlatforms() || currentPlaylists != mLaunchBoxInstall->getExistingPlaylists())
@@ -469,7 +381,7 @@ void MainWindow::redoInputChecks()
 {
     // Get existing locations
     QString launchBoxPath = mLaunchBoxInstall->getPath();
-    QString flashpointPath = mFlashpointInstall->getPath();
+    QString flashpointPath = mFlashpointInstall->fullPath();
 
     // Check them again
     validateInstall(launchBoxPath, Install::LaunchBox);
@@ -596,7 +508,7 @@ QStringList MainWindow::getSelectedPlaylists() const
     return selectedPlaylists;
 }
 
-FP::Install::InclusionOptions MainWindow::getSelectedInclusionOptions() const
+FP::DB::InclusionOptions MainWindow::getSelectedInclusionOptions() const
 {
     return {generateTagExlusionSet(), ui->action_includeAnimations->isChecked()};
 }
@@ -755,11 +667,9 @@ void MainWindow::standaloneCLIFpDeploy()
 
     if(!selectedDir.isEmpty())
     {
-        FP::Install::ValidityReport fpValidity = FP::Install::checkInstallValidity(selectedDir, FP::Install::CompatLevel::Full);
-        if(fpValidity.installValid)
+        FP::Install tempFlashpointInstall(selectedDir);
+        if(tempFlashpointInstall.isValid())
         {
-            FP::Install tempFlashpointInstall(selectedDir);
-
             if(!installMatchesTargetVersion(tempFlashpointInstall))
                 QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_VER_NOT_TARGET);
 
@@ -784,7 +694,7 @@ void MainWindow::standaloneCLIFpDeploy()
             }
         }
         else
-            postGenericError(Qx::GenericError(Qx::GenericError::Critical, MSG_FP_INSTALL_INVALID, fpValidity.details), QMessageBox::Ok);
+            postGenericError(tempFlashpointInstall.error(), QMessageBox::Ok);
     }
 }
 void MainWindow::showTagSelectionDialog()

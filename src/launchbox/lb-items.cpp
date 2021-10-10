@@ -1,5 +1,5 @@
 #include "lb-items.h"
-#include "../flashpoint-install.h"
+#include "../flashpoint/fp-install.h"
 #include "../clifp.h"
 #include "qx-io.h"
 
@@ -64,7 +64,7 @@ Game::Game(FP::Game flashpointGame, QString fullCLIFpPath)
       mCommandLine(CLIFp::parametersFromStandard(flashpointGame.getID())),
       mReleaseDate(flashpointGame.getReleaseDate()),
       mVersion(flashpointGame.getVersion()),
-      mReleaseType(flashpointGame.getLibrary() == FP::Install::DBTable_Game::ENTRY_GAME_LIBRARY ? RELEASE_TYPE_GAME : RELEASE_TYPE_ANIM) {}
+      mReleaseType(flashpointGame.getLibrary() == FP::DB::Table_Game::ENTRY_GAME_LIBRARY ? RELEASE_TYPE_GAME : RELEASE_TYPE_ANIM) {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:

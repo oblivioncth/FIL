@@ -17,7 +17,7 @@ ImportWorker::ImportWorker(std::shared_ptr<FP::Install> fpInstallForWork,
 
 //-Instance Functions--------------------------------------------------------------------------------------------
 //Private
-const QList<QUuid> ImportWorker::preloadPlaylists(FP::Install::DBQueryBuffer& playlistQuery)
+const QList<QUuid> ImportWorker::preloadPlaylists(FP::DB::QueryBuffer& playlistQuery)
 {
     QList<QUuid> targetPlaylistIDs;
 
@@ -28,10 +28,10 @@ const QList<QUuid> ImportWorker::preloadPlaylists(FP::Install::DBQueryBuffer& pl
 
         // Form playlist from record
         FP::PlaylistBuilder fpPb;
-        fpPb.wID(playlistQuery.result.value(FP::Install::DBTable_Playlist::COL_ID).toString());
-        fpPb.wTitle(playlistQuery.result.value(FP::Install::DBTable_Playlist::COL_TITLE).toString());
-        fpPb.wDescription(playlistQuery.result.value(FP::Install::DBTable_Playlist::COL_DESCRIPTION).toString());
-        fpPb.wAuthor(playlistQuery.result.value(FP::Install::DBTable_Playlist::COL_AUTHOR).toString());
+        fpPb.wID(playlistQuery.result.value(FP::DB::Table_Playlist::COL_ID).toString());
+        fpPb.wTitle(playlistQuery.result.value(FP::DB::Table_Playlist::COL_TITLE).toString());
+        fpPb.wDescription(playlistQuery.result.value(FP::DB::Table_Playlist::COL_DESCRIPTION).toString());
+        fpPb.wAuthor(playlistQuery.result.value(FP::DB::Table_Playlist::COL_AUTHOR).toString());
 
         // Build playlist
         FP::Playlist playlist = fpPb.build();
@@ -46,7 +46,7 @@ const QList<QUuid> ImportWorker::preloadPlaylists(FP::Install::DBQueryBuffer& pl
     return targetPlaylistIDs;
 }
 
-//const QMultiHash<QUuid, int> generateGameTagMap(FP::Install::DBQueryBuffer& gameTagsQuery)
+//const QMultiHash<QUuid, int> generateGameTagMap(FP::DB::QueryBuffer& gameTagsQuery)
 //{
 //    QMultiHash<QUuid, int> tagMap;
 
@@ -56,14 +56,14 @@ const QList<QUuid> ImportWorker::preloadPlaylists(FP::Install::DBQueryBuffer& pl
 //        gameTagsQuery.result.next();
 
 //        // Add game and tag ID to map
-//        tagMap.insert(QUuid(gameTagsQuery.result.value(FP::Install::DBTable_Game_Tags_Tag::COL_GAME_ID).toString()),
-//                      gameTagsQuery.result.value(FP::Install::DBTable_Game_Tags_Tag::COL_TAG_ID).toInt());
+//        tagMap.insert(QUuid(gameTagsQuery.result.value(FP::DB::Table_Game_Tags_Tag::COL_GAME_ID).toString()),
+//                      gameTagsQuery.result.value(FP::DB::Table_Game_Tags_Tag::COL_TAG_ID).toInt());
 //    }
 
 //    return tagMap;
 //}
 
-const QList<QUuid> ImportWorker::getPlaylistSpecificGameIDs(FP::Install::DBQueryBuffer& playlistGameIDQuery)
+const QList<QUuid> ImportWorker::getPlaylistSpecificGameIDs(FP::DB::QueryBuffer& playlistGameIDQuery)
 {
     QList<QUuid> playlistSpecGameIDs;
 
@@ -73,13 +73,13 @@ const QList<QUuid> ImportWorker::getPlaylistSpecificGameIDs(FP::Install::DBQuery
         playlistGameIDQuery.result.next();
 
         // Add ID to list
-        playlistSpecGameIDs.append(QUuid(playlistGameIDQuery.result.value(FP::Install::DBTable_Playlist_Game::COL_GAME_ID).toString()));
+        playlistSpecGameIDs.append(QUuid(playlistGameIDQuery.result.value(FP::DB::Table_Playlist_Game::COL_GAME_ID).toString()));
     }
 
     return playlistSpecGameIDs;
 }
 
-ImportWorker::ImportResult ImportWorker::preloadAddApps(Qx::GenericError& errorReport, FP::Install::DBQueryBuffer& addAppQuery)
+ImportWorker::ImportResult ImportWorker::preloadAddApps(Qx::GenericError& errorReport, FP::DB::QueryBuffer& addAppQuery)
 {
     mAddAppsCache.reserve(addAppQuery.size);
     for(int i = 0; i < addAppQuery.size; i++)
@@ -89,13 +89,13 @@ ImportWorker::ImportResult ImportWorker::preloadAddApps(Qx::GenericError& errorR
 
         // Form additional app from record
         FP::AddAppBuilder fpAab;
-        fpAab.wID(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_ID).toString());
-        fpAab.wAppPath(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_APP_PATH).toString());
-        fpAab.wAutorunBefore(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_AUTORUN).toString());
-        fpAab.wLaunchCommand(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_LAUNCH_COMMAND).toString());
-        fpAab.wName(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_NAME).toString());
-        fpAab.wWaitExit(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_WAIT_EXIT).toString());
-        fpAab.wParentID(addAppQuery.result.value(FP::Install::DBTable_Add_App::COL_PARENT_ID).toString());
+        fpAab.wID(addAppQuery.result.value(FP::DB::Table_Add_App::COL_ID).toString());
+        fpAab.wAppPath(addAppQuery.result.value(FP::DB::Table_Add_App::COL_APP_PATH).toString());
+        fpAab.wAutorunBefore(addAppQuery.result.value(FP::DB::Table_Add_App::COL_AUTORUN).toString());
+        fpAab.wLaunchCommand(addAppQuery.result.value(FP::DB::Table_Add_App::COL_LAUNCH_COMMAND).toString());
+        fpAab.wName(addAppQuery.result.value(FP::DB::Table_Add_App::COL_NAME).toString());
+        fpAab.wWaitExit(addAppQuery.result.value(FP::DB::Table_Add_App::COL_WAIT_EXIT).toString());
+        fpAab.wParentID(addAppQuery.result.value(FP::DB::Table_Add_App::COL_PARENT_ID).toString());
 
         // Build additional app
         FP::AddApp additionalApp = fpAab.build();
@@ -118,12 +118,12 @@ ImportWorker::ImportResult ImportWorker::preloadAddApps(Qx::GenericError& errorR
     return Successful;
 }
 
-ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorReport, QList<FP::Install::DBQueryBuffer>& gameQueries, bool playlistSpecific)
+ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorReport, QList<FP::DB::QueryBuffer>& gameQueries, bool playlistSpecific)
 {
     for(int i = 0; i < gameQueries.size(); i++)
     {
         // Get current result
-        FP::Install::DBQueryBuffer& currentPlatformGameResult = gameQueries[i];
+        FP::DB::QueryBuffer& currentPlatformGameResult = gameQueries[i];
 
         // Update progress dialog label
         emit progressStepChanged((playlistSpecific ? STEP_IMPORTING_PLAYLIST_SPEC_GAMES : STEP_IMPORTING_PLATFORM_GAMES).arg(currentPlatformGameResult.source));
@@ -166,27 +166,27 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
 
             // Form game from record
             FP::GameBuilder fpGb;
-            fpGb.wID(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ID).toString());
-            fpGb.wTitle(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_TITLE).toString());
-            fpGb.wSeries(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_SERIES).toString());
-            fpGb.wDeveloper(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_DEVELOPER).toString());
-            fpGb.wPublisher(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_PUBLISHER).toString());
-            fpGb.wDateAdded(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_DATE_ADDED).toString());
-            fpGb.wDateModified(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_DATE_MODIFIED).toString());
-            fpGb.wPlatform(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_PLATFORM).toString());
-            fpGb.wBroken(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_BROKEN).toString());
-            fpGb.wPlayMode(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_PLAY_MODE).toString());
-            fpGb.wStatus(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_STATUS).toString());
-            fpGb.wNotes(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_NOTES).toString());
-            fpGb.wSource(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_SOURCE).toString());
-            fpGb.wAppPath(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_APP_PATH).toString());
-            fpGb.wLaunchCommand(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_LAUNCH_COMMAND).toString());
-            fpGb.wReleaseDate(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_RELEASE_DATE).toString());
-            fpGb.wVersion(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_VERSION).toString());
-            fpGb.wOriginalDescription(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ORIGINAL_DESC).toString());
-            fpGb.wLanguage(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_LANGUAGE).toString());
-            fpGb.wOrderTitle(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_ORDER_TITLE).toString());
-            fpGb.wLibrary(currentPlatformGameResult.result.value(FP::Install::DBTable_Game::COL_LIBRARY).toString());
+            fpGb.wID(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_ID).toString());
+            fpGb.wTitle(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_TITLE).toString());
+            fpGb.wSeries(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_SERIES).toString());
+            fpGb.wDeveloper(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_DEVELOPER).toString());
+            fpGb.wPublisher(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_PUBLISHER).toString());
+            fpGb.wDateAdded(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_DATE_ADDED).toString());
+            fpGb.wDateModified(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_DATE_MODIFIED).toString());
+            fpGb.wPlatform(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_PLATFORM).toString());
+            fpGb.wBroken(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_BROKEN).toString());
+            fpGb.wPlayMode(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_PLAY_MODE).toString());
+            fpGb.wStatus(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_STATUS).toString());
+            fpGb.wNotes(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_NOTES).toString());
+            fpGb.wSource(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_SOURCE).toString());
+            fpGb.wAppPath(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_APP_PATH).toString());
+            fpGb.wLaunchCommand(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_LAUNCH_COMMAND).toString());
+            fpGb.wReleaseDate(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_RELEASE_DATE).toString());
+            fpGb.wVersion(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_VERSION).toString());
+            fpGb.wOriginalDescription(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_ORIGINAL_DESC).toString());
+            fpGb.wLanguage(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_LANGUAGE).toString());
+            fpGb.wOrderTitle(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_ORDER_TITLE).toString());
+            fpGb.wLibrary(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_LIBRARY).toString());
 
             // Convert and convert FP game to LB game and add to document
             LB::Game builtGame = LB::Game(fpGb.build(), CLIFp::standardCLIFpPath(*mFlashpointInstall));
@@ -200,7 +200,7 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
             // Transfer game images if applicable
             if(mOptionSet.imageMode != LB::Install::Reference)
             {
-                while(!skipAllImages && !mLaunchBoxInstall->transferLogo(imageTransferError, mOptionSet.imageMode, mFlashpointInstall->getLogosDirectory(), builtGame))
+                while(!skipAllImages && !mLaunchBoxInstall->transferLogo(imageTransferError, mOptionSet.imageMode, mFlashpointInstall->logosDirectory(), builtGame))
                 {
                     // Notify GUI Thread of error
                     emit blockingErrorOccured(mBlockingErrorResponse, Qx::GenericError(Qx::GenericError::Error, imageTransferError, "Retry?", QString(), CAPTION_IMAGE_ERR),
@@ -213,7 +213,7 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
                        skipAllImages = true;
                 }
 
-                while(!skipAllImages && !mLaunchBoxInstall->transferScreenshot(imageTransferError, mOptionSet.imageMode, mFlashpointInstall->getScrenshootsDirectory(), builtGame))
+                while(!skipAllImages && !mLaunchBoxInstall->transferScreenshot(imageTransferError, mOptionSet.imageMode, mFlashpointInstall->screenshootsDirectory(), builtGame))
                 {
                     // Notify GUI Thread of error
                     emit blockingErrorOccured(mBlockingErrorResponse, Qx::GenericError(Qx::GenericError::Error, imageTransferError, "Retry?", QString(), CAPTION_IMAGE_ERR),
@@ -309,8 +309,8 @@ ImportWorker::ImportResult ImportWorker::setImageReferences(Qx::GenericError& er
     // Set media folder paths and ensure document contains platform or else image paths will be ignored
     for(const QString& platform : platforms)
     {
-        platformConfigXML->setMediaFolder(platform, LB::Install::LOGO_PATH, QDir::toNativeSeparators(mFlashpointInstall->getLogosDirectory().absolutePath()));
-        platformConfigXML->setMediaFolder(platform, LB::Install::SCREENSHOT_PATH,  QDir::toNativeSeparators(mFlashpointInstall->getScrenshootsDirectory().absolutePath()));
+        platformConfigXML->setMediaFolder(platform, LB::Install::LOGO_PATH, QDir::toNativeSeparators(mFlashpointInstall->logosDirectory().absolutePath()));
+        platformConfigXML->setMediaFolder(platform, LB::Install::SCREENSHOT_PATH,  QDir::toNativeSeparators(mFlashpointInstall->screenshootsDirectory().absolutePath()));
 
         if(!platformConfigXML->containsPlatform(platform))
         {
@@ -334,9 +334,9 @@ ImportWorker::ImportResult ImportWorker::setImageReferences(Qx::GenericError& er
     return Successful;
 }
 
-ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& errorReport, QList<FP::Install::DBQueryBuffer>& playlistGameQueries)
+ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& errorReport, QList<FP::DB::QueryBuffer>& playlistGameQueries)
 {
-    for(FP::Install::DBQueryBuffer& currentPlaylistGameResult : playlistGameQueries)
+    for(FP::DB::QueryBuffer& currentPlaylistGameResult : playlistGameQueries)
     {
         // Get corresponding playlist from cache
         FP::Playlist currentPlaylist = mPlaylistsCache.value(QUuid(currentPlaylistGameResult.source));
@@ -367,14 +367,14 @@ ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& erro
             currentPlaylistGameResult.result.next();
 
             // Only process the playlist game if it was included in import
-            if(mPlaylistGameDetailsCache.contains(QUuid(currentPlaylistGameResult.result.value(FP::Install::DBTable_Playlist_Game::COL_GAME_ID).toString())))
+            if(mPlaylistGameDetailsCache.contains(QUuid(currentPlaylistGameResult.result.value(FP::DB::Table_Playlist_Game::COL_GAME_ID).toString())))
             {
                 // Form game from record
                 FP::PlaylistGameBuilder fpPgb;
-                fpPgb.wID(currentPlaylistGameResult.result.value(FP::Install::DBTable_Playlist_Game::COL_ID).toString());
-                fpPgb.wPlaylistID(currentPlaylistGameResult.result.value(FP::Install::DBTable_Playlist_Game::COL_PLAYLIST_ID).toString());
-                fpPgb.wOrder(currentPlaylistGameResult.result.value(FP::Install::DBTable_Playlist_Game::COL_ORDER).toString());
-                fpPgb.wGameID(currentPlaylistGameResult.result.value(FP::Install::DBTable_Playlist_Game::COL_GAME_ID).toString());
+                fpPgb.wID(currentPlaylistGameResult.result.value(FP::DB::Table_Playlist_Game::COL_ID).toString());
+                fpPgb.wPlaylistID(currentPlaylistGameResult.result.value(FP::DB::Table_Playlist_Game::COL_PLAYLIST_ID).toString());
+                fpPgb.wOrder(currentPlaylistGameResult.result.value(FP::DB::Table_Playlist_Game::COL_ORDER).toString());
+                fpPgb.wGameID(currentPlaylistGameResult.result.value(FP::DB::Table_Playlist_Game::COL_GAME_ID).toString());
 
                 // Build FP playlist game, convert to LB and add
                 currentPlaylistXML->addPlaylistGame(LB::PlaylistGame(fpPgb.build(), mPlaylistGameDetailsCache));
@@ -418,14 +418,17 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     QSqlError queryError;
 
     // Initial query buffers
-    QList<FP::Install::DBQueryBuffer> gameQueries;
-    QList<FP::Install::DBQueryBuffer> playlistSpecGameQueries;
-    FP::Install::DBQueryBuffer addAppQuery;
-    FP::Install::DBQueryBuffer playlistQueries;
-    QList<FP::Install::DBQueryBuffer> playlistGameQueries;
+    QList<FP::DB::QueryBuffer> gameQueries;
+    QList<FP::DB::QueryBuffer> playlistSpecGameQueries;
+    FP::DB::QueryBuffer addAppQuery;
+    FP::DB::QueryBuffer playlistQueries;
+    QList<FP::DB::QueryBuffer> playlistGameQueries;
+
+    // Get flashpoint database
+    FP::DB* fpDatabase = mFlashpointInstall->database();
 
     // Make initial playlists query
-    queryError = mFlashpointInstall->queryPlaylistsByName(playlistQueries, mImportSelections.playlists);
+    queryError = fpDatabase->queryPlaylistsByName(playlistQueries, mImportSelections.playlists);
     if(queryError.isValid())
     {
         errorReport = Qx::GenericError(Qx::GenericError::Critical, MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());
@@ -436,7 +439,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     const QList<QUuid> targetPlaylistIDs = preloadPlaylists(playlistQueries);
 
     // Make initial game query
-    queryError = mFlashpointInstall->queryGamesByPlatform(gameQueries, mImportSelections.platforms, mOptionSet.inclusionOptions);
+    queryError = fpDatabase->queryGamesByPlatform(gameQueries, mImportSelections.platforms, mOptionSet.inclusionOptions);
     if(queryError.isValid())
     {
         errorReport = Qx::GenericError(Qx::GenericError::Critical, MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());
@@ -446,10 +449,10 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     // Make initial playlist specific game query if applicable
     if(mOptionSet.playlistMode == LB::Install::PlaylistGameMode::ForceAll)
     {
-        FP::Install::DBQueryBuffer pgIDQuery;
+        FP::DB::QueryBuffer pgIDQuery;
 
         // Make playlist game ID query
-        queryError = mFlashpointInstall->queryPlaylistGameIDs(pgIDQuery, targetPlaylistIDs);
+        queryError = fpDatabase->queryPlaylistGameIDs(pgIDQuery, targetPlaylistIDs);
         if(queryError.isValid())
         {
             errorReport = Qx::GenericError(Qx::GenericError::Critical, MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());
@@ -460,13 +463,13 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         const QList<QUuid> targetPlaylistGameIDs = getPlaylistSpecificGameIDs(pgIDQuery);
 
         // Make unselected platforms list
-        QStringList availablePlatforms = mFlashpointInstall->getPlatformList();
+        QStringList availablePlatforms = fpDatabase->platformList();
         QStringList unselectedPlatforms = QStringList(availablePlatforms);
         for(const QString& selPlatform : qAsConst(mImportSelections.platforms))
             unselectedPlatforms.removeAll(selPlatform);
 
         // Make game query
-        queryError = mFlashpointInstall->queryGamesByPlatform(playlistSpecGameQueries, unselectedPlatforms, mOptionSet.inclusionOptions, targetPlaylistGameIDs);
+        queryError = fpDatabase->queryGamesByPlatform(playlistSpecGameQueries, unselectedPlatforms, mOptionSet.inclusionOptions, targetPlaylistGameIDs);
         if(queryError.isValid())
         {
             errorReport = Qx::GenericError(Qx::GenericError::Critical, MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());
@@ -475,7 +478,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     }
 
     // Make initial add apps query
-    queryError = mFlashpointInstall->queryAllAddApps(addAppQuery);
+    queryError = fpDatabase->queryAllAddApps(addAppQuery);
     if(queryError.isValid())
     {
         errorReport = Qx::GenericError(Qx::GenericError::Critical, MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());
@@ -483,7 +486,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     }
 
     // Make initial playlist games query
-    queryError = mFlashpointInstall->queryPlaylistGamesByPlaylist(playlistGameQueries, targetPlaylistIDs);
+    queryError = fpDatabase->queryPlaylistGamesByPlaylist(playlistGameQueries, targetPlaylistIDs);
     if(queryError.isValid())
     {
        errorReport = Qx::GenericError(Qx::GenericError::Critical, MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());
@@ -493,11 +496,11 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     // Determine workload
     mCurrentProgressValue = 0;
     mMaximumProgressValue = addAppQuery.size; // Additional App pre-load
-    for(const FP::Install::DBQueryBuffer& query : qAsConst(gameQueries)) // All games
+    for(const FP::DB::QueryBuffer& query : qAsConst(gameQueries)) // All games
         mMaximumProgressValue += query.size;
-    for(const FP::Install::DBQueryBuffer& query : qAsConst(playlistSpecGameQueries)) // All playlist specific games
+    for(const FP::DB::QueryBuffer& query : qAsConst(playlistSpecGameQueries)) // All playlist specific games
         mMaximumProgressValue += query.size;
-    for(const FP::Install::DBQueryBuffer& query : qAsConst(playlistGameQueries)) // All playlist games
+    for(const FP::DB::QueryBuffer& query : qAsConst(playlistGameQueries)) // All playlist games
         mMaximumProgressValue += query.size;
     mMaximumProgressValue += addAppQuery.size * gameQueries.size() + addAppQuery.size * playlistSpecGameQueries.size(); // All checks of Additional Apps
 
@@ -525,7 +528,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
 
         // Create playlist pecific platforms set
         QStringList playlistSpecPlatforms;
-        for(const FP::Install::DBQueryBuffer& query : qAsConst(playlistSpecGameQueries))
+        for(const FP::DB::QueryBuffer& query : qAsConst(playlistSpecGameQueries))
             playlistSpecPlatforms.append(query.source);
 
         if((importStepStatus = setImageReferences(errorReport, mImportSelections.platforms + playlistSpecPlatforms)) != Successful)

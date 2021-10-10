@@ -1,5 +1,5 @@
-#ifndef FLASHPOINT_H
-#define FLASHPOINT_H
+#ifndef FLASHPOINT_ITEMS_H
+#define FLASHPOINT_ITEMS_H
 
 #include <QString>
 #include <QDateTime>
@@ -269,4 +269,4 @@ public:
 
 }
 
-#endif // FLASHPOINT_H
+#endif // FLASHPOINT_ITEMS_H

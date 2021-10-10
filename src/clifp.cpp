@@ -1,5 +1,5 @@
 #include "clifp.h"
-#include "flashpoint-install.h"
+#include "flashpoint/fp-install.h"
 #include "qx-io.h"
 #include "qx-windows.h"
 
@@ -9,7 +9,7 @@
 
 //-Class Functions--------------------------------------------------------------------------------------------
 //Public:
-QString CLIFp::standardCLIFpPath(const FP::Install& fpInstall) { return fpInstall.getPath() + "/" + EXE_NAME; }
+QString CLIFp::standardCLIFpPath(const FP::Install& fpInstall) { return fpInstall.fullPath() + "/" + EXE_NAME; }
 
 bool CLIFp::hasCLIFp(const FP::Install& fpInstall)
 {
@@ -58,9 +58,9 @@ QString CLIFp::parametersFromStandard(QString originalAppPath, QString originalA
 {
     QString clifpParam = "-q "; // Start with global quiet switch
 
-    if(originalAppPath == FP::Install::DBTable_Add_App::ENTRY_MESSAGE)
+    if(originalAppPath == FP::DB::Table_Add_App::ENTRY_MESSAGE)
         clifpParam += SHOW_COMMAND + " " + MSG_ARG.arg(originalAppParams);
-    else if(originalAppPath == FP::Install::DBTable_Add_App::ENTRY_EXTRAS)
+    else if(originalAppPath == FP::DB::Table_Add_App::ENTRY_EXTRAS)
          clifpParam += SHOW_COMMAND + " " + EXTRA_ARG.arg(originalAppParams);
     else
          clifpParam += RUN_COMMAND + " " +  APP_ARG.arg(originalAppPath) + " " + PARAM_ARG.arg(originalAppParams);
