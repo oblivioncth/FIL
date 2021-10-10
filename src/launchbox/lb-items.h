@@ -1,5 +1,5 @@
-#ifndef LAUNCHBOX_H
-#define LAUNCHBOX_H
+#ifndef LAUNCHBOX_ITEMS_H
+#define LAUNCHBOX_ITEMS_H
 
 #include <QString>
 #include <QDateTime>
@@ -373,4 +373,4 @@ public:
 
 
 }
-#endif // LAUNCHBOX_H
+#endif // LAUNCHBOX_ITEMS_H
