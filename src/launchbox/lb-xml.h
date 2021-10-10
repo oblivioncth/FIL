@@ -6,7 +6,7 @@
 #include <memory>
 #include "qx.h"
 #include "qx-xml.h"
-#include "launchbox.h"
+#include "lb-items.h"
 
 namespace LB {
 

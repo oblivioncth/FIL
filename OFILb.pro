@@ -22,9 +22,9 @@ SOURCES += \
     src/flashpoint-install.cpp \
     src/flashpoint.cpp \
     src/import-worker.cpp \
-    src/launchbox-install.cpp \
-    src/launchbox-xml.cpp \
-    src/launchbox.cpp \
+    src/launchbox/lb-install.cpp \
+    src/launchbox/lb-xml.cpp \
+    src/launchbox/lb-items.cpp \
     src/main.cpp \
     src/mainwindow.cpp
 
@@ -33,9 +33,9 @@ HEADERS += \
     src/flashpoint-install.h \
     src/flashpoint.h \
     src/import-worker.h \
-    src/launchbox-install.h \
-    src/launchbox-xml.h \
-    src/launchbox.h \
+    src/launchbox/lb-install.h \
+    src/launchbox/lb-xml.h \
+    src/launchbox/lb-items.h \
     src/mainwindow.h \
     src/version.h
 

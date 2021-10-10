@@ -1,6 +1,6 @@
-#include "launchbox.h"
-#include "flashpoint-install.h"
-#include "clifp.h"
+#include "lb-items.h"
+#include "../flashpoint-install.h"
+#include "../clifp.h"
 #include "qx-io.h"
 
 namespace LB

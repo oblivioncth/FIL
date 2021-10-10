@@ -7,8 +7,8 @@
 #include <QtXml>
 #include "qx-io.h"
 #include "qx-xml.h"
-#include "launchbox.h"
-#include "launchbox-xml.h"
+#include "lb-items.h"
+#include "lb-xml.h"
 
 namespace LB {
 

@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QMessageBox>
 #include "flashpoint-install.h"
-#include "launchbox-install.h"
+#include "launchbox/lb-install.h"
 
 class ImportWorker : public QObject
 {

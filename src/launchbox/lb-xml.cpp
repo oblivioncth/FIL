@@ -1,4 +1,4 @@
-#include "launchbox-xml.h"
+#include "lb-xml.h"
 
 namespace LB
 {

@@ -1,4 +1,4 @@
-#include "launchbox-install.h"
+#include "lb-install.h"
 #include <QFileInfo>
 #include <QDir>
 #include <qhashfunctions.h>
