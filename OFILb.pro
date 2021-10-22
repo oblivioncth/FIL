@@ -24,6 +24,7 @@ SOURCES += \
     src/flashpoint/fp-items.cpp \
     src/flashpoint/fp-json.cpp \
     src/flashpoint/fp-macro.cpp \
+    src/frontend-data.cpp \
     src/frontend.cpp \
     src/import-worker.cpp \
     src/launchbox/lb-install.cpp \
@@ -39,6 +40,7 @@ HEADERS += \
     src/flashpoint/fp-items.h \
     src/flashpoint/fp-json.h \
     src/flashpoint/fp-macro.h \
+    src/frontend-data.h \
     src/frontend.h \
     src/import-worker.h \
     src/launchbox/lb-install.h \
