@@ -1,8 +1,10 @@
-#ifndef FRONTEND_H
-#define FRONTEND_H
+#ifndef SES_H
+#define SES_H
 
+namespace Fe
+{
 
-class Frontend
+class Something
 {
 //-Class Variables-----------------------------------------------------------------------------------------------
 public:
@@ -14,10 +16,11 @@ private:
 
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
-    Frontend();
+    Something();
 
 //-Instance Functions---------------------------------------------------------------------------------------------------------
 private:
 };
 
-#endif // FRONTEND_H
+}
+#endif // SES_H
