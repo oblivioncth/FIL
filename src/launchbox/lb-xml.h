@@ -90,7 +90,7 @@ public:
     class Element_CustomField
     {
     public:
-        static inline const QString NAME = "CustomFields";
+        static inline const QString NAME = "CustomField";
 
         static inline const QString ELEMENT_GAME_ID = "GameID";
         static inline const QString ELEMENT_NAME = "Name";
