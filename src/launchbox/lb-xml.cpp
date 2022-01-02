@@ -156,6 +156,7 @@ Xml::PlatformDoc::PlatformDoc(std::unique_ptr<QFile> xmlFile, QString docName, U
 //Public:
 const QHash<QUuid, Game>& Xml::PlatformDoc::getFinalGames() const { return mGamesFinal; }
 const QHash<QUuid, AddApp>& Xml::PlatformDoc::getFinalAddApps() const { return mAddAppsFinal; }
+const QHash<QString, CustomField> Xml::PlatformDoc::getFinalCustomFields() const { return mCustomFieldsFinal; }
 
 bool Xml::PlatformDoc::containsGame(QUuid gameID) const { return mGamesFinal.contains(gameID) || mGamesExisting.contains(gameID); }
 bool Xml::PlatformDoc::containsAddApp(QUuid addAppId) const { return mAddAppsFinal.contains(addAppId) || mAddAppsExisting.contains(addAppId); }
@@ -210,6 +211,31 @@ void Xml::PlatformDoc::addAddApp(AddApp app)
         mAddAppsFinal[key] = app;
 }
 
+void Xml::PlatformDoc::addCustomField(CustomField customField)
+{
+    QString key = customField.getGameID().toString() + customField.getName();
+
+    // Check if custom field exists
+    if(mCustomFieldsExisting.contains(key))
+    {
+        // Replace if existing update is on, move existing otherwise
+        if(mUpdateOptions.importMode == ImportMode::NewAndExisting)
+        {
+            customField.transferOtherFields(mAddAppsExisting[key].getOtherFields());
+            mCustomFieldsFinal[key] = customField;
+            mCustomFieldsExisting.remove(key);
+        }
+        else
+        {
+            mCustomFieldsFinal[key] = std::move(mCustomFieldsExisting[key]);
+            mCustomFieldsExisting.remove(key);
+        }
+
+    }
+    else
+        mCustomFieldsFinal[key] = customField;
+}
+
 void Xml::PlatformDoc::finalize()
 {
     // Copy items to final list if obsolete entries are to be kept
@@ -217,11 +243,23 @@ void Xml::PlatformDoc::finalize()
     {
         mGamesFinal.insert(mGamesExisting);
         mAddAppsFinal.insert(mAddAppsExisting);
+        mCustomFieldsFinal.insert(mCustomFieldsExisting);
     }
 
     // Clear existing lists
     mGamesExisting.clear();
     mAddAppsExisting.clear();
+    mCustomFieldsExisting.clear();
+
+    // Ensure that custom fields for removed games are deleted
+    QHash<QString, CustomField>::iterator i = mCustomFieldsFinal.begin();
+    while (i != mCustomFieldsFinal.end())
+    {
+        if(!mGamesFinal.contains(i->getGameID()))
+            i = mCustomFieldsFinal.erase(i);
+        else
+            ++i;
+    }
 }
 
 //===============================================================================================================
@@ -243,6 +281,8 @@ bool Xml::PlatformDocReader::readTargetDoc()
             parseGame();
         else if(mStreamReader.name() == Element_AddApp::NAME)
             parseAddApp();
+        else if(mStreamReader.name() == Element_CustomField::NAME)
+            parseCustomField();
         else
             mStreamReader.skipCurrentElement();
     }
@@ -304,7 +344,7 @@ void Xml::PlatformDocReader::parseGame()
     }
 
     // Build Game and add to document
-    LB::Game existingGame = gb.build();
+    Game existingGame = gb.build();
     static_cast<PlatformDoc*>(mTargetDocument)->mGamesExisting[existingGame.getID()] = existingGame;
 }
 
@@ -335,9 +375,32 @@ void Xml::PlatformDocReader::parseAddApp()
     }
 
     // Build Additional App and add to document
-    LB::AddApp existingAddApp = aab.build();
+    AddApp existingAddApp = aab.build();
     static_cast<PlatformDoc*>(mTargetDocument)->mAddAppsExisting[existingAddApp.getID()] = existingAddApp;
+}
 
+void Xml::PlatformDocReader::parseCustomField()
+{
+    // Custom Field to Build
+    CustomFieldBuilder cfb;
+
+    // Cover all children
+    while(mStreamReader.readNextStartElement())
+    {
+        if(mStreamReader.name() == Element_CustomField::ELEMENT_GAME_ID)
+            cfb.wGameID(mStreamReader.readElementText());
+        else if(mStreamReader.name() == Element_CustomField::ELEMENT_NAME)
+            cfb.wName(mStreamReader.readElementText());
+        else if(mStreamReader.name() == Element_CustomField::ELEMENT_VALUE)
+            cfb.wValue(mStreamReader.readElementText());
+        else
+            cfb.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
+    }
+
+    // Build Custom Field and add to document
+    CustomField existingCustomField = cfb.build();
+    QString key = existingCustomField.getGameID().toString() + existingCustomField.getName();
+    static_cast<PlatformDoc*>(mTargetDocument)->mCustomFieldsExisting[key] = existingCustomField;
 }
 
 //===============================================================================================================
@@ -364,6 +427,13 @@ bool Xml::PlatformDocWriter::writeSourceDoc()
     for(const AddApp& addApp : static_cast<PlatformDoc*>(mSourceDocument)->getFinalAddApps())
     {
         if(!writeAddApp(addApp))
+            return false;
+    }
+
+    // Write all custom fields
+    for(const CustomField& customField : static_cast<PlatformDoc*>(mSourceDocument)->getFinalCustomFields())
+    {
+        if(!writeCustomField(customField))
             return false;
     }
 
@@ -433,7 +503,27 @@ bool Xml::PlatformDocWriter::writeAddApp(const AddApp& addApp)
     // Write other tags
     writeOtherFields(addApp.getOtherFields());
 
-    // Close game tag
+    // Close aditional app tag
+    mStreamWriter.writeEndElement();
+
+    // Return error status
+    return !mStreamWriter.hasError();
+}
+
+bool Xml::PlatformDocWriter::writeCustomField(const CustomField& customField)
+{
+    // Write opening tag
+    mStreamWriter.writeStartElement(Element_CustomField::NAME);
+
+    // Write known tags
+    writeCleanTextElement(Element_CustomField::ELEMENT_GAME_ID, customField.getGameID().toString(QUuid::WithoutBraces));
+    writeCleanTextElement(Element_CustomField::ELEMENT_NAME, customField.getName());
+    writeCleanTextElement(Element_CustomField::ELEMENT_VALUE, customField.getValue());
+
+    // Write other tags
+    writeOtherFields(customField.getOtherFields());
+
+    // Close custom field tag
     mStreamWriter.writeEndElement();
 
     // Return error status

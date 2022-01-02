@@ -194,6 +194,44 @@ public:
     AddAppBuilder& wWaitForExit(QString rawWaitForExit);
 };
 
+class CustomField : public Item
+{
+    friend class CustomFieldBuilder;
+//-Class Variables--------------------------------------------------------------------------------------------------
+public:
+    static inline const QString LANGUAGE = "Language";
+
+//-Instance Variables-----------------------------------------------------------------------------------------------
+private:
+    QUuid mGameID;
+    QString mName;
+    QString mValue;
+
+//-Constructor------------------------------------------------------------------------------------------------------
+public:
+    CustomField();
+
+//-Instance Functions------------------------------------------------------------------------------------------------------
+public:
+    QUuid getGameID() const;
+    QString getName() const;
+    QString getValue() const;
+};
+
+class CustomFieldBuilder : public ItemBuilder<CustomFieldBuilder, CustomField>
+{
+//-Constructor-------------------------------------------------------------------------------------------------
+public:
+    CustomFieldBuilder();
+
+//-Instance Functions------------------------------------------------------------------------------------------
+public:
+    CustomFieldBuilder& wGameID(QString rawGameID);
+    CustomFieldBuilder& wGameID(QUuid gameID);
+    CustomFieldBuilder& wName(QString name);
+    CustomFieldBuilder& wValue(QString value);
+};
+
 class PlaylistHeader : public Item
 {
     friend class PlaylistHeaderBuilder;

@@ -55,8 +55,7 @@ Game::Game(FP::Game flashpointGame, QString fullCLIFpPath)
       mBroken(flashpointGame.isBroken()),
       mPlayMode(flashpointGame.getPlayMode()),
       mStatus(flashpointGame.getStatus()),
-      mRegion(Qx::kosherizeFileName(flashpointGame.getLanguage().replace(':',';'))),
-      // Some entries have a typo and since mRegion is used in folder creation the field must be kosher
+      mRegion(), // Ensures this field is cleared because of older tool versions
       mNotes(flashpointGame.getOriginalDescription() +
              (!flashpointGame.getNotes().isEmpty() ? "\n\n" + flashpointGame.getNotes() : "")),
       mSource(flashpointGame.getSource()),
@@ -182,6 +181,35 @@ AddAppBuilder& AddAppBuilder::wCommandLine(QString commandLine) { mItemBlueprint
 AddAppBuilder& AddAppBuilder::wAutorunBefore(QString rawAutorunBefore) { mItemBlueprint.mAutorunBefore = rawAutorunBefore != "0"; return *this; }
 AddAppBuilder& AddAppBuilder::wName(QString name) { mItemBlueprint.mName = name; return *this; }
 AddAppBuilder& AddAppBuilder::wWaitForExit(QString rawWaitForExit) { mItemBlueprint.mWaitForExit = rawWaitForExit != "0"; return *this; }
+
+//===============================================================================================================
+// CUSTOM FIELD
+//===============================================================================================================
+
+//-Constructor---------------------------------------------------------------------------------------------------
+//Public:
+CustomField::CustomField() {}
+
+//-Instance Functions------------------------------------------------------------------------------------------------
+//Public:
+QUuid CustomField::getGameID() const { return mGameID; }
+QString CustomField::getName() const { return mName; }
+QString CustomField::getValue() const { return mValue; }
+
+//===============================================================================================================
+// CUSTOM FIELD BUILDER
+//===============================================================================================================
+
+//-Constructor-------------------------------------------------------------------------------------------------
+//Public:
+CustomFieldBuilder::CustomFieldBuilder() {}
+
+//-Instance Functions------------------------------------------------------------------------------------------
+//Public:
+CustomFieldBuilder& CustomFieldBuilder::wGameID(QString rawGameID) { mItemBlueprint.mGameID = QUuid(rawGameID); return *this; }
+CustomFieldBuilder& CustomFieldBuilder::wGameID(QUuid gameID) { mItemBlueprint.mGameID = gameID; return *this; }
+CustomFieldBuilder& CustomFieldBuilder::wName(QString name) { mItemBlueprint.mName = name; return *this;}
+CustomFieldBuilder& CustomFieldBuilder::wValue(QString value) { mItemBlueprint.mValue = value; return *this;}
 
 //===============================================================================================================
 // PLAYLIST HEADER
