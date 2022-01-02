@@ -74,10 +74,10 @@ private:
     Json::Services mServices;
 
     // Database
-    DB* mDatabase;
+    DB* mDatabase = nullptr;
 
     // Utilities
-    MacroResolver* mMacroResolver;
+    MacroResolver* mMacroResolver = nullptr;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
