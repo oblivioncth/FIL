@@ -30,16 +30,16 @@ Since Flashpoint originally used LaunchBox as its launcher, most fields within F
 ### Version Matching
 Each release of this application targets a specific version or versions of BlueMaxima's Flashpoint and while newer releases will sometimes contain general improvements to functionality, they will largely be created to match the changes made between each Flashpoint release and therefore maintain compatibility. These matches are shown below:
 
-| OFILb Version  |Included CLIFp Version | Target Flashpoint Version       |
-|----------------|-----------------------|---------------------------------|
-| 0.1            | 0.1                   | 8.1 ("Spirit of Adventure")     |
-| 0.1.1          | 0.1.1                 | 8.2 ("Approaching Planet Nine") |
-| 0.1.2, 0.1.2.1 | 0.3                   | 8.2 ("Approaching Planet Nine") |
-| 0.1.3          | 0.3.2                 | 9.0 ("Glorious Sunset")         |
-| 0.3, 0.3.0.1   | 0.4                   | 9.0 ("Glorious Sunset")         |
-| 0.4            | 0.5.1                 | 10.0 ("Absence")                |
-| 0.4.1          | 0.8                   | 10.1 ("Absence - II")           |
-| 0.4.1.1        | 0.8                   | 10.1.0.3 ("Absence - II")       |
+| OFILb Version    |Included CLIFp Version | Target Flashpoint Version       |
+|------------------|-----------------------|---------------------------------|
+| 0.1              | 0.1                   | 8.1 ("Spirit of Adventure")     |
+| 0.1.1            | 0.1.1                 | 8.2 ("Approaching Planet Nine") |
+| 0.1.2, 0.1.2.1   | 0.3                   | 8.2 ("Approaching Planet Nine") |
+| 0.1.3            | 0.3.2                 | 9.0 ("Glorious Sunset")         |
+| 0.3, 0.3.0.1     | 0.4                   | 9.0 ("Glorious Sunset")         |
+| 0.4              | 0.5.1                 | 10.0 ("Absence")                |
+| 0.4.1            | 0.8                   | 10.1 ("Absence - II")           |
+| 0.4.1.1, 0.4.1.2 | 0.8                   | 10.1.0.3 ("Absence - II")       |
 
 Using a version of OFILb that does not target the version of Flashpoint you wish to use it with is highly discouraged as some features may not work correctly or at all and in some cases the utility may fail to function entirely or even damage the Flashpoint install it is used with.
 
@@ -58,12 +58,12 @@ Currently the following fields in LaunchBox will be populated for each game, whi
 - Broken Flag
 - Play Mode
 - Status
-- Region
 - Notes
 - Source
 - Release Date
 - Version
 - Library
+- Language (as a custom field)
 
 ## Usage
 ### Primary Usage
