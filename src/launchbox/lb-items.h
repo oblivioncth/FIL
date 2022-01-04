@@ -90,7 +90,7 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    Game(FP::Game flashpointGame, QString fullOFLIbPath);
+    Game(FP::Game flashpointGame, QString fullCLIFpPath);
     Game();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
@@ -163,7 +163,7 @@ private:
 
 //-Constructor------------------------------------------------------------------------------------------------------
 public:
-    AddApp(FP::AddApp flashpointAddApp, QString fullOFLIbPath);
+    AddApp(FP::AddApp flashpointAddApp, QString fullCLIFpPath);
     AddApp();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
