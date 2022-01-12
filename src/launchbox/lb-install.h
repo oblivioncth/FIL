@@ -40,7 +40,6 @@ public:
     // Images Errors
     static inline const QString ERR_IMAGE_WONT_BACKUP = R"(Cannot rename the existing image "%1" for backup.)";
     static inline const QString ERR_IMAGE_WONT_COPY = R"(Cannot copy the image "%1" to "%2".)";
-    static inline const QString ERR_IMAGE_WONT_MOVE = R"(Cannot move the image "%1" to "%2".)";
     static inline const QString ERR_IMAGE_WONT_LINK = R"(Cannot create a symbolic link from "%1" to "%2".)";
     static inline const QString ERR_CANT_MAKE_DIR = R"(Could not create the image directory "%1". Make sure you have write permissions at that location.)";
 
@@ -48,7 +47,6 @@ public:
     static inline const QString ERR_REVERT_CANT_REMOVE_XML = R"(Cannot remove the XML file "%1". It may need to be deleted and have its backup restored manually.)";
     static inline const QString ERR_REVERT_CANT_RESTORE_XML = R"(Cannot restore the XML backup "%1". It may need to be renamed manually.)";
     static inline const QString ERR_REVERT_CANT_REMOVE_IMAGE = R"(Cannot remove the image file "%1". It may need to be deleted manually.)";
-    static inline const QString ERR_REVERT_CANT_MOVE_IMAGE = R"(Cannot move the image file "%1" to its original location. It may need to be moved manually.)";
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -71,7 +69,6 @@ private:
 
     // Other trackers
     QList<QString> mPurgableImages;
-    QMap<QString, QString> mLinksToReverse;
     Qx::FreeIndexTracker<int> mLBDatabaseIDTracker = Qx::FreeIndexTracker<int>(0, -1, {});
     // TODO: Even though the playlist game IDs dont seem to matter, at some for for completeness scann all playlists when hooking an install to get the
     // full list of in use IDs
@@ -106,7 +103,7 @@ public:
    bool savePlaylistDoc(QString& errorMessage, std::unique_ptr<Xml::PlaylistDoc> document);
    bool savePlatformsDoc(QString& errorMessage, std::unique_ptr<Xml::PlatformsDoc> document);
 
-   bool ensureImageDirectories(QString& errorMessage, QString platform);
+   bool ensureImageDirectories(QString& errorMessage, QString platform); // TODO: Make part of the constructor after validity is ensured
    bool transferLogo(QString& errorMessage, ImageMode imageMode, QDir logoSourceDir, const LB::Game& game);
    bool transferScreenshot(QString& errorMessage, ImageMode imageMode, QDir screenshotSourceDir, const LB::Game& game);
 
