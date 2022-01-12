@@ -144,8 +144,10 @@ void Install::nullify()
     mServicesJsonFile.reset();
     mDataPackMounterFile.reset();
     mVersionFile.reset();
-    delete mMacroResolver;
-    delete mDatabase;
+    if(mMacroResolver)
+        delete mMacroResolver;
+    if(mDatabase)
+        delete mDatabase;
 
     // Settings
     Json::Config mConfig = {};

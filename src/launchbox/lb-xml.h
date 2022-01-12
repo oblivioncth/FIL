@@ -87,6 +87,16 @@ public:
         static inline const QString ELEMENT_WAIT_FOR_EXIT = "WaitForExit";
     };
 
+    class Element_CustomField
+    {
+    public:
+        static inline const QString NAME = "CustomField";
+
+        static inline const QString ELEMENT_GAME_ID = "GameID";
+        static inline const QString ELEMENT_NAME = "Name";
+        static inline const QString ELEMENT_VALUE = "Value";
+    };
+
     class Element_PlaylistHeader
     {
     public:
@@ -234,6 +244,8 @@ public:
         QHash<QUuid, Game> mGamesExisting;
         QHash<QUuid, AddApp> mAddAppsFinal;
         QHash<QUuid, AddApp> mAddAppsExisting;
+        QHash<QString, CustomField> mCustomFieldsFinal;
+        QHash<QString, CustomField> mCustomFieldsExisting;
 
     //-Constructor--------------------------------------------------------------------------------------------------------
     public:
@@ -243,12 +255,14 @@ public:
     public:
         const QHash<QUuid, Game>& getFinalGames() const;
         const QHash<QUuid, AddApp>& getFinalAddApps() const;
+        const QHash<QString, CustomField> getFinalCustomFields() const;
 
         bool containsGame(QUuid gameID) const;
         bool containsAddApp(QUuid addAppId) const;
 
         void addGame(Game game);
         void addAddApp(AddApp app);
+        void addCustomField(CustomField customField);
 
         void finalize();
     };
@@ -267,6 +281,7 @@ public:
         bool readTargetDoc();
         void parseGame();
         void parseAddApp();
+        void parseCustomField();
     };
 
     class PlatformDocWriter : public DataDocWriter
@@ -280,6 +295,7 @@ public:
         bool writeSourceDoc();
         bool writeGame(const Game& game);
         bool writeAddApp(const AddApp& addApp);
+        bool writeCustomField(const CustomField& customField);
     };
 
     class PlaylistDoc : public DataDoc

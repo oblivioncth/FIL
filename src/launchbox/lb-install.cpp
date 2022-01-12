@@ -274,7 +274,7 @@ Qx::IOOpReport Install::populateExistingDocs(QStringList platformMatches, QStrin
     // Temp storage
     QStringList existingList;
 
-    // Check for platforms
+    // Check for platforms (Likely disolve Qx::getDirFileList in favor of QFileInfoList and QDir::entryInfoList())
     Qx::IOOpReport existingCheck = Qx::getDirFileList(existingList, mPlatformsDirectory, {XML_EXT}, QDirIterator::Subdirectories);
     if(existingCheck.wasSuccessful())
         for(const QString& platformPath : qAsConst(existingList))

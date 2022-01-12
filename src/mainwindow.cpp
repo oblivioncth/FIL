@@ -150,17 +150,16 @@ void MainWindow::initializeEnableConditionMaps()
 
 bool MainWindow::installMatchesTargetVersion(const FP::Install& fpInstall)
 {
-    // Check exe checksum
-    if(fpInstall.launcherChecksum() != TARGET_EXE_SHA256)
-        return false;
+    QString hash = fpInstall.launcherChecksum();
+    QString ver = fpInstall.versionString();
 
-    // Check version file
-    QString versionString = fpInstall.versionString();
-    if(versionString != TARGET_ULT_VER_STRING && versionString != TARGET_INF_VER_STRING)
+    // Check for ultimate
+    if(hash == TARGET_ULT_LAUNCHER_SHA256 && ver == TARGET_ULT_VER_STRING)
+        return true;
+    else if(hash == TARGET_INF_LAUNCHER_SHA256 && ver == TARGET_INF_VER_STRING) // Check for infinity
+        return true;
+    else
         return false;
-
-    // Return true if all passes
-    return true;
 }
 
 void MainWindow::checkManualInstallInput(Install install)

@@ -189,8 +189,16 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
             fpGb.wLibrary(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_LIBRARY).toString());
 
             // Convert and convert FP game to LB game and add to document
-            LB::Game builtGame = LB::Game(fpGb.build(), CLIFp::standardCLIFpPath(*mFlashpointInstall));
-            currentPlatformXML->addGame(builtGame);
+            FP::Game builtGame = fpGb.build();
+            LB::Game convertedGame = LB::Game(fpGb.build(), CLIFp::standardCLIFpPath(*mFlashpointInstall));
+            currentPlatformXML->addGame(convertedGame);
+
+            // Add language as custom field
+            LB::CustomFieldBuilder lbCfb;
+            lbCfb.wGameID(builtGame.getID());
+            lbCfb.wName(LB::CustomField::LANGUAGE);
+            lbCfb.wValue(builtGame.getLanguage());
+            currentPlatformXML->addCustomField(lbCfb.build());
 
             // Setup for ensuring image sub-directories exist
             QString imageTransferError; // Error return reference
@@ -200,7 +208,7 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
             // Transfer game images if applicable
             if(mOptionSet.imageMode != LB::Install::Reference)
             {
-                while(!skipAllImages && !mLaunchBoxInstall->transferLogo(imageTransferError, mOptionSet.imageMode, mFlashpointInstall->logosDirectory(), builtGame))
+                while(!skipAllImages && !mLaunchBoxInstall->transferLogo(imageTransferError, mOptionSet.imageMode, mFlashpointInstall->logosDirectory(), convertedGame))
                 {
                     // Notify GUI Thread of error
                     emit blockingErrorOccured(mBlockingErrorResponse, Qx::GenericError(Qx::GenericError::Error, imageTransferError, "Retry?", QString(), CAPTION_IMAGE_ERR),
@@ -213,7 +221,7 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
                        skipAllImages = true;
                 }
 
-                while(!skipAllImages && !mLaunchBoxInstall->transferScreenshot(imageTransferError, mOptionSet.imageMode, mFlashpointInstall->screenshootsDirectory(), builtGame))
+                while(!skipAllImages && !mLaunchBoxInstall->transferScreenshot(imageTransferError, mOptionSet.imageMode, mFlashpointInstall->screenshootsDirectory(), convertedGame))
                 {
                     // Notify GUI Thread of error
                     emit blockingErrorOccured(mBlockingErrorResponse, Qx::GenericError(Qx::GenericError::Error, imageTransferError, "Retry?", QString(), CAPTION_IMAGE_ERR),

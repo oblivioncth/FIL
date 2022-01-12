@@ -90,7 +90,7 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    Game(FP::Game flashpointGame, QString fullOFLIbPath);
+    Game(FP::Game flashpointGame, QString fullCLIFpPath);
     Game();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
@@ -163,7 +163,7 @@ private:
 
 //-Constructor------------------------------------------------------------------------------------------------------
 public:
-    AddApp(FP::AddApp flashpointAddApp, QString fullOFLIbPath);
+    AddApp(FP::AddApp flashpointAddApp, QString fullCLIFpPath);
     AddApp();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
@@ -192,6 +192,44 @@ public:
     AddAppBuilder& wAutorunBefore(QString rawAutorunBefore);
     AddAppBuilder& wName(QString name);
     AddAppBuilder& wWaitForExit(QString rawWaitForExit);
+};
+
+class CustomField : public Item
+{
+    friend class CustomFieldBuilder;
+//-Class Variables--------------------------------------------------------------------------------------------------
+public:
+    static inline const QString LANGUAGE = "Language";
+
+//-Instance Variables-----------------------------------------------------------------------------------------------
+private:
+    QUuid mGameID;
+    QString mName;
+    QString mValue;
+
+//-Constructor------------------------------------------------------------------------------------------------------
+public:
+    CustomField();
+
+//-Instance Functions------------------------------------------------------------------------------------------------------
+public:
+    QUuid getGameID() const;
+    QString getName() const;
+    QString getValue() const;
+};
+
+class CustomFieldBuilder : public ItemBuilder<CustomFieldBuilder, CustomField>
+{
+//-Constructor-------------------------------------------------------------------------------------------------
+public:
+    CustomFieldBuilder();
+
+//-Instance Functions------------------------------------------------------------------------------------------
+public:
+    CustomFieldBuilder& wGameID(QString rawGameID);
+    CustomFieldBuilder& wGameID(QUuid gameID);
+    CustomFieldBuilder& wName(QString name);
+    CustomFieldBuilder& wValue(QString value);
 };
 
 class PlaylistHeader : public Item
