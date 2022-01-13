@@ -6,8 +6,21 @@
 
 #include <QDir>
 
+//-Macros-------------------------------------------------------------------------------------------------------------------
+#define REGISTER_FRONTEND(install) \
+    class install##Factory : public Fe::InstallFactory \
+    { \
+    public: \
+        install##Factory() { Fe::Install::registerCommand(install::name(), this); } \
+        virtual std::unique_ptr<Command> produce(QString installPath) { return std::make_unique<install>(installPath); } \
+    }; \
+    static install##Factory _##install##Factory;
+
 namespace Fe
 {
+
+//-Forward Declarations-----------------------------------------------------------------------------------------
+class InstallFactory;
 
 class Install
 {
@@ -59,7 +72,14 @@ public:
 
 //-Class Functions------------------------------------------------------------------------------------------------------
 private:
+    // Registry put behind function call to avoid SIOF since otherwise initialization of static registry before calls to registerFrontend would not be guarenteed
+    static QMap<QString, InstallFactory*>& registry();
+
     static void allowUserWriteOnFile(QString filePath);
+
+public:
+    static void registerInstall(QString name, InstallFactory* factory);
+    static std::unique_ptr<Install> acquireMatch(const QString& installPath);
 
 //-Instance Functions---------------------------------------------------------------------------------------------------------
 private:
@@ -106,6 +126,13 @@ public:
     void softReset();
     int getRevertQueueCount() const;
     int revertNextChange(Qx::GenericError& error, bool skipOnFail);
+};
+
+class InstallFactory
+{
+//-Instance Functions------------------------------------------------------------------------------------------------------
+public:
+    virtual std::unique_ptr<Install> produce(QString installPath) = 0;
 };
 
 }

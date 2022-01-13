@@ -24,6 +24,8 @@ Install::Install(QString installPath) :
 
 //-Class Functions--------------------------------------------------------------------------------------------
 //Private:
+QMap<QString, InstallFactory*>& Install::registry() { static QMap<QString, InstallFactory*> registry; return registry; }
+
 void Install::allowUserWriteOnFile(QString filePath)
 {
     PACL pDacl,pNewDACL;
@@ -53,6 +55,27 @@ void Install::allowUserWriteOnFile(QString filePath)
     LocalFree(psid);
 
     filePathC.ReleaseBuffer();
+}
+
+//Public:
+void Install::registerInstall(QString name, InstallFactory* factory) { registry()[name] = factory; }
+
+std::unique_ptr<Install> Install::acquireMatch(const QString& installPath)
+{
+    // Check all installs against path and return match if found
+    QMap<QString, InstallFactory*>::const_iterator i;
+
+    for(i = registry().constBegin(); i != registry().constEnd(); ++i)
+    {
+        InstallFactory* installFactory = i.value();
+        std::unique_ptr<Install> possibleMatch = installFactory->produce(installPath);
+
+        if(possibleMatch->isValid())
+            return possibleMatch;
+    }
+
+    // Return nullptr on failure to find match
+    return nullptr;
 }
 
 //-Instance Functions--------------------------------------------------------------------------------------------
