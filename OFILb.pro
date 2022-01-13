@@ -28,9 +28,9 @@ SOURCES += \
     src/frontend/fe-install.cpp \
     src/frontend/fe-items.cpp \
     src/import-worker.cpp \
-    src/launchbox/lb-install.cpp \
-    src/launchbox/lb-xml.cpp \
-    src/launchbox/lb-items.cpp \
+    src/frontend/launchbox/lb-install.cpp \
+    src/frontend/launchbox/lb-xml.cpp \
+    src/frontend/launchbox/lb-items.cpp \
     src/main.cpp \
     src/mainwindow.cpp
 
@@ -45,9 +45,9 @@ HEADERS += \
     src/frontend/fe-install.h \
     src/frontend/fe-items.h \
     src/import-worker.h \
-    src/launchbox/lb-install.h \
-    src/launchbox/lb-xml.h \
-    src/launchbox/lb-items.h \
+    src/frontend/launchbox/lb-install.h \
+    src/frontend/launchbox/lb-xml.h \
+    src/frontend/launchbox/lb-items.h \
     src/mainwindow.h \
     src/version.h
 

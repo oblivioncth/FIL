@@ -1,6 +1,6 @@
 #include "lb-items.h"
-#include "../flashpoint/fp-install.h"
-#include "../clifp.h"
+#include "../../flashpoint/fp-install.h"
+#include "../../clifp.h"
 #include "qx-io.h"
 
 namespace LB
