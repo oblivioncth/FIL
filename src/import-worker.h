@@ -45,7 +45,6 @@ public:
     // Import Errors
     static inline const QString MSG_FP_DB_CANT_CONNECT = "Failed to establish a handle to the Flashpoint database:";
     static inline const QString MSG_FP_DB_UNEXPECTED_ERROR = "An unexpected SQL error occured while reading the Flashpoint database:";
-    static inline const QString MSG_LB_XML_UNEXPECTED_ERROR = "An unexpected error occured while reading Launchbox XML (%1 | %2):";
 
     // Error Captions
     static inline const QString CAPTION_IMAGE_ERR = "Error importing game image(s)";

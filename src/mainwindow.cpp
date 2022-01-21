@@ -332,7 +332,7 @@ bool MainWindow::installsHaveChanged()
 {
     // TODO: Make this check more thorough
 
-    // Check LB existing items
+    // Check frontend existing items
     QSet<QString> currentPlatforms = mFrontendInstall->getExistingPlatforms();
     QSet<QString> currentPlaylists = mFrontendInstall->getExistingPlaylists();
 
@@ -543,7 +543,7 @@ void MainWindow::prepareImport()
     if(Qx::processIsRunning(QFileInfo(FP::Install::LAUNCHER_PATH).fileName()))
         QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_CLOSE_PROMPT);
 
-    // Only allow proceeding if LB isn't running
+    // Only allow proceeding if frontend isn't running
     bool feRunning;
     while((feRunning = Qx::processIsRunning(mFrontendInstall->executablePath())))
         if(QMessageBox::critical(this, QApplication::applicationName(), MSG_FRONTEND_CLOSE_PROMPT, QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Retry) == QMessageBox::Cancel)

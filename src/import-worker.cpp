@@ -134,7 +134,7 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
         // Update progress dialog label
         emit progressStepChanged((playlistSpecific ? STEP_IMPORTING_PLAYLIST_SPEC_GAMES : STEP_IMPORTING_PLATFORM_GAMES).arg(currentPlatformGameResult.source));
 
-        // Open LB platform doc
+        // Open frontend platform doc
         std::unique_ptr<Fe::PlatformDoc> currentPlatformDoc;
         Qx::GenericError platformReadError = mFrontendInstall->openPlatformDoc(currentPlatformDoc, currentPlatformGameResult.source, mOptionSet.updateOptions);
 
@@ -180,7 +180,7 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
             fpGb.wOrderTitle(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_ORDER_TITLE).toString());
             fpGb.wLibrary(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_LIBRARY).toString());
 
-            // BuildFP game to LB game and add to document
+            // Build FP game and add to document
             FP::Game builtGame = fpGb.build();
             const Fe::Game* addedGame = currentPlatformDoc->addGame(builtGame);
 
@@ -298,7 +298,7 @@ ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& erro
         // Update progress dialog label
         emit progressStepChanged(STEP_IMPORTING_PLAYLIST_GAMES.arg(currentPlaylist.getTitle()));
 
-        // Open LB playlist doc
+        // Open frontend playlist doc
         std::unique_ptr<Fe::PlaylistDoc> currentPlaylistDoc;
         Qx::GenericError playlistReadError = mFrontendInstall->openPlaylistDoc(currentPlaylistDoc, currentPlaylist.getTitle(), mOptionSet.updateOptions);
 
@@ -328,7 +328,7 @@ ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& erro
                 fpPgb.wOrder(currentPlaylistGameResult.result.value(FP::DB::Table_Playlist_Game::COL_ORDER).toString());
                 fpPgb.wGameID(currentPlaylistGameResult.result.value(FP::DB::Table_Playlist_Game::COL_GAME_ID).toString());
 
-                // Build FP playlist game, convert to LB and add
+                // Build FP playlist game and add
                 currentPlaylistDoc->addPlaylistGame(fpPgb.build());
             }
 
