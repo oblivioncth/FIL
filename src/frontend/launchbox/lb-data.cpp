@@ -311,8 +311,6 @@ void PlatformDocReader::parseCustomField()
     std::shared_ptr<CustomField> existingCustomField = cfb.buildShared();
     QString key = existingCustomField->getGameID().toString() + existingCustomField->getName();
     static_cast<PlatformDoc*>(mTargetDocument)->mCustomFieldsExisting[key] = existingCustomField;
-    // TODO: Consider making a private access method for this specific field so that there is
-    //       more visual consistancy, since the base class fields are accessed with a method
 }
 
 //===============================================================================================================

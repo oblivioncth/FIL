@@ -127,7 +127,7 @@ Qx::GenericError Install::transferImage(bool symlink, ImageType imageType, QDir 
 
     // Ensure destination path exists
     if(!destinationDir.mkpath("."))
-        return Qx::GenericError(Qx::GenericError::Error, ERR_CANT_MAKE_DIR, destinationDir.absolutePath());
+        return Qx::GenericError(Qx::GenericError::Error, ERR_CANT_MAKE_DIR, destinationDir.absolutePath(), QString(), CAPTION_IMAGE_ERR);
 
     // Determine backup path
     QString backupPath = destinationInfo.absolutePath() + '/' + destinationInfo.baseName() + MODIFIED_FILE_EXT;
@@ -135,7 +135,7 @@ Qx::GenericError Install::transferImage(bool symlink, ImageType imageType, QDir 
     // Temporarily backup image if it already exists (also acts as deletion marking in case images for the title were removed in an update)
     if(destinationOccupied && sourceAvailable)
         if(!QFile::rename(destinationPath, backupPath)) // Temp backup
-            return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_BACKUP, destinationPath);
+            return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_BACKUP, destinationPath, QString(), CAPTION_IMAGE_ERR);
 
     // Linking error tracker
     std::error_code linkError;
@@ -148,7 +148,7 @@ Qx::GenericError Install::transferImage(bool symlink, ImageType imageType, QDir 
             if(!QFile::copy(sourcePath, destinationPath))
             {
                 QFile::rename(backupPath, destinationPath); // Restore Backup
-                return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_COPY.arg(sourcePath), destinationPath);
+                return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_COPY.arg(sourcePath), destinationPath, QString(), CAPTION_IMAGE_ERR);
             }
             else if(QFile::exists(backupPath))
                 QFile::remove(backupPath);
@@ -161,7 +161,7 @@ Qx::GenericError Install::transferImage(bool symlink, ImageType imageType, QDir 
             if(linkError)
             {
                 QFile::rename(backupPath, destinationPath); // Restore Backup
-                return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_LINK.arg(sourcePath), destinationPath);
+                return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_LINK.arg(sourcePath), destinationPath, QString(), CAPTION_IMAGE_ERR);
             }
             else if(QFile::exists(backupPath))
                 QFile::remove(backupPath);

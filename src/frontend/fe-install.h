@@ -45,11 +45,13 @@ public:
     static inline const QString ERR_IMAGE_WONT_COPY = R"(Cannot copy the image "%1" to its destination:)";
     static inline const QString ERR_IMAGE_WONT_LINK = R"(Cannot create a symbolic link for "%1" at:)";
     static inline const QString ERR_CANT_MAKE_DIR = R"(Could not create the following image directory. Make sure you have write permissions at that location.)";
+    static inline const QString CAPTION_IMAGE_ERR = "Error importing game image(s)";
 
     // Reversion Errors
     static inline const QString ERR_REVERT_CANT_REMOVE_DOC = R"(Cannot remove a data document file. It may need to be deleted and have its backup restored manually.)";
     static inline const QString ERR_REVERT_CANT_RESTORE_DOC = R"(Cannot restore a data document backup. It may need to be renamed manually.)";
     static inline const QString ERR_REVERT_CANT_REMOVE_IMAGE = R"(Cannot remove an image file. It may need to be deleted manually.)";
+
 
 //-Instance Variables--------------------------------------------------------------------------------------------
 protected:
@@ -108,7 +110,7 @@ protected:
 
 public:
     void linkClifpPath(QString clifpPath);
-    QString linkedClifpPath() const; // TODO: If program compiles with somewhat circular reference, change this to give actual CLIFp path
+    QString linkedClifpPath() const;
 
     virtual QString name() const = 0;
     virtual QString executablePath() const = 0;

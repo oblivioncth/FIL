@@ -1,12 +1,6 @@
 #include "import-worker.h"
 #include "clifp.h"
 
-
-// TODO: Ensure that in every place an error message is grabbed from an Install function here, that the install implementation provides
-//       an error that fulfills the same function of the original ones that were removed
-
-// TODO: Make formatting on constructor initializer lits consistant
-
 //===============================================================================================================
 // IMPORT WORKER
 //===============================================================================================================
@@ -15,8 +9,8 @@
 ImportWorker::ImportWorker(std::shared_ptr<FP::Install> fpInstallForWork,
                            std::shared_ptr<Fe::Install> feInstallForWork,
                            ImportSelections importSelections,
-                           OptionSet optionSet)
-    : mFlashpointInstall(fpInstallForWork),
+                           OptionSet optionSet) :
+      mFlashpointInstall(fpInstallForWork),
       mFrontendInstall(feInstallForWork),
       mImportSelections(importSelections),
       mOptionSet(optionSet) {}
@@ -198,9 +192,6 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
                 while(!skipAllImages &&
                       (imageTransferError = mFrontendInstall->importImage(mOptionSet.imageMode, Fe::Install::Logo, mFlashpointInstall->logosDirectory(), *addedGame)).isValid())
                 {
-                    // Add caption
-                    imageTransferError.setCaption(CAPTION_IMAGE_ERR); // TODO: Consider adding caption natively within above function
-
                     // Notify GUI Thread of error
                     emit blockingErrorOccured(mBlockingErrorResponse, imageTransferError,
                                               QMessageBox::Retry | QMessageBox::Ignore | QMessageBox::NoToAll);
@@ -215,9 +206,6 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
                 while(!skipAllImages &&
                       (imageTransferError = mFrontendInstall->importImage(mOptionSet.imageMode, Fe::Install::Screenshot, mFlashpointInstall->screenshotsDirectory(), *addedGame)).isValid())
                 {
-                    // Add caption
-                    imageTransferError.setCaption(CAPTION_IMAGE_ERR); // TODO: Consider adding caption natively within above function
-
                     // Notify GUI Thread of error
                     emit blockingErrorOccured(mBlockingErrorResponse, imageTransferError,
                                               QMessageBox::Retry | QMessageBox::Ignore | QMessageBox::NoToAll);
@@ -289,7 +277,6 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
 
 ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& errorReport, QList<FP::DB::QueryBuffer>& playlistGameQueries)
 {
-    // TODO: Have LB specific keep its own playlist game cache and then delete it when softReset is called
     for(FP::DB::QueryBuffer& currentPlaylistGameResult : playlistGameQueries)
     {
         // Get corresponding playlist from cache

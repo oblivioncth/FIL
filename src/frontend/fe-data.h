@@ -197,7 +197,7 @@ class PlatformDoc : public UpdateableDoc
     friend class PlatformDocReader;
     friend class PlatformDocWriter;
 //-Instance Variables--------------------------------------------------------------------------------------------------
-private: //TODO: Change this to protected and see if in LB implementation it allows for simplified access
+protected:
     QHash<QUuid, std::shared_ptr<Game>> mGamesFinal;
     QHash<QUuid, std::shared_ptr<Game>> mGamesExisting;
     QHash<QUuid, std::shared_ptr<AddApp>> mAddAppsFinal;

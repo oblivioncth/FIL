@@ -23,7 +23,9 @@
 //===============================================================================================================
 
 //-Constructor---------------------------------------------------------------------------------------------------
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
+MainWindow::MainWindow(QWidget *parent) :
+    QMainWindow(parent),
+    ui(new Ui::MainWindow)
 {
     // Register metatypes
     qRegisterMetaType<ImportWorker::ImportResult>("ImportResult");
