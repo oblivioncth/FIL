@@ -7,12 +7,12 @@
 #include <QDir>
 
 //-Macros-------------------------------------------------------------------------------------------------------------------
-#define REGISTER_FRONTEND(install) \
+#define REGISTER_FRONTEND(name, install) \
     class install##Factory : public Fe::InstallFactory \
     { \
     public: \
-        install##Factory() { Fe::Install::registerCommand(install::name(), this); } \
-        virtual std::unique_ptr<Command> produce(QString installPath) { return std::make_unique<install>(installPath); } \
+        install##Factory() { Fe::Install::registerInstall(name, this); } \
+        virtual std::shared_ptr<Fe::Install> produce(QString installPath) { return std::make_shared<install>(installPath); } \
     }; \
     static install##Factory _##install##Factory;
 
@@ -37,7 +37,8 @@ public:
     static inline const QString MODIFIED_FILE_EXT = ".obk";
 
     // Base errors
-    static inline const QString UNSUPPORTED_FEATURE = "A feature unsupported by the frontend was called upon!";
+    static inline const QString ERR_UNSUPPORTED_FEATURE = "A feature unsupported by the frontend was called upon!";
+    static inline const QString ERR_INSEPECTION = "An unexpected error occured while inspecting the frontend.";
 
     // Images Errors
     static inline const QString ERR_IMAGE_WONT_BACKUP = R"(Cannot rename the an existing image for backup:)";
@@ -79,35 +80,38 @@ private:
 
 public:
     static void registerInstall(QString name, InstallFactory* factory);
-    static std::unique_ptr<Install> acquireMatch(const QString& installPath);
+    static std::shared_ptr<Install> acquireMatch(const QString& installPath);
 
 //-Instance Functions---------------------------------------------------------------------------------------------------------
 private:
-    void nullify();
-
     QSet<QString> getExistingDocs(DataDoc::Type docType) const;
-
-    Qx::GenericError openDataDocument(DataDoc* docToOpen, std::shared_ptr<DataDocReader> docReader);
-    Qx::GenericError saveDataDocument(DataDoc* docToSave, std::shared_ptr<DataDocWriter> docWriter);
     Qx::GenericError transferImage(bool symlink, ImageType imageType, QDir sourceDir, const Game& game);
 
 protected:
+    void nullify();
     virtual void nullifyDerived() = 0;
     virtual void softResetDerived() = 0;
 
     virtual QString dataDocPath(DataDoc::Identifier identifier) const = 0;
-    virtual QString imageDestinationPath(ImageType imageType, const Game& game) = 0;
+    virtual QString imageDestinationPath(ImageType imageType, const Game& game) const = 0;
 
-    virtual std::shared_ptr<PlatformDocReader> prepareOpenPlatformDoc(std::unique_ptr<PlatformDoc>& platformDoc) = 0;
-    virtual std::shared_ptr<PlaylistDocReader> prepareOpenPlaylistDoc(std::unique_ptr<PlaylistDoc>& playlistDoc) = 0;
+    Qx::GenericError openDataDocument(DataDoc* docToOpen, std::shared_ptr<DataDocReader> docReader);
+    Qx::GenericError saveDataDocument(DataDoc* docToSave, std::shared_ptr<DataDocWriter> docWriter);
+
+    virtual std::shared_ptr<PlatformDocReader> prepareOpenPlatformDoc(std::unique_ptr<PlatformDoc>& platformDoc, const QString& name, const UpdateOptions& updateOptions) = 0;
+    virtual std::shared_ptr<PlaylistDocReader> prepareOpenPlaylistDoc(std::unique_ptr<PlaylistDoc>& playlistDoc, const QString& name, const UpdateOptions& updateOptions) = 0;
     virtual std::shared_ptr<PlatformDocWriter> prepareSavePlatformDoc(const std::unique_ptr<PlatformDoc>& document) = 0;
     virtual std::shared_ptr<PlaylistDocWriter> prepareSavePlaylistDoc(const std::unique_ptr<PlaylistDoc>& document) = 0;
 
     virtual Qx::GenericError referenceImage(ImageType imageType, QDir sourceDir, const Game& game);
 
 public:
-    virtual QString name() = 0;
-    virtual ImageRefType imageRefType() = 0;
+    QString bullshit() { return "ASAD"; } // TODO: If program compiles with somewhat circular reference, change this to give actual CLIFp path
+
+    virtual QString name() const = 0;
+    virtual QString executablePath() const = 0;
+    virtual ImageRefType imageRefType() const = 0;
+    virtual QString versionString() const;
     bool isValid() const;
     QString getPath() const;
 
@@ -118,10 +122,10 @@ public:
 
     Qx::GenericError openPlatformDoc(std::unique_ptr<PlatformDoc>& returnBuffer, QString name, UpdateOptions updateOptions);
     Qx::GenericError openPlaylistDoc(std::unique_ptr<PlaylistDoc>& returnBuffer, QString name, UpdateOptions updateOptions);
-    Qx::GenericError savePlatformDoc(std::unique_ptr<PlatformDoc> document);
-    Qx::GenericError savePlaylistDoc(std::unique_ptr<PlaylistDoc> document);
+    Qx::GenericError savePlatformDoc(std::unique_ptr<PlatformDoc> platformDoc);
+    Qx::GenericError savePlaylistDoc(std::unique_ptr<PlaylistDoc> playlistDoc);
     Qx::GenericError importImage(ImageMode imageMode, ImageType imageType, QDir sourceDir, const Game& game);
-    virtual Qx::GenericError bulkReferenceImages(ImageType imageType, QString rootImagePath);
+    virtual Qx::GenericError bulkReferenceImages(QString logoRootPath, QString screenshotRootPath, QStringList platforms);
 
     void softReset();
     int getRevertQueueCount() const;
@@ -132,7 +136,7 @@ class InstallFactory
 {
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    virtual std::unique_ptr<Install> produce(QString installPath) = 0;
+    virtual std::shared_ptr<Install> produce(QString installPath) = 0;
 };
 
 }

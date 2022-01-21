@@ -49,7 +49,7 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    QUuid getID() const;
+    QUuid getId() const;
     QString getTitle() const;
     QString getSeries() const;
     QString getDeveloper() const;

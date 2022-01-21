@@ -14,7 +14,7 @@ Game::Game() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QUuid Game::getID() const { return mID; }
+QUuid Game::getId() const { return mID; }
 QString Game::getTitle() const { return mTitle; }
 QString Game::getSeries() const { return mSeries; }
 QString Game::getDeveloper() const { return mDeveloper; }

@@ -211,7 +211,7 @@ Json::Services Install::services() const { return mServices; }
 
 QString Install::fullPath() const { return mRootDirectory.absolutePath(); }
 QDir Install::logosDirectory() const { return mLogosDirectory; }
-QDir Install::screenshootsDirectory() const { return mScreenshotsDirectory; }
+QDir Install::screenshotsDirectory() const { return mScreenshotsDirectory; }
 QDir Install::extrasDirectory() const { return mExtrasDirectory; }
 QString Install::datapackMounterPath() const { return mDataPackMounterFile->fileName(); }
 const MacroResolver* Install::macroResolver() const { return mMacroResolver; }

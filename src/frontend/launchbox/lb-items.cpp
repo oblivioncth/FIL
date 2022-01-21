@@ -5,74 +5,42 @@
 
 namespace LB
 {
-
 //===============================================================================================================
-// ITEM
-//===============================================================================================================
-
-//-Constructor------------------------------------------------------------------------------------------------
-//Public:
-Item::Item() {}
-
-//-Instance Functions------------------------------------------------------------------------------------------------
-//Public:
-QHash<QString, QString>& Item::getOtherFields() { return mOtherFields; }
-const QHash<QString, QString>& Item::getOtherFields() const { return mOtherFields; }
-
-void Item::transferOtherFields(QHash<QString, QString>& otherFields) { mOtherFields = std::move(otherFields); }
-
-//===============================================================================================================
-// ITEM BUILDER
-//===============================================================================================================
-
-//-Constructor------------------------------------------------------------------------------------------------
-//Public:
-//ItemBuilder::ItemBuilder() { defined in .h }
-
-//-Instance Functions------------------------------------------------------------------------------------------------
-//Public:
-//B& wOtherField(QPair<QString, QString> otherField) { defined in .h }
-//T build() { defined in .h }
-
-//===============================================================================================================
-// GAME
+// Game
 //===============================================================================================================
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 Game::Game() {}
 
-Game::Game(FP::Game flashpointGame, QString fullCLIFpPath)
-    : mID(flashpointGame.getID()),
-      mTitle(flashpointGame.getTitle()),
-      mSeries(flashpointGame.getSeries()),
-      mDeveloper(flashpointGame.getDeveloper()),
-      mPublisher(flashpointGame.getPublisher()),
-      mPlatform(flashpointGame.getPlatform()),
-      mSortTitle(flashpointGame.getOrderTitle()),
-      mDateAdded(flashpointGame.getDateAdded()),
-      mDateModified(flashpointGame.getDateModified()),
-      mBroken(flashpointGame.isBroken()),
-      mPlayMode(flashpointGame.getPlayMode()),
-      mStatus(flashpointGame.getStatus()),
-      mRegion(), // Ensures this field is cleared because of older tool versions
-      mNotes(flashpointGame.getOriginalDescription() +
-             (!flashpointGame.getNotes().isEmpty() ? "\n\n" + flashpointGame.getNotes() : "")),
-      mSource(flashpointGame.getSource()),
-      mAppPath(QDir::toNativeSeparators(fullCLIFpPath)),
-      mCommandLine(CLIFp::parametersFromStandard(flashpointGame.getID())),
-      mReleaseDate(flashpointGame.getReleaseDate()),
-      mVersion(flashpointGame.getVersion()),
-      mReleaseType(flashpointGame.getLibrary() == FP::DB::Table_Game::ENTRY_GAME_LIBRARY ? RELEASE_TYPE_GAME : RELEASE_TYPE_ANIM) {}
+Game::Game(FP::Game flashpointGame, QString fullCLIFpPath) :
+    Fe::Game(flashpointGame.getId(), flashpointGame.getTitle(), flashpointGame.getPlatform()),
+    mSeries(flashpointGame.getSeries()),
+    mDeveloper(flashpointGame.getDeveloper()),
+    mPublisher(flashpointGame.getPublisher()),
+    mSortTitle(flashpointGame.getOrderTitle()),
+    mDateAdded(flashpointGame.getDateAdded()),
+    mDateModified(flashpointGame.getDateModified()),
+    mBroken(flashpointGame.isBroken()),
+    mPlayMode(flashpointGame.getPlayMode()),
+    mStatus(flashpointGame.getStatus()),
+    mRegion(), // Ensures this field is cleared because of older tool versions
+    mNotes(flashpointGame.getOriginalDescription() +
+           (!flashpointGame.getNotes().isEmpty() ? "\n\n" + flashpointGame.getNotes() : "")),
+    mSource(flashpointGame.getSource()),
+    mAppPath(QDir::toNativeSeparators(fullCLIFpPath)),
+    mCommandLine(CLIFp::parametersFromStandard(flashpointGame.getId())),
+    mReleaseDate(flashpointGame.getReleaseDate()),
+    mVersion(flashpointGame.getVersion()),
+    mReleaseType(flashpointGame.getLibrary() == FP::DB::Table_Game::ENTRY_GAME_LIBRARY ? RELEASE_TYPE_GAME : RELEASE_TYPE_ANIM)
+{}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QUuid Game::getID() const { return mID; }
-QString Game::getTitle() const { return mTitle; }
+QString Game::getTitle() const { return mName; } // Proxy for name
 QString Game::getSeries() const { return mSeries; }
 QString Game::getDeveloper() const { return mDeveloper; }
 QString Game::getPublisher() const { return mPublisher; }
-QString Game::getPlatform() const { return mPlatform; }
 QString Game::getSortTitle() const { return mSortTitle; }
 QDateTime Game::getDateAdded() const { return mDateAdded; }
 QDateTime Game::getDateModified() const { return mDateModified; }
@@ -89,7 +57,7 @@ QString Game::getVersion() const { return mVersion; }
 QString Game::getReleaseType() const { return mReleaseType; }
 
 //===============================================================================================================
-// GAME BUILDER
+// GameBuilder
 //===============================================================================================================
 
 //-Constructor-------------------------------------------------------------------------------------------------
@@ -98,12 +66,10 @@ GameBuilder::GameBuilder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-GameBuilder& GameBuilder::wID(QString rawID) { mItemBlueprint.mID = QUuid(rawID); return *this; }
-GameBuilder& GameBuilder::wTitle(QString title) { mItemBlueprint.mTitle = title; return *this; }
+GameBuilder& GameBuilder::wTitle(QString title) { mItemBlueprint.mName = title; return *this; } // Proxy for name
 GameBuilder& GameBuilder::wSeries(QString series) { mItemBlueprint.mSeries = series; return *this; }
 GameBuilder& GameBuilder::wDeveloper(QString developer) { mItemBlueprint.mDeveloper = developer; return *this; }
 GameBuilder& GameBuilder::wPublisher(QString publisher) { mItemBlueprint.mPublisher = publisher; return *this; }
-GameBuilder& GameBuilder::wPlatform(QString platform) { mItemBlueprint.mPlatform = platform; return *this; }
 GameBuilder& GameBuilder::wSortTitle(QString sortTitle) { mItemBlueprint.mSortTitle = sortTitle; return *this; }
 
 GameBuilder& GameBuilder::wDateAdded(QString rawDateAdded)
@@ -137,35 +103,33 @@ GameBuilder& GameBuilder::wVersion(QString version) { mItemBlueprint.mVersion = 
 GameBuilder& GameBuilder::wReleaseType(QString releaseType) { mItemBlueprint.mReleaseType = releaseType; return *this; }
 
 //===============================================================================================================
-// ADD APP
+// AddApp
 //===============================================================================================================
 
 //-Constructor---------------------------------------------------------------------------------------------------
 //Public:
-AddApp::AddApp(FP::AddApp flashpointAddApp, QString fullCLIFpPath)
-    : mID(flashpointAddApp.getID()),
-      mGameID(flashpointAddApp.getParentID()),
-      mAppPath(QDir::toNativeSeparators(fullCLIFpPath)),
-      mCommandLine(flashpointAddApp.isPlayable() ? CLIFp::parametersFromStandard(mID)
-                     : CLIFp::parametersFromStandard(flashpointAddApp.getAppPath(), flashpointAddApp.getLaunchCommand())),
-      mAutorunBefore(false),
-      mName(flashpointAddApp.getName()),
-      mWaitForExit(flashpointAddApp.isWaitExit()) {}
-
 AddApp::AddApp() {}
+
+AddApp::AddApp(FP::AddApp flashpointAddApp, QString fullCLIFpPath) :
+    Fe::AddApp(flashpointAddApp.getID(), flashpointAddApp.getName(), flashpointAddApp.getParentID()),
+    mAppPath(QDir::toNativeSeparators(fullCLIFpPath)),
+    mCommandLine(flashpointAddApp.isPlayable() ? CLIFp::parametersFromStandard(mId)
+                   : CLIFp::parametersFromStandard(flashpointAddApp.getAppPath(), flashpointAddApp.getLaunchCommand())),
+    mAutorunBefore(false),
+    mWaitForExit(flashpointAddApp.isWaitExit())
+{}
+
+
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QUuid AddApp::getID() const { return mID; }
-QUuid AddApp::getGameID() const { return mGameID; }
 QString AddApp::getAppPath() const { return mAppPath; }
 QString AddApp::getCommandLine() const { return mCommandLine; }
 bool AddApp::isAutorunBefore() const { return mAutorunBefore; }
-QString AddApp::getName() const { return mName; }
 bool AddApp::isWaitForExit() const { return mWaitForExit; }
 
 //===============================================================================================================
-// ADD APP BUILDER
+// AddAppBuilder
 //===============================================================================================================
 
 //-Constructor-------------------------------------------------------------------------------------------------
@@ -174,16 +138,13 @@ AddAppBuilder::AddAppBuilder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-AddAppBuilder& AddAppBuilder::wID(QString rawID) { mItemBlueprint.mID = QUuid(rawID); return *this; }
-AddAppBuilder& AddAppBuilder::wGameID(QString rawGameID) { mItemBlueprint.mGameID = QUuid(rawGameID); return *this; }
 AddAppBuilder& AddAppBuilder::wAppPath(QString appPath) { mItemBlueprint.mAppPath = appPath; return *this; }
 AddAppBuilder& AddAppBuilder::wCommandLine(QString commandLine) { mItemBlueprint.mCommandLine = commandLine; return *this; }
 AddAppBuilder& AddAppBuilder::wAutorunBefore(QString rawAutorunBefore) { mItemBlueprint.mAutorunBefore = rawAutorunBefore != "0"; return *this; }
-AddAppBuilder& AddAppBuilder::wName(QString name) { mItemBlueprint.mName = name; return *this; }
 AddAppBuilder& AddAppBuilder::wWaitForExit(QString rawWaitForExit) { mItemBlueprint.mWaitForExit = rawWaitForExit != "0"; return *this; }
 
 //===============================================================================================================
-// CUSTOM FIELD
+// CustomField
 //===============================================================================================================
 
 //-Constructor---------------------------------------------------------------------------------------------------
@@ -197,7 +158,7 @@ QString CustomField::getName() const { return mName; }
 QString CustomField::getValue() const { return mValue; }
 
 //===============================================================================================================
-// CUSTOM FIELD BUILDER
+// CustomFieldBuilder
 //===============================================================================================================
 
 //-Constructor-------------------------------------------------------------------------------------------------
@@ -212,28 +173,26 @@ CustomFieldBuilder& CustomFieldBuilder::wName(QString name) { mItemBlueprint.mNa
 CustomFieldBuilder& CustomFieldBuilder::wValue(QString value) { mItemBlueprint.mValue = value; return *this;}
 
 //===============================================================================================================
-// PLAYLIST HEADER
+// PlaylistHeader
 //===============================================================================================================
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 PlaylistHeader::PlaylistHeader() {}
-PlaylistHeader::PlaylistHeader(FP::Playlist flashpointPlaylist)
-    : mPlaylistID(flashpointPlaylist.getID()),
-      mName(flashpointPlaylist.getTitle()),
-      mNestedName(flashpointPlaylist.getTitle()),
-      mNotes(flashpointPlaylist.getDescription()) {}
-
+PlaylistHeader::PlaylistHeader(FP::Playlist flashpointPlaylist) :
+    Fe::PlaylistHeader(flashpointPlaylist.getID(), flashpointPlaylist.getTitle()),
+    mNestedName(flashpointPlaylist.getTitle()),
+    mNotes(flashpointPlaylist.getDescription())
+{}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QUuid PlaylistHeader::getPlaylistID() const { return mPlaylistID; }
-QString PlaylistHeader::getName() const { return mName; }
+QUuid PlaylistHeader::getPlaylistId() const { return mId; } // Proxy for mId
 QString PlaylistHeader::getNestedName() const { return mNestedName; }
 QString PlaylistHeader::getNotes() const { return mNotes; }
 
 //===============================================================================================================
-// PLAYLIST HEADER BUILDER
+// PlaylistHeaderBuilder
 //===============================================================================================================
 
 //-Constructor-------------------------------------------------------------------------------------------------
@@ -242,40 +201,56 @@ PlaylistHeaderBuilder::PlaylistHeaderBuilder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-PlaylistHeaderBuilder& PlaylistHeaderBuilder::wPlaylistID(QString rawPlaylistID) { mItemBlueprint.mPlaylistID = QUuid(rawPlaylistID); return *this; }
-PlaylistHeaderBuilder& PlaylistHeaderBuilder::wName(QString name) { mItemBlueprint.mName = name; return *this;}
+PlaylistHeaderBuilder& PlaylistHeaderBuilder::wPlaylistId(QString rawId) { mItemBlueprint.mId = QUuid(rawId); return *this; } // Proxy for Id
 PlaylistHeaderBuilder& PlaylistHeaderBuilder::wNestedName(QString nestedName) { mItemBlueprint.mNestedName = nestedName; return *this;}
 PlaylistHeaderBuilder& PlaylistHeaderBuilder::wNotes(QString notes) { mItemBlueprint.mNotes = notes; return *this;}
 
 //===============================================================================================================
-// PLAYLIST GAME
+// PlaylistGame::EntryDetails
 //===============================================================================================================
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-PlaylistGame::PlaylistGame(FP::PlaylistGame flashpointPlaylistGame, const QHash<QUuid, EntryDetails>& playlistGameDetailsMap)
-    : mGameID(flashpointPlaylistGame.getGameID()),
-      mLBDatabaseID(-1),
-      mGameTitle(playlistGameDetailsMap.value(mGameID).title),
-      mGameFileName(playlistGameDetailsMap.value(mGameID).fileName),
-      mGamePlatform(playlistGameDetailsMap.value(mGameID).platform),
-      mManualOrder(flashpointPlaylistGame.getOrder()) {}
+PlaylistGame::EntryDetails::EntryDetails(const Game& refGame) :
+    mTitle(refGame.getName()),
+    mFilename(QFileInfo(refGame.getAppPath()).fileName()),
+    mPlatform(refGame.getPlatform())
+{}
+
+//-Instance Functions------------------------------------------------------------------------------------------
+//Public:
+QString PlaylistGame::EntryDetails::title() const { return mTitle; }
+QString PlaylistGame::EntryDetails::filename() const { return mFilename; }
+QString PlaylistGame::EntryDetails::platform() const { return mTitle; }
+
+//===============================================================================================================
+// PlaylistGame
+//===============================================================================================================
+
+//-Constructor------------------------------------------------------------------------------------------------
+//Public:
+PlaylistGame::PlaylistGame(FP::PlaylistGame flashpointPlaylistGame, const QHash<QUuid, EntryDetails>& playlistGameDetailsMap) :
+    Fe::PlaylistGame(flashpointPlaylistGame.getGameID(), playlistGameDetailsMap.value(flashpointPlaylistGame.getGameID()).title()),
+    mLBDatabaseId(-1),
+    mGameFilename(playlistGameDetailsMap.value(flashpointPlaylistGame.getGameID()).filename()),
+    mGamePlatform(playlistGameDetailsMap.value(flashpointPlaylistGame.getGameID()).platform()),
+    mManualOrder(flashpointPlaylistGame.getOrder())
+{}
 
 PlaylistGame::PlaylistGame() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QUuid PlaylistGame::getGameID() const { return mGameID; };
-int PlaylistGame::getLBDatabaseID() const { return mLBDatabaseID; }
-QString PlaylistGame::getGameTitle() const { return mGameTitle; }
-QString PlaylistGame::getGameFileName() const { return mGameFileName; }
+QString PlaylistGame::getGameTitle() const { return mName; } // Proxy for mName
+int PlaylistGame::getLBDatabaseId() const { return mLBDatabaseId; }
+QString PlaylistGame::getGameFileName() const { return mGameFilename; }
 QString PlaylistGame::getGamePlatform() const { return mGamePlatform; }
 int PlaylistGame::getManualOrder() const { return mManualOrder; }
 
-void PlaylistGame::setLBDatabaseID(int lbDBID) { mLBDatabaseID = lbDBID; }
+void PlaylistGame::setLBDatabaseId(int lbDBID) { mLBDatabaseId = lbDBID; }
 
 //===============================================================================================================
-// PLAYLIST GAME BUILDER
+// PlaylistGameBuilder
 //===============================================================================================================
 
 //-Constructor-------------------------------------------------------------------------------------------------
@@ -284,19 +259,18 @@ PlaylistGameBuilder::PlaylistGameBuilder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-PlaylistGameBuilder& PlaylistGameBuilder::wGameID(QString rawGameID) { mItemBlueprint.mGameID = QUuid(rawGameID); return *this; }
+PlaylistGameBuilder& PlaylistGameBuilder::wGameTitle(QString gameTitle) { mItemBlueprint.mName = gameTitle; return *this;} // Proxy for mName
 
 PlaylistGameBuilder& PlaylistGameBuilder::wLBDatabaseID(QString rawLBDatabaseID)
 {
     bool validInt = false;
-    mItemBlueprint.mLBDatabaseID = rawLBDatabaseID.toInt(&validInt);
+    mItemBlueprint.mLBDatabaseId = rawLBDatabaseID.toInt(&validInt);
     if(!validInt)
-        mItemBlueprint.mLBDatabaseID = -1;
+        mItemBlueprint.mLBDatabaseId = -1;
     return *this;
 }
 
-PlaylistGameBuilder& PlaylistGameBuilder::wGameTitle(QString gameTitle) { mItemBlueprint.mGameTitle = gameTitle; return *this; }
-PlaylistGameBuilder& PlaylistGameBuilder::wGameFileName(QString gameFileName) { mItemBlueprint.mGameFileName = gameFileName; return *this; }
+PlaylistGameBuilder& PlaylistGameBuilder::wGameFileName(QString gameFileName) { mItemBlueprint.mGameFilename = gameFileName; return *this; }
 PlaylistGameBuilder& PlaylistGameBuilder::wGamePlatform(QString gamePlatform) { mItemBlueprint.mGamePlatform = gamePlatform; return *this; }
 
 PlaylistGameBuilder& PlaylistGameBuilder::wManualOrder(QString rawManualOrder)
@@ -309,7 +283,7 @@ PlaylistGameBuilder& PlaylistGameBuilder::wManualOrder(QString rawManualOrder)
 }
 
 //===============================================================================================================
-// PLATFORM
+// Platform
 //===============================================================================================================
 
 //-Constructor-------------------------------------------------------------------------------------------------
@@ -321,7 +295,7 @@ Platform::Platform() {}
 QString Platform::getName() const { return mName; }
 
 //===============================================================================================================
-// PLATFORM BUILDER
+// PlatformBuilder
 //===============================================================================================================
 
 //-Constructor-------------------------------------------------------------------------------------------------
@@ -333,7 +307,7 @@ PlatformBuilder::PlatformBuilder() {}
 PlatformBuilder& PlatformBuilder::wName(QString name) { mItemBlueprint.mName = name; return *this; }
 
 //===============================================================================================================
-// PLATFORM FOLDER
+// PlatformFolder
 //===============================================================================================================
 
 //-Constructor-------------------------------------------------------------------------------------------------
@@ -347,7 +321,7 @@ PlatformBuilder& PlatformBuilder::wName(QString name) { mItemBlueprint.mName = n
 //QString PlatformFolder::getPlatform() { return mPlatform; }
 
 //===============================================================================================================
-// PLATFORM FOLDER BUILDER
+// PlatformFolderBuilder
 //===============================================================================================================
 
 //-Constructor-------------------------------------------------------------------------------------------------
@@ -361,7 +335,7 @@ PlatformBuilder& PlatformBuilder::wName(QString name) { mItemBlueprint.mName = n
 //PlatformFolderBuilder& PlatformFolderBuilder::wPlatform(QString platform) { mItemBlueprint.mMediaType = platform; return *this; }
 
 //===============================================================================================================
-// PLATFORM CATEGORY
+// PlatformCategory
 //===============================================================================================================
 
 //-Constructor-------------------------------------------------------------------------------------------------
@@ -369,7 +343,7 @@ PlatformBuilder& PlatformBuilder::wName(QString name) { mItemBlueprint.mName = n
 PlatformCategory::PlatformCategory() {}
 
 //===============================================================================================================
-// PLATFORM CATEGORY BUILDER
+// PlatformCategoryBuilder
 //===============================================================================================================
 
 //-Constructor-------------------------------------------------------------------------------------------------

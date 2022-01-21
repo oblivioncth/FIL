@@ -1,5 +1,6 @@
 #include "fe-items.h"
 
+
 namespace Fe
 {
 
@@ -19,93 +20,82 @@ const QHash<QString, QString>& Item::getOtherFields() const { return mOtherField
 void Item::transferOtherFields(QHash<QString, QString>& otherFields) { mOtherFields = std::move(otherFields); }
 
 //===============================================================================================================
-// ITEM BUILDER
+// BASIC ITEM
 //===============================================================================================================
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-//ItemBuilder::ItemBuilder() { defined in .h }
+BasicItem::BasicItem() {}
+
+BasicItem::BasicItem(QUuid id, QString name) :
+    mId(id),
+    mName(name)
+{}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-//B& wOtherField(QPair<QString, QString> otherField) { defined in .h }
-//T build() { defined in .h }
+QUuid BasicItem::getId() const { return mId; }
+QString BasicItem::getName() const { return mName; }
 
 //===============================================================================================================
 // GAME
 //===============================================================================================================
+
+//-Constructor------------------------------------------------------------------------------------------------
+//Public:
+Game::Game() {}
+Game::Game(QUuid id, QString name, QString platform) :
+    BasicItem(id, name),
+    mPlatform(platform)
+{}
+
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QUuid Game::getID() const { return mID; }
-QString Game::getTitle() const { return mTitle; }
 QString Game::getPlatform() const { return mPlatform; }
-
-//===============================================================================================================
-// GAME BUILDER
-//===============================================================================================================
-
-//-Instance Functions------------------------------------------------------------------------------------------
-//Public:
-GameBuilder& GameBuilder::wID(QString rawID) { mItemBlueprint.mID = QUuid(rawID); return *this; }
-GameBuilder& GameBuilder::wTitle(QString title) { mItemBlueprint.mTitle = title; return *this; }
-GameBuilder& GameBuilder::wPlatform(QString platform) { mItemBlueprint.mPlatform = platform; return *this; }
 
 //===============================================================================================================
 // ADD APP
 //===============================================================================================================
 
+//-Constructor------------------------------------------------------------------------------------------------
+//Public:
+AddApp::AddApp() {}
+
+AddApp::AddApp(QUuid id, QString name, QUuid gameId) :
+    BasicItem(id, name),
+    mGameId(gameId)
+{}
+
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QUuid AddApp::getID() const { return mID; }
-QUuid AddApp::getGameID() const { return mGameID; }
-QString AddApp::getName() const { return mName; }
-
-//===============================================================================================================
-// ADD APP BUILDER
-//===============================================================================================================
-
-//-Instance Functions------------------------------------------------------------------------------------------
-//Public:
-AddAppBuilder& AddAppBuilder::wID(QString rawID) { mItemBlueprint.mID = QUuid(rawID); return *this; }
-AddAppBuilder& AddAppBuilder::wGameID(QString rawGameID) { mItemBlueprint.mGameID = QUuid(rawGameID); return *this; }
-AddAppBuilder& AddAppBuilder::wName(QString name) { mItemBlueprint.mName = name; return *this; }
+QUuid AddApp::getGameID() const { return mGameId; }
 
 //===============================================================================================================
 // PLAYLIST HEADER
 //===============================================================================================================
 
-//-Instance Functions------------------------------------------------------------------------------------------------
+//-Constructor------------------------------------------------------------------------------------------------
 //Public:
-QUuid PlaylistHeader::getPlaylistID() const { return mPlaylistID; }
-QString PlaylistHeader::getName() const { return mName; }
+PlaylistHeader::PlaylistHeader() {}
 
-//===============================================================================================================
-// PLAYLIST HEADER BUILDER
-//===============================================================================================================
-
-//-Instance Functions------------------------------------------------------------------------------------------
-//Public:
-PlaylistHeaderBuilder& PlaylistHeaderBuilder::wPlaylistID(QString rawPlaylistID) { mItemBlueprint.mPlaylistID = QUuid(rawPlaylistID); return *this; }
-PlaylistHeaderBuilder& PlaylistHeaderBuilder::wName(QString name) { mItemBlueprint.mName = name; return *this;}
+PlaylistHeader::PlaylistHeader(QUuid id, QString name) :
+    BasicItem(id, name)
+{}
 
 //===============================================================================================================
 // PLAYLIST GAME
 //===============================================================================================================
 
+//-Constructor------------------------------------------------------------------------------------------------
+//Public:
+PlaylistGame::PlaylistGame() {}
+
+PlaylistGame::PlaylistGame(QUuid id, QString name) :
+    BasicItem(id, name)
+{}
+
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QUuid PlaylistGame::getGameID() const { return mGameID; };
-
-//===============================================================================================================
-// PLAYLIST GAME BUILDER
-//===============================================================================================================
-
-//-Constructor-------------------------------------------------------------------------------------------------
-//Public:
-PlaylistGameBuilder::PlaylistGameBuilder() {}
-
-//-Instance Functions------------------------------------------------------------------------------------------
-//Public:
-PlaylistGameBuilder& PlaylistGameBuilder::wGameID(QString rawGameID) { mItemBlueprint.mGameID = QUuid(rawGameID); return *this; }
+QUuid PlaylistGame::getGameID() const { return mId; } // Proxy for getId()
 
 }

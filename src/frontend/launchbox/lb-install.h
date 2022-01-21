@@ -5,23 +5,24 @@
 #include <QDir>
 #include <QSet>
 #include <QtXml>
+
 #include "qx-io.h"
 #include "qx-xml.h"
+
+#include "../fe-install.h"
 #include "lb-items.h"
-#include "lb-xml.h"
+#include "lb-data.h"
 
 namespace LB {
 
-class Install
+class Install : public Fe::Install
 {
-//-Class Enums---------------------------------------------------------------------------------------------------
-public:
-    enum ImageMode {Copy, Reference, Link};
-    enum PlaylistGameMode {SelectedPlatform, ForceAll};
-
+    friend class PlatformDoc;
+    friend class PlaylistDoc;
 //-Class Variables--------------------------------------------------------------------------------------------------
 public:
-    //
+    // Identity
+    static inline const QString NAME = "LaunchBox";
 
     // Paths
     static inline const QString PLATFORMS_PATH = "Data/Platforms";
@@ -34,42 +35,19 @@ public:
 
     // Files
     static inline const QString XML_EXT = ".xml";
-    static inline const QString IMAGE_EXT = ".png";
-    static inline const QString MODIFIED_FILE_EXT = ".obk";
-
-    // Images Errors
-    static inline const QString ERR_IMAGE_WONT_BACKUP = R"(Cannot rename the existing image "%1" for backup.)";
-    static inline const QString ERR_IMAGE_WONT_COPY = R"(Cannot copy the image "%1" to "%2".)";
-    static inline const QString ERR_IMAGE_WONT_LINK = R"(Cannot create a symbolic link from "%1" to "%2".)";
-    static inline const QString ERR_CANT_MAKE_DIR = R"(Could not create the image directory "%1". Make sure you have write permissions at that location.)";
-
-    // Reversion Errors
-    static inline const QString ERR_REVERT_CANT_REMOVE_XML = R"(Cannot remove the XML file "%1". It may need to be deleted and have its backup restored manually.)";
-    static inline const QString ERR_REVERT_CANT_RESTORE_XML = R"(Cannot restore the XML backup "%1". It may need to be renamed manually.)";
-    static inline const QString ERR_REVERT_CANT_REMOVE_IMAGE = R"(Cannot remove the image file "%1". It may need to be deleted manually.)";
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
-    // Validity
-    bool mValid;
 
     // Files and directories
-    QDir mRootDirectory;
     QDir mDataDirectory;
     QDir mPlatformsDirectory;
     QDir mPlaylistsDirectory;
     QDir mPlatformImagesDirectory;
 
-    // XML Information
-    QSet<Xml::DataDocHandle> mExistingDocuments;
-
-    // XML Interaction
-    QList<QString> mModifiedXMLDocuments;
-    QSet<Xml::DataDocHandle> mLeasedHandles;
-
     // Other trackers
-    QList<QString> mPurgableImages;
     Qx::FreeIndexTracker<int> mLBDatabaseIDTracker = Qx::FreeIndexTracker<int>(0, -1, {});
+    QHash<QUuid, PlaylistGame::EntryDetails> mPlaylistGameDetailsCache;
     // TODO: Even though the playlist game IDs dont seem to matter, at some point for for completeness scan all playlists when hooking an install to get the
     // full list of in use IDs
 
@@ -79,43 +57,36 @@ public:
 
 //-Class Functions------------------------------------------------------------------------------------------------------
 private:
-    static void allowUserWriteOnXML(QString xmlPath);
-
-public:
-   static QString makeFileNameLBKosher(QString fileName);
+    static QString makeFileNameLBKosher(QString fileName);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 private:
-   void nullify();
-   QString transferImage(ImageMode imageMode, QDir sourceDir, QString destinationSubPath, const LB::Game& game);
-   Qx::XmlStreamReaderError openDataDocument(Xml::DataDoc* docToOpen, Xml::DataDocReader* docReader);
-   bool saveDataDocument(QString& errorMessage, Xml::DataDoc* docToSave, Xml::DataDocWriter* docWriter);
-   QSet<QString> getExistingDocs(QString type) const;
+    void nullifyDerived() override;
+    void softResetDerived() override;
+
+    QString dataDocPath(Fe::DataDoc::Identifier identifier) const override;
+    QString imageDestinationPath(ImageType imageType, const Fe::Game& game) const override;
+
+    std::shared_ptr<Fe::PlatformDocReader> prepareOpenPlatformDoc(std::unique_ptr<Fe::PlatformDoc>& platformDoc, const QString& name, const Fe::UpdateOptions& updateOptions) override;
+    std::shared_ptr<Fe::PlaylistDocReader> prepareOpenPlaylistDoc(std::unique_ptr<Fe::PlaylistDoc>& playlistDoc, const QString& name, const Fe::UpdateOptions& updateOptions) override;
+    std::shared_ptr<Fe::PlatformDocWriter> prepareSavePlatformDoc(const std::unique_ptr<Fe::PlatformDoc>& platformDoc) override;
+    std::shared_ptr<Fe::PlaylistDocWriter> prepareSavePlaylistDoc(const std::unique_ptr<Fe::PlaylistDoc>& playlistDoc) override;
+
+    Qx::GenericError openPlatformsDoc(std::unique_ptr<PlatformsDoc>& returnBuffer);
+    Qx::GenericError savePlatformsDoc(std::unique_ptr<PlatformsDoc> document);
 
 public:
-   bool isValid();
-   Qx::IOOpReport populateExistingDocs(QStringList platformMatches, QStringList playlistMatches);
+    QString name() const override;
+    QString executablePath() const override;
+    ImageRefType imageRefType() const override;
 
-   Qx::XmlStreamReaderError openPlatformDoc(std::unique_ptr<Xml::PlatformDoc>& returnBuffer, QString name, UpdateOptions updateOptions);
-   Qx::XmlStreamReaderError openPlaylistDoc(std::unique_ptr<Xml::PlaylistDoc>& returnBuffer, QString name, UpdateOptions updateOptions);
-   Qx::XmlStreamReaderError openPlatformsDoc(std::unique_ptr<Xml::PlatformsDoc>& returnBuffer);
-   bool savePlatformDoc(QString& errorMessage, std::unique_ptr<Xml::PlatformDoc> document);
-   bool savePlaylistDoc(QString& errorMessage, std::unique_ptr<Xml::PlaylistDoc> document);
-   bool savePlatformsDoc(QString& errorMessage, std::unique_ptr<Xml::PlatformsDoc> document);
+    Qx::GenericError populateExistingDocs(QStringList targetPlatforms, QStringList targetPlaylists) override;
 
-   bool ensureImageDirectories(QString& errorMessage, QString platform); // TODO: Make part of the constructor after validity is ensured
-   bool transferLogo(QString& errorMessage, ImageMode imageMode, QDir logoSourceDir, const LB::Game& game);
-   bool transferScreenshot(QString& errorMessage, ImageMode imageMode, QDir screenshotSourceDir, const LB::Game& game);
-
-   int revertNextChange(QString& errorMessage, bool skipOnFail);
-   void softReset();
-
-   QString getPath() const;
-   int getRevertQueueCount() const;
-   QSet<QString> getExistingPlatforms() const;
-   QSet<QString> getExistingPlaylists() const;
-
+    Qx::GenericError bulkReferenceImages(QString logoRootPath, QString screenshotRootPath, QStringList platforms) override;
 };
+REGISTER_FRONTEND(Install::NAME, Install);
 
 }
+
+
 #endif // LAUNCHBOX_INSTALL_H

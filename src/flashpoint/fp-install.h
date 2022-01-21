@@ -115,7 +115,7 @@ public:
     // Data access
     QString fullPath() const;
     QDir logosDirectory() const;
-    QDir screenshootsDirectory() const;
+    QDir screenshotsDirectory() const;
     QDir extrasDirectory() const;
     QString datapackMounterPath() const;
     const MacroResolver* macroResolver() const;

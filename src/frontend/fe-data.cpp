@@ -27,6 +27,10 @@ uint qHash(const DataDoc::Identifier& key, uint seed) noexcept
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
+DataDoc::Identifier::Identifier(Type docType, QString docName) :
+    mDocType(docType),
+    mDocName(docName)
+{}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
@@ -40,8 +44,8 @@ QString DataDoc::Identifier::docName() const { return mDocName; }
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-DataDoc::DataDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName)
-    : mParent(parent),
+DataDoc::DataDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName) :
+      mParent(parent),
       mDocumentFile(std::move(docFile)),
       mName(docName)
 {}
@@ -53,14 +57,14 @@ QString DataDoc::filePath() const { return mDocumentFile->fileName(); }
 //Public:
 Install* DataDoc::parent() const { return mParent; }
 DataDoc::Identifier DataDoc::identifier() const { return Identifier(type(), mName); }
-Qx::GenericError DataDoc::standardError(StandardError error, Qx::GenericError::ErrorLevel errorLevel) const
+QString DataDoc::errorString(StandardError error) const
 {
     QString formattedError = STD_ERRORS[error];
     formattedError.replace(M_DOC_TYPE, identifier().docTypeString());
     formattedError.replace(M_DOC_NAME, identifier().docName());
-    formattedError.replace(M_DOC_PARENT, parent()->name());
+    formattedError.replace(M_DOC_PARENT, parent()->name()); //TODO: If compiler error from circular dependency, this is likely the culprit
 
-    return Qx::GenericError(errorLevel, formattedError);
+    return formattedError;
 }
 
 void DataDoc::clearFile() { mDocumentFile->resize(0); }
@@ -70,16 +74,44 @@ void DataDoc::clearFile() { mDocumentFile->resize(0); }
 //===============================================================================================================
 
 //-Constructor-----------------------------------------------------------------------------------------------------
-//Public:
-DataDocReader::DataDocReader(DataDoc* targetDoc) : mTargetDocument(targetDoc) {}
+//Protected:
+DataDocReader::DataDocReader(DataDoc* targetDoc) :
+    mTargetDocument(targetDoc),
+    mPrimaryError(targetDoc->errorString(DataDoc::StandardError::DocReadFailed))
+{}
 
+//-Instance Functions-------------------------------------------------------------------------------------------------
+//Protected:
+std::unique_ptr<QFile>& DataDocReader::targetDocFile() { return mTargetDocument->mDocumentFile; }
 //===============================================================================================================
 // DataDocWriter
 //===============================================================================================================
 
 //-Constructor-----------------------------------------------------------------------------------------------------
+//Protected:
+DataDocWriter::DataDocWriter(DataDoc* sourceDoc) :
+    mSourceDocument(sourceDoc),
+    mPrimaryError(sourceDoc->errorString(DataDoc::StandardError::DocWriteFailed))
+{}
+
+//-Instance Functions-------------------------------------------------------------------------------------------------
+//Protected:
+std::unique_ptr<QFile>& DataDocWriter::sourceDocFile() { return mSourceDocument->mDocumentFile; }
+
+//===============================================================================================================
+// UpdateableDoc
+//===============================================================================================================
+
+//-Constructor-----------------------------------------------------------------------------------------------------
+//Protected:
+UpdateableDoc::UpdateableDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions) :
+    DataDoc(parent, std::move(docFile), docName),
+    mUpdateOptions(updateOptions)
+{}
+
+//-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-DataDocWriter::DataDocWriter(DataDoc* sourceDoc) : mSourceDocument(sourceDoc) {}
+void UpdateableDoc::finalize() { finalizeDerived(); }
 
 //===============================================================================================================
 // PlatformDoc
@@ -87,8 +119,9 @@ DataDocWriter::DataDocWriter(DataDoc* sourceDoc) : mSourceDocument(sourceDoc) {}
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlatformDoc::PlatformDoc(Install* parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions, const Key&)
-    : DataDoc(parent, std::move(docFile), docName), mUpdateOptions(updateOptions) {}
+PlatformDoc::PlatformDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions) :
+    UpdateableDoc(parent, std::move(docFile), docName, updateOptions)
+{}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
@@ -101,73 +134,38 @@ const QHash<QUuid, std::shared_ptr<AddApp>>& PlatformDoc::getFinalAddApps() cons
 bool PlatformDoc::containsGame(QUuid gameID) const { return mGamesFinal.contains(gameID) || mGamesExisting.contains(gameID); }
 bool PlatformDoc::containsAddApp(QUuid addAppId) const { return mAddAppsFinal.contains(addAppId) || mAddAppsExisting.contains(addAppId); }
 
-void PlatformDoc::addGame(FP::Game game)
+const Game* PlatformDoc::addGame(FP::Game game)
 {
+    // Prepare game
     std::shared_ptr<Game> feGame = prepareGame(game);
-    QUuid key = feGame->getID();
 
-    // Check if game exists
-    if(mGamesExisting.contains(key))
-    {
-        // Replace if existing update is on, move existing otherwise
-        if(mUpdateOptions.importMode == ImportMode::NewAndExisting)
-        {
-            feGame->transferOtherFields(mGamesExisting[key]->getOtherFields());
-            mGamesFinal[key] = feGame;
-            mGamesExisting.remove(key);
-        }
-        else
-        {
-            mGamesFinal[key] = std::move(mGamesExisting[key]);
-            mGamesExisting.remove(key);
-        }
+    // Add game
+    addUpdateableItem(mGamesExisting, mGamesFinal, feGame);
 
-    }
-    else
-        mGamesFinal[key] = feGame;
+    // Return pointer to converted and added game
+    return feGame.get();
 }
 
-void PlatformDoc::addAddApp(FP::AddApp app)
+const AddApp* PlatformDoc::addAddApp(FP::AddApp app)
 {
-    std::shared_ptr<AddApp> feApp = prepareAddApp(app);
-    QUuid key = feApp->getID();
+    // Prepare game
+    std::shared_ptr<AddApp> feAddApp = prepareAddApp(app);
 
-    // Check if additional app exists
-    if(mAddAppsExisting.contains(key))
-    {
-        // Replace if existing update is on, move existing otherwise
-        if(mUpdateOptions.importMode == ImportMode::NewAndExisting)
-        {
-            feApp->transferOtherFields(mAddAppsExisting[key]->getOtherFields());
-            mAddAppsFinal[key] = feApp;
-            mAddAppsExisting.remove(key);
-        }
-        else
-        {
-            mAddAppsFinal[key] = std::move(mAddAppsExisting[key]);
-            mAddAppsExisting.remove(key);
-        }
+    // Add game
+    addUpdateableItem(mAddAppsExisting, mAddAppsFinal, feAddApp);
 
-    }
-    else
-        mAddAppsFinal[key] = feApp;
+    // Return pointer to converted and added add app
+    return feAddApp.get();
 }
 
 void PlatformDoc::finalize()
 {
-    // Copy items to final list if obsolete entries are to be kept
-    if(!mUpdateOptions.removeObsolete)
-    {
-        mGamesFinal.insert(mGamesExisting);
-        mAddAppsFinal.insert(mAddAppsExisting);
-    }
+    // Finalize item stores
+    finalizeUpdateableItems(mGamesExisting, mGamesFinal);
+    finalizeUpdateableItems(mAddAppsExisting, mAddAppsFinal);
 
-    // Clear existing lists
-    mGamesExisting.clear();
-    mAddAppsExisting.clear();
-
-    // Perform frontend specific finalization
-    cleanup();
+    // Perform base finalization
+    UpdateableDoc::finalize();
 }
 
 //===============================================================================================================
@@ -175,19 +173,34 @@ void PlatformDoc::finalize()
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
-//Public:
-PlatformDocReader::PlatformDocReader(PlatformDoc* targetDoc)
-    : DataDocReader(targetDoc) {}
+//Protected:
+PlatformDocReader::PlatformDocReader(DataDoc* targetDoc) :
+    DataDocReader(targetDoc)
+{}
+
+//-Instance Functions--------------------------------------------------------------------------------------------------
+//Protected:
+// TODO: Consider removing the following and similar, and just making public getters for existing items.
+//       Right now this is considered to break encapsulation too much, but it might be alright
+QHash<QUuid, std::shared_ptr<Game>>& PlatformDocReader::targetDocExistingGames()
+{
+    return static_cast<PlatformDoc*>(mTargetDocument)->mGamesExisting;
+}
+
+QHash<QUuid, std::shared_ptr<AddApp>>& PlatformDocReader::targetDocExistingAddApps()
+{
+    return static_cast<PlatformDoc*>(mTargetDocument)->mAddAppsExisting;
+}
 
 //===============================================================================================================
 // PlatformDocWriter
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
-//Public:
-PlatformDocWriter::PlatformDocWriter(PlatformDoc* sourceDoc)
-    : DataDocWriter(sourceDoc) {}
-
+//Protected:
+PlatformDocWriter::PlatformDocWriter(DataDoc* sourceDoc) :
+    DataDocWriter(sourceDoc)
+{}
 
 //===============================================================================================================
 // PlaylistDoc
@@ -195,8 +208,9 @@ PlatformDocWriter::PlatformDocWriter(PlatformDoc* sourceDoc)
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlaylistDoc::PlaylistDoc(Install* parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions, const Key&)
-    : DataDoc(parent, std::move(docFile), docName), mUpdateOptions(updateOptions) {}
+PlaylistDoc::PlaylistDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions) :
+    UpdateableDoc(parent, std::move(docFile), docName, updateOptions)
+{}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
@@ -219,63 +233,53 @@ void PlaylistDoc::setPlaylistHeader(FP::Playlist playlist)
 
 void PlaylistDoc::addPlaylistGame(FP::PlaylistGame playlistGame)
 {
+    // Prepare playlist game
     std::shared_ptr<PlaylistGame> fePlaylistGame = preparePlaylistGame(playlistGame);
-    QUuid key = fePlaylistGame->getGameID();
 
-    // Check if playlist game exists
-    if(mPlaylistGamesExisting.contains(key))
-    {
-        // Replace if existing update is on, move existing otherwise
-        if(mUpdateOptions.importMode == ImportMode::NewAndExisting)
-        {
-            fePlaylistGame->transferOtherFields(mPlaylistGamesExisting[key]->getOtherFields());
-            //fePlaylistGame.setLBDatabaseID(mPlaylistGamesExisting[key].getLBDatabaseID()); // TODO: For LB specific child add this in
-            mPlaylistGamesFinal[key] = fePlaylistGame;
-            mPlaylistGamesExisting.remove(key);
-        }
-        else
-        {
-            mPlaylistGamesFinal[key] = std::move(mPlaylistGamesExisting[key]);
-            mPlaylistGamesExisting.remove(key);
-        }
-
-    }
-    else
-    {
-        //fePlaylistGame.setLBDatabaseID(mPlaylistGameFreeLBDBIDTracker->reserveFirstFree()); // TODO: For LB specific child add this in
-        mPlaylistGamesFinal[key] = fePlaylistGame;
-    }
+    // Add playlist game
+    addUpdateableItem(mPlaylistGamesExisting, mPlaylistGamesFinal, fePlaylistGame);
 }
 
 void PlaylistDoc::finalize()
 {
-    // Copy items to final list if obsolete entries are to be kept
-    if(!mUpdateOptions.removeObsolete)
-        mPlaylistGamesFinal.insert(mPlaylistGamesExisting);
+    // Finalize item stores
+    finalizeUpdateableItems(mPlaylistGamesExisting, mPlaylistGamesFinal);
 
-    // Clear existing lists
-    mPlaylistGamesExisting.clear();
-
-    // Perform frontend specific finalization
-    cleanup();
+    // Perform base finalization
+    UpdateableDoc::finalize();
 }
 
 //===============================================================================================================
-// PlaylistDocReader
+// PlatformDocReader
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
-//Public:
-PlaylistDocReader::PlaylistDocReader(PlaylistDoc* targetDoc)
-    : DataDocReader(targetDoc) {}
+//Protected:
+PlaylistDocReader::PlaylistDocReader(DataDoc* targetDoc) :
+    DataDocReader(targetDoc)
+{}
+
+//-Instance Functions--------------------------------------------------------------------------------------------------
+//Protected:
+
+QHash<QUuid, std::shared_ptr<PlaylistGame>>& PlaylistDocReader::targetDocExistingPlaylistGames()
+{
+    return static_cast<PlaylistDoc*>(mTargetDocument)->mPlaylistGamesExisting;
+}
+
+std::shared_ptr<PlaylistHeader>& PlaylistDocReader::targetDocPlaylistHeader()
+{
+    return static_cast<PlaylistDoc*>(mTargetDocument)->mPlaylistHeader;
+}
 
 //===============================================================================================================
 // PlatformDocWriter
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
-//Public:
-PlaylistDocWriter::PlaylistDocWriter(PlaylistDoc* sourceDoc)
-    : DataDocWriter(sourceDoc) {}
+//Protected:
+PlaylistDocWriter::PlaylistDocWriter(DataDoc* sourceDoc) :
+    DataDocWriter(sourceDoc)
+{}
 
 }

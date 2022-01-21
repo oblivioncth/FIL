@@ -8,14 +8,14 @@
 #include <QWinTaskbarButton>
 #include <QWinTaskbarProgress>
 #include "version.h"
-#include "launchbox/lb-install.h"
-#include "launchbox/lb-xml.h"
+#include "frontend/fe-install.h"
 #include "flashpoint/fp-install.h"
 #include "import-worker.h"
 #include "qx-io.h"
 #include "qx-widgets.h"
 #include "clifp.h"
 
+// TODO: Remove all instances of "defined in .h" comments from project
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -28,7 +28,7 @@ class MainWindow : public QMainWindow
 //-Class Enums------------------------------------------------------------------------------------------------
 private:
     enum class InputStage {Paths, Imports};
-    enum class Install {LaunchBox, Flashpoint};
+    enum class Install {Frontend, Flashpoint};
 
 //-Class Variables--------------------------------------------------------------------------------------------
 private:
@@ -78,7 +78,7 @@ private:
                                                       "<b>Image Cache Build Speed:</b> Fast<br>";
 
     // Messages - Input
-    static inline const QString MSG_LB_INSTALL_INVALID = "The specified directory either doesn't contain a valid LaunchBox install, or it contains a version that is incompatible with this tool.";
+    static inline const QString MSG_FE_INSTALL_INVALID = "The specified directory either doesn't contain a valid frontend install, or it contains a version that is incompatible with this tool.";
     static inline const QString MSG_FP_INSTALL_INVALID = "The specified directory either doesn't contain a valid Flashpoint install, or it contains a version that is incompatible with this tool.";
     static inline const QString MSG_FP_VER_NOT_TARGET = "The selected Flashpoint install contains a version of Flashpoint that is different from the target version (" VER_PRODUCTVERSION_STR "), but appears to have a compatible structure. "
                                                                 "You may proceed at your own risk as the tool is not guarnteed to work correctly in this circumstance. Please use a newer version of " VER_INTERNALNAME_STR " if available.";
@@ -168,7 +168,7 @@ private:
     QHash<QAction*, std::function<bool(void)>> mActionEnableConditionMap;
     QColor mExistingItemColor;
 
-    std::shared_ptr<LB::Install> mLaunchBoxInstall;
+    std::shared_ptr<Fe::Install> mFrontendInstall;
     std::shared_ptr<FP::Install> mFlashpointInstall;
     Qx::MMRB mInternalCLIFpVersion;
 
@@ -221,16 +221,16 @@ private:
     void postSqlError(QString mainText, QSqlError sqlError);
     void postListError(QString mainText, QStringList detailedItems);
     void postIOError(QString mainText, Qx::IOOpReport report);
-    int postGenericError(Qx::GenericError error, QMessageBox::StandardButtons choices);
+    int postGenericError(Qx::GenericError error, QMessageBox::StandardButtons choices = QMessageBox::Ok);
 
     void refreshEnableStates();
 
     QStringList getSelectedPlatforms() const;
     QStringList getSelectedPlaylists() const;
     FP::DB::InclusionOptions getSelectedInclusionOptions() const;
-    LB::UpdateOptions getSelectedUpdateOptions() const;
-    LB::Install::ImageMode getSelectedImageMode() const;
-    LB::Install::PlaylistGameMode getSelectedPlaylistGameMode() const;
+    Fe::UpdateOptions getSelectedUpdateOptions() const;
+    Fe::Install::ImageMode getSelectedImageMode() const;
+    ImportWorker::PlaylistGameMode getSelectedPlaylistGameMode() const;
 
     void prepareImport();
     void revertAllLaunchBoxChanges();

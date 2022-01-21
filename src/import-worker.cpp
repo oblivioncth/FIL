@@ -1,17 +1,21 @@
 #include "import-worker.h"
 #include "clifp.h"
 
+
+// TODO: Ensure that in every place an error message is grabbed from an Install function here, that the install implementation provides
+//       an error that fulfills the same function of the original ones that were removed
+
 //===============================================================================================================
 // IMPORT WORKER
 //===============================================================================================================
 
 //-Constructor---------------------------------------------------------------------------------------------------
 ImportWorker::ImportWorker(std::shared_ptr<FP::Install> fpInstallForWork,
-                           std::shared_ptr<LB::Install> lbInstallForWork,
+                           std::shared_ptr<Fe::Install> feInstallForWork,
                            ImportSelections importSelections,
                            OptionSet optionSet)
     : mFlashpointInstall(fpInstallForWork),
-      mLaunchBoxInstall(lbInstallForWork),
+      mFrontendInstall(feInstallForWork),
       mImportSelections(importSelections),
       mOptionSet(optionSet) {}
 
@@ -129,34 +133,20 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
         emit progressStepChanged((playlistSpecific ? STEP_IMPORTING_PLAYLIST_SPEC_GAMES : STEP_IMPORTING_PLATFORM_GAMES).arg(currentPlatformGameResult.source));
 
         // Open LB platform doc
-        LB::Xml::DataDocHandle docRequest = {LB::Xml::PlatformDoc::TYPE_NAME, currentPlatformGameResult.source};
-        std::unique_ptr<LB::Xml::PlatformDoc> currentPlatformXML;
-        Qx::XmlStreamReaderError platformReadError = mLaunchBoxInstall->openPlatformDoc(currentPlatformXML, docRequest.docName, mOptionSet.updateOptions);
+        std::unique_ptr<Fe::PlatformDoc> currentPlatformDoc;
+        Qx::GenericError platformReadError = mFrontendInstall->openPlatformDoc(currentPlatformDoc, currentPlatformGameResult.source, mOptionSet.updateOptions);
 
         // Stop import if error occured
         if(platformReadError.isValid())
         {
             // Emit import failure
-            errorReport = Qx::GenericError(Qx::GenericError::Critical, LB::Xml::formatDataDocError(MSG_LB_XML_UNEXPECTED_ERROR, docRequest),
-                                           platformReadError.getText());
+            errorReport = platformReadError;
             return Failed;
         }
 
         // Setup for ensuring image sub-directories exist
         QString imageDirError; // Error return reference
         *mBlockingErrorResponse = QMessageBox::No; // Default to choice "No" incase the signal is not correctly connected using Qt::BlockingQueuedConnection
-
-        // Check image sub-directories
-        while(!mLaunchBoxInstall->ensureImageDirectories(imageDirError, currentPlatformGameResult.source))
-        {
-            // Notify GUI Thread of error
-            emit blockingErrorOccured(mBlockingErrorResponse, Qx::GenericError(Qx::GenericError::Error, imageDirError, "Retry?", QString(), CAPTION_IMAGE_ERR),
-                                      QMessageBox::Yes | QMessageBox::No);
-
-            // Check response
-            if(*mBlockingErrorResponse == QMessageBox::No)
-               break;
-        }
 
         // Add/Update games
         for(int j = 0; j < currentPlatformGameResult.size; j++)
@@ -188,47 +178,57 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
             fpGb.wOrderTitle(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_ORDER_TITLE).toString());
             fpGb.wLibrary(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_LIBRARY).toString());
 
-            // Convert and convert FP game to LB game and add to document
+            // BuildFP game to LB game and add to document
             FP::Game builtGame = fpGb.build();
-            LB::Game convertedGame = LB::Game(fpGb.build(), CLIFp::standardCLIFpPath(*mFlashpointInstall));
-            currentPlatformXML->addGame(convertedGame);
+            const Fe::Game* addedGame = currentPlatformDoc->addGame(builtGame);
 
-            // Add language as custom field
-            LB::CustomFieldBuilder lbCfb;
-            lbCfb.wGameID(builtGame.getID());
-            lbCfb.wName(LB::CustomField::LANGUAGE);
-            lbCfb.wValue(builtGame.getLanguage());
-            currentPlatformXML->addCustomField(lbCfb.build());
+            // Add ID to imported game cache
+            mImportedGameIDsCache.insert(addedGame->getId());
 
-            // Setup for ensuring image sub-directories exist
-            QString imageTransferError; // Error return reference
+//            // Add language as custom field TODO: Port this to Lb::Install implementation
+//            LB::CustomFieldBuilder lbCfb;
+//            lbCfb.wGameID(builtGame.getID());
+//            lbCfb.wName(LB::CustomField::LANGUAGE);
+//            lbCfb.wValue(builtGame.getLanguage());
+//            currentPlatformXML->addCustomField(lbCfb.build());
+
+            // Setup for ensuring image transfer
+            Qx::GenericError imageTransferError; // Error return reference
             *mBlockingErrorResponse = QMessageBox::NoToAll; // Default to choice "NoToAll" incase the signal is not correctly connected using Qt::BlockingQueuedConnection
             bool skipAllImages = false; // NoToAll response tracker
 
             // Transfer game images if applicable
-            if(mOptionSet.imageMode != LB::Install::Reference)
+            if(mOptionSet.imageMode != Fe::Install::Reference)
             {
-                while(!skipAllImages && !mLaunchBoxInstall->transferLogo(imageTransferError, mOptionSet.imageMode, mFlashpointInstall->logosDirectory(), convertedGame))
+                while(!skipAllImages &&
+                      (imageTransferError = mFrontendInstall->importImage(mOptionSet.imageMode, Fe::Install::Logo, mFlashpointInstall->logosDirectory(), *addedGame)).isValid())
                 {
+                    // Add caption
+                    imageTransferError.setCaption(CAPTION_IMAGE_ERR); // TODO: Consider adding caption natively within above function
+
                     // Notify GUI Thread of error
-                    emit blockingErrorOccured(mBlockingErrorResponse, Qx::GenericError(Qx::GenericError::Error, imageTransferError, "Retry?", QString(), CAPTION_IMAGE_ERR),
-                                              QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
+                    emit blockingErrorOccured(mBlockingErrorResponse, imageTransferError,
+                                              QMessageBox::Retry | QMessageBox::Ignore | QMessageBox::NoToAll);
 
                     // Check response
-                    if(*mBlockingErrorResponse == QMessageBox::No)
+                    if(*mBlockingErrorResponse == QMessageBox::Ignore)
                        break;
                     else if(*mBlockingErrorResponse == QMessageBox::NoToAll)
                        skipAllImages = true;
                 }
 
-                while(!skipAllImages && !mLaunchBoxInstall->transferScreenshot(imageTransferError, mOptionSet.imageMode, mFlashpointInstall->screenshootsDirectory(), convertedGame))
+                while(!skipAllImages &&
+                      (imageTransferError = mFrontendInstall->importImage(mOptionSet.imageMode, Fe::Install::Screenshot, mFlashpointInstall->screenshotsDirectory(), *addedGame)).isValid())
                 {
+                    // Add caption
+                    imageTransferError.setCaption(CAPTION_IMAGE_ERR); // TODO: Consider adding caption natively within above function
+
                     // Notify GUI Thread of error
-                    emit blockingErrorOccured(mBlockingErrorResponse, Qx::GenericError(Qx::GenericError::Error, imageTransferError, "Retry?", QString(), CAPTION_IMAGE_ERR),
-                                              QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
+                    emit blockingErrorOccured(mBlockingErrorResponse, imageTransferError,
+                                              QMessageBox::Retry | QMessageBox::Ignore | QMessageBox::NoToAll);
 
                     // Check response
-                    if(*mBlockingErrorResponse == QMessageBox::No)
+                    if(*mBlockingErrorResponse == QMessageBox::Ignore)
                        break;
                     else if(*mBlockingErrorResponse == QMessageBox::NoToAll)
                        skipAllImages = true;
@@ -252,9 +252,9 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
         for (QSet<FP::AddApp>::iterator j = mAddAppsCache.begin(); j != mAddAppsCache.end();)
         {
             // If the current platform doc contains the game this add app belongs to, convert and add it, then remove it from cache
-            if (currentPlatformXML->containsGame((*j).getParentID()))
+            if (currentPlatformDoc->containsGame((*j).getParentID()))
             {
-               currentPlatformXML->addAddApp(LB::AddApp(*j, CLIFp::standardCLIFpPath(*mFlashpointInstall)));
+               currentPlatformDoc->addAddApp(*j);
                j = mAddAppsCache.erase(j);
 
                // Reduce progress dialog maximum by total iterations cut from future platforms
@@ -275,66 +275,16 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
         }
 
         // Finalize document
-        currentPlatformXML->finalize();
-
-        // Add final game details to Playlist Game lookup cache
-        for (QHash<QUuid, LB::Game>::const_iterator i = currentPlatformXML->getFinalGames().constBegin();
-             i != currentPlatformXML->getFinalGames().constEnd(); ++i)
-           mPlaylistGameDetailsCache[i.key()] = {i.value().getTitle(), QFileInfo(i.value().getAppPath()).fileName(), i.value().getPlatform()};
+        currentPlatformDoc->finalize();
 
         // Forefit doucment lease and save it
-        QString saveError;
-        if(!mLaunchBoxInstall->savePlatformDoc(saveError, std::move(currentPlatformXML)))
+        Qx::GenericError saveError; // TODO: See if in cases like this, errorReport can just be set directly to the function output instead of this temp var
+        if((saveError = mFrontendInstall->savePlatformDoc(std::move(currentPlatformDoc))).isValid())
         {
-            errorReport = Qx::GenericError(Qx::GenericError::Critical,
-                                           LB::Xml::formatDataDocError(LB::Xml::ERR_WRITE_FAILED, docRequest), saveError);
+            errorReport = saveError;
             return Failed;
         }
 
-    }
-
-    // Report successful step completion
-    errorReport = Qx::GenericError();
-    return Successful;
-}
-
-ImportWorker::ImportResult ImportWorker::setImageReferences(Qx::GenericError& errorReport, QStringList platforms)
-{
-    // Open platforms document
-    std::unique_ptr<LB::Xml::PlatformsDoc> platformConfigXML;
-    LB::Xml::DataDocHandle requestHandle = {LB::Xml::PlatformsDoc::TYPE_NAME, LB::Xml::PlatformsDoc::STD_NAME}; // For errors only
-    Qx::XmlStreamReaderError platformConfigReadError = mLaunchBoxInstall->openPlatformsDoc(platformConfigXML);
-
-    // Stop import if error occured
-    if(platformConfigReadError.isValid())
-    {
-        // Emit import failure
-        errorReport = Qx::GenericError(Qx::GenericError::Critical, LB::Xml::formatDataDocError(MSG_LB_XML_UNEXPECTED_ERROR, requestHandle),
-                                       platformConfigReadError.getText());
-        return Failed;
-    }
-
-    // Set media folder paths and ensure document contains platform or else image paths will be ignored
-    for(const QString& platform : platforms)
-    {
-        platformConfigXML->setMediaFolder(platform, LB::Install::LOGO_PATH, QDir::toNativeSeparators(mFlashpointInstall->logosDirectory().absolutePath()));
-        platformConfigXML->setMediaFolder(platform, LB::Install::SCREENSHOT_PATH,  QDir::toNativeSeparators(mFlashpointInstall->screenshootsDirectory().absolutePath()));
-
-        if(!platformConfigXML->containsPlatform(platform))
-        {
-            LB::PlatformBuilder pb;
-            pb.wName(platform);
-            platformConfigXML->addPlatform(pb.build());
-        }
-    }
-
-    // Save platforms document
-    QString saveError;
-    if(!mLaunchBoxInstall->savePlatformsDoc(saveError, std::move(platformConfigXML)))
-    {
-        errorReport = Qx::GenericError(Qx::GenericError::Critical,
-                                       LB::Xml::formatDataDocError(LB::Xml::ERR_WRITE_FAILED, requestHandle), saveError);
-        return Failed;
     }
 
     // Report successful step completion
@@ -344,6 +294,7 @@ ImportWorker::ImportResult ImportWorker::setImageReferences(Qx::GenericError& er
 
 ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& errorReport, QList<FP::DB::QueryBuffer>& playlistGameQueries)
 {
+    // TODO: Have LB specific keep its own playlist game cache and then delete it when softReset is called
     for(FP::DB::QueryBuffer& currentPlaylistGameResult : playlistGameQueries)
     {
         // Get corresponding playlist from cache
@@ -353,20 +304,18 @@ ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& erro
         emit progressStepChanged(STEP_IMPORTING_PLAYLIST_GAMES.arg(currentPlaylist.getTitle()));
 
         // Open LB playlist doc
-        LB::Xml::DataDocHandle docRequest = {LB::Xml::PlaylistDoc::TYPE_NAME, currentPlaylist.getTitle()};
-        std::unique_ptr<LB::Xml::PlaylistDoc> currentPlaylistXML;
-        Qx::XmlStreamReaderError playlistReadError = mLaunchBoxInstall->openPlaylistDoc(currentPlaylistXML, docRequest.docName, mOptionSet.updateOptions);
+        std::unique_ptr<Fe::PlaylistDoc> currentPlaylistDoc;
+        Qx::GenericError playlistReadError = mFrontendInstall->openPlaylistDoc(currentPlaylistDoc, currentPlaylist.getTitle(), mOptionSet.updateOptions);
 
         // Stop import if error occured
         if(playlistReadError.isValid())
         {
-            errorReport = Qx::GenericError(Qx::GenericError::Critical,
-                                           LB::Xml::formatDataDocError(MSG_LB_XML_UNEXPECTED_ERROR, docRequest), playlistReadError.getText());
+            errorReport = playlistReadError;
             return Failed;
         }
 
         // Convert and set playlist header
-        currentPlaylistXML->setPlaylistHeader(LB::PlaylistHeader(currentPlaylist));
+        currentPlaylistDoc->setPlaylistHeader(currentPlaylist);
 
         // Add/Update playlist games
         for(int i = 0; i < currentPlaylistGameResult.size; i++)
@@ -375,7 +324,7 @@ ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& erro
             currentPlaylistGameResult.result.next();
 
             // Only process the playlist game if it was included in import
-            if(mPlaylistGameDetailsCache.contains(QUuid(currentPlaylistGameResult.result.value(FP::DB::Table_Playlist_Game::COL_GAME_ID).toString())))
+            if(mImportedGameIDsCache.contains(QUuid(currentPlaylistGameResult.result.value(FP::DB::Table_Playlist_Game::COL_GAME_ID).toString())))
             {
                 // Form game from record
                 FP::PlaylistGameBuilder fpPgb;
@@ -385,7 +334,7 @@ ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& erro
                 fpPgb.wGameID(currentPlaylistGameResult.result.value(FP::DB::Table_Playlist_Game::COL_GAME_ID).toString());
 
                 // Build FP playlist game, convert to LB and add
-                currentPlaylistXML->addPlaylistGame(LB::PlaylistGame(fpPgb.build(), mPlaylistGameDetailsCache));
+                currentPlaylistDoc->addPlaylistGame(fpPgb.build());
             }
 
             // Update progress dialog value
@@ -399,14 +348,13 @@ ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& erro
         }
 
         // Finalize document
-        currentPlaylistXML->finalize();
+        currentPlaylistDoc->finalize();
 
         // Forefit doucment lease and save it
-        QString saveError;
-        if(!mLaunchBoxInstall->savePlaylistDoc(saveError, std::move(currentPlaylistXML)))
+        Qx::GenericError saveError;
+        if((saveError = mFrontendInstall->savePlaylistDoc(std::move(currentPlaylistDoc))).isValid())
         {
-            errorReport = Qx::GenericError(Qx::GenericError::Critical,
-                                           LB::Xml::formatDataDocError(LB::Xml::ERR_WRITE_FAILED, docRequest), saveError);
+            errorReport = saveError;
             return Failed;
         }
     }
@@ -455,7 +403,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     }
 
     // Make initial playlist specific game query if applicable
-    if(mOptionSet.playlistMode == LB::Install::PlaylistGameMode::ForceAll)
+    if(mOptionSet.playlistMode == PlaylistGameMode::ForceAll)
     {
         FP::DB::QueryBuffer pgIDQuery;
 
@@ -529,18 +477,34 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         return importStepStatus;
 
     // Set image references if applicable
-    if(mOptionSet.imageMode == LB::Install::Reference)
+    if(mOptionSet.imageMode == Fe::Install::Reference)
     {
-        // Update progress dialog label
-        emit progressStepChanged(STEP_SETTING_IMAGE_REFERENCES);
+        if(mFrontendInstall->imageRefType() == Fe::Install::ImageRefType::Single)
+        {
+            throw std::runtime_error("Not implemented");
+            //TODO Implement (also probably needs to go somewhere else
+        }
+        else
+        {
+            // Update progress dialog label
+            emit progressStepChanged(STEP_SETTING_IMAGE_REFERENCES);
 
-        // Create playlist pecific platforms set
-        QStringList playlistSpecPlatforms;
-        for(const FP::DB::QueryBuffer& query : qAsConst(playlistSpecGameQueries))
-            playlistSpecPlatforms.append(query.source);
+            // Create playlist pecific platforms set
+            QStringList playlistSpecPlatforms;
+            for(const FP::DB::QueryBuffer& query : qAsConst(playlistSpecGameQueries))
+                playlistSpecPlatforms.append(query.source);
 
-        if((importStepStatus = setImageReferences(errorReport, mImportSelections.platforms + playlistSpecPlatforms)) != Successful)
-            return importStepStatus;
+            // Initiate frontend reference routine
+            Qx::GenericError referenceError = mFrontendInstall->bulkReferenceImages(QDir::toNativeSeparators(mFlashpointInstall->logosDirectory().absolutePath()),
+                                                                                    QDir::toNativeSeparators(mFlashpointInstall->screenshotsDirectory().absolutePath()),
+                                                                                    mImportSelections.platforms + playlistSpecPlatforms);
+            if(referenceError.isValid())
+            {
+                // Emit import failure
+                errorReport = referenceError;
+                return Failed;
+            }
+        }
     }
 
     // Process playlists
@@ -555,7 +519,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     }
 
     // Reset install
-    mLaunchBoxInstall->softReset();
+    mFrontendInstall->softReset();
 
     // Report successful import completion
     errorReport = Qx::GenericError();

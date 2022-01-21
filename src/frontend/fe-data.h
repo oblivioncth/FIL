@@ -22,10 +22,12 @@ struct UpdateOptions
 class DataDoc
 {
     friend class Install;
+    friend class DataDocReader;
+    friend class DataDocWriter;
 //-Class Enums---------------------------------------------------------------------------------------------------------
-protected:
-    enum Type {Platform, Playlist, Config};
-    enum StandardError {DocAlreadyOpen, DocCantOpen, NotParentDoc, CantRemoveBackup, CantCreateBackup, DocTypeMismatch, DocWriteFailed};
+public:
+    enum class Type {Platform, Playlist, Config};
+    enum class StandardError {DocAlreadyOpen, DocCantOpen, NotParentDoc, CantRemoveBackup, CantCreateBackup, DocTypeMismatch, DocReadFailed, DocWriteFailed};
 
 //-Inner Classes----------------------------------------------------------------------------------------------------
 public:
@@ -46,20 +48,12 @@ public:
         QString docName() const;
     };
 
-    class Key
-    {
-        friend class Install;
-    private:
-        Key() {};
-        Key(const Key&) = default;
-    };
-
 //-Class Variables-----------------------------------------------------------------------------------------------------
 private:
     static inline const QHash<Type, const QString> TYPE_STRINGS = {
-        {Platform, "Platform"},
-        {Playlist, "Playlist"},
-        {Config, "Config"}
+        {Type::Platform, "Platform"},
+        {Type::Playlist, "Playlist"},
+        {Type::Config, "Config"}
     };
 
     // Message Macros
@@ -69,13 +63,14 @@ private:
 
     // Standard Errors
     static inline const QHash<StandardError, const QString> STD_ERRORS = {
-        {DocAlreadyOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is already open"},
-        {DocCantOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be opened"},
-        {NotParentDoc, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is not a" + M_DOC_PARENT + "document."},
-        {CantRemoveBackup, "The existing backup of the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") could not be removed."},
-        {CantCreateBackup, "Could not create a backup of the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ")."},
-        {DocTypeMismatch, "The document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") contained an element that belongs to a different document type than expected."},
-        {DocWriteFailed, "Writing to the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") failed."}
+        {StandardError::DocAlreadyOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is already open"},
+        {StandardError::DocCantOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be opened"},
+        {StandardError::NotParentDoc, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is not a" + M_DOC_PARENT + "document."},
+        {StandardError::CantRemoveBackup, "The existing backup of the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") could not be removed."},
+        {StandardError::CantCreateBackup, "Could not create a backup of the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ")."},
+        {StandardError::DocTypeMismatch, "The document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") contained an element that belongs to a different document type than expected."},
+        {StandardError::DocReadFailed, "Reading the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") failed."},
+        {StandardError::DocWriteFailed, "Writing to the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") failed."}
     };
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
@@ -86,7 +81,7 @@ protected:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    DataDoc(Install* parent, std::unique_ptr<QFile> docFile, QString docName);
+    DataDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 protected:
@@ -96,7 +91,7 @@ protected:
 public:
     Install* parent() const;
     Identifier identifier() const;
-    Qx::GenericError standardError(StandardError error, Qx::GenericError::ErrorLevel errorLevel = Qx::GenericError::Critical) const;
+    QString errorString(StandardError error) const;
 
     void clearFile();
 };
@@ -106,12 +101,16 @@ class DataDocReader
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
     DataDoc* mTargetDocument;
+    QString mPrimaryError;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
-public:
+protected:
     DataDocReader(DataDoc* targetDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
+protected:
+    std::unique_ptr<QFile>& targetDocFile();
+
 public:
     virtual Qx::GenericError readInto() = 0;
 };
@@ -121,47 +120,101 @@ class DataDocWriter
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
     DataDoc* mSourceDocument;
+    QString mPrimaryError;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
-public:
+protected:
     DataDocWriter(DataDoc* sourceDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
+protected:
+    std::unique_ptr<QFile>& sourceDocFile();
+
 public:
     virtual Qx::GenericError writeOutOf() = 0;
 };
 
-
-class PlatformDoc : public DataDoc
+class UpdateableDoc : public DataDoc
 {
-    friend class Install;
-
-//-Class Variables-----------------------------------------------------------------------------------------------------
-public:
-
-
 //-Instance Variables--------------------------------------------------------------------------------------------------
-private:
+protected:
     UpdateOptions mUpdateOptions;
 
+//-Constructor--------------------------------------------------------------------------------------------------------
+protected:
+    explicit UpdateableDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions);
+
+//-Instance Functions--------------------------------------------------------------------------------------------------
+protected:
+    virtual void finalizeDerived() = 0; // Should maybe be option via default empty implementation
+
+    template <typename T, ENABLE_IF(std::is_base_of<BasicItem, T>)>
+    void finalizeUpdateableItems(QHash<QUuid, std::shared_ptr<T>>& existingItems,
+                                 QHash<QUuid, std::shared_ptr<T>>& finalItems)
+    {
+        // Copy items to final list if obsolete entries are to be kept
+        if(!mUpdateOptions.removeObsolete)
+            finalItems.insert(existingItems);
+
+        // Clear existing lists
+        existingItems.clear();
+    }
+
+    template <typename T, ENABLE_IF(std::is_base_of<BasicItem, T>)>
+    void addUpdateableItem(QHash<QUuid, std::shared_ptr<T>>& existingItems,
+                           QHash<QUuid, std::shared_ptr<T>>& finalItems,
+                           std::shared_ptr<T> newItem)
+{
+    QUuid key = newItem->getId();
+
+    // Check if game exists
+    if(existingItems.contains(key))
+    {
+        // Replace if existing update is on, move existing otherwise
+        if(mUpdateOptions.importMode == ImportMode::NewAndExisting)
+        {
+            newItem->transferOtherFields(existingItems[key]->getOtherFields());
+            finalItems[key] = newItem;
+            existingItems.remove(key);
+        }
+        else
+        {
+            finalItems[key] = std::move(existingItems[key]);
+            existingItems.remove(key);
+        }
+
+    }
+    else
+        finalItems[key] = newItem;
+}
+
+public:
+    virtual void finalize();
+};
+
+class PlatformDoc : public UpdateableDoc
+{
+    friend class Install;
+    friend class PlatformDocReader;
+    friend class PlatformDocWriter;
+//-Instance Variables--------------------------------------------------------------------------------------------------
+private: //TODO: Change this to protected and see if in LB implementation it allows for simplified access
     QHash<QUuid, std::shared_ptr<Game>> mGamesFinal;
     QHash<QUuid, std::shared_ptr<Game>> mGamesExisting;
     QHash<QUuid, std::shared_ptr<AddApp>> mAddAppsFinal;
     QHash<QUuid, std::shared_ptr<AddApp>> mAddAppsExisting;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
-public:
-    explicit PlatformDoc(Install* parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions, const Key&);
+protected:
+    explicit PlatformDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
-    Type type() const;
+    Type type() const override;
 
 protected:
     virtual std::shared_ptr<Game> prepareGame(const FP::Game& game) = 0;
     virtual std::shared_ptr<AddApp> prepareAddApp(const FP::AddApp& game) = 0;
-
-    virtual void cleanup() = 0;
 
 public:
     const QHash<QUuid, std::shared_ptr<Game>>& getFinalGames() const;
@@ -170,64 +223,53 @@ public:
     bool containsGame(QUuid gameID) const;
     bool containsAddApp(QUuid addAppId) const;
 
-    void addGame(FP::Game game);
-    void addAddApp(FP::AddApp app);
+    const Game* addGame(FP::Game game);
+    const AddApp* addAddApp(FP::AddApp app);
 
-    void finalize();
+    void finalize() override;
 };
 
-class PlatformDocReader : public DataDocReader
+class PlatformDocReader : public virtual DataDocReader
 {
-//-Constructor--------------------------------------------------------------------------------------------------------
-public:
-    PlatformDocReader(PlatformDoc* targetDoc);
+//-Constructor-------------------------------------------------------------------------------------------------------
+protected:
+    PlatformDocReader(DataDoc* targetDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
-public:
-
-private:
+protected:
+    QHash<QUuid, std::shared_ptr<Game>>& targetDocExistingGames();
+    QHash<QUuid, std::shared_ptr<AddApp>>& targetDocExistingAddApps();
 };
 
-class PlatformDocWriter : public DataDocWriter
+class PlatformDocWriter : public virtual DataDocWriter
 {
-//-Constructor--------------------------------------------------------------------------------------------------------
-public:
-    PlatformDocWriter(PlatformDoc* sourceDoc);
-
-//-Instance Functions-------------------------------------------------------------------------------------------------
-public:
-
-private:
+//-Constructor-------------------------------------------------------------------------------------------------------
+protected:
+    PlatformDocWriter(DataDoc* sourceDoc);
 };
 
-class PlaylistDoc : public DataDoc
+class PlaylistDoc : public UpdateableDoc
 {
     friend class Install;
-
-//-Class Variables-----------------------------------------------------------------------------------------------------
-public:
-
+    friend class PlaylistDocReader;
+    friend class PlaylistDocWriter;
 //-Instance Variables--------------------------------------------------------------------------------------------------
-private:
-    UpdateOptions mUpdateOptions;
-
+protected:
     std::shared_ptr<PlaylistHeader> mPlaylistHeader;
     QHash<QUuid, std::shared_ptr<PlaylistGame>> mPlaylistGamesFinal;
     QHash<QUuid, std::shared_ptr<PlaylistGame>> mPlaylistGamesExisting;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
-public:
-    explicit PlaylistDoc(Install* parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions, const Key&);
+protected:
+    explicit PlaylistDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
-    Type type() const;
+    Type type() const override;
 
 protected:
     virtual std::shared_ptr<PlaylistHeader> preparePlaylistHeader(const FP::Playlist& playlist) = 0;
     virtual std::shared_ptr<PlaylistGame> preparePlaylistGame(const FP::PlaylistGame& game) = 0;
-
-    virtual void cleanup();
 
 public:
     const std::shared_ptr<PlaylistHeader>& getPlaylistHeader() const;
@@ -238,35 +280,28 @@ public:
     void setPlaylistHeader(FP::Playlist playlist);
     void addPlaylistGame(FP::PlaylistGame playlistGame);
 
-    void finalize();
+    void finalize() override;
 };
 
-class PlaylistDocReader : public DataDocReader
+class PlaylistDocReader : public virtual DataDocReader
 {
-//-Constructor--------------------------------------------------------------------------------------------------------
-public:
-    PlaylistDocReader(PlaylistDoc* targetDoc);
+//-Constructor-------------------------------------------------------------------------------------------------------
+protected:
+    PlaylistDocReader(DataDoc* targetDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
-public:
+protected:
 
-private:
+    QHash<QUuid, std::shared_ptr<PlaylistGame>>& targetDocExistingPlaylistGames();
+    std::shared_ptr<PlaylistHeader>& targetDocPlaylistHeader();
 };
 
-class PlaylistDocWriter : public DataDocWriter
+class PlaylistDocWriter : public virtual DataDocWriter
 {
-//-Constructor--------------------------------------------------------------------------------------------------------
-public:
-    PlaylistDocWriter(PlaylistDoc* sourceDoc);
-
-//-Instance Functions-------------------------------------------------------------------------------------------------
-public:
-
-private:
+//-Constructor-------------------------------------------------------------------------------------------------------
+protected:
+    PlaylistDocWriter(DataDoc* sourceDoc);
 };
-
-//-Functions---------------------------------------------------------------------------------------------------------
-
 
 }
 #endif // FE_DATA

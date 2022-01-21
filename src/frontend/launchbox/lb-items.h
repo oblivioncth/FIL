@@ -4,75 +4,22 @@
 #include <QString>
 #include <QDateTime>
 #include <QSet>
+#include "../fe-items.h"
 #include "../../flashpoint/fp-items.h"
 #include "qx.h"
 
 namespace LB
 {
 
-//-Class Forward Declarations---------------------------------------------------------------------------------------
-class Item;
-template <typename B, typename T, ENABLE_IF(std::is_base_of<Item, T>)> class ItemBuilder;
-
-//-Namespace Global Classes-----------------------------------------------------------------------------------------
-class Item
-{
-    template <typename B, typename T, ENABLE_IF2(std::is_base_of<Item, T>)>
-    friend class ItemBuilder;
-//-Instance Variables-----------------------------------------------------------------------------------------------
-private:
-    QHash<QString, QString> mOtherFields;
-
-//-Constructor-------------------------------------------------------------------------------------------------
-public:
-    Item();
-
-    QHash<QString, QString>& getOtherFields();
-    const QHash<QString, QString>& getOtherFields() const;
-
-//-Instance Functions------------------------------------------------------------------------------------------
-public:
-    void transferOtherFields(QHash<QString, QString>& otherFields);
-};
-
-template <typename B, typename T, ENABLE_IF2(std::is_base_of<Item, T>)>
-class ItemBuilder
-{
-//-Instance Variables------------------------------------------------------------------------------------------
-protected:
-    T mItemBlueprint;
-
-//-Constructor-------------------------------------------------------------------------------------------------
-protected:
-    ItemBuilder() {}
-
-//-Instance Functions------------------------------------------------------------------------------------------
-public:
-    B& wOtherField(QPair<QString, QString> otherField)
-    {
-        mItemBlueprint.mOtherFields[otherField.first] = otherField.second;
-        return static_cast<B&>(*this);
-    }
-    T build() { return mItemBlueprint; }
-};
-
-class Game : public Item
+class Game : public Fe::Game
 {
     friend class GameBuilder;
 
-//-Class Variables--------------------------------------------------------------------------------------------------
-private:
-    static inline const QString RELEASE_TYPE_GAME = "Game";
-    static inline const QString RELEASE_TYPE_ANIM = "Animation";
-
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
-    QUuid mID;
-    QString mTitle;
     QString mSeries;
     QString mDeveloper;
     QString mPublisher;
-    QString mPlatform;
     QString mSortTitle;
     QDateTime mDateAdded;
     QDateTime mDateModified;
@@ -95,12 +42,10 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    QUuid getID() const;
     QString getTitle() const;
     QString getSeries() const;
     QString getDeveloper() const;
     QString getPublisher() const;
-    QString getPlatform() const;
     QString getSortTitle() const;
     QDateTime getDateAdded() const;
     QDateTime getDateModified() const;
@@ -117,7 +62,7 @@ public:
     QString getReleaseType() const;
 };
 
-class GameBuilder : public ItemBuilder<GameBuilder, Game>
+class GameBuilder : public Fe::GameBuilder<GameBuilder, Game>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -125,12 +70,10 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    GameBuilder& wID(QString rawID);
     GameBuilder& wTitle(QString title);
     GameBuilder& wSeries(QString series);
     GameBuilder& wDeveloper(QString developer);
     GameBuilder& wPublisher(QString publisher);
-    GameBuilder& wPlatform(QString platform);
     GameBuilder& wSortTitle(QString sortTitle);
     GameBuilder& wDateAdded(QString rawDateAdded);
     GameBuilder& wDateModified(QString rawDateModified);
@@ -147,18 +90,15 @@ public:
     GameBuilder& wReleaseType(QString releaseType);
 };
 
-class AddApp : public Item
+class AddApp : public Fe::AddApp
 {
     friend class AddAppBuilder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
-    QUuid mID;
-    QUuid mGameID;
     QString mAppPath;
     QString mCommandLine;
     bool mAutorunBefore;
-    QString mName;
     bool mWaitForExit;
 
 //-Constructor------------------------------------------------------------------------------------------------------
@@ -168,16 +108,13 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    QUuid getID() const;
-    QUuid getGameID() const;
     QString getAppPath() const;
     QString getCommandLine() const;
     bool isAutorunBefore() const;
-    QString getName() const;
     bool isWaitForExit() const;
 };
 
-class AddAppBuilder : public ItemBuilder<AddAppBuilder, AddApp>
+class AddAppBuilder : public Fe::AddAppBuilder<AddAppBuilder, AddApp>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -185,16 +122,13 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    AddAppBuilder& wID(QString rawID);
-    AddAppBuilder& wGameID(QString rawGameID);
     AddAppBuilder& wAppPath(QString appPath);
     AddAppBuilder& wCommandLine(QString commandLine);
     AddAppBuilder& wAutorunBefore(QString rawAutorunBefore);
-    AddAppBuilder& wName(QString name);
     AddAppBuilder& wWaitForExit(QString rawWaitForExit);
 };
 
-class CustomField : public Item
+class CustomField : public Fe::Item
 {
     friend class CustomFieldBuilder;
 //-Class Variables--------------------------------------------------------------------------------------------------
@@ -218,7 +152,7 @@ public:
     QString getValue() const;
 };
 
-class CustomFieldBuilder : public ItemBuilder<CustomFieldBuilder, CustomField>
+class CustomFieldBuilder : public Fe::ItemBuilder<CustomFieldBuilder, CustomField>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -232,14 +166,12 @@ public:
     CustomFieldBuilder& wValue(QString value);
 };
 
-class PlaylistHeader : public Item
+class PlaylistHeader : public Fe::PlaylistHeader
 {
     friend class PlaylistHeaderBuilder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
-    QUuid mPlaylistID;
-    QString mName;
     QString mNestedName;
     QString mNotes;
 
@@ -250,13 +182,12 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    QUuid getPlaylistID() const;
-    QString getName() const;
+    QUuid getPlaylistId() const;
     QString getNestedName() const;
     QString getNotes() const;
 };
 
-class PlaylistHeaderBuilder : public ItemBuilder<PlaylistHeaderBuilder, PlaylistHeader>
+class PlaylistHeaderBuilder : public Fe::PlaylistHeaderBuilder<PlaylistHeaderBuilder, PlaylistHeader>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -264,31 +195,36 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    PlaylistHeaderBuilder& wPlaylistID(QString rawPlaylistID);
-    PlaylistHeaderBuilder& wName(QString name);
+    PlaylistHeaderBuilder& wPlaylistId(QString rawId);
     PlaylistHeaderBuilder& wNestedName(QString nestedName);
     PlaylistHeaderBuilder& wNotes(QString notes);
 };
 
-class PlaylistGame : public Item
+class PlaylistGame : public Fe::PlaylistGame
 {
     friend class PlaylistGameBuilder;
 
 //-Class Structs----------------------------------------------------------------------------------------------------
 public:
-    struct EntryDetails
+    class EntryDetails
     {
-        QString title;
-        QString fileName;
-        QString platform;
+    private:
+        QString mTitle;
+        QString mFilename;
+        QString mPlatform;
+
+    public:
+        EntryDetails(const Game& refGame);
+
+        QString title() const;
+        QString filename() const;
+        QString platform() const;
     };
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
-    QUuid mGameID;
-    int mLBDatabaseID;
-    QString mGameTitle;
-    QString mGameFileName;
+    int mLBDatabaseId;
+    QString mGameFilename;
     QString mGamePlatform;
     int mManualOrder;
 
@@ -299,17 +235,16 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    QUuid getGameID() const;
-    int getLBDatabaseID() const;
     QString getGameTitle() const;
+    int getLBDatabaseId() const;
     QString getGameFileName() const;
     QString getGamePlatform() const;
     int getManualOrder() const;
 
-    void setLBDatabaseID(int lbDBID);
+    void setLBDatabaseId(int lbDBID);
 };
 
-class PlaylistGameBuilder : public ItemBuilder<PlaylistGameBuilder, PlaylistGame>
+class PlaylistGameBuilder : public Fe::PlaylistGameBuilder<PlaylistGameBuilder, PlaylistGame>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -317,15 +252,14 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    PlaylistGameBuilder& wGameID(QString rawGameID);
-    PlaylistGameBuilder& wLBDatabaseID(QString rawLBDatabaseID);
     PlaylistGameBuilder& wGameTitle(QString gameTitle);
+    PlaylistGameBuilder& wLBDatabaseID(QString rawLBDatabaseID);
     PlaylistGameBuilder& wGameFileName(QString gameFileName);
     PlaylistGameBuilder& wGamePlatform(QString gamePlatform);
     PlaylistGameBuilder& wManualOrder(QString rawManualOrder);
 };
 
-class Platform : public Item
+class Platform : public Fe::Item
 {
     friend class PlatformBuilder;
 
@@ -340,7 +274,7 @@ public:
     QString getName() const;
 };
 
-class PlatformBuilder : public ItemBuilder<PlatformBuilder, Platform>
+class PlatformBuilder : public Fe::ItemBuilder<PlatformBuilder, Platform>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -384,7 +318,7 @@ public:
 //    PlatformFolderBuilder& wPlatform(QString platform);
 //};
 
-class PlatformCategory  : public Item
+class PlatformCategory  : public Fe::Item
 {
     friend class PlatformCategoryBuilder;
 
@@ -397,7 +331,7 @@ public:
 //-Instance Functions------------------------------------------------------------------------------------------------------
 };
 
-class PlatformCategoryBuilder : public ItemBuilder<PlatformCategoryBuilder, PlatformCategory>
+class PlatformCategoryBuilder : public Fe::ItemBuilder<PlatformCategoryBuilder, PlatformCategory>
 {
 //-Instance Variables-----------------------------------------------------------------------------------------------
 

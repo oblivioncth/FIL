@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QMessageBox>
 #include "flashpoint/fp-install.h"
-#include "launchbox/lb-install.h"
+#include "frontend/fe-install.h"
 
 class ImportWorker : public QObject
 {
@@ -13,6 +13,7 @@ class ImportWorker : public QObject
 //-Class Enums---------------------------------------------------------------------------------------------------
 public:
     enum ImportResult {Failed, Canceled, Successful};
+    enum PlaylistGameMode {SelectedPlatform, ForceAll};
 
 //-Class Structs-------------------------------------------------------------------------------------------------
 public:
@@ -24,9 +25,9 @@ public:
 
     struct OptionSet
     {
-        LB::UpdateOptions updateOptions;
-        LB::Install::ImageMode imageMode;
-        LB::Install::PlaylistGameMode playlistMode;
+        Fe::UpdateOptions updateOptions;
+        Fe::Install::ImageMode imageMode;
+        PlaylistGameMode playlistMode;
         FP::DB::InclusionOptions inclusionOptions;
     };
 
@@ -53,7 +54,7 @@ public:
 private:
     // Install links
     std::shared_ptr<FP::Install> mFlashpointInstall;
-    std::shared_ptr<LB::Install> mLaunchBoxInstall;
+    std::shared_ptr<Fe::Install> mFrontendInstall;
 
     // Job details
     ImportSelections mImportSelections;
@@ -62,7 +63,7 @@ private:
     // Job Caches
     QSet<FP::AddApp> mAddAppsCache;
     QHash<QUuid, FP::Playlist> mPlaylistsCache;
-    QHash<QUuid, LB::PlaylistGame::EntryDetails> mPlaylistGameDetailsCache;
+    QSet<QUuid> mImportedGameIDsCache;
 
     // Progress Tracking
     int mCurrentProgressValue;
@@ -77,7 +78,7 @@ private:
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
     ImportWorker(std::shared_ptr<FP::Install> fpInstallForWork,
-                 std::shared_ptr<LB::Install> lbInstallForWork,
+                 std::shared_ptr<Fe::Install> feInstallForWork,
                  ImportSelections importSelections,
                  OptionSet optionSet);
 
@@ -88,7 +89,6 @@ private:
     const QList<QUuid> getPlaylistSpecificGameIDs(FP::DB::QueryBuffer& playlistGameIDQuery);
     ImportResult preloadAddApps(Qx::GenericError& errorReport, FP::DB::QueryBuffer& addAppQuery);
     ImportResult processGames(Qx::GenericError& errorReport, QList<FP::DB::QueryBuffer>& gameQueries, bool playlistSpecific);
-    ImportResult setImageReferences(Qx::GenericError& errorReport, QStringList platforms);
     ImportResult processPlaylists(Qx::GenericError& errorReport, QList<FP::DB::QueryBuffer>& playlistGameQueries);
 
 public:

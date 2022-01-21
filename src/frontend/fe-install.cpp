@@ -1,6 +1,7 @@
 #include "fe-install.h"
 
 #include "qx-io.h"
+#include "qx-windows.h"
 #include <filesystem>
 #include <QFileInfo>
 
@@ -60,7 +61,7 @@ void Install::allowUserWriteOnFile(QString filePath)
 //Public:
 void Install::registerInstall(QString name, InstallFactory* factory) { registry()[name] = factory; }
 
-std::unique_ptr<Install> Install::acquireMatch(const QString& installPath)
+std::shared_ptr<Install> Install::acquireMatch(const QString& installPath)
 {
     // Check all installs against path and return match if found
     QMap<QString, InstallFactory*>::const_iterator i;
@@ -68,7 +69,7 @@ std::unique_ptr<Install> Install::acquireMatch(const QString& installPath)
     for(i = registry().constBegin(); i != registry().constEnd(); ++i)
     {
         InstallFactory* installFactory = i.value();
-        std::unique_ptr<Install> possibleMatch = installFactory->produce(installPath);
+        std::shared_ptr<Install> possibleMatch = installFactory->produce(installPath);
 
         if(possibleMatch->isValid())
             return possibleMatch;
@@ -91,88 +92,17 @@ QSet<QString> Install::getExistingDocs(DataDoc::Type docType) const
     return nameSet;
 }
 
-Qx::GenericError Install::openDataDocument(DataDoc* docToOpen, std::shared_ptr<DataDocReader> docReader)
-{
-    // Error report to return
-    Qx::GenericError openReadError; // Defaults to no error
-
-    // Check if lease is already
-    if(mLeasedDocuments.contains(docToOpen->identifier()))
-        openReadError = docToOpen->standardError(DataDoc::DocAlreadyOpen);
-    else
-    {
-        // Create backup if required
-        QFileInfo targetInfo(docToOpen->filePath());
-
-        if(targetInfo.exists() && targetInfo.isFile())
-        {
-            QString backupPath = targetInfo.absolutePath() + '/' + targetInfo.baseName() + MODIFIED_FILE_EXT;
-
-            if(QFile::exists(backupPath) && QFileInfo(backupPath).isFile())
-            {
-                if(!QFile::remove(backupPath))
-                    return docToOpen->standardError(DataDoc::CantRemoveBackup);
-            }
-
-            if(!QFile::copy(targetInfo.absoluteFilePath(), backupPath))
-                return docToOpen->standardError(DataDoc::CantCreateBackup);
-        }
-
-        // Add file to modified list
-        mModifiedDocuments.insert(docToOpen->identifier());
-
-        // Open File
-        if(docToOpen->mDocumentFile->open(QFile::ReadWrite)) // Ensures that empty file is created if the target doesn't exist
-        {
-            // Read existing file if present
-            if(mExistingDocuments.contains(docToOpen->identifier()))
-            {
-                openReadError = docReader->readInto();
-
-                // Clear file to prepare for writing
-                docToOpen->clearFile();
-            }
-
-            // Add lease to ledger if no error occured while readding
-            if(!openReadError.isValid())
-                mLeasedDocuments.insert(docToOpen->identifier());
-        }
-        else
-            openReadError = docToOpen->standardError(DataDoc::DocCantOpen).setSecondaryInfo(docToOpen->mDocumentFile->errorString());
-    }
-
-    // Return opened document and status
-    return openReadError;
-}
-
-Qx::GenericError Install::saveDataDocument(DataDoc* docToSave, std::shared_ptr<DataDocWriter> docWriter)
-{
-    // Write to file
-    Qx::GenericError saveWriteError = docWriter->writeOutOf();
-
-    // Close document file
-    docToSave->mDocumentFile->close();
-
-    // Set document perfmissions
-    allowUserWriteOnFile(docToSave->mDocumentFile->fileName());
-
-    // Remove handle reservation
-    mLeasedDocuments.remove(docToSave->identifier());
-
-    // Return write status and let document ptr auto delete
-    return saveWriteError;
-}
-
 Qx::GenericError Install::transferImage(bool symlink, ImageType imageType, QDir sourceDir, const Game& game)
 {
     // Parse to paths
-    QString gameIDString = game.getID().toString(QUuid::WithoutBraces);
+    QString gameIDString = game.getId().toString(QUuid::WithoutBraces);
     QString sourcePath = sourceDir.absolutePath() + '/' + gameIDString.left(2) + '/' + gameIDString.mid(2, 2) + '/' + gameIDString + IMAGE_EXT;
     QString destinationPath = imageDestinationPath(imageType, game);
 
     // Image info
     QFileInfo destinationInfo(destinationPath);
     QFileInfo sourceInfo(sourcePath);
+    QDir destinationDir(destinationInfo.absolutePath());
     bool destinationOccupied = destinationInfo.exists() && (destinationInfo.isFile() || destinationInfo.isSymLink());
     bool sourceAvailable = sourceInfo.exists();
 
@@ -194,6 +124,10 @@ Qx::GenericError Install::transferImage(bool symlink, ImageType imageType, QDir 
                 return Qx::GenericError();
         }
     }
+
+    // Ensure destination path exists
+    if(!destinationDir.mkpath("."))
+        return Qx::GenericError(Qx::GenericError::Error, ERR_CANT_MAKE_DIR, destinationDir.absolutePath());
 
     // Determine backup path
     QString backupPath = destinationInfo.absolutePath() + '/' + destinationInfo.baseName() + MODIFIED_FILE_EXT;
@@ -248,12 +182,102 @@ void Install::nullify()
     nullifyDerived();
 }
 
+Qx::GenericError Install::openDataDocument(DataDoc* docToOpen, std::shared_ptr<DataDocReader> docReader)
+{
+    // TODO: Docs should probably be backed-up and marked as modified on save instead of on open
+
+    // Error report to return
+    Qx::GenericError openReadError; // Defaults to no error
+    Qx::GenericError errorTemplate(Qx::GenericError::Critical, docToOpen->errorString(DataDoc::StandardError::DocCantOpen));
+
+    // Check if lease is already
+    if(mLeasedDocuments.contains(docToOpen->identifier()))
+        openReadError = errorTemplate.setSecondaryInfo(docToOpen->errorString(DataDoc::StandardError::DocAlreadyOpen));
+    else
+    {
+        // Create backup if required
+        QFileInfo targetInfo(docToOpen->filePath());
+
+        if(targetInfo.exists() && targetInfo.isFile())
+        {
+            QString backupPath = targetInfo.absolutePath() + '/' + targetInfo.baseName() + MODIFIED_FILE_EXT;
+
+            if(QFile::exists(backupPath) && QFileInfo(backupPath).isFile())
+            {
+                if(!QFile::remove(backupPath))
+                    return errorTemplate.setSecondaryInfo(docToOpen->errorString(DataDoc::StandardError::CantRemoveBackup));
+            }
+
+            if(!QFile::copy(targetInfo.absoluteFilePath(), backupPath))
+                return errorTemplate.setSecondaryInfo(docToOpen->errorString(DataDoc::StandardError::CantCreateBackup));
+        }
+
+        // Add file to modified list
+        mModifiedDocuments.insert(docToOpen->identifier());
+
+        // Open File
+        if(docToOpen->mDocumentFile->open(QFile::ReadWrite)) // Ensures that empty file is created if the target doesn't exist
+        {
+            // Read existing file if present
+            if(mExistingDocuments.contains(docToOpen->identifier()))
+            {
+                openReadError = docReader->readInto();
+
+                // Clear file to prepare for writing
+                docToOpen->clearFile();
+            }
+
+            // Add lease to ledger if no error occured while readding
+            if(!openReadError.isValid())
+                mLeasedDocuments.insert(docToOpen->identifier());
+        }
+        else
+            openReadError = errorTemplate.setSecondaryInfo(docToOpen->mDocumentFile->errorString());
+    }
+
+    // Return opened document and status
+    return openReadError;
+}
+
+Qx::GenericError Install::saveDataDocument(DataDoc* docToSave, std::shared_ptr<DataDocWriter> docWriter)
+{
+    // Write to file
+    Qx::GenericError saveWriteError = docWriter->writeOutOf();
+
+    // Close document file
+    docToSave->mDocumentFile->close();
+
+    // Set document perfmissions
+    allowUserWriteOnFile(docToSave->mDocumentFile->fileName());
+
+    // Remove handle reservation
+    mLeasedDocuments.remove(docToSave->identifier());
+
+    // Return write status and let document ptr auto delete
+    return saveWriteError;
+}
+
 Qx::GenericError Install::referenceImage(ImageType imageType, QDir sourceDir, const Game& game)
 {
-    return Qx::GenericError(Qx::GenericError::Critical, UNSUPPORTED_FEATURE, "Image Referencing");
+    return Qx::GenericError(Qx::GenericError::Critical, ERR_UNSUPPORTED_FEATURE, "Image Referencing");
 }
 
 //Public:
+QString Install::versionString() const
+{
+    Qx::FileDetails exeDetails = Qx::getFileDetails(executablePath());
+
+    QString fileVersionStr = exeDetails.getStringTable().fileVersion;
+    QString productVersionStr = exeDetails.getStringTable().productVersion;
+
+    if(!fileVersionStr.isEmpty())
+        return fileVersionStr;
+    else if(!productVersionStr.isEmpty())
+        return productVersionStr;
+    else
+        return "Unknown Version";
+}
+
 bool Install::isValid() const { return mValid; }
 QString Install::getPath() const { return mRootDirectory.absolutePath(); }
 
@@ -263,7 +287,7 @@ QSet<QString> Install::getExistingPlaylists() const { return getExistingDocs(Dat
 Qx::GenericError Install::openPlatformDoc(std::unique_ptr<PlatformDoc>& returnBuffer, QString name, UpdateOptions updateOptions)
 {
     // Get initialized blank doc and reader
-    std::shared_ptr<PlatformDocReader> docReader = prepareOpenPlatformDoc(returnBuffer);
+    std::shared_ptr<PlatformDocReader> docReader = prepareOpenPlatformDoc(returnBuffer, name, updateOptions);
 
     // Open document
     Qx::GenericError readErrorStatus = openDataDocument(returnBuffer.get(), docReader);
@@ -279,7 +303,7 @@ Qx::GenericError Install::openPlatformDoc(std::unique_ptr<PlatformDoc>& returnBu
 Qx::GenericError Install::openPlaylistDoc(std::unique_ptr<PlaylistDoc>& returnBuffer, QString name, UpdateOptions updateOptions)
 {
     // Get initialized blank doc and reader
-    std::shared_ptr<PlaylistDocReader> docReader = prepareOpenPlaylistDoc(returnBuffer);
+    std::shared_ptr<PlaylistDocReader> docReader = prepareOpenPlaylistDoc(returnBuffer, name, updateOptions);
 
     // Open document
     Qx::GenericError readErrorStatus = openDataDocument(returnBuffer.get(), docReader);
@@ -294,6 +318,9 @@ Qx::GenericError Install::openPlaylistDoc(std::unique_ptr<PlaylistDoc>& returnBu
 
 Qx::GenericError Install::savePlatformDoc(std::unique_ptr<PlatformDoc> document)
 {
+    // Doc should belong to this install
+    assert(document->parent() == this);
+
     // Prepare writer
     std::shared_ptr<PlatformDocWriter> docWriter = prepareSavePlatformDoc(document);
 
@@ -309,6 +336,9 @@ Qx::GenericError Install::savePlatformDoc(std::unique_ptr<PlatformDoc> document)
 
 Qx::GenericError Install::savePlaylistDoc(std::unique_ptr<PlaylistDoc> document)
 {
+    // Doc should belong to this install
+    assert(document->parent() == this);
+
     // Prepare writer
     std::shared_ptr<PlaylistDocWriter> docWriter = prepareSavePlaylistDoc(document);
 
@@ -330,9 +360,9 @@ Qx::GenericError Install::importImage(ImageMode imageMode, ImageType imageType, 
         return referenceImage(imageType, sourceDir, game);
 }
 
-Qx::GenericError Install::bulkReferenceImages(ImageType imageType, QString rootImagePath)
+Qx::GenericError Install::bulkReferenceImages(QString logoRootPath, QString screenshotRootPath)
 {
-    return Qx::GenericError(Qx::GenericError::Critical, UNSUPPORTED_FEATURE, "Image Referencing");
+    return Qx::GenericError(Qx::GenericError::Critical, ERR_UNSUPPORTED_FEATURE, "Image Referencing");
 }
 
 void Install::softReset()
