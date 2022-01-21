@@ -263,6 +263,8 @@ Qx::GenericError Install::referenceImage(ImageType imageType, QDir sourceDir, co
 }
 
 //Public:
+QString Install::linkedClifpPath() { return mLinkedClifpPath; }
+
 QString Install::versionString() const
 {
     Qx::FileDetails exeDetails = Qx::getFileDetails(executablePath());
@@ -360,7 +362,7 @@ Qx::GenericError Install::importImage(ImageMode imageMode, ImageType imageType, 
         return referenceImage(imageType, sourceDir, game);
 }
 
-Qx::GenericError Install::bulkReferenceImages(QString logoRootPath, QString screenshotRootPath)
+Qx::GenericError Install::bulkReferenceImages(QString logoRootPath, QString screenshotRootPath, QStringList platforms)
 {
     return Qx::GenericError(Qx::GenericError::Critical, ERR_UNSUPPORTED_FEATURE, "Image Referencing");
 }
