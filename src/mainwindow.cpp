@@ -119,7 +119,7 @@ void MainWindow::initializeForms()
                                                    ui->radioButton_link->text());
 
     // Setup main forms
-    ui->label_flashPointVersion->clear();
+    ui->label_flashpointVersion->clear();
     ui->label_frontendVersion->clear();
     ui->radioButton_link->setEnabled(mHasLinkPermissions);
     ui->radioButton_link->setChecked(mHasLinkPermissions);
@@ -196,7 +196,7 @@ void MainWindow::validateInstall(QString installPath, Install install)
             mFlashpointInstall = std::make_shared<FP::Install>(installPath);
             if(mFlashpointInstall->isValid())
             {
-                ui->label_flashPointVersion->setText(mFlashpointInstall->versionString());
+                ui->label_flashpointVersion->setText(mFlashpointInstall->versionString());
                 if(installMatchesTargetVersion(*mFlashpointInstall))
                     ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
                 else
@@ -375,7 +375,7 @@ void MainWindow::invalidateInstall(Install install, bool informUser)
         case Install::Flashpoint:
             mFlashpointInstall.reset();
             ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-            ui->label_flashPointVersion->clear();
+            ui->label_flashpointVersion->clear();
             if(informUser)
                 postGenericError(mFlashpointInstall->error(), QMessageBox::Ok);
             break;

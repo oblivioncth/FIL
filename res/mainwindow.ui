@@ -196,14 +196,14 @@
           <number>5</number>
          </property>
          <item>
-          <widget class="QLabel" name="label_flashPointPath">
+          <widget class="QLabel" name="label_flashpointPath">
            <property name="text">
             <string>Flashpoint Install:</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="label_flashPointVersion">
+          <widget class="QLabel" name="label_flashpointVersion">
            <property name="font">
             <font>
              <italic>true</italic>
