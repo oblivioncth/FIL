@@ -57,6 +57,7 @@ protected:
     bool mValid;
 
     // Files and directories
+    QString mLinkedClifpPath;
     QDir mRootDirectory;
 
     // Document tracking
@@ -69,7 +70,7 @@ protected:
 
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
-    Install(QString installPath);
+    Install(QString installPath, QString linkedClifpPath);
 
 //-Class Functions------------------------------------------------------------------------------------------------------
 private:
@@ -106,7 +107,7 @@ protected:
     virtual Qx::GenericError referenceImage(ImageType imageType, QDir sourceDir, const Game& game);
 
 public:
-    QString bullshit() { return "ASAD"; } // TODO: If program compiles with somewhat circular reference, change this to give actual CLIFp path
+    QString linkedClifpPath(); // TODO: If program compiles with somewhat circular reference, change this to give actual CLIFp path
 
     virtual QString name() const = 0;
     virtual QString executablePath() const = 0;

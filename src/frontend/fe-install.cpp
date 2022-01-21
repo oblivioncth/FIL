@@ -18,8 +18,9 @@ namespace Fe
 //===============================================================================================================
 
 //-Constructor---------------------------------------------------------------------------------------------------
-Install::Install(QString installPath) :
+Install::Install(QString installPath, QString linkedClifpPath) :
     mValid(false), // Path is invalid until proven otherwise
+    mLinkedClifpPath(linkedClifpPath),
     mRootDirectory(installPath)
 {}
 
