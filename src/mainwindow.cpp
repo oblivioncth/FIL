@@ -217,7 +217,7 @@ void MainWindow::validateInstall(QString installPath, Install install)
 void MainWindow::gatherInstallInfo()
 {
     // Get data in order but only continue if each step is successful
-    if(parseLaunchBoxData())
+    if(parseFrontendData())
     {
         // Show selection options
         populateImportSelectionBoxes();
@@ -312,7 +312,7 @@ void MainWindow::generateTagSelectionOptions()
     mTagSelectionModel->sort(0);
 }
 
-bool MainWindow::parseLaunchBoxData()
+bool MainWindow::parseFrontendData()
 {
     // IO Error check instance
     Qx::GenericError existingCheck;
@@ -347,13 +347,9 @@ bool MainWindow::installsHaveChanged()
 
 void MainWindow::redoInputChecks()
 {
-    // Get existing locations
-    QString launchBoxPath = mFrontendInstall->getPath();
-    QString flashpointPath = mFlashpointInstall->fullPath();
-
-    // Check them again
-    validateInstall(launchBoxPath, Install::Frontend);
-    validateInstall(flashpointPath, Install::Flashpoint);
+    // Check existing locations again
+    validateInstall(mFrontendInstall->getPath(), Install::Frontend);
+    validateInstall(mFlashpointInstall->fullPath(), Install::Flashpoint);
 }
 
 void MainWindow::invalidateInstall(Install install, bool informUser)
@@ -550,7 +546,7 @@ void MainWindow::prepareImport()
     // Only allow proceeding if LB isn't running
     bool feRunning;
     while((feRunning = Qx::processIsRunning(mFrontendInstall->executablePath())))
-        if(QMessageBox::critical(this, QApplication::applicationName(), MSG_LB_CLOSE_PROMPT, QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Retry) == QMessageBox::Cancel)
+        if(QMessageBox::critical(this, QApplication::applicationName(), MSG_FRONTEND_CLOSE_PROMPT, QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Retry) == QMessageBox::Cancel)
             break;
 
     if(!feRunning)
@@ -607,7 +603,7 @@ void MainWindow::prepareImport()
     }
 }
 
-void MainWindow::revertAllLaunchBoxChanges()
+void MainWindow::revertAllFrontendChanges()
 {
     // Trackers
     bool tempSkip = false;
@@ -775,7 +771,7 @@ void MainWindow::all_on_pushButton_clicked()
     // Determine sender and take corresponding action
     if(senderPushButton == ui->pushButton_frontendBrowse)
     {
-        QString selectedDir = QFileDialog::getExistingDirectory(this, CAPTION_LAUNCHBOX_BROWSE,
+        QString selectedDir = QFileDialog::getExistingDirectory(this, CAPTION_FRONTEND_BROWSE,
                                                                 (QFileInfo::exists(ui->lineEdit_frontendPath->text()) ? ui->lineEdit_frontendPath->text() : QDir::currentPath()));
 
         if(!selectedDir.isEmpty())
@@ -841,10 +837,10 @@ void MainWindow::all_on_lineEdit_editingFinished()
     // Determine sender and take corresponding action
     if(senderLineEdit == ui->lineEdit_frontendPath)
     {
-        if(!mLineEdit_launchBoxPath_blocker)
+        if(!mLineEdit_frontendPath_blocker)
             checkManualInstallInput(Install::Frontend);
         else
-            mLineEdit_launchBoxPath_blocker--;
+            mLineEdit_frontendPath_blocker--;
     }
     else if(senderLineEdit == ui->lineEdit_flashpointPath)
     {
@@ -868,7 +864,7 @@ void MainWindow::all_on_lineEdit_textEdited() // Required due to an oversight wi
 
     // Determine sender and take corresponding action
     if(senderLineEdit == ui->lineEdit_frontendPath)
-        mLineEdit_launchBoxPath_blocker = 0;
+        mLineEdit_frontendPath_blocker = 0;
     else if(senderLineEdit == ui->lineEdit_flashpointPath)
         mLineEdit_flashpointPath_blocker = 0;
     else
@@ -887,7 +883,7 @@ void MainWindow::all_on_lineEdit_returnPressed() // Required due to an oversight
     // Determine sender and take corresponding action
     if(senderLineEdit == ui->lineEdit_frontendPath)
     {
-        mLineEdit_launchBoxPath_blocker = 2;
+        mLineEdit_frontendPath_blocker = 2;
         checkManualInstallInput(Install::Frontend);
     }
     else if(senderLineEdit == ui->lineEdit_flashpointPath)
@@ -1011,12 +1007,12 @@ void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx:
     else if(importResult == ImportWorker::Canceled)
     {
         QMessageBox::critical(this, CAPTION_REVERT, MSG_USER_CANCELED);
-        revertAllLaunchBoxChanges();
+        revertAllFrontendChanges();
     }
     else
     {
         // Show general next steps message
         QMessageBox::warning(this, CAPTION_REVERT, MSG_HAVE_TO_REVERT);
-        revertAllLaunchBoxChanges();
+        revertAllFrontendChanges();
     }
 }

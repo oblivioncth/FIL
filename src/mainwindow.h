@@ -59,24 +59,25 @@ private:
                                                        "metadata. Note that this option will still cause missing games to be removed even if you are going backwards to a previous version of FP, as implied above. Additionally, this option will "
                                                        "remove any existing Extreme games in your collection, for the select platforms, if you have the <i>%4</i> option unselected.";
 
-    static inline const QString MSG_IMAGE_MODE_HELP = "<b>%1</b> - All relevant images from Flashpoint will be fully copied into your LaunchBox installation. This causes zero overhead but will require additional storage space proportional to "
+    static inline const QString MSG_IMAGE_MODE_HELP = "<b>%1</b> - All relevant images from Flashpoint will be fully copied into your frontend installation. This causes zero overhead but will require additional storage space proportional to "
                                                       "the number of games you end up importing, up to double if all platforms are selected.<br>"
                                                       "<b>Space Consumption:</b> High<br>"
                                                       "<b>Import Speed:</b> Very Slow<br>"
                                                       "<b>Image Cache Build Speed:</b> Fast<br>"
                                                       "<br>"
-                                                      "<b>%2</b> - Your LaunchBox platform configuration will be altered so that the relavent image folders within Flashpoint are directly referenced by LaunchBox's media scanner, requiring no "
+                                                      "<b>%2</b> - Your frontend platform configuration will be altered so that the relavent image folders within Flashpoint are directly referenced by its media scanner, requiring no "
                                                       "extra space and causing no overhead.<br>"
                                                       "<b>Space Consumption:</b> None<br>"
                                                       "<b>Import Speed:</b> Fast<br>"
                                                       "<b>Image Cache Build Speed:</b> Very Slow<br>"
                                                       "<br>"
-                                                      "<b>%3</b> - A symbolic link to each relavent image from Flashpoint will be created in your LaunchBox installation. These appear like the real files to LaunchBox, adding only a miniscle "
+                                                      "<b>%3</b> - A symbolic link to each relavent image from Flashpoint will be created in your frontend installation. These appear like the real files to the frontend, adding only a miniscle "
                                                       "amount of overhead when it loads images and require almost no extra disk space to store.<br>"
                                                       "<b>Space Consumption:</b> Near-zero<br>"
                                                       "<b>Import Speed:</b> Slow<br>"
                                                       "<b>Image Cache Build Speed:</b> Fast<br>";
 
+    static inline const QString MSG_TEST = "test";
     // Messages - Input
     static inline const QString MSG_FE_INSTALL_INVALID = "The specified directory either doesn't contain a valid frontend install, or it contains a version that is incompatible with this tool.";
     static inline const QString MSG_FP_INSTALL_INVALID = "The specified directory either doesn't contain a valid Flashpoint install, or it contains a version that is incompatible with this tool.";
@@ -90,8 +91,8 @@ private:
                                                           "already happened to have a Platform/Playlist with the same name as one present in Flashpoint).\n"
                                                           "\n"
                                                           "Are you sure you want to proceed?";
-    static inline const QString MSG_LB_CLOSE_PROMPT = "The importer has detected that LaunchBox is running. It must be closed in order to continue. If recently closed, wait a few moments before trying to proceed again as it performs significant cleanup in the background.";
-    static inline const QString MSG_POST_IMPORT = "The Flashpoint import has completed succesfully. Next time you start LaunchBox it may take longer than usual as it will have to fill in some default fields for the imported Platforms/Playlists.\n"
+    static inline const QString MSG_FRONTEND_CLOSE_PROMPT = "The importer has detected that the selected frontend is running. It must be closed in order to continue. If recently closed, wait a few moments before trying to proceed again as it performs significant cleanup in the background.";
+    static inline const QString MSG_POST_IMPORT = "The Flashpoint import has completed succesfully. Next time you start the frontend it may take longer than usual as it will have to fill in some default fields for the imported Platforms/Playlists.\n"
                                                   "\n"
                                                   "If you wish to import further selections or update to a newer version of Flashpoint, simply re-run this procedure after pointing it to the desired Flashpoint installation.";
     // Initial import status
@@ -118,13 +119,10 @@ private:
                                                            "\n"
                                                            "If you choose to ignore this you will have to place CLIFp in your Flashpoint install directory manually.";
 
-    // Messages - LB XML read
-    static inline const QString MSG_LB_XML_UNEXPECTED_ERROR = "An unexpected error occured while reading Launchbox XML (%1 | %2):";
-
     // Messages - Revert
     static inline const QString MSG_HAVE_TO_REVERT = "Due to previous unrecoverable errors, all changes that occured during import will now be reverted (other than existing images that were replaced with newer versions).\n"
                                                      "\n"
-                                                     "Aftewards, check to see if there is a newer version of " VER_INTERNALNAME_STR " and try again using that version. If not ask for help on the LaunchBox forums where this tool was released (see Tools).\n"
+                                                     "Aftewards, check to see if there is a newer version of " VER_INTERNALNAME_STR " and try again using that version. If not ask for help on the relavent forums where this tool was released (see Help).\n"
                                                      "\n"
                                                      "If you beleive this to be due to a bug with this software, please submit an issue to its GitHub page (listed under help)";
 
@@ -132,7 +130,7 @@ private:
 
     // Dialog captions
     static inline const QString CAPTION_GENERAL_FATAL_ERROR = "Fatal Error!";
-    static inline const QString CAPTION_LAUNCHBOX_BROWSE = "Select the root directory of your LaunchBox install...";
+    static inline const QString CAPTION_FRONTEND_BROWSE = "Select the root directory of your frontend install...";
     static inline const QString CAPTION_FLASHPOINT_BROWSE = "Select the root directory of your Flashpoint install...";
     static inline const QString CAPTION_PLAYLIST_GAME_MODE_HELP = "Playlist game mode options";
     static inline const QString CAPTION_UPDATE_MODE_HELP = "Update mode options";
@@ -172,7 +170,7 @@ private:
     std::shared_ptr<FP::Install> mFlashpointInstall;
     Qx::MMRB mInternalCLIFpVersion;
 
-    int mLineEdit_launchBoxPath_blocker = 0; // Required due to an oversight with QLineEdit::editingFinished()
+    int mLineEdit_frontendPath_blocker = 0; // Required due to an oversight with QLineEdit::editingFinished()
     int mLineEdit_flashpointPath_blocker = 0; // Required due to an oversight with QLineEdit::editingFinished()
 
     QHash<QListWidgetItem*,Qt::CheckState> mPlatformItemCheckStates;
@@ -210,7 +208,7 @@ private:
     void gatherInstallInfo();
     void populateImportSelectionBoxes();
     void generateTagSelectionOptions();
-    bool parseLaunchBoxData();
+    bool parseFrontendData();
     bool installsHaveChanged();
     void redoInputChecks();
 
@@ -234,7 +232,7 @@ private:
     ImportWorker::PlaylistGameMode getSelectedPlaylistGameMode() const;
 
     void prepareImport();
-    void revertAllLaunchBoxChanges();
+    void revertAllFrontendChanges();
     void standaloneCLIFpDeploy();
     void showTagSelectionDialog();
     QSet<int> generateTagExlusionSet() const;
