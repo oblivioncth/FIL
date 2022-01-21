@@ -119,7 +119,7 @@ Fe::DataDoc::Type PlatformDoc::type() const { return Fe::DataDoc::Type::Platform
 std::shared_ptr<Fe::Game> PlatformDoc::prepareGame(const FP::Game& game)
 {
     // Convert to LaunchBox game
-    std::shared_ptr<Game> lbGame = std::make_shared<Game>(game, parent()->bullshit());
+    std::shared_ptr<Game> lbGame = std::make_shared<Game>(game, parent()->linkedClifpPath());
 
     // Add details to cache
     static_cast<Install*>(parent())->mPlaylistGameDetailsCache[game.getId()] = PlaylistGame::EntryDetails(*lbGame);
@@ -138,7 +138,7 @@ std::shared_ptr<Fe::Game> PlatformDoc::prepareGame(const FP::Game& game)
 std::shared_ptr<Fe::AddApp> PlatformDoc::prepareAddApp(const FP::AddApp& addApp)
 {
     // Convert to LaunchBox add app
-    std::shared_ptr<AddApp> lbAddApp = std::make_shared<AddApp>(addApp, parent()->bullshit());
+    std::shared_ptr<AddApp> lbAddApp = std::make_shared<AddApp>(addApp, parent()->linkedClifpPath());
 
     // Return converted game
     return lbAddApp;

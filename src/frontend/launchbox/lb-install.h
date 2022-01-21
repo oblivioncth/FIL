@@ -53,7 +53,7 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    Install(QString installPath, QString linkedClifpPath);
+    Install(QString installPath);
 
 //-Class Functions------------------------------------------------------------------------------------------------------
 private:

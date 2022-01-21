@@ -380,6 +380,9 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     FP::DB::QueryBuffer playlistQueries;
     QList<FP::DB::QueryBuffer> playlistGameQueries;
 
+    // Link Clifp to frontend
+    mFrontendInstall->linkClifpPath(CLIFp::standardCLIFpPath(*mFlashpointInstall));
+
     // Get flashpoint database
     FP::DB* fpDatabase = mFlashpointInstall->database();
 

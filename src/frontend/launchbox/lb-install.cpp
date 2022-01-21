@@ -17,8 +17,8 @@ namespace LB
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-Install::Install(QString installPath, QString linkedClifpPath) :
-    Fe::Install(installPath, linkedClifpPath)
+Install::Install(QString installPath) :
+    Fe::Install(installPath)
 {
     QScopeGuard validityGuard([this](){ nullify(); }); // Automatically nullify on fail
 

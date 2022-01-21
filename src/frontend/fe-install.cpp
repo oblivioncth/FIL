@@ -18,9 +18,8 @@ namespace Fe
 //===============================================================================================================
 
 //-Constructor---------------------------------------------------------------------------------------------------
-Install::Install(QString installPath, QString linkedClifpPath) :
+Install::Install(QString installPath) :
     mValid(false), // Path is invalid until proven otherwise
-    mLinkedClifpPath(linkedClifpPath),
     mRootDirectory(installPath)
 {}
 
@@ -264,7 +263,8 @@ Qx::GenericError Install::referenceImage(ImageType imageType, QDir sourceDir, co
 }
 
 //Public:
-QString Install::linkedClifpPath() { return mLinkedClifpPath; }
+void Install::linkClifpPath(QString clifpPath) { mLinkedClifpPath = clifpPath; }
+QString Install::linkedClifpPath() const { return mLinkedClifpPath; }
 
 QString Install::versionString() const
 {
@@ -370,6 +370,7 @@ Qx::GenericError Install::bulkReferenceImages(QString logoRootPath, QString scre
 
 void Install::softReset()
 {
+    mLinkedClifpPath.clear();
     mModifiedDocuments.clear();
     mLeasedDocuments.clear();
     mPurgeableImagePaths.clear();

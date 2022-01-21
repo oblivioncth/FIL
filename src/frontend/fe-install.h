@@ -70,7 +70,7 @@ protected:
 
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
-    Install(QString installPath, QString linkedClifpPath);
+    Install(QString installPath);
 
 //-Class Functions------------------------------------------------------------------------------------------------------
 private:
@@ -107,7 +107,8 @@ protected:
     virtual Qx::GenericError referenceImage(ImageType imageType, QDir sourceDir, const Game& game);
 
 public:
-    QString linkedClifpPath(); // TODO: If program compiles with somewhat circular reference, change this to give actual CLIFp path
+    void linkClifpPath(QString clifpPath);
+    QString linkedClifpPath() const; // TODO: If program compiles with somewhat circular reference, change this to give actual CLIFp path
 
     virtual QString name() const = 0;
     virtual QString executablePath() const = 0;
