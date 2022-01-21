@@ -119,6 +119,8 @@ void MainWindow::initializeForms()
                                                    ui->radioButton_link->text());
 
     // Setup main forms
+    ui->label_flashPointVersion->clear();
+    ui->label_frontendVersion->clear();
     ui->radioButton_link->setEnabled(mHasLinkPermissions);
     ui->radioButton_link->setChecked(mHasLinkPermissions);
     if(!mHasLinkPermissions)
@@ -165,20 +167,17 @@ bool MainWindow::installMatchesTargetVersion(const FP::Install& fpInstall)
 void MainWindow::checkManualInstallInput(Install install)
 {
     QLineEdit* pathSource;
-    QLabel* installStatusIcon;
 
     switch(install)
     {
         case Install::Frontend:
             mFrontendInstall.reset(); // Detach from previous install if present
-            pathSource = ui->lineEdit_launchBoxPath;
-            installStatusIcon = ui->icon_launchBox_install_status;
+            pathSource = ui->lineEdit_frontendPath;
             break;
 
         case Install::Flashpoint:
             mFlashpointInstall.reset(); // Detach from previous install if present
             pathSource = ui->lineEdit_flashpointPath;
-            installStatusIcon = ui->icon_flashpoint_install_status;
             break;
     }
 
@@ -186,12 +185,7 @@ void MainWindow::checkManualInstallInput(Install install)
     if(!pathSource->text().isEmpty() && selectedDir.exists())
         validateInstall(selectedDir.absolutePath(), install);
     else
-    {
-        installStatusIcon->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-        clearListWidgets();
-        mTagSelectionModel.reset(); // Void tag selection model
-        refreshEnableStates();
-    }
+        invalidateInstallFields(install, false);
 }
 
 void MainWindow::validateInstall(QString installPath, Install install)
@@ -201,21 +195,19 @@ void MainWindow::validateInstall(QString installPath, Install install)
         case Install::Frontend:
             mFrontendInstall = Fe::Install::acquireMatch(installPath);
             if(mFrontendInstall)
-                ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
-            else
             {
-                ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-                clearListWidgets();
-                mTagSelectionModel.reset(); // Void tag selection model
-                refreshEnableStates();
-                QMessageBox::critical(this, QApplication::applicationName(), MSG_FE_INSTALL_INVALID);
+                ui->icon_frontend_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
+                ui->label_frontendVersion->setText(mFrontendInstall->versionString());
             }
+            else
+                invalidateInstallFields(install, true);
             break;
 
         case Install::Flashpoint:
             mFlashpointInstall = std::make_shared<FP::Install>(installPath);
             if(mFlashpointInstall->isValid())
             {
+                ui->label_flashPointVersion->setText(mFlashpointInstall->versionString());
                 if(installMatchesTargetVersion(*mFlashpointInstall))
                     ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
                 else
@@ -225,13 +217,7 @@ void MainWindow::validateInstall(QString installPath, Install install)
                 }
             }
             else
-            {
-                ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-                clearListWidgets();
-                mTagSelectionModel.reset(); // Void tag selection model
-                refreshEnableStates();
-                postGenericError(mFlashpointInstall->error(), QMessageBox::Ok);
-            }
+                invalidateInstallFields(install, true);
             break;
     }
 
@@ -256,10 +242,7 @@ void MainWindow::gatherInstallInfo()
     else
     {
         mFrontendInstall.reset();
-        ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-        clearListWidgets();
-        mTagSelectionModel.reset(); // Void tag selection model
-        refreshEnableStates();
+        invalidateInstallFields(Install::Frontend, false);
     }
 }
 
@@ -385,6 +368,30 @@ void MainWindow::redoInputChecks()
     // Check them again
     validateInstall(launchBoxPath, Install::Frontend);
     validateInstall(flashpointPath, Install::Flashpoint);
+}
+
+void MainWindow::invalidateInstallFields(Install install, bool informUser)
+{
+    clearListWidgets();
+    mTagSelectionModel.reset(); // Void tag selection model
+    refreshEnableStates();
+
+    switch(install)
+    {
+        case Install::Frontend:
+            ui->icon_frontend_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
+            ui->label_frontendVersion->clear();
+            if(informUser)
+                QMessageBox::critical(this, QApplication::applicationName(), MSG_FE_INSTALL_INVALID);
+            break;
+
+        case Install::Flashpoint:
+            ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
+            ui->label_flashPointVersion->clear();
+            if(informUser)
+                postGenericError(mFlashpointInstall->error(), QMessageBox::Ok);
+            break;
+    }
 }
 
 void MainWindow::clearListWidgets()
@@ -778,14 +785,14 @@ void MainWindow::all_on_pushButton_clicked()
         throw std::runtime_error("Pointer conversion to push button failed");
 
     // Determine sender and take corresponding action
-    if(senderPushButton == ui->pushButton_launchBoxBrowse)
+    if(senderPushButton == ui->pushButton_frontendBrowse)
     {
         QString selectedDir = QFileDialog::getExistingDirectory(this, CAPTION_LAUNCHBOX_BROWSE,
-                                                                (QFileInfo::exists(ui->lineEdit_launchBoxPath->text()) ? ui->lineEdit_launchBoxPath->text() : QDir::currentPath()));
+                                                                (QFileInfo::exists(ui->lineEdit_frontendPath->text()) ? ui->lineEdit_frontendPath->text() : QDir::currentPath()));
 
         if(!selectedDir.isEmpty())
         {
-            ui->lineEdit_launchBoxPath->setText(QDir::toNativeSeparators(selectedDir));
+            ui->lineEdit_frontendPath->setText(QDir::toNativeSeparators(selectedDir));
             validateInstall(selectedDir, Install::Frontend);
         }
     }
@@ -844,7 +851,7 @@ void MainWindow::all_on_lineEdit_editingFinished()
         throw std::runtime_error("Pointer conversion to line edit failed");
 
     // Determine sender and take corresponding action
-    if(senderLineEdit == ui->lineEdit_launchBoxPath)
+    if(senderLineEdit == ui->lineEdit_frontendPath)
     {
         if(!mLineEdit_launchBoxPath_blocker)
             checkManualInstallInput(Install::Frontend);
@@ -872,7 +879,7 @@ void MainWindow::all_on_lineEdit_textEdited() // Required due to an oversight wi
         throw std::runtime_error("Pointer conversion to line edit failed");
 
     // Determine sender and take corresponding action
-    if(senderLineEdit == ui->lineEdit_launchBoxPath)
+    if(senderLineEdit == ui->lineEdit_frontendPath)
         mLineEdit_launchBoxPath_blocker = 0;
     else if(senderLineEdit == ui->lineEdit_flashpointPath)
         mLineEdit_flashpointPath_blocker = 0;
@@ -890,7 +897,7 @@ void MainWindow::all_on_lineEdit_returnPressed() // Required due to an oversight
         throw std::runtime_error("Pointer conversion to line edit failed");
 
     // Determine sender and take corresponding action
-    if(senderLineEdit == ui->lineEdit_launchBoxPath)
+    if(senderLineEdit == ui->lineEdit_frontendPath)
     {
         mLineEdit_launchBoxPath_blocker = 2;
         checkManualInstallInput(Install::Frontend);

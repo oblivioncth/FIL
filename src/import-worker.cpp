@@ -5,6 +5,8 @@
 // TODO: Ensure that in every place an error message is grabbed from an Install function here, that the install implementation provides
 //       an error that fulfills the same function of the original ones that were removed
 
+// TODO: Make formatting on constructor initializer lits consistant
+
 //===============================================================================================================
 // IMPORT WORKER
 //===============================================================================================================
@@ -184,13 +186,6 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
 
             // Add ID to imported game cache
             mImportedGameIDsCache.insert(addedGame->getId());
-
-//            // Add language as custom field TODO: Port this to Lb::Install implementation
-//            LB::CustomFieldBuilder lbCfb;
-//            lbCfb.wGameID(builtGame.getID());
-//            lbCfb.wName(LB::CustomField::LANGUAGE);
-//            lbCfb.wValue(builtGame.getLanguage());
-//            currentPlatformXML->addCustomField(lbCfb.build());
 
             // Setup for ensuring image transfer
             Qx::GenericError imageTransferError; // Error return reference
@@ -485,7 +480,9 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         if(mFrontendInstall->imageRefType() == Fe::Install::ImageRefType::Single)
         {
             throw std::runtime_error("Not implemented");
-            //TODO Implement (also probably needs to go somewhere else
+            //TODO Implement (also probably needs to go somewhere else), though probably best to leave
+            // like this until a frontend that needs it is found to make it easier to determine the
+            // best approach
         }
         else
         {

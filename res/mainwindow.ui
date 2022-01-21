@@ -30,8 +30,8 @@
        <property name="topMargin">
         <number>9</number>
        </property>
-       <item row="1" column="1">
-        <widget class="QLineEdit" name="lineEdit_launchBoxPath">
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="lineEdit_frontendPath">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
            <horstretch>20</horstretch>
@@ -51,39 +51,8 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="icon_flashpoint_install_status">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>1</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>27</width>
-           <height>27</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>27</width>
-           <height>27</height>
-          </size>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-         <property name="pixmap">
-          <pixmap resource="../resources_cmn.qrc">:/res/icon/No_Install.png</pixmap>
-         </property>
-         <property name="scaledContents">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="icon_launchBox_install_status">
+       <item row="2" column="0">
+        <widget class="QLabel" name="icon_frontend_install_status">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -131,33 +100,38 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="0" colspan="2">
-        <widget class="QLabel" name="label_launchBoxPath">
-         <property name="text">
-          <string>LaunchBox Location:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="2">
-        <widget class="QPushButton" name="pushButton_launchBoxBrowse">
+       <item row="6" column="0">
+        <widget class="QLabel" name="icon_flashpoint_install_status">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
            <horstretch>1</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
          <property name="minimumSize">
           <size>
-           <width>60</width>
-           <height>22</height>
+           <width>27</width>
+           <height>27</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>27</width>
+           <height>27</height>
           </size>
          </property>
          <property name="text">
-          <string>...</string>
+          <string/>
+         </property>
+         <property name="pixmap">
+          <pixmap resource="../resources_cmn.qrc">:/res/icon/No_Install.png</pixmap>
+         </property>
+         <property name="scaledContents">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
-       <item row="3" column="1">
+       <item row="6" column="1">
         <widget class="QLineEdit" name="lineEdit_flashpointPath">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
@@ -178,7 +152,26 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="2">
+       <item row="2" column="2">
+        <widget class="QPushButton" name="pushButton_frontendBrowse">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+           <horstretch>1</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>60</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>...</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="2">
         <widget class="QPushButton" name="pushButton_flashpointBrowse">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
@@ -197,12 +190,66 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="0" colspan="2">
-        <widget class="QLabel" name="label_flashPointPath">
-         <property name="text">
-          <string>Flashpoint Location:</string>
+       <item row="5" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
+         <property name="spacing">
+          <number>5</number>
          </property>
-        </widget>
+         <item>
+          <widget class="QLabel" name="label_flashPointPath">
+           <property name="text">
+            <string>Flashpoint Install:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_flashPointVersion">
+           <property name="font">
+            <font>
+             <italic>true</italic>
+            </font>
+           </property>
+           <property name="text">
+            <string>VERSION_INFO</string>
+           </property>
+           <property name="margin">
+            <number>0</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="0,1">
+         <property name="spacing">
+          <number>5</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_frontendPath">
+           <property name="text">
+            <string>Frontend Install:</string>
+           </property>
+           <property name="indent">
+            <number>0</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_frontendVersion">
+           <property name="font">
+            <font>
+             <italic>true</italic>
+            </font>
+           </property>
+           <property name="text">
+            <string>VERSION_INFO</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>
@@ -995,7 +1042,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>pushButton_launchBoxBrowse</sender>
+   <sender>pushButton_frontendBrowse</sender>
    <signal>clicked()</signal>
    <receiver>MainWindow</receiver>
    <slot>all_on_pushButton_clicked()</slot>
@@ -1011,7 +1058,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>lineEdit_launchBoxPath</sender>
+   <sender>lineEdit_frontendPath</sender>
    <signal>editingFinished()</signal>
    <receiver>MainWindow</receiver>
    <slot>all_on_lineEdit_editingFinished()</slot>
@@ -1043,7 +1090,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>lineEdit_launchBoxPath</sender>
+   <sender>lineEdit_frontendPath</sender>
    <signal>textEdited(QString)</signal>
    <receiver>MainWindow</receiver>
    <slot>all_on_lineEdit_textEdited()</slot>
@@ -1075,7 +1122,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>lineEdit_launchBoxPath</sender>
+   <sender>lineEdit_frontendPath</sender>
    <signal>returnPressed()</signal>
    <receiver>MainWindow</receiver>
    <slot>all_on_lineEdit_returnPressed()</slot>
