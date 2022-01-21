@@ -88,7 +88,6 @@ class Game : public BasicItem
     friend class GameBuilder;
 //-Class Variables--------------------------------------------------------------------------------------------------
 protected:
-    // TODO: See if these are needed
     static inline const QString RELEASE_TYPE_GAME = "Game";
     static inline const QString RELEASE_TYPE_ANIM = "Animation";
 

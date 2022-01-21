@@ -273,7 +273,7 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
         currentPlatformDoc->finalize();
 
         // Forefit doucment lease and save it
-        Qx::GenericError saveError; // TODO: See if in cases like this, errorReport can just be set directly to the function output instead of this temp var
+        Qx::GenericError saveError;
         if((saveError = mFrontendInstall->savePlatformDoc(std::move(currentPlatformDoc))).isValid())
         {
             errorReport = saveError;

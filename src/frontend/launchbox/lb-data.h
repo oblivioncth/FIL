@@ -192,7 +192,6 @@ private:
     std::shared_ptr<Fe::Game> prepareGame(const FP::Game& game) override;
     std::shared_ptr<Fe::AddApp> prepareAddApp(const FP::AddApp& addApp) override;
 
-    const QHash<QString, std::shared_ptr<CustomField>> getFinalCustomFields() const; //TODO: See if this is even needed
     void addCustomField(std::shared_ptr<CustomField> customField);
 
 public:

@@ -145,7 +145,6 @@ std::shared_ptr<Fe::AddApp> PlatformDoc::prepareAddApp(const FP::AddApp& addApp)
 }
 
 //Public:
-const QHash<QString, std::shared_ptr<CustomField>> PlatformDoc::getFinalCustomFields() const { return mCustomFieldsFinal; }
 
 void PlatformDoc::addCustomField(std::shared_ptr<CustomField> customField)
 {
@@ -374,7 +373,7 @@ bool PlatformDocWriter::writeSourceDoc()
     }
 
     // Write all custom fields
-    for(std::shared_ptr<CustomField> customField : static_cast<PlatformDoc*>(mSourceDocument)->getFinalCustomFields())
+    for(std::shared_ptr<CustomField> customField : static_cast<PlatformDoc*>(mSourceDocument)->mCustomFieldsFinal)
     {
         if(!writeCustomField(*customField))
             return false;

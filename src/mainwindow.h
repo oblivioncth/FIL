@@ -15,8 +15,6 @@
 #include "qx-widgets.h"
 #include "clifp.h"
 
-// TODO: Remove all instances of "defined in .h" comments from project
-
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
