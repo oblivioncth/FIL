@@ -148,42 +148,15 @@ std::shared_ptr<Fe::AddApp> PlatformDoc::prepareAddApp(const FP::AddApp& addApp)
 
 void PlatformDoc::addCustomField(std::shared_ptr<CustomField> customField)
 {
-    // Add custom field (can't use addUpdateableItem because of QString hash key)
-    // TODO: Maybe see if this can be altered to use it, but it would likely require
-    //       templating all of the base item types to accept a type used for hashing,
-    //       which most children would inherit with QUuid as T. Feels cumbersome for
-    //       such a small change
     QString key = customField->getGameID().toString() + customField->getName();
-
-    // Check if custom field exists
-    if(mCustomFieldsExisting.contains(key))
-    {
-        // Replace if existing update is on, move existing otherwise
-        if(mUpdateOptions.importMode == Fe::ImportMode::NewAndExisting)
-        {
-            customField->transferOtherFields(mCustomFieldsExisting[key]->getOtherFields());
-            mCustomFieldsFinal[key] = customField;
-            mCustomFieldsExisting.remove(key);
-        }
-        else
-        {
-            mCustomFieldsFinal[key] = std::move(mCustomFieldsExisting[key]);
-            mCustomFieldsExisting.remove(key);
-        }
-    }
-    else
-        mCustomFieldsFinal[key] = customField;
+    addUpdateableItem(mCustomFieldsExisting, mCustomFieldsFinal, key, customField);
 }
 
 //Public:
 void PlatformDoc::finalizeDerived()
 {
-    // Copy items to final list if obsolete entries are to be kept
-    if(!mUpdateOptions.removeObsolete)
-        mCustomFieldsFinal.insert(mCustomFieldsExisting);
-
-    // Clear existing lists
-    mCustomFieldsExisting.clear();
+    // Finalize custom fields
+    finalizeUpdateableItems(mCustomFieldsExisting, mCustomFieldsFinal);
 
     // Ensure that custom fields for removed games are deleted
     QHash<QString, std::shared_ptr<CustomField>>::iterator i = mCustomFieldsFinal.begin();

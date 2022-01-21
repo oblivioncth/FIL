@@ -148,9 +148,9 @@ protected:
 protected:
     virtual void finalizeDerived() = 0; // Should maybe be option via default empty implementation
 
-    template <typename T, ENABLE_IF(std::is_base_of<BasicItem, T>)>
-    void finalizeUpdateableItems(QHash<QUuid, std::shared_ptr<T>>& existingItems,
-                                 QHash<QUuid, std::shared_ptr<T>>& finalItems)
+    template <typename T, typename K, ENABLE_IF(std::is_base_of<Item, T>)>
+    void finalizeUpdateableItems(QHash<K, std::shared_ptr<T>>& existingItems,
+                                 QHash<K, std::shared_ptr<T>>& finalItems)
     {
         // Copy items to final list if obsolete entries are to be kept
         if(!mUpdateOptions.removeObsolete)
@@ -160,13 +160,12 @@ protected:
         existingItems.clear();
     }
 
-    template <typename T, ENABLE_IF(std::is_base_of<BasicItem, T>)>
-    void addUpdateableItem(QHash<QUuid, std::shared_ptr<T>>& existingItems,
-                           QHash<QUuid, std::shared_ptr<T>>& finalItems,
+    template <typename T, typename K, ENABLE_IF(std::is_base_of<Item, T>)>
+    void addUpdateableItem(QHash<K, std::shared_ptr<T>>& existingItems,
+                           QHash<K, std::shared_ptr<T>>& finalItems,
+                           K key,
                            std::shared_ptr<T> newItem)
 {
-    QUuid key = newItem->getId();
-
     // Check if game exists
     if(existingItems.contains(key))
     {
