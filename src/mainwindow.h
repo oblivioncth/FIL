@@ -214,7 +214,7 @@ private:
     bool installsHaveChanged();
     void redoInputChecks();
 
-    void invalidateInstallFields(Install install, bool informUser);
+    void invalidateInstall(Install install, bool informUser);
     void clearListWidgets();
     bool isExistingPlatformSelected();
     bool isExistingPlaylistSelected();

@@ -166,26 +166,15 @@ bool MainWindow::installMatchesTargetVersion(const FP::Install& fpInstall)
 
 void MainWindow::checkManualInstallInput(Install install)
 {
-    QLineEdit* pathSource;
-
-    switch(install)
-    {
-        case Install::Frontend:
-            mFrontendInstall.reset(); // Detach from previous install if present
-            pathSource = ui->lineEdit_frontendPath;
-            break;
-
-        case Install::Flashpoint:
-            mFlashpointInstall.reset(); // Detach from previous install if present
-            pathSource = ui->lineEdit_flashpointPath;
-            break;
-    }
+    QLineEdit* pathSource = install == Install::Frontend ?
+                            ui->lineEdit_frontendPath :
+                            ui->lineEdit_flashpointPath;
 
     QDir selectedDir = QDir::cleanPath(QDir::fromNativeSeparators(pathSource->text()));
     if(!pathSource->text().isEmpty() && selectedDir.exists())
         validateInstall(selectedDir.absolutePath(), install);
     else
-        invalidateInstallFields(install, false);
+        invalidateInstall(install, false);
 }
 
 void MainWindow::validateInstall(QString installPath, Install install)
@@ -200,7 +189,7 @@ void MainWindow::validateInstall(QString installPath, Install install)
                 ui->label_frontendVersion->setText(mFrontendInstall->versionString());
             }
             else
-                invalidateInstallFields(install, true);
+                invalidateInstall(install, true);
             break;
 
         case Install::Flashpoint:
@@ -217,7 +206,7 @@ void MainWindow::validateInstall(QString installPath, Install install)
                 }
             }
             else
-                invalidateInstallFields(install, true);
+                invalidateInstall(install, true);
             break;
     }
 
@@ -240,10 +229,7 @@ void MainWindow::gatherInstallInfo()
         refreshEnableStates();
     }
     else
-    {
-        mFrontendInstall.reset();
-        invalidateInstallFields(Install::Frontend, false);
-    }
+        invalidateInstall(Install::Frontend, false);
 }
 
 void MainWindow::populateImportSelectionBoxes()
@@ -370,7 +356,7 @@ void MainWindow::redoInputChecks()
     validateInstall(flashpointPath, Install::Flashpoint);
 }
 
-void MainWindow::invalidateInstallFields(Install install, bool informUser)
+void MainWindow::invalidateInstall(Install install, bool informUser)
 {
     clearListWidgets();
     mTagSelectionModel.reset(); // Void tag selection model
@@ -379,6 +365,7 @@ void MainWindow::invalidateInstallFields(Install install, bool informUser)
     switch(install)
     {
         case Install::Frontend:
+            mFrontendInstall.reset();
             ui->icon_frontend_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
             ui->label_frontendVersion->clear();
             if(informUser)
@@ -386,6 +373,7 @@ void MainWindow::invalidateInstallFields(Install install, bool informUser)
             break;
 
         case Install::Flashpoint:
+            mFlashpointInstall.reset();
             ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
             ui->label_flashPointVersion->clear();
             if(informUser)
