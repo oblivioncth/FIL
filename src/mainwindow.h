@@ -75,7 +75,6 @@ private:
                                                       "<b>Import Speed:</b> Slow<br>"
                                                       "<b>Image Cache Build Speed:</b> Fast<br>";
 
-    static inline const QString MSG_TEST = "test";
     // Messages - Input
     static inline const QString MSG_FE_INSTALL_INVALID = "The specified directory either doesn't contain a valid frontend install, or it contains a version that is incompatible with this tool.";
     static inline const QString MSG_FP_INSTALL_INVALID = "The specified directory either doesn't contain a valid Flashpoint install, or it contains a version that is incompatible with this tool.";
