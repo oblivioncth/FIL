@@ -27,7 +27,7 @@ class DataDoc
 //-Class Enums---------------------------------------------------------------------------------------------------------
 public:
     enum class Type {Platform, Playlist, Config};
-    enum class StandardError {DocAlreadyOpen, DocCantOpen, NotParentDoc, CantRemoveBackup, CantCreateBackup, DocTypeMismatch, DocReadFailed, DocWriteFailed};
+    enum class StandardError {DocAlreadyOpen, DocCantOpen, DocCantSave, NotParentDoc, CantRemoveBackup, CantCreateBackup, DocTypeMismatch, DocReadFailed, DocWriteFailed};
 
 //-Inner Classes----------------------------------------------------------------------------------------------------
 public:
@@ -63,8 +63,9 @@ private:
 
     // Standard Errors
     static inline const QHash<StandardError, const QString> STD_ERRORS = {
-        {StandardError::DocAlreadyOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is already open"},
-        {StandardError::DocCantOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be opened"},
+        {StandardError::DocAlreadyOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is already open."},
+        {StandardError::DocCantOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be opened."},
+        {StandardError::DocCantSave, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be saved."}
         {StandardError::NotParentDoc, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is not a" + M_DOC_PARENT + "document."},
         {StandardError::CantRemoveBackup, "The existing backup of the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") could not be removed."},
         {StandardError::CantCreateBackup, "Could not create a backup of the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ")."},

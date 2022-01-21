@@ -190,49 +190,24 @@ Qx::GenericError Install::openDataDocument(DataDoc* docToOpen, std::shared_ptr<D
     Qx::GenericError openReadError; // Defaults to no error
     Qx::GenericError errorTemplate(Qx::GenericError::Critical, docToOpen->errorString(DataDoc::StandardError::DocCantOpen));
 
-    // Check if lease is already
+    // Check if lease is already out
     if(mLeasedDocuments.contains(docToOpen->identifier()))
         openReadError = errorTemplate.setSecondaryInfo(docToOpen->errorString(DataDoc::StandardError::DocAlreadyOpen));
     else
     {
-        // Create backup if required
-        QFileInfo targetInfo(docToOpen->filePath());
-
-        if(targetInfo.exists() && targetInfo.isFile())
+        // Read existing file if present
+        if(mExistingDocuments.contains(docToOpen->identifier()))
         {
-            QString backupPath = targetInfo.absolutePath() + '/' + targetInfo.baseName() + MODIFIED_FILE_EXT;
-
-            if(QFile::exists(backupPath) && QFileInfo(backupPath).isFile())
-            {
-                if(!QFile::remove(backupPath))
-                    return errorTemplate.setSecondaryInfo(docToOpen->errorString(DataDoc::StandardError::CantRemoveBackup));
-            }
-
-            if(!QFile::copy(targetInfo.absoluteFilePath(), backupPath))
-                return errorTemplate.setSecondaryInfo(docToOpen->errorString(DataDoc::StandardError::CantCreateBackup));
-        }
-
-        // Add file to modified list
-        mModifiedDocuments.insert(docToOpen->identifier());
-
-        // Open File
-        if(docToOpen->mDocumentFile->open(QFile::ReadWrite)) // Ensures that empty file is created if the target doesn't exist
-        {
-            // Read existing file if present
-            if(mExistingDocuments.contains(docToOpen->identifier()))
-            {
+            // Open File
+            if(docToOpen->mDocumentFile->open(QFile::ReadOnly))
                 openReadError = docReader->readInto();
-
-                // Clear file to prepare for writing
-                docToOpen->clearFile();
-            }
-
-            // Add lease to ledger if no error occured while readding
-            if(!openReadError.isValid())
-                mLeasedDocuments.insert(docToOpen->identifier());
+            else
+                openReadError = errorTemplate.setSecondaryInfo(docToOpen->mDocumentFile->errorString());
         }
-        else
-            openReadError = errorTemplate.setSecondaryInfo(docToOpen->mDocumentFile->errorString());
+
+        // Add lease to ledger if no error occured while readding
+        if(!openReadError.isValid())
+            mLeasedDocuments.insert(docToOpen->identifier());
     }
 
     // Return opened document and status
@@ -241,6 +216,35 @@ Qx::GenericError Install::openDataDocument(DataDoc* docToOpen, std::shared_ptr<D
 
 Qx::GenericError Install::saveDataDocument(DataDoc* docToSave, std::shared_ptr<DataDocWriter> docWriter)
 {
+    // Error template
+    Qx::GenericError errorTemplate(Qx::GenericError::Critical, docToSave->errorString(DataDoc::StandardError::DocCantSave));
+
+    // Create backup if required
+    QFileInfo targetInfo(docToSave->filePath());
+
+    if(targetInfo.exists() && targetInfo.isFile())
+    {
+        QString backupPath = targetInfo.absolutePath() + '/' + targetInfo.baseName() + MODIFIED_FILE_EXT;
+
+        if(QFile::exists(backupPath) && QFileInfo(backupPath).isFile())
+        {
+            if(!QFile::remove(backupPath))
+                return errorTemplate.setSecondaryInfo(docToSave->errorString(DataDoc::StandardError::CantRemoveBackup));
+        }
+
+        if(!QFile::copy(targetInfo.absoluteFilePath(), backupPath))
+            return errorTemplate.setSecondaryInfo(docToSave->errorString(DataDoc::StandardError::CantCreateBackup));
+    }
+
+    // Add file to modified list
+    mModifiedDocuments.insert(docToSave->identifier());
+
+    // Open and clear document file
+    if(!docToSave->mDocumentFile->open(QFile::WriteOnly))
+        return errorTemplate.setSecondaryInfo(docToSave->mDocumentFile->errorString());
+
+    docToSave->clearFile();
+
     // Write to file
     Qx::GenericError saveWriteError = docWriter->writeOutOf();
 
