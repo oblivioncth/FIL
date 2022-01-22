@@ -168,7 +168,7 @@ Qx::GenericError Install::openPlatformsDoc(std::unique_ptr<PlatformsDoc>& return
 
 Qx::GenericError Install::savePlatformsDoc(std::unique_ptr<PlatformsDoc> document)
 {
-    assert(document.parent() == this);
+    assert(document->parent() == this);
 
     // Prepare writer
     std::shared_ptr<PlatformsDocWriter> docWriter = std::make_shared<PlatformsDocWriter>(document.get());
