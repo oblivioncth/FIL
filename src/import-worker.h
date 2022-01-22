@@ -81,7 +81,6 @@ public:
 //-Instance Functions---------------------------------------------------------------------------------------------------------
 private:
     const QList<QUuid> preloadPlaylists(FP::DB::QueryBuffer& playlistQuery);
-    //const QMultiHash<QUuid, int> generateGameTagMap(FP::DB::QueryBuffer& gameTagsQuery);
     const QList<QUuid> getPlaylistSpecificGameIDs(FP::DB::QueryBuffer& playlistGameIDQuery);
     ImportResult preloadAddApps(Qx::GenericError& errorReport, FP::DB::QueryBuffer& addAppQuery);
     ImportResult processGames(Qx::GenericError& errorReport, QList<FP::DB::QueryBuffer>& gameQueries, bool playlistSpecific);

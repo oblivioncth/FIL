@@ -46,23 +46,6 @@ const QList<QUuid> ImportWorker::preloadPlaylists(FP::DB::QueryBuffer& playlistQ
     return targetPlaylistIDs;
 }
 
-//const QMultiHash<QUuid, int> generateGameTagMap(FP::DB::QueryBuffer& gameTagsQuery)
-//{
-//    QMultiHash<QUuid, int> tagMap;
-
-//    for(int i = 0; i < gameTagsQuery.size; i++)
-//    {
-//        // Advance to next record
-//        gameTagsQuery.result.next();
-
-//        // Add game and tag ID to map
-//        tagMap.insert(QUuid(gameTagsQuery.result.value(FP::DB::Table_Game_Tags_Tag::COL_GAME_ID).toString()),
-//                      gameTagsQuery.result.value(FP::DB::Table_Game_Tags_Tag::COL_TAG_ID).toInt());
-//    }
-
-//    return tagMap;
-//}
-
 const QList<QUuid> ImportWorker::getPlaylistSpecificGameIDs(FP::DB::QueryBuffer& playlistGameIDQuery)
 {
     QList<QUuid> playlistSpecGameIDs;
@@ -139,10 +122,6 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
             errorReport = platformReadError;
             return Failed;
         }
-
-        // Setup for ensuring image sub-directories exist
-        QString imageDirError; // Error return reference
-        *mBlockingErrorResponse = QMessageBox::No; // Default to choice "No" incase the signal is not correctly connected using Qt::BlockingQueuedConnection
 
         // Add/Update games
         for(int j = 0; j < currentPlatformGameResult.size; j++)
