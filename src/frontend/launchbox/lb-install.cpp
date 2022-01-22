@@ -103,8 +103,8 @@ std::shared_ptr<Fe::PlatformDocReader> Install::prepareOpenPlatformDoc(std::uniq
     // Construct unopened document
     platformDoc = std::make_unique<PlatformDoc>(this, std::move(docFile), name, updateOptions, DocKey{});
 
-    // Construct doc reader
-    std::shared_ptr<Fe::PlatformDocReader> docReader = std::make_shared<PlatformDocReader>(platformDoc.get());
+    // Construct doc reader (need to downcast pointer since doc pointer is upcasted after construction above)
+    std::shared_ptr<Fe::PlatformDocReader> docReader = std::make_shared<PlatformDocReader>(static_cast<PlatformDoc*>(platformDoc.get()));
 
     // Return reader and doc
     return docReader;
@@ -118,8 +118,8 @@ std::shared_ptr<Fe::PlaylistDocReader> Install::prepareOpenPlaylistDoc(std::uniq
     // Construct unopened document
     playlistDoc = std::make_unique<PlaylistDoc>(this, std::move(docFile), name, updateOptions, DocKey{});
 
-    // Construct doc reader
-    std::shared_ptr<Fe::PlaylistDocReader> docReader = std::make_shared<PlaylistDocReader>(playlistDoc.get());
+    // Construct doc reader (need to downcast pointer since doc pointer is upcasted after construction above)
+    std::shared_ptr<Fe::PlaylistDocReader> docReader = std::make_shared<PlaylistDocReader>(static_cast<PlaylistDoc*>(playlistDoc.get()));
 
     // Return reader and doc
     return docReader;
@@ -128,7 +128,7 @@ std::shared_ptr<Fe::PlaylistDocReader> Install::prepareOpenPlaylistDoc(std::uniq
 std::shared_ptr<Fe::PlatformDocWriter> Install::prepareSavePlatformDoc(const std::unique_ptr<Fe::PlatformDoc>& platformDoc)
 {
     // Construct doc writer
-    std::shared_ptr<Fe::PlatformDocWriter> docWriter = std::make_shared<PlatformDocWriter>(platformDoc.get());
+    std::shared_ptr<Fe::PlatformDocWriter> docWriter = std::make_shared<PlatformDocWriter>(static_cast<PlatformDoc*>(platformDoc.get()));
 
     // Return writer
     return docWriter;
@@ -137,7 +137,7 @@ std::shared_ptr<Fe::PlatformDocWriter> Install::prepareSavePlatformDoc(const std
 std::shared_ptr<Fe::PlaylistDocWriter> Install::prepareSavePlaylistDoc(const std::unique_ptr<Fe::PlaylistDoc>& playlistDoc)
 {
     // Construct doc writer
-    std::shared_ptr<Fe::PlaylistDocWriter> docWriter = std::make_shared<PlaylistDocWriter>(playlistDoc.get());
+    std::shared_ptr<Fe::PlaylistDocWriter> docWriter = std::make_shared<PlaylistDocWriter>(static_cast<PlaylistDoc*>(playlistDoc.get()));
 
     // Return writer
     return docWriter;
