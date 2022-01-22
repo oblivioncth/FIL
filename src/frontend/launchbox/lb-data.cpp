@@ -122,7 +122,7 @@ std::shared_ptr<Fe::Game> PlatformDoc::prepareGame(const FP::Game& game)
     std::shared_ptr<Game> lbGame = std::make_shared<Game>(game, parent()->linkedClifpPath());
 
     // Add details to cache
-    static_cast<Install*>(parent())->mPlaylistGameDetailsCache[game.getId()] = PlaylistGame::EntryDetails(*lbGame);
+    static_cast<Install*>(parent())->mPlaylistGameDetailsCache.insert(game.getId(), PlaylistGame::EntryDetails(*lbGame));
 
     // Add language as custom field
     CustomFieldBuilder cfb;
@@ -170,7 +170,7 @@ void PlatformDoc::finalizeDerived()
 }
 
 //===============================================================================================================
-// Xml::PlatformDocReader
+// PlatformDocReader
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
@@ -314,7 +314,7 @@ void PlatformDocReader::parseCustomField()
 }
 
 //===============================================================================================================
-// Xml::PlatformDocWriter
+// PlatformDocWriter
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
@@ -450,9 +450,9 @@ bool PlatformDocWriter::writeCustomField(const CustomField& customField)
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
 PlaylistDoc::PlaylistDoc(Install* const parent, std::unique_ptr<QFile> xmlFile, QString docName, Fe::UpdateOptions updateOptions,
-                         Qx::FreeIndexTracker<int>* lbDBFIDT, const DocKey&) :
+                         const DocKey&) :
     Fe::PlaylistDoc(parent, std::move(xmlFile), docName, updateOptions),
-    mPlaylistGameFreeLBDBIDTracker(lbDBFIDT)
+    mPlaylistGameFreeLBDBIDTracker(&parent->mLBDatabaseIDTracker)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -492,7 +492,7 @@ std::shared_ptr<Fe::PlaylistGame> PlaylistDoc::preparePlaylistGame(const FP::Pla
 void PlaylistDoc::finalizeDerived() {}
 
 //===============================================================================================================
-// Xml::PlaylistDocReader
+// PlaylistDocReader
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
@@ -585,7 +585,7 @@ void PlaylistDocReader::parsePlaylistGame()
 
 
 //===============================================================================================================
-// Xml::PlaylistDocWriter
+// PlaylistDocWriter
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
@@ -660,7 +660,7 @@ bool PlaylistDocWriter::writePlaylistGame(const PlaylistGame& playlistGame)
 }
 
 //===============================================================================================================
-// Xml::PlatformsDoc
+// PlatformsDoc
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
@@ -688,7 +688,7 @@ void PlatformsDoc::setMediaFolder(QString platform, QString mediaType, QString f
 }
 
 //===============================================================================================================
-// Xml::PlatformsDocReader
+// PlatformsDocReader
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
@@ -778,7 +778,7 @@ void PlatformsDocReader::parsePlatformCategory()
 }
 
 //===============================================================================================================
-// Xml::PlatformsDocWriter
+// PlatformsDocWriter
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------

@@ -239,7 +239,7 @@ private:
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
     explicit PlaylistDoc(Install* const parent, std::unique_ptr<QFile> xmlFile, QString docName, Fe::UpdateOptions updateOptions,
-                         Qx::FreeIndexTracker<int>* lbDBFIDT, const DocKey&);
+                         const DocKey&);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
