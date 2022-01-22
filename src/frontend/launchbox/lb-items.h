@@ -214,6 +214,7 @@ public:
         QString mPlatform;
 
     public:
+        EntryDetails();
         EntryDetails(const Game& refGame);
 
         QString title() const;

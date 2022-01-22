@@ -211,6 +211,8 @@ PlaylistHeaderBuilder& PlaylistHeaderBuilder::wNotes(QString notes) { mItemBluep
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
+PlaylistGame::EntryDetails::EntryDetails() {}
+
 PlaylistGame::EntryDetails::EntryDetails(const Game& refGame) :
     mTitle(refGame.getName()),
     mFilename(QFileInfo(refGame.getAppPath()).fileName()),
