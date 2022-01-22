@@ -65,7 +65,7 @@ private:
     static inline const QHash<StandardError, const QString> STD_ERRORS = {
         {StandardError::DocAlreadyOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is already open."},
         {StandardError::DocCantOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be opened."},
-        {StandardError::DocCantSave, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be saved."}
+        {StandardError::DocCantSave, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be saved."},
         {StandardError::NotParentDoc, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is not a" + M_DOC_PARENT + "document."},
         {StandardError::CantRemoveBackup, "The existing backup of the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") could not be removed."},
         {StandardError::CantCreateBackup, "Could not create a backup of the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ")."},
@@ -96,6 +96,8 @@ public:
 
     void clearFile();
 };
+QX_SCOPED_ENUM_HASH_FUNC(DataDoc::Type);
+QX_SCOPED_ENUM_HASH_FUNC(DataDoc::StandardError);
 
 class DataDocReader
 {
@@ -149,7 +151,7 @@ protected:
 protected:
     virtual void finalizeDerived() = 0; // Should maybe be option via default empty implementation
 
-    template <typename T, typename K, ENABLE_IF(std::is_base_of<Item, T>)>
+    template <typename T, typename K, QX_ENABLE_IF(std::is_base_of<Item, T>)>
     void finalizeUpdateableItems(QHash<K, std::shared_ptr<T>>& existingItems,
                                  QHash<K, std::shared_ptr<T>>& finalItems)
     {
@@ -161,7 +163,7 @@ protected:
         existingItems.clear();
     }
 
-    template <typename T, typename K, ENABLE_IF(std::is_base_of<Item, T>)>
+    template <typename T, typename K, QX_ENABLE_IF(std::is_base_of<Item, T>)>
     void addUpdateableItem(QHash<K, std::shared_ptr<T>>& existingItems,
                            QHash<K, std::shared_ptr<T>>& finalItems,
                            K key,

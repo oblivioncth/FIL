@@ -18,9 +18,8 @@ bool operator== (const DataDoc::Identifier& lhs, const DataDoc::Identifier& rhs)
 //-Hashing------------------------------------------------------------------------------------------------------
 uint qHash(const DataDoc::Identifier& key, uint seed) noexcept
 {
-    QtPrivate::QHashCombine hash;
-    seed = hash(seed, key.mDocType);
-    seed = hash(seed, key.mDocName);
+    seed = qHash(key.mDocType, seed);
+    seed = qHash(key.mDocName, seed);
 
     return seed;
 }
@@ -283,3 +282,4 @@ PlaylistDocWriter::PlaylistDocWriter(DataDoc* sourceDoc) :
 {}
 
 }
+
