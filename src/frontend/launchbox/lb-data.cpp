@@ -129,7 +129,7 @@ std::shared_ptr<Fe::Game> PlatformDoc::prepareGame(const FP::Game& game)
     cfb.wGameID(game.getId());
     cfb.wName(CustomField::LANGUAGE);
     cfb.wValue(game.getLanguage());
-    addCustomField(std::make_shared<CustomField>(cfb.buildShared()));
+    addCustomField(cfb.buildShared());
 
     // Return converted game
     return lbGame;
