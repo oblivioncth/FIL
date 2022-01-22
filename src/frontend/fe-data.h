@@ -50,7 +50,7 @@ public:
 
 //-Class Variables-----------------------------------------------------------------------------------------------------
 private:
-    static inline const QHash<Type, const QString> TYPE_STRINGS = {
+    static inline const QHash<Type, QString> TYPE_STRINGS = {
         {Type::Platform, "Platform"},
         {Type::Playlist, "Playlist"},
         {Type::Config, "Config"}
@@ -62,7 +62,7 @@ private:
     static inline const QString M_DOC_PARENT = "<docParent>";
 
     // Standard Errors
-    static inline const QHash<StandardError, const QString> STD_ERRORS = {
+    static inline const QHash<StandardError, QString> STD_ERRORS = {
         {StandardError::DocAlreadyOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is already open."},
         {StandardError::DocCantOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be opened."},
         {StandardError::DocCantSave, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be saved."},
