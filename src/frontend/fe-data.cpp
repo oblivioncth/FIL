@@ -61,7 +61,7 @@ QString DataDoc::errorString(StandardError error) const
     QString formattedError = STD_ERRORS[error];
     formattedError.replace(M_DOC_TYPE, identifier().docTypeString());
     formattedError.replace(M_DOC_NAME, identifier().docName());
-    formattedError.replace(M_DOC_PARENT, parent()->name()); //TODO: If compiler error from circular dependency, this is likely the culprit
+    formattedError.replace(M_DOC_PARENT, parent()->name());
 
     return formattedError;
 }

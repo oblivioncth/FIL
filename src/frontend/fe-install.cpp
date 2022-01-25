@@ -184,8 +184,6 @@ void Install::nullify()
 
 Qx::GenericError Install::openDataDocument(DataDoc* docToOpen, std::shared_ptr<DataDocReader> docReader)
 {
-    // TODO: Docs should probably be backed-up and marked as modified on save instead of on open
-
     // Error report to return
     Qx::GenericError openReadError; // Defaults to no error
     Qx::GenericError errorTemplate(Qx::GenericError::Critical, docToOpen->errorString(DataDoc::StandardError::DocCantOpen));
