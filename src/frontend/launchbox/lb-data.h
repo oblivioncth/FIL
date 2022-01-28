@@ -1,6 +1,7 @@
 #ifndef LAUNCHBOX_XML_H
 #define LAUNCHBOX_XML_H
 
+#pragma warning( disable : 4250 )
 #include <QString>
 #include <QFile>
 #include <memory>
