@@ -10,12 +10,16 @@
 #include "fp-json.h"
 #include "fp-macro.h"
 #include "fp-db.h"
+#include "fp-items.h"
 
 namespace FP
 {
 
 class Install
 {
+//-Class Enums---------------------------------------------------------------------------------------------------
+enum class Edition {Ultimate, Infinity, Core};
+
 //-Class Variables-----------------------------------------------------------------------------------------------
 private:
     // Validity check fail reasons
@@ -31,6 +35,7 @@ public:
     static inline const QString VER_TXT_PATH = "version.txt";
 
     // File Info
+    static inline const QString IMAGE_EXT = ".png";
     static inline const QFileInfo SECURE_PLAYER_INFO = QFileInfo("FlashpointSecurePlayer.exe");
 
     // Dynamic path file names
@@ -88,6 +93,9 @@ public:
     ~Install();
 
 //-Class Functions------------------------------------------------------------------------------------------------------
+private:
+    static QString standardImageSubPath(ImageType imageType, QUuid gameId);
+
 public:
     static Qx::GenericError appInvolvesSecurePlayer(bool& involvesBuffer, QFileInfo appInfo);
 
@@ -101,7 +109,8 @@ public:
     Qx::GenericError error() const;
 
     // General information
-    QString versionString() const;
+    Edition edition() const;
+    QString nameVersionString() const;
     QString launcherChecksum() const;
 
     // Database
@@ -117,6 +126,8 @@ public:
     QDir logosDirectory() const;
     QDir screenshotsDirectory() const;
     QDir extrasDirectory() const;
+    QString imageLocalPath(ImageType imageType, QUuid gameId) const;
+    QUrl imageRemoteUrl(ImageType imageType, QUuid gameId) const;
     QString datapackMounterPath() const;
     const MacroResolver* macroResolver() const;
 };

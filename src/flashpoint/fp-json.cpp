@@ -127,7 +127,13 @@ Qx::GenericError Json::PreferencesReader::parseDocument(const QJsonDocument &pre
         return valueError.setErrorLevel(Qx::GenericError::Critical);
 
     if((valueError = Qx::Json::checkedKeyRetrieval(targetPreferences->dataPacksFolderPath, prefDoc.object(), Object_Preferences::KEY_DATA_PACKS_FOLDER_PATH)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);;
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
+
+    if((valueError = Qx::Json::checkedKeyRetrieval(targetPreferences->onDemandImages, prefDoc.object(), Object_Preferences::KEY_ON_DEMAND_IMAGES)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
+
+    if((valueError = Qx::Json::checkedKeyRetrieval(targetPreferences->onDemandBaseUrl, prefDoc.object(), Object_Preferences::KEY_ON_DEMAND_BASE_URL)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
 
     // Return invalid error on success
     return Qx::GenericError();

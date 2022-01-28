@@ -101,8 +101,17 @@ Install::~Install()
 }
 
 //-Class Functions------------------------------------------------------------------------------------------------
+//Private:
+QString Install::standardImageSubPath(ImageType imageType, QUuid gameId)
+{
+    QString gameIDString = gameId.toString(QUuid::WithoutBraces);
+    return (imageType == ImageType::Logo ? LOGOS_FOLDER_NAME : SCREENSHOTS_FOLDER_NAME) + '/' +
+           gameIDString.left(2) + '/' + gameIDString.mid(2, 2) + '/' + gameIDString + IMAGE_EXT;
+}
+
+
 //Public:
-Qx::GenericError FP::Install::appInvolvesSecurePlayer(bool& involvesBuffer, QFileInfo appInfo)
+Qx::GenericError Install::appInvolvesSecurePlayer(bool& involvesBuffer, QFileInfo appInfo)
 {
     // Reset buffer
     involvesBuffer = false;
@@ -159,7 +168,15 @@ void Install::nullify()
 bool Install::isValid() const { return mValid; }
 Qx::GenericError Install::error() const { return mError; }
 
-QString Install::versionString() const
+Install::Edition Install::edition() const
+{
+    QString nameVer = nameVersionString();
+
+    return nameVer.contains("ultimate", Qt::CaseInsensitive) ? Edition::Ultimate :
+           nameVer.contains("infinity", Qt::CaseInsensitive) ? Edition::Infinity :
+                                                               Edition::Core;
+}
+QString Install::nameVersionString() const
 {
     // Check version file
     QString readVersion = QString();
@@ -181,7 +198,7 @@ DB* Install::database(QSqlError* error)
 {
     /*
      * Automatically manages opening the database if the thread is different. An error here in unlikely,
-     * given that open capabilities are testing in the DB constructor, but nonetheless they are possible,
+     * given that open capabilities are tested in the DB constructor, but nonetheless they are possible,
      * so a return state is optionally set here. It is only possible for an error to occur if database
      * isn't already open in the calling thread since an issue can only occur from opening a connection
     */
@@ -213,6 +230,18 @@ QString Install::fullPath() const { return mRootDirectory.absolutePath(); }
 QDir Install::logosDirectory() const { return mLogosDirectory; }
 QDir Install::screenshotsDirectory() const { return mScreenshotsDirectory; }
 QDir Install::extrasDirectory() const { return mExtrasDirectory; }
+
+QString Install::imageLocalPath(ImageType imageType, QUuid gameId) const
+{
+    QDir sourceDir = imageType == ImageType::Logo ? mLogosDirectory : mScreenshotsDirectory;
+    return sourceDir.absolutePath() + '/' + standardImageSubPath(imageType, gameId);
+}
+
+QUrl Install::imageRemoteUrl(ImageType imageType, QUuid gameId) const
+{
+    return QUrl(mPreferences.onDemandBaseUrl + standardImageSubPath(imageType, gameId));
+}
+
 QString Install::datapackMounterPath() const { return mDataPackMounterFile->fileName(); }
 const MacroResolver* Install::macroResolver() const { return mMacroResolver; }
 
