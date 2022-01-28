@@ -345,13 +345,6 @@
         </layout>
        </item>
        <item>
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>TextLabel</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <spacer name="horizontalSpacer">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -494,6 +487,9 @@
           <iconset resource="../resources_cmn.qrc">
            <normaloff>:/res/icon/Update_Mode_Info.png</normaloff>:/res/icon/Update_Mode_Info.png</iconset>
          </property>
+         <attribute name="buttonGroup">
+          <string notr="true">buttonGroup_imageMode</string>
+         </attribute>
         </widget>
        </item>
        <item row="1" column="0">
@@ -811,6 +807,9 @@
          <property name="text">
           <string>Copy</string>
          </property>
+         <attribute name="buttonGroup">
+          <string notr="true">buttonGroup_imageMode</string>
+         </attribute>
         </widget>
        </item>
        <item row="0" column="2">
@@ -869,6 +868,9 @@
          <property name="checked">
           <bool>false</bool>
          </property>
+         <attribute name="buttonGroup">
+          <string notr="true">buttonGroup_imageMode</string>
+         </attribute>
         </widget>
        </item>
        <item row="2" column="0">
@@ -885,6 +887,9 @@
          <property name="checked">
           <bool>true</bool>
          </property>
+         <attribute name="buttonGroup">
+          <string notr="true">buttonGroup_imageMode</string>
+         </attribute>
         </widget>
        </item>
       </layout>
@@ -937,8 +942,9 @@
     <property name="title">
      <string>Tools</string>
     </property>
-    <addaction name="separator"/>
     <addaction name="action_editTagFilter"/>
+    <addaction name="separator"/>
+    <addaction name="action_forceDownloadImages"/>
     <addaction name="action_includeAnimations"/>
     <addaction name="separator"/>
     <addaction name="action_deployCLIFp"/>
@@ -1025,6 +1031,17 @@
    </property>
    <property name="text">
     <string>Edit Tag Filter</string>
+   </property>
+  </action>
+  <action name="action_forceDownloadImages">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Force Download Images</string>
    </property>
   </action>
  </widget>
@@ -1474,4 +1491,7 @@
   <slot>all_on_action_triggered()</slot>
   <slot>all_on_radioButton_clicked()</slot>
  </slots>
+ <buttongroups>
+  <buttongroup name="buttonGroup_imageMode"/>
+ </buttongroups>
 </ui>
