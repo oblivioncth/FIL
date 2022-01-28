@@ -3,7 +3,7 @@
 
 # include <memory>
 
-namespace LB
+namespace Lb
 {
 //===============================================================================================================
 // XmlDocReader
@@ -116,7 +116,7 @@ PlatformDoc::PlatformDoc(Install* const parent, std::unique_ptr<QFile> xmlFile, 
 //Private:
 Fe::DataDoc::Type PlatformDoc::type() const { return Fe::DataDoc::Type::Platform; }
 
-std::shared_ptr<Fe::Game> PlatformDoc::prepareGame(const FP::Game& game)
+std::shared_ptr<Fe::Game> PlatformDoc::prepareGame(const Fp::Game& game)
 {
     // Convert to LaunchBox game
     std::shared_ptr<Game> lbGame = std::make_shared<Game>(game, parent()->linkedClifpPath());
@@ -126,7 +126,7 @@ std::shared_ptr<Fe::Game> PlatformDoc::prepareGame(const FP::Game& game)
 
     // Add language as custom field
     CustomFieldBuilder cfb;
-    cfb.wGameID(game.getId());
+    cfb.wGameId(game.getId());
     cfb.wName(CustomField::LANGUAGE);
     cfb.wValue(game.getLanguage());
     addCustomField(cfb.buildShared());
@@ -135,7 +135,7 @@ std::shared_ptr<Fe::Game> PlatformDoc::prepareGame(const FP::Game& game)
     return lbGame;
 }
 
-std::shared_ptr<Fe::AddApp> PlatformDoc::prepareAddApp(const FP::AddApp& addApp)
+std::shared_ptr<Fe::AddApp> PlatformDoc::prepareAddApp(const Fp::AddApp& addApp)
 {
     // Convert to LaunchBox add app
     std::shared_ptr<AddApp> lbAddApp = std::make_shared<AddApp>(addApp, parent()->linkedClifpPath());
@@ -148,7 +148,7 @@ std::shared_ptr<Fe::AddApp> PlatformDoc::prepareAddApp(const FP::AddApp& addApp)
 
 void PlatformDoc::addCustomField(std::shared_ptr<CustomField> customField)
 {
-    QString key = customField->getGameID().toString() + customField->getName();
+    QString key = customField->getGameId().toString() + customField->getName();
     addUpdateableItem(mCustomFieldsExisting, mCustomFieldsFinal, key, customField);
 }
 
@@ -162,7 +162,7 @@ void PlatformDoc::finalizeDerived()
     QHash<QString, std::shared_ptr<CustomField>>::iterator i = mCustomFieldsFinal.begin();
     while (i != mCustomFieldsFinal.end())
     {
-        if(!getFinalGames().contains(i.value()->getGameID()))
+        if(!getFinalGames().contains(i.value()->getGameId()))
             i = mCustomFieldsFinal.erase(i);
         else
             ++i;
@@ -298,7 +298,7 @@ void PlatformDocReader::parseCustomField()
     while(mStreamReader.readNextStartElement())
     {
         if(mStreamReader.name() == Xml::Element_CustomField::ELEMENT_GAME_ID)
-            cfb.wGameID(mStreamReader.readElementText());
+            cfb.wGameId(mStreamReader.readElementText());
         else if(mStreamReader.name() == Xml::Element_CustomField::ELEMENT_NAME)
             cfb.wName(mStreamReader.readElementText());
         else if(mStreamReader.name() == Xml::Element_CustomField::ELEMENT_VALUE)
@@ -309,7 +309,7 @@ void PlatformDocReader::parseCustomField()
 
     // Build Custom Field and add to document
     std::shared_ptr<CustomField> existingCustomField = cfb.buildShared();
-    QString key = existingCustomField->getGameID().toString() + existingCustomField->getName();
+    QString key = existingCustomField->getGameId().toString() + existingCustomField->getName();
     static_cast<PlatformDoc*>(mTargetDocument)->mCustomFieldsExisting[key] = existingCustomField;
 }
 
@@ -406,7 +406,7 @@ bool PlatformDocWriter::writeAddApp(const AddApp& addApp)
 
     // Write known tags
     writeCleanTextElement(Xml::Element_AddApp::ELEMENT_ID, addApp.getId().toString(QUuid::WithoutBraces));
-    writeCleanTextElement(Xml::Element_AddApp::ELEMENT_GAME_ID, addApp.getGameID().toString(QUuid::WithoutBraces));
+    writeCleanTextElement(Xml::Element_AddApp::ELEMENT_GAME_ID, addApp.getGameId().toString(QUuid::WithoutBraces));
     writeCleanTextElement(Xml::Element_AddApp::ELEMENT_APP_PATH, addApp.getAppPath());
     writeCleanTextElement(Xml::Element_AddApp::ELEMENT_COMMAND_LINE, addApp.getCommandLine());
     writeCleanTextElement(Xml::Element_AddApp::ELEMENT_AUTORUN_BEFORE, addApp.isAutorunBefore() ? "true" : "false");
@@ -429,7 +429,7 @@ bool PlatformDocWriter::writeCustomField(const CustomField& customField)
     mStreamWriter.writeStartElement(Xml::Element_CustomField::NAME);
 
     // Write known tags
-    writeCleanTextElement(Xml::Element_CustomField::ELEMENT_GAME_ID, customField.getGameID().toString(QUuid::WithoutBraces));
+    writeCleanTextElement(Xml::Element_CustomField::ELEMENT_GAME_ID, customField.getGameId().toString(QUuid::WithoutBraces));
     writeCleanTextElement(Xml::Element_CustomField::ELEMENT_NAME, customField.getName());
     writeCleanTextElement(Xml::Element_CustomField::ELEMENT_VALUE, customField.getValue());
 
@@ -452,14 +452,14 @@ bool PlatformDocWriter::writeCustomField(const CustomField& customField)
 PlaylistDoc::PlaylistDoc(Install* const parent, std::unique_ptr<QFile> xmlFile, QString docName, Fe::UpdateOptions updateOptions,
                          const DocKey&) :
     Fe::PlaylistDoc(parent, std::move(xmlFile), docName, updateOptions),
-    mPlaylistGameFreeLBDBIDTracker(&parent->mLBDatabaseIDTracker)
+    mLaunchBoxDatabaseIdTracker(&parent->mLbDatabaseIdTracker)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
 Fe::DataDoc::Type PlaylistDoc::type() const { return Fe::DataDoc::Type::Playlist; }
 
-std::shared_ptr<Fe::PlaylistHeader> PlaylistDoc::preparePlaylistHeader(const FP::Playlist& playlist)
+std::shared_ptr<Fe::PlaylistHeader> PlaylistDoc::preparePlaylistHeader(const Fp::Playlist& playlist)
 {
     // Convert to LaunchBox playlist header
     std::shared_ptr<PlaylistHeader> lbPlaylist = std::make_shared<PlaylistHeader>(playlist);
@@ -468,7 +468,7 @@ std::shared_ptr<Fe::PlaylistHeader> PlaylistDoc::preparePlaylistHeader(const FP:
     return lbPlaylist;
 }
 
-std::shared_ptr<Fe::PlaylistGame> PlaylistDoc::preparePlaylistGame(const FP::PlaylistGame& game)
+std::shared_ptr<Fe::PlaylistGame> PlaylistDoc::preparePlaylistGame(const Fp::PlaylistGame& game)
 {
     // Convert to LaunchBox playlist game
     std::shared_ptr<PlaylistGame> lbPlaylistGame = std::make_shared<PlaylistGame>(game, static_cast<Install*>(parent())->mPlaylistGameDetailsCache);
@@ -482,7 +482,7 @@ std::shared_ptr<Fe::PlaylistGame> PlaylistDoc::preparePlaylistGame(const FP::Pla
             lbPlaylistGame->setLBDatabaseId(std::static_pointer_cast<PlaylistGame>(mPlaylistGamesExisting[key])->getLBDatabaseId());
     }
     else
-        lbPlaylistGame->setLBDatabaseId(mPlaylistGameFreeLBDBIDTracker->reserveFirstFree());
+        lbPlaylistGame->setLBDatabaseId(mLaunchBoxDatabaseIdTracker->reserveFirstFree());
 
     // Return converted playlist game
     return lbPlaylistGame;
@@ -564,22 +564,22 @@ void PlaylistDocReader::parsePlaylistGame()
         else if(mStreamReader.name() == Xml::Element_PlaylistGame::ELEMENT_MANUAL_ORDER)
             pgb.wManualOrder(mStreamReader.readElementText());
         else if(mStreamReader.name() == Xml::Element_PlaylistGame::ELEMENT_LB_DB_ID)
-            pgb.wLBDatabaseID(mStreamReader.readElementText());
+            pgb.wLBDatabaseId(mStreamReader.readElementText());
         else
             pgb.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
     }
 
     // Build Playlist Game
-    std::shared_ptr<LB::PlaylistGame> existingPlaylistGame = pgb.buildShared();
+    std::shared_ptr<Lb::PlaylistGame> existingPlaylistGame = pgb.buildShared();
 
     // Correct LB ID if it is invalid and then add it to tracker
     if(existingPlaylistGame->getLBDatabaseId() < 0)
-        existingPlaylistGame->setLBDatabaseId(static_cast<PlaylistDoc*>(mTargetDocument)->mPlaylistGameFreeLBDBIDTracker->reserveFirstFree());
+        existingPlaylistGame->setLBDatabaseId(static_cast<PlaylistDoc*>(mTargetDocument)->mLaunchBoxDatabaseIdTracker->reserveFirstFree());
     else
-        static_cast<PlaylistDoc*>(mTargetDocument)->mPlaylistGameFreeLBDBIDTracker->release(existingPlaylistGame->getLBDatabaseId());
+        static_cast<PlaylistDoc*>(mTargetDocument)->mLaunchBoxDatabaseIdTracker->release(existingPlaylistGame->getLBDatabaseId());
 
     // Add to document
-    targetDocExistingPlaylistGames()[existingPlaylistGame->getGameID()] = existingPlaylistGame;
+    targetDocExistingPlaylistGames()[existingPlaylistGame->getGameId()] = existingPlaylistGame;
 }
 
 
@@ -643,7 +643,7 @@ bool PlaylistDocWriter::writePlaylistGame(const PlaylistGame& playlistGame)
     mStreamWriter.writeStartElement(Xml::Element_PlaylistGame::NAME);
 
     // Write known tags
-    writeCleanTextElement(Xml::Element_PlaylistGame::ELEMENT_ID, playlistGame.getGameID().toString(QUuid::WithoutBraces));
+    writeCleanTextElement(Xml::Element_PlaylistGame::ELEMENT_ID, playlistGame.getGameId().toString(QUuid::WithoutBraces));
     writeCleanTextElement(Xml::Element_PlaylistGame::ELEMENT_GAME_TITLE, playlistGame.getGameTitle());
     writeCleanTextElement(Xml::Element_PlaylistGame::ELEMENT_GAME_PLATFORM, playlistGame.getGamePlatform());
     writeCleanTextElement(Xml::Element_PlaylistGame::ELEMENT_MANUAL_ORDER, QString::number(playlistGame.getManualOrder()));

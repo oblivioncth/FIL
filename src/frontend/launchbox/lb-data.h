@@ -16,7 +16,7 @@
 // since some classes here use multiple virtual inheritance:
 // https://stackoverflow.com/questions/70746451/
 
-namespace LB
+namespace Lb
 {
 
 namespace Xml
@@ -190,8 +190,8 @@ public:
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
     Type type() const override;
-    std::shared_ptr<Fe::Game> prepareGame(const FP::Game& game) override;
-    std::shared_ptr<Fe::AddApp> prepareAddApp(const FP::AddApp& addApp) override;
+    std::shared_ptr<Fe::Game> prepareGame(const Fp::Game& game) override;
+    std::shared_ptr<Fe::AddApp> prepareAddApp(const Fp::AddApp& addApp) override;
 
     void addCustomField(std::shared_ptr<CustomField> customField);
 
@@ -235,7 +235,7 @@ class PlaylistDoc : public Fe::PlaylistDoc
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
-    Qx::FreeIndexTracker<int>* mPlaylistGameFreeLBDBIDTracker;
+    Qx::FreeIndexTracker<int>* mLaunchBoxDatabaseIdTracker;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -245,8 +245,8 @@ public:
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
     Type type() const override;
-    std::shared_ptr<Fe::PlaylistHeader> preparePlaylistHeader(const FP::Playlist& playlist) override;
-    std::shared_ptr<Fe::PlaylistGame> preparePlaylistGame(const FP::PlaylistGame& game) override;
+    std::shared_ptr<Fe::PlaylistHeader> preparePlaylistHeader(const Fp::Playlist& playlist) override;
+    std::shared_ptr<Fe::PlaylistGame> preparePlaylistGame(const Fp::PlaylistGame& game) override;
 
 public:
     void finalizeDerived() override;

@@ -9,7 +9,7 @@
 #include "Aclapi.h"
 #include "sddl.h"
 
-namespace LB
+namespace Lb
 {
 //===============================================================================================================
 // INSTALL
@@ -64,7 +64,7 @@ void Install::nullifyDerived()
 
 void Install::softResetDerived()
 {
-    mLBDatabaseIDTracker = Qx::FreeIndexTracker<int>(0, -1);
+    mLbDatabaseIdTracker = Qx::FreeIndexTracker<int>(0, -1);
     mPlaylistGameDetailsCache.clear();
 }
 
@@ -219,11 +219,11 @@ Qx::GenericError Install::populateExistingDocs(QStringList targetPlatforms, QStr
                 Qx::GenericError();
 }
 
-QString Install::imageDestinationPath(FP::ImageType imageType, const Fe::Game& game) const
+QString Install::imageDestinationPath(Fp::ImageType imageType, const Fe::Game& game) const
 {
     return mPlatformImagesDirectory.absolutePath() + '/' +
            game.getPlatform() + '/' +
-           (imageType == FP::ImageType::Logo ? LOGO_PATH : SCREENSHOT_PATH) + '/' +
+           (imageType == Fp::ImageType::Logo ? LOGO_PATH : SCREENSHOT_PATH) + '/' +
            game.getId().toString(QUuid::WithoutBraces) +
            IMAGE_EXT;
 }
@@ -241,12 +241,12 @@ Qx::GenericError Install::bulkReferenceImages(QString logoRootPath, QString scre
     // Set media folder paths and ensure document contains platform or else image paths will be ignored
     for(const QString& platform : platforms)
     {
-        platformConfigXML->setMediaFolder(platform, LB::Install::LOGO_PATH, logoRootPath);
-        platformConfigXML->setMediaFolder(platform, LB::Install::SCREENSHOT_PATH, screenshotRootPath);
+        platformConfigXML->setMediaFolder(platform, Lb::Install::LOGO_PATH, logoRootPath);
+        platformConfigXML->setMediaFolder(platform, Lb::Install::SCREENSHOT_PATH, screenshotRootPath);
 
         if(!platformConfigXML->containsPlatform(platform))
         {
-            LB::PlatformBuilder pb;
+            Lb::PlatformBuilder pb;
             pb.wName(platform);
             platformConfigXML->addPlatform(pb.build());
         }

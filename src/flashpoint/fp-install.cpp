@@ -2,7 +2,7 @@
 #include "qx-io.h"
 #include "qx-windows.h"
 
-namespace FP
+namespace Fp
 {
 //===============================================================================================================
 // INSTALL
@@ -78,7 +78,7 @@ Install::Install(QString installPath) :
     }
 
     // Add database
-    mDatabase = new DB(mDatabaseFile->fileName(), {});
+    mDatabase = new Db(mDatabaseFile->fileName(), {});
 
     if(!mDatabase->isValid())
     {
@@ -104,9 +104,9 @@ Install::~Install()
 //Private:
 QString Install::standardImageSubPath(ImageType imageType, QUuid gameId)
 {
-    QString gameIDString = gameId.toString(QUuid::WithoutBraces);
+    QString gameIdString = gameId.toString(QUuid::WithoutBraces);
     return (imageType == ImageType::Logo ? LOGOS_FOLDER_NAME : SCREENSHOTS_FOLDER_NAME) + '/' +
-           gameIDString.left(2) + '/' + gameIDString.mid(2, 2) + '/' + gameIDString + IMAGE_EXT;
+           gameIdString.left(2) + '/' + gameIdString.mid(2, 2) + '/' + gameIdString + IMAGE_EXT;
 }
 
 
@@ -194,7 +194,7 @@ QString Install::launcherChecksum() const
     return launcherHash;
 }
 
-DB* Install::database(QSqlError* error)
+Db* Install::database(QSqlError* error)
 {
     /*
      * Automatically manages opening the database if the thread is different. An error here in unlikely,

@@ -8,7 +8,7 @@
 #include "../../flashpoint/fp-items.h"
 #include "qx.h"
 
-namespace LB
+namespace Lb
 {
 
 class Game : public Fe::Game
@@ -37,7 +37,7 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    Game(FP::Game flashpointGame, QString fullCLIFpPath);
+    Game(Fp::Game flashpointGame, QString fullCLIFpPath);
     Game();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
@@ -103,7 +103,7 @@ private:
 
 //-Constructor------------------------------------------------------------------------------------------------------
 public:
-    AddApp(FP::AddApp flashpointAddApp, QString fullCLIFpPath);
+    AddApp(Fp::AddApp flashpointAddApp, QString fullCLIFpPath);
     AddApp();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
@@ -137,7 +137,7 @@ public:
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
-    QUuid mGameID;
+    QUuid mGameId;
     QString mName;
     QString mValue;
 
@@ -147,7 +147,7 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    QUuid getGameID() const;
+    QUuid getGameId() const;
     QString getName() const;
     QString getValue() const;
 };
@@ -160,8 +160,8 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    CustomFieldBuilder& wGameID(QString rawGameID);
-    CustomFieldBuilder& wGameID(QUuid gameID);
+    CustomFieldBuilder& wGameId(QString rawGameId);
+    CustomFieldBuilder& wGameId(QUuid gameId);
     CustomFieldBuilder& wName(QString name);
     CustomFieldBuilder& wValue(QString value);
 };
@@ -177,7 +177,7 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    PlaylistHeader(FP::Playlist flashpointPlaylist);
+    PlaylistHeader(Fp::Playlist flashpointPlaylist);
     PlaylistHeader();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
@@ -231,7 +231,7 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    PlaylistGame(FP::PlaylistGame flashpointPlaylistGame, const QHash<QUuid, EntryDetails>& playlistGameDetailsMap);
+    PlaylistGame(Fp::PlaylistGame flashpointPlaylistGame, const QHash<QUuid, EntryDetails>& playlistGameDetailsMap);
     PlaylistGame();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
@@ -242,7 +242,7 @@ public:
     QString getGamePlatform() const;
     int getManualOrder() const;
 
-    void setLBDatabaseId(int lbDBID);
+    void setLBDatabaseId(int lbDbId);
 };
 
 class PlaylistGameBuilder : public Fe::PlaylistGameBuilder<PlaylistGameBuilder, PlaylistGame>
@@ -254,7 +254,7 @@ public:
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
     PlaylistGameBuilder& wGameTitle(QString gameTitle);
-    PlaylistGameBuilder& wLBDatabaseID(QString rawLBDatabaseID);
+    PlaylistGameBuilder& wLBDatabaseId(QString rawLBDatabaseId);
     PlaylistGameBuilder& wGameFileName(QString gameFileName);
     PlaylistGameBuilder& wGamePlatform(QString gamePlatform);
     PlaylistGameBuilder& wManualOrder(QString rawManualOrder);

@@ -3,7 +3,7 @@
 #include "../../clifp.h"
 #include "qx-io.h"
 
-namespace LB
+namespace Lb
 {
 //===============================================================================================================
 // Game
@@ -13,7 +13,7 @@ namespace LB
 //Public:
 Game::Game() {}
 
-Game::Game(FP::Game flashpointGame, QString fullCLIFpPath) :
+Game::Game(Fp::Game flashpointGame, QString fullCLIFpPath) :
     Fe::Game(flashpointGame.getId(), flashpointGame.getTitle(), flashpointGame.getPlatform()),
     mSeries(flashpointGame.getSeries()),
     mDeveloper(flashpointGame.getDeveloper()),
@@ -32,7 +32,7 @@ Game::Game(FP::Game flashpointGame, QString fullCLIFpPath) :
     mCommandLine(CLIFp::parametersFromStandard(flashpointGame.getId())),
     mReleaseDate(flashpointGame.getReleaseDate()),
     mVersion(flashpointGame.getVersion()),
-    mReleaseType(flashpointGame.getLibrary() == FP::DB::Table_Game::ENTRY_GAME_LIBRARY ? RELEASE_TYPE_GAME : RELEASE_TYPE_ANIM)
+    mReleaseType(flashpointGame.getLibrary() == Fp::Db::Table_Game::ENTRY_GAME_LIBRARY ? RELEASE_TYPE_GAME : RELEASE_TYPE_ANIM)
 {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
@@ -110,8 +110,8 @@ GameBuilder& GameBuilder::wReleaseType(QString releaseType) { mItemBlueprint.mRe
 //Public:
 AddApp::AddApp() {}
 
-AddApp::AddApp(FP::AddApp flashpointAddApp, QString fullCLIFpPath) :
-    Fe::AddApp(flashpointAddApp.getID(), flashpointAddApp.getName(), flashpointAddApp.getParentID()),
+AddApp::AddApp(Fp::AddApp flashpointAddApp, QString fullCLIFpPath) :
+    Fe::AddApp(flashpointAddApp.getId(), flashpointAddApp.getName(), flashpointAddApp.getParentId()),
     mAppPath(QDir::toNativeSeparators(fullCLIFpPath)),
     mCommandLine(flashpointAddApp.isPlayable() ? CLIFp::parametersFromStandard(mId)
                    : CLIFp::parametersFromStandard(flashpointAddApp.getAppPath(), flashpointAddApp.getLaunchCommand())),
@@ -153,7 +153,7 @@ CustomField::CustomField() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QUuid CustomField::getGameID() const { return mGameID; }
+QUuid CustomField::getGameId() const { return mGameId; }
 QString CustomField::getName() const { return mName; }
 QString CustomField::getValue() const { return mValue; }
 
@@ -167,8 +167,8 @@ CustomFieldBuilder::CustomFieldBuilder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-CustomFieldBuilder& CustomFieldBuilder::wGameID(QString rawGameID) { mItemBlueprint.mGameID = QUuid(rawGameID); return *this; }
-CustomFieldBuilder& CustomFieldBuilder::wGameID(QUuid gameID) { mItemBlueprint.mGameID = gameID; return *this; }
+CustomFieldBuilder& CustomFieldBuilder::wGameId(QString rawGameId) { mItemBlueprint.mGameId = QUuid(rawGameId); return *this; }
+CustomFieldBuilder& CustomFieldBuilder::wGameId(QUuid gameId) { mItemBlueprint.mGameId = gameId; return *this; }
 CustomFieldBuilder& CustomFieldBuilder::wName(QString name) { mItemBlueprint.mName = name; return *this;}
 CustomFieldBuilder& CustomFieldBuilder::wValue(QString value) { mItemBlueprint.mValue = value; return *this;}
 
@@ -179,8 +179,8 @@ CustomFieldBuilder& CustomFieldBuilder::wValue(QString value) { mItemBlueprint.m
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 PlaylistHeader::PlaylistHeader() {}
-PlaylistHeader::PlaylistHeader(FP::Playlist flashpointPlaylist) :
-    Fe::PlaylistHeader(flashpointPlaylist.getID(), flashpointPlaylist.getTitle()),
+PlaylistHeader::PlaylistHeader(Fp::Playlist flashpointPlaylist) :
+    Fe::PlaylistHeader(flashpointPlaylist.getId(), flashpointPlaylist.getTitle()),
     mNestedName(flashpointPlaylist.getTitle()),
     mNotes(flashpointPlaylist.getDescription())
 {}
@@ -231,11 +231,11 @@ QString PlaylistGame::EntryDetails::platform() const { return mTitle; }
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-PlaylistGame::PlaylistGame(FP::PlaylistGame flashpointPlaylistGame, const QHash<QUuid, EntryDetails>& playlistGameDetailsMap) :
-    Fe::PlaylistGame(flashpointPlaylistGame.getGameID(), playlistGameDetailsMap.value(flashpointPlaylistGame.getGameID()).title()),
+PlaylistGame::PlaylistGame(Fp::PlaylistGame flashpointPlaylistGame, const QHash<QUuid, EntryDetails>& playlistGameDetailsMap) :
+    Fe::PlaylistGame(flashpointPlaylistGame.getGameId(), playlistGameDetailsMap.value(flashpointPlaylistGame.getGameId()).title()),
     mLBDatabaseId(-1),
-    mGameFilename(playlistGameDetailsMap.value(flashpointPlaylistGame.getGameID()).filename()),
-    mGamePlatform(playlistGameDetailsMap.value(flashpointPlaylistGame.getGameID()).platform()),
+    mGameFilename(playlistGameDetailsMap.value(flashpointPlaylistGame.getGameId()).filename()),
+    mGamePlatform(playlistGameDetailsMap.value(flashpointPlaylistGame.getGameId()).platform()),
     mManualOrder(flashpointPlaylistGame.getOrder())
 {}
 
@@ -249,7 +249,7 @@ QString PlaylistGame::getGameFileName() const { return mGameFilename; }
 QString PlaylistGame::getGamePlatform() const { return mGamePlatform; }
 int PlaylistGame::getManualOrder() const { return mManualOrder; }
 
-void PlaylistGame::setLBDatabaseId(int lbDBID) { mLBDatabaseId = lbDBID; }
+void PlaylistGame::setLBDatabaseId(int lbDbId) { mLBDatabaseId = lbDbId; }
 
 //===============================================================================================================
 // PlaylistGameBuilder
@@ -263,10 +263,10 @@ PlaylistGameBuilder::PlaylistGameBuilder() {}
 //Public:
 PlaylistGameBuilder& PlaylistGameBuilder::wGameTitle(QString gameTitle) { mItemBlueprint.mName = gameTitle; return *this;} // Proxy for mName
 
-PlaylistGameBuilder& PlaylistGameBuilder::wLBDatabaseID(QString rawLBDatabaseID)
+PlaylistGameBuilder& PlaylistGameBuilder::wLBDatabaseId(QString rawLBDatabaseId)
 {
     bool validInt = false;
-    mItemBlueprint.mLBDatabaseId = rawLBDatabaseID.toInt(&validInt);
+    mItemBlueprint.mLBDatabaseId = rawLBDatabaseId.toInt(&validInt);
     if(!validInt)
         mItemBlueprint.mLBDatabaseId = -1;
     return *this;

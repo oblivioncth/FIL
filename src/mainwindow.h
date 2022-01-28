@@ -164,7 +164,7 @@ private:
     QColor mExistingItemColor;
 
     std::shared_ptr<Fe::Install> mFrontendInstall;
-    std::shared_ptr<FP::Install> mFlashpointInstall;
+    std::shared_ptr<Fp::Install> mFlashpointInstall;
     Qx::MMRB mInternalCLIFpVersion;
 
     int mLineEdit_frontendPath_blocker = 0; // Required due to an oversight with QLineEdit::editingFinished()
@@ -199,7 +199,7 @@ private:
     bool testForLinkPermissions();
     void initializeForms();
     void initializeEnableConditionMaps();
-    bool installMatchesTargetVersion(const FP::Install& fpInstall);
+    bool installMatchesTargetVersion(const Fp::Install& fpInstall);
     void checkManualInstallInput(Install install);
     void validateInstall(QString installPath, Install install);
     void gatherInstallInfo();
@@ -223,7 +223,7 @@ private:
 
     QStringList getSelectedPlatforms() const;
     QStringList getSelectedPlaylists() const;
-    FP::DB::InclusionOptions getSelectedInclusionOptions() const;
+    Fp::Db::InclusionOptions getSelectedInclusionOptions() const;
     Fe::UpdateOptions getSelectedUpdateOptions() const;
     Fe::Install::ImageMode getSelectedImageMode() const;
     ImportWorker::PlaylistGameMode getSelectedPlaylistGameMode() const;

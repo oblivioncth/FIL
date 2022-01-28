@@ -12,7 +12,7 @@
 #include "fp-db.h"
 #include "fp-items.h"
 
-namespace FP
+namespace Fp
 {
 
 class Install
@@ -79,7 +79,7 @@ private:
     Json::Services mServices;
 
     // Database
-    DB* mDatabase = nullptr;
+    Db* mDatabase = nullptr;
 
     // Utilities
     MacroResolver* mMacroResolver = nullptr;
@@ -114,7 +114,7 @@ public:
     QString launcherChecksum() const;
 
     // Database
-    DB* database(QSqlError* error = nullptr);
+    Db* database(QSqlError* error = nullptr);
 
     // Support Application Checks
     Json::Config config() const;

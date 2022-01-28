@@ -283,7 +283,7 @@ void Install::addPurgeableImagePath(QString imagePath)
     mPurgeableImagePaths.append(imagePath);
 }
 
-Qx::GenericError Install::referenceImage(FP::ImageType, QString, const Game&)
+Qx::GenericError Install::referenceImage(Fp::ImageType, QString, const Game&)
 {
     throw new std::exception("UNSUPPORTED");
 }

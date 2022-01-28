@@ -68,7 +68,7 @@ AddApp::AddApp(QUuid id, QString name, QUuid gameId) :
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QUuid AddApp::getGameID() const { return mGameId; }
+QUuid AddApp::getGameId() const { return mGameId; }
 
 //===============================================================================================================
 // PLAYLIST HEADER
@@ -96,6 +96,6 @@ PlaylistGame::PlaylistGame(QUuid id, QString name) :
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QUuid PlaylistGame::getGameID() const { return mId; } // Proxy for getId()
+QUuid PlaylistGame::getGameId() const { return mId; } // Proxy for getId()
 
 }

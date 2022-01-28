@@ -127,7 +127,7 @@ PlatformDoc::PlatformDoc(Install* const parent, std::unique_ptr<QFile> docFile, 
 DataDoc::Type PlatformDoc::type() const { return Type::Platform; }
 
 //Public:
-void PlatformDoc::setGameImageReference(FP::ImageType, QUuid, QString)
+void PlatformDoc::setGameImageReference(Fp::ImageType, QUuid, QString)
 {
     throw new std::exception("UNSUPPORTED");
 }
@@ -135,10 +135,10 @@ void PlatformDoc::setGameImageReference(FP::ImageType, QUuid, QString)
 const QHash<QUuid, std::shared_ptr<Game>>& PlatformDoc::getFinalGames() const { return mGamesFinal; }
 const QHash<QUuid, std::shared_ptr<AddApp>>& PlatformDoc::getFinalAddApps() const { return mAddAppsFinal; }
 
-bool PlatformDoc::containsGame(QUuid gameID) const { return mGamesFinal.contains(gameID) || mGamesExisting.contains(gameID); }
+bool PlatformDoc::containsGame(QUuid gameId) const { return mGamesFinal.contains(gameId) || mGamesExisting.contains(gameId); }
 bool PlatformDoc::containsAddApp(QUuid addAppId) const { return mAddAppsFinal.contains(addAppId) || mAddAppsExisting.contains(addAppId); }
 
-const Game* PlatformDoc::addGame(FP::Game game)
+const Game* PlatformDoc::addGame(Fp::Game game)
 {
     // Prepare game
     std::shared_ptr<Game> feGame = prepareGame(game);
@@ -150,7 +150,7 @@ const Game* PlatformDoc::addGame(FP::Game game)
     return feGame.get();
 }
 
-const AddApp* PlatformDoc::addAddApp(FP::AddApp app)
+const AddApp* PlatformDoc::addAddApp(Fp::AddApp app)
 {
     // Prepare game
     std::shared_ptr<AddApp> feAddApp = prepareAddApp(app);
@@ -224,10 +224,10 @@ DataDoc::Type PlaylistDoc::type() const { return Type::Platform; }
 const std::shared_ptr<PlaylistHeader>& PlaylistDoc::getPlaylistHeader() const { return mPlaylistHeader; }
 const QHash<QUuid, std::shared_ptr<PlaylistGame>>& PlaylistDoc::getFinalPlaylistGames() const { return mPlaylistGamesFinal; }
 
-bool PlaylistDoc::containsPlaylistGame(QUuid gameID) const { return mPlaylistGamesFinal.contains(gameID) || mPlaylistGamesExisting.contains(gameID); }
+bool PlaylistDoc::containsPlaylistGame(QUuid gameId) const { return mPlaylistGamesFinal.contains(gameId) || mPlaylistGamesExisting.contains(gameId); }
 
 
-void PlaylistDoc::setPlaylistHeader(FP::Playlist playlist)
+void PlaylistDoc::setPlaylistHeader(Fp::Playlist playlist)
 {
     std::shared_ptr<PlaylistHeader> fePlaylistHeader = preparePlaylistHeader(playlist);
 
@@ -235,7 +235,7 @@ void PlaylistDoc::setPlaylistHeader(FP::Playlist playlist)
     mPlaylistHeader = fePlaylistHeader;
 }
 
-void PlaylistDoc::addPlaylistGame(FP::PlaylistGame playlistGame)
+void PlaylistDoc::addPlaylistGame(Fp::PlaylistGame playlistGame)
 {
     // Prepare playlist game
     std::shared_ptr<PlaylistGame> fePlaylistGame = preparePlaylistGame(playlistGame);

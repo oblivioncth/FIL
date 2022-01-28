@@ -7,7 +7,7 @@
 
 #include "fp-macro.h"
 
-namespace FP
+namespace Fp
 {
 
 class Json

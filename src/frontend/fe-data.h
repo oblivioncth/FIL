@@ -219,20 +219,20 @@ private:
     Type type() const override;
 
 protected:
-    virtual std::shared_ptr<Game> prepareGame(const FP::Game& game) = 0;
-    virtual std::shared_ptr<AddApp> prepareAddApp(const FP::AddApp& game) = 0;
+    virtual std::shared_ptr<Game> prepareGame(const Fp::Game& game) = 0;
+    virtual std::shared_ptr<AddApp> prepareAddApp(const Fp::AddApp& game) = 0;
 
 public:
-    virtual void setGameImageReference(FP::ImageType imageType, QUuid gameId, QString sourcePath);
+    virtual void setGameImageReference(Fp::ImageType imageType, QUuid gameId, QString sourcePath);
 
     const QHash<QUuid, std::shared_ptr<Game>>& getFinalGames() const;
     const QHash<QUuid, std::shared_ptr<AddApp>>& getFinalAddApps() const;
 
-    bool containsGame(QUuid gameID) const;
+    bool containsGame(QUuid gameId) const;
     bool containsAddApp(QUuid addAppId) const;
 
-    const Game* addGame(FP::Game game);
-    const AddApp* addAddApp(FP::AddApp app);
+    const Game* addGame(Fp::Game game);
+    const AddApp* addAddApp(Fp::AddApp app);
 
     void finalize() override;
 };
@@ -276,17 +276,17 @@ private:
     Type type() const override;
 
 protected:
-    virtual std::shared_ptr<PlaylistHeader> preparePlaylistHeader(const FP::Playlist& playlist) = 0;
-    virtual std::shared_ptr<PlaylistGame> preparePlaylistGame(const FP::PlaylistGame& game) = 0;
+    virtual std::shared_ptr<PlaylistHeader> preparePlaylistHeader(const Fp::Playlist& playlist) = 0;
+    virtual std::shared_ptr<PlaylistGame> preparePlaylistGame(const Fp::PlaylistGame& game) = 0;
 
 public:
     const std::shared_ptr<PlaylistHeader>& getPlaylistHeader() const;
     const QHash<QUuid, std::shared_ptr<PlaylistGame>>& getFinalPlaylistGames() const;
 
-    bool containsPlaylistGame(QUuid gameID) const;
+    bool containsPlaylistGame(QUuid gameId) const;
 
-    void setPlaylistHeader(FP::Playlist playlist);
-    void addPlaylistGame(FP::PlaylistGame playlistGame);
+    void setPlaylistHeader(Fp::Playlist playlist);
+    void addPlaylistGame(Fp::PlaylistGame playlistGame);
 
     void finalize() override;
 };

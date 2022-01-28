@@ -128,7 +128,7 @@ protected:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    QUuid getGameID() const;
+    QUuid getGameId() const;
 };
 
 template <typename B, typename T, QX_ENABLE_IF(std::is_base_of<AddApp, T>)>
@@ -168,7 +168,7 @@ protected:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    QUuid getGameID() const;
+    QUuid getGameId() const;
 };
 
 template <typename B, typename T, QX_ENABLE_IF(std::is_base_of<PlaylistGame, T>)>

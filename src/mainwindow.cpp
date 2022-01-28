@@ -63,7 +63,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //connect(&mUIUpdateWorkaroundTimer, &QTimer::timeout, this, &MainWindow::updateUI); // Process events at minimum rate
 
     // Check if Flashpoint is running
-    if(Qx::processIsRunning(QFileInfo(FP::Install::LAUNCHER_PATH).fileName()))
+    if(Qx::processIsRunning(QFileInfo(Fp::Install::LAUNCHER_PATH).fileName()))
         QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_CLOSE_PROMPT);
 
     mInitCompleted = true;
@@ -164,7 +164,7 @@ void MainWindow::initializeEnableConditionMaps()
     mActionEnableConditionMap[ui->action_editTagFilter] = [&](){ return mFrontendInstall && mFlashpointInstall; };
 }
 
-bool MainWindow::installMatchesTargetVersion(const FP::Install& fpInstall)
+bool MainWindow::installMatchesTargetVersion(const Fp::Install& fpInstall)
 {
     QString hash = fpInstall.launcherChecksum();
     QString ver = fpInstall.nameVersionString();
@@ -207,7 +207,7 @@ void MainWindow::validateInstall(QString installPath, Install install)
             break;
 
         case Install::Flashpoint:
-            mFlashpointInstall = std::make_shared<FP::Install>(installPath);
+            mFlashpointInstall = std::make_shared<Fp::Install>(installPath);
             if(mFlashpointInstall->isValid())
             {
                 ui->label_flashpointVersion->setText(mFlashpointInstall->nameVersionString());
@@ -287,7 +287,7 @@ void MainWindow::generateTagSelectionOptions()
     mTagSelectionModel.reset();
 
     // Get tag hiearchy
-    QMap<int, FP::DB::TagCategory> tagMap = mFlashpointInstall->database()->tags();
+    QMap<int, Fp::Db::TagCategory> tagMap = mFlashpointInstall->database()->tags();
 
     // Create new model
     mTagSelectionModel = std::make_unique<Qx::StandardItemModelX>();
@@ -296,7 +296,7 @@ void MainWindow::generateTagSelectionOptions()
 
     // Populate model
     QStandardItem* modelRoot = mTagSelectionModel->invisibleRootItem();
-    QMap<int, FP::DB::TagCategory>::const_iterator i;
+    QMap<int, Fp::Db::TagCategory>::const_iterator i;
 
     // Add root tag categories
     for(i = tagMap.constBegin(); i != tagMap.constEnd(); ++i)
@@ -306,7 +306,7 @@ void MainWindow::generateTagSelectionOptions()
         rootItem->setData(QBrush(Qx::Color::textColorFromBackgroundColor(i->color)), Qt::ForegroundRole);
         rootItem->setCheckState(Qt::CheckState::Checked);
         rootItem->setCheckable(true);
-        QMap<int, FP::DB::Tag>::const_iterator j;
+        QMap<int, Fp::Db::Tag>::const_iterator j;
 
         // Add child tags
         for(j = i->tags.constBegin(); j != i->tags.constEnd(); ++j)
@@ -527,7 +527,7 @@ QStringList MainWindow::getSelectedPlaylists() const
     return selectedPlaylists;
 }
 
-FP::DB::InclusionOptions MainWindow::getSelectedInclusionOptions() const
+Fp::Db::InclusionOptions MainWindow::getSelectedInclusionOptions() const
 {
     return {generateTagExlusionSet(), ui->action_includeAnimations->isChecked()};
 }
@@ -574,7 +574,7 @@ void MainWindow::prepareImport()
 
     // Warn user if Flashpoint is running
     // Check if Flashpoint is running
-    if(Qx::processIsRunning(QFileInfo(FP::Install::LAUNCHER_PATH).fileName()))
+    if(Qx::processIsRunning(QFileInfo(Fp::Install::LAUNCHER_PATH).fileName()))
         QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_CLOSE_PROMPT);
 
     // Only allow proceeding if frontend isn't running
@@ -693,7 +693,7 @@ void MainWindow::standaloneCLIFpDeploy()
 
     if(!selectedDir.isEmpty())
     {
-        FP::Install tempFlashpointInstall(selectedDir);
+        Fp::Install tempFlashpointInstall(selectedDir);
         if(tempFlashpointInstall.isValid())
         {
             if(!installMatchesTargetVersion(tempFlashpointInstall))

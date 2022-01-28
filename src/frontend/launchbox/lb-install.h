@@ -13,7 +13,7 @@
 #include "lb-items.h"
 #include "lb-data.h"
 
-namespace LB {
+namespace Lb {
 
 class Install : public Fe::Install
 {
@@ -53,7 +53,7 @@ private:
     QDir mPlatformImagesDirectory;
 
     // Other trackers
-    Qx::FreeIndexTracker<int> mLBDatabaseIDTracker = Qx::FreeIndexTracker<int>(0, -1, {});
+    Qx::FreeIndexTracker<int> mLbDatabaseIdTracker = Qx::FreeIndexTracker<int>(0, -1, {});
     QHash<QUuid, PlaylistGame::EntryDetails> mPlaylistGameDetailsCache;
     // TODO: Even though the playlist game IDs dont seem to matter, at some point for for completeness scan all playlists when hooking an install to get the
     // full list of in use IDs
@@ -89,7 +89,7 @@ public:
 
     Qx::GenericError populateExistingDocs(QStringList targetPlatforms, QStringList targetPlaylists) override;
 
-    QString imageDestinationPath(FP::ImageType imageType, const Fe::Game& game) const override;
+    QString imageDestinationPath(Fp::ImageType imageType, const Fe::Game& game) const override;
     Qx::GenericError bulkReferenceImages(QString logoRootPath, QString screenshotRootPath, QStringList platforms) override;
 };
 REGISTER_FRONTEND(Install::NAME, Install);

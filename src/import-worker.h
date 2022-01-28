@@ -31,7 +31,7 @@ public:
         Fe::Install::ImageMode imageMode;
         bool downloadImages;
         PlaylistGameMode playlistMode;
-        FP::DB::InclusionOptions inclusionOptions;
+        Fp::Db::InclusionOptions inclusionOptions;
     };
 
     struct ImageTransferJob
@@ -71,7 +71,7 @@ public:
 //-Instance Variables--------------------------------------------------------------------------------------------
 private:
     // Install links
-    std::shared_ptr<FP::Install> mFlashpointInstall;
+    std::shared_ptr<Fp::Install> mFlashpointInstall;
     std::shared_ptr<Fe::Install> mFrontendInstall;
 
     // Image processing
@@ -82,9 +82,9 @@ private:
     OptionSet mOptionSet;
 
     // Job Caches
-    QSet<FP::AddApp> mAddAppsCache;
-    QHash<QUuid, FP::Playlist> mPlaylistsCache;
-    QSet<QUuid> mImportedGameIDsCache;
+    QSet<Fp::AddApp> mAddAppsCache;
+    QHash<QUuid, Fp::Playlist> mPlaylistsCache;
+    QSet<QUuid> mImportedGameIdsCache;
     QList<ImageTransferJob> mImageTransferJobs;
 
     // Progress Tracking
@@ -99,21 +99,21 @@ private:
 
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
-    ImportWorker(std::shared_ptr<FP::Install> fpInstallForWork,
+    ImportWorker(std::shared_ptr<Fp::Install> fpInstallForWork,
                  std::shared_ptr<Fe::Install> feInstallForWork,
                  ImportSelections importSelections,
                  OptionSet optionSet);
 
 //-Instance Functions---------------------------------------------------------------------------------------------------------
 private:
-    const QList<QUuid> preloadPlaylists(FP::DB::QueryBuffer& playlistQuery);
-    const QList<QUuid> getPlaylistSpecificGameIDs(FP::DB::QueryBuffer& playlistGameIDQuery);
+    const QList<QUuid> preloadPlaylists(Fp::Db::QueryBuffer& playlistQuery);
+    const QList<QUuid> getPlaylistSpecificGameIds(Fp::Db::QueryBuffer& playlistGameIdQuery);
     Qx::GenericError transferImage(bool symlink, QString sourcePath, QString destPath);
 
-    ImportResult preloadAddApps(Qx::GenericError& errorReport, FP::DB::QueryBuffer& addAppQuery);
-    ImportResult processGames(Qx::GenericError& errorReport, QList<FP::DB::QueryBuffer>& gameQueries, bool playlistSpecific);
-    ImportResult processPlaylists(Qx::GenericError& errorReport, QList<FP::DB::QueryBuffer>& playlistGameQueries);
-    ImportResult processImages(Qx::GenericError& errorReport, const QList<FP::DB::QueryBuffer>& playlistSpecGameQueries);
+    ImportResult preloadAddApps(Qx::GenericError& errorReport, Fp::Db::QueryBuffer& addAppQuery);
+    ImportResult processGames(Qx::GenericError& errorReport, QList<Fp::Db::QueryBuffer>& gameQueries, bool playlistSpecific);
+    ImportResult processPlaylists(Qx::GenericError& errorReport, QList<Fp::Db::QueryBuffer>& playlistGameQueries);
+    ImportResult processImages(Qx::GenericError& errorReport, const QList<Fp::Db::QueryBuffer>& playlistSpecGameQueries);
 
 
 public:
