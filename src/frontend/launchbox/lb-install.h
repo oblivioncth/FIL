@@ -36,6 +36,13 @@ public:
     // Files
     static inline const QString XML_EXT = ".xml";
 
+    // Support
+    static inline const QSet<Fe::Install::ImageMode> IMAGE_MODES {
+        Fe::Install::ImageMode::Reference,
+        Fe::Install::ImageMode::Copy,
+        Fe::Install::ImageMode::Link
+    };
+
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
 
@@ -65,7 +72,6 @@ private:
     void softResetDerived() override;
 
     QString dataDocPath(Fe::DataDoc::Identifier identifier) const override;
-    QString imageDestinationPath(ImageType imageType, const Fe::Game& game) const override;
 
     std::shared_ptr<Fe::PlatformDocReader> prepareOpenPlatformDoc(std::unique_ptr<Fe::PlatformDoc>& platformDoc, const QString& name, const Fe::UpdateOptions& updateOptions) override;
     std::shared_ptr<Fe::PlaylistDocReader> prepareOpenPlaylistDoc(std::unique_ptr<Fe::PlaylistDoc>& playlistDoc, const QString& name, const Fe::UpdateOptions& updateOptions) override;
@@ -79,9 +85,11 @@ public:
     QString name() const override;
     QString executablePath() const override;
     ImageRefType imageRefType() const override;
+    bool supportsImageMode(ImageMode imageMode) const override;
 
     Qx::GenericError populateExistingDocs(QStringList targetPlatforms, QStringList targetPlaylists) override;
 
+    QString imageDestinationPath(FP::ImageType imageType, const Fe::Game& game) const override;
     Qx::GenericError bulkReferenceImages(QString logoRootPath, QString screenshotRootPath, QStringList platforms) override;
 };
 REGISTER_FRONTEND(Install::NAME, Install);

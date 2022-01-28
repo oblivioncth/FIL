@@ -2,7 +2,6 @@
 
 #include "qx-io.h"
 #include "qx-windows.h"
-#include <filesystem>
 #include <QFileInfo>
 
 // Specifically for changing file permissions
@@ -92,88 +91,6 @@ QSet<QString> Install::getExistingDocs(DataDoc::Type docType) const
     return nameSet;
 }
 
-Qx::GenericError Install::transferImage(bool symlink, ImageType imageType, QDir sourceDir, const Game& game)
-{
-    // Parse to paths
-    QString gameIDString = game.getId().toString(QUuid::WithoutBraces);
-    QString sourcePath = sourceDir.absolutePath() + '/' + gameIDString.left(2) + '/' + gameIDString.mid(2, 2) + '/' + gameIDString + IMAGE_EXT;
-    QString destinationPath = imageDestinationPath(imageType, game);
-
-    // Image info
-    QFileInfo destinationInfo(destinationPath);
-    QFileInfo sourceInfo(sourcePath);
-    QDir destinationDir(destinationInfo.absolutePath());
-    bool destinationOccupied = destinationInfo.exists() && (destinationInfo.isFile() || destinationInfo.isSymLink());
-    bool sourceAvailable = sourceInfo.exists();
-
-    // Return if image is already up-to-date
-    if(sourceAvailable && destinationOccupied)
-    {
-        if(destinationInfo.isSymLink() && symlink)
-            return Qx::GenericError();
-        else
-        {
-            QFile source(sourcePath);
-            QFile destination(destinationPath);
-            QString sourceChecksum;
-            QString destinationChecksum;
-
-            if(Qx::calculateFileChecksum(sourceChecksum, source, QCryptographicHash::Md5).wasSuccessful() &&
-               Qx::calculateFileChecksum(destinationChecksum, destination, QCryptographicHash::Md5).wasSuccessful() &&
-               sourceChecksum.compare(destinationChecksum, Qt::CaseInsensitive) == 0)
-                return Qx::GenericError();
-        }
-    }
-
-    // Ensure destination path exists
-    if(!destinationDir.mkpath("."))
-        return Qx::GenericError(Qx::GenericError::Error, ERR_CANT_MAKE_DIR, destinationDir.absolutePath(), QString(), CAPTION_IMAGE_ERR);
-
-    // Determine backup path
-    QString backupPath = destinationInfo.absolutePath() + '/' + destinationInfo.baseName() + MODIFIED_FILE_EXT;
-
-    // Temporarily backup image if it already exists (also acts as deletion marking in case images for the title were removed in an update)
-    if(destinationOccupied && sourceAvailable)
-        if(!QFile::rename(destinationPath, backupPath)) // Temp backup
-            return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_BACKUP, destinationPath, QString(), CAPTION_IMAGE_ERR);
-
-    // Linking error tracker
-    std::error_code linkError;
-
-    // Handle transfer if source is available
-    if(sourceAvailable)
-    {
-        if(symlink)
-        {
-            if(!QFile::copy(sourcePath, destinationPath))
-            {
-                QFile::rename(backupPath, destinationPath); // Restore Backup
-                return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_COPY.arg(sourcePath), destinationPath, QString(), CAPTION_IMAGE_ERR);
-            }
-            else if(QFile::exists(backupPath))
-                QFile::remove(backupPath);
-            else
-                mPurgeableImagePaths.append(destinationPath); // Only queue image to be removed on failure if its new, so existing images arent deleted on revert
-        }
-        else
-        {
-            std::filesystem::create_symlink(sourcePath.toStdString(), destinationPath.toStdString(), linkError);
-            if(linkError)
-            {
-                QFile::rename(backupPath, destinationPath); // Restore Backup
-                return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_LINK.arg(sourcePath), destinationPath, QString(), CAPTION_IMAGE_ERR);
-            }
-            else if(QFile::exists(backupPath))
-                QFile::remove(backupPath);
-            else
-                mPurgeableImagePaths.append(destinationPath); // Only queue image to be removed on failure if its new, so existing images arent deleted on revert
-        }
-    }
-
-    // Return null error on success
-    return Qx::GenericError();
-}
-
 //Protected:
 void Install::nullify()
 {
@@ -257,11 +174,6 @@ Qx::GenericError Install::saveDataDocument(DataDoc* docToSave, std::shared_ptr<D
 
     // Return write status and let document ptr auto delete
     return saveWriteError;
-}
-
-Qx::GenericError Install::referenceImage(ImageType imageType, QDir sourceDir, const Game& game)
-{
-    return Qx::GenericError(Qx::GenericError::Critical, ERR_UNSUPPORTED_FEATURE, "Image Referencing");
 }
 
 //Public:
@@ -357,17 +269,28 @@ Qx::GenericError Install::savePlaylistDoc(std::unique_ptr<PlaylistDoc> document)
     return writeErrorStatus;
 }
 
-Qx::GenericError Install::importImage(ImageMode imageMode, ImageType imageType, QDir sourceDir, const Game& game)
+void Install::addPurgeableImagePath(QString imagePath)
 {
-    if(imageMode == ImageMode::Copy || imageMode == ImageMode::Link)
-        return transferImage(imageMode == Link, imageType, sourceDir, game);
-    else
-        return referenceImage(imageType, sourceDir, game);
+    /*TODO: This feels ugly, but due to the fact that a game's info is pulled before a transfer
+     *      may be possible (i.e. if the image needs to be downloaded), and the info is needed
+     *      to determine an images destination path (and caching game info in import worker also
+     *      feels crudy), this seemed like the best way to handle tracking modified images short
+     *      of moving the image transfer duty back into Fe::Install, adding image transfers to a
+     *      queue within Fe::Install when the game info is pulled, and then later when ImportWorker
+     *      would performed the transfers, call a function to have Fe::Install initiate them. Though,
+     *      this then makes reporting progress uglier...
+    */
+    mPurgeableImagePaths.append(imagePath);
 }
 
-Qx::GenericError Install::bulkReferenceImages(QString logoRootPath, QString screenshotRootPath, QStringList platforms)
+Qx::GenericError Install::referenceImage(FP::ImageType, QString, const Game&)
 {
-    return Qx::GenericError(Qx::GenericError::Critical, ERR_UNSUPPORTED_FEATURE, "Image Referencing");
+    throw new std::exception("UNSUPPORTED");
+}
+
+Qx::GenericError Install::bulkReferenceImages(QString, QString, QStringList)
+{
+    throw new std::exception("UNSUPPORTED");
 }
 
 void Install::softReset()

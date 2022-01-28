@@ -227,6 +227,7 @@ private:
     Fe::UpdateOptions getSelectedUpdateOptions() const;
     Fe::Install::ImageMode getSelectedImageMode() const;
     ImportWorker::PlaylistGameMode getSelectedPlaylistGameMode() const;
+    bool getForceDownloadImages() const;
 
     void prepareImport();
     void revertAllFrontendChanges();
@@ -255,8 +256,9 @@ private slots:
     //void resetUpdateTimer();
     //void updateUI();
 
-    // Import Error Handling
+    // Import Exception Handling
     void handleBlockingError(std::shared_ptr<int> response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices);
+    void handleAuthRequest(QString prompt, QString* username, QString* password, bool* abort);
     void handleImportResult(ImportWorker::ImportResult importResult, Qx::GenericError errorReport);
 };
 

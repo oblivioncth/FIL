@@ -1,6 +1,8 @@
 #include "import-worker.h"
 #include "clifp.h"
 
+#include <filesystem>
+
 //===============================================================================================================
 // IMPORT WORKER
 //===============================================================================================================
@@ -13,7 +15,8 @@ ImportWorker::ImportWorker(std::shared_ptr<FP::Install> fpInstallForWork,
       mFlashpointInstall(fpInstallForWork),
       mFrontendInstall(feInstallForWork),
       mImportSelections(importSelections),
-      mOptionSet(optionSet) {}
+      mOptionSet(optionSet)
+{}
 
 //-Instance Functions--------------------------------------------------------------------------------------------
 //Private
@@ -101,6 +104,83 @@ ImportWorker::ImportResult ImportWorker::preloadAddApps(Qx::GenericError& errorR
     return Successful;
 }
 
+Qx::GenericError ImportWorker::transferImage(bool symlink, QString sourcePath, QString destinationPath)
+{
+    // Image info
+    QFileInfo destinationInfo(destinationPath);
+    QFileInfo sourceInfo(sourcePath);
+    QDir destinationDir(destinationInfo.absolutePath());
+    bool destinationOccupied = destinationInfo.exists() && (destinationInfo.isFile() || destinationInfo.isSymLink());
+    bool sourceAvailable = sourceInfo.exists();
+
+    // Return if image is already up-to-date
+    if(sourceAvailable && destinationOccupied)
+    {
+        if(destinationInfo.isSymLink() && symlink)
+            return Qx::GenericError();
+        else
+        {
+            QFile source(sourcePath);
+            QFile destination(destinationPath);
+            QString sourceChecksum;
+            QString destinationChecksum;
+
+            if(Qx::calculateFileChecksum(sourceChecksum, source, QCryptographicHash::Md5).wasSuccessful() &&
+               Qx::calculateFileChecksum(destinationChecksum, destination, QCryptographicHash::Md5).wasSuccessful() &&
+               sourceChecksum.compare(destinationChecksum, Qt::CaseInsensitive) == 0)
+                return Qx::GenericError();
+        }
+    }
+
+    // Ensure destination path exists
+    if(!destinationDir.mkpath("."))
+        return Qx::GenericError(Qx::GenericError::Error, ERR_CANT_MAKE_DIR, destinationDir.absolutePath(), QString(), CAPTION_IMAGE_ERR);
+
+    // Determine backup path
+    QString backupPath = destinationInfo.absolutePath() + '/' + destinationInfo.baseName() + Fe::Install::MODIFIED_FILE_EXT;
+
+    // Temporarily backup image if it already exists (also acts as deletion marking in case images for the title were removed in an update)
+    if(destinationOccupied && sourceAvailable)
+        if(!QFile::rename(destinationPath, backupPath)) // Temp backup
+            return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_BACKUP, destinationPath, QString(), CAPTION_IMAGE_ERR);
+
+    // Linking error tracker
+    std::error_code linkError;
+
+    // Handle transfer if source is available
+    if(sourceAvailable)
+    {
+        if(symlink)
+        {
+            if(!QFile::copy(sourcePath, destinationPath))
+            {
+                QFile::rename(backupPath, destinationPath); // Restore Backup
+                return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_COPY.arg(sourcePath), destinationPath, QString(), CAPTION_IMAGE_ERR);
+            }
+            else if(QFile::exists(backupPath))
+                QFile::remove(backupPath);
+            else
+                mFrontendInstall->addPurgeableImagePath(destinationPath); // Only queue image to be removed on failure if its new, so existing images arent deleted on revert
+        }
+        else
+        {
+            std::filesystem::create_symlink(sourcePath.toStdString(), destinationPath.toStdString(), linkError);
+            if(linkError)
+            {
+                QFile::rename(backupPath, destinationPath); // Restore Backup
+                return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_LINK.arg(sourcePath), destinationPath, QString(), CAPTION_IMAGE_ERR);
+            }
+            else if(QFile::exists(backupPath))
+                QFile::remove(backupPath);
+            else
+                mFrontendInstall->addPurgeableImagePath(destinationPath); // Only queue image to be removed on failure if its new, so existing images arent deleted on revert
+        }
+    }
+
+    // Return null error on success
+    return Qx::GenericError();
+}
+
 ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorReport, QList<FP::DB::QueryBuffer>& gameQueries, bool playlistSpecific)
 {
     for(int i = 0; i < gameQueries.size(); i++)
@@ -160,44 +240,53 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
             // Add ID to imported game cache
             mImportedGameIDsCache.insert(addedGame->getId());
 
-            // Setup for ensuring image transfer
-            Qx::GenericError imageTransferError; // Error return reference
-            *mBlockingErrorResponse = QMessageBox::NoToAll; // Default to choice "NoToAll" incase the signal is not correctly connected using Qt::BlockingQueuedConnection
-            bool skipAllImages = false; // NoToAll response tracker
+            // Get image information
+            QString logoLocalPath = mFlashpointInstall->imageLocalPath(FP::ImageType::Logo, addedGame->getId());
+            QString ssLocalPath =  mFlashpointInstall->imageLocalPath(FP::ImageType::Screenshot, addedGame->getId());
 
-            // Transfer game images if applicable
-            if(mOptionSet.imageMode != Fe::Install::Reference)
+            // Setup image downloads if applicable
+            if(mOptionSet.downloadImages)
             {
-                while(!skipAllImages &&
-                      (imageTransferError = mFrontendInstall->importImage(mOptionSet.imageMode, Fe::Install::Logo, mFlashpointInstall->logosDirectory(), *addedGame)).isValid())
+                if(!QFileInfo::exists(logoLocalPath))
                 {
-                    // Notify GUI Thread of error
-                    emit blockingErrorOccured(mBlockingErrorResponse, imageTransferError,
-                                              QMessageBox::Retry | QMessageBox::Ignore | QMessageBox::NoToAll);
-
-                    // Check response
-                    if(*mBlockingErrorResponse == QMessageBox::Ignore)
-                       break;
-                    else if(*mBlockingErrorResponse == QMessageBox::NoToAll)
-                       skipAllImages = true;
+                    QUrl logoRemotePath = mFlashpointInstall->imageRemoteUrl(FP::ImageType::Logo, addedGame->getId());
+                    mImageDownloadManager.appendTask(Qx::DownloadTask{logoRemotePath, logoLocalPath});
                 }
+                else
+                    emit progressMaximumChanged(--mMaximumProgressValue); // Already exists, remove download step from progress bar
 
-                while(!skipAllImages &&
-                      (imageTransferError = mFrontendInstall->importImage(mOptionSet.imageMode, Fe::Install::Screenshot, mFlashpointInstall->screenshotsDirectory(), *addedGame)).isValid())
+                if(!QFileInfo::exists(ssLocalPath))
                 {
-                    // Notify GUI Thread of error
-                    emit blockingErrorOccured(mBlockingErrorResponse, imageTransferError,
-                                              QMessageBox::Retry | QMessageBox::Ignore | QMessageBox::NoToAll);
-
-                    // Check response
-                    if(*mBlockingErrorResponse == QMessageBox::Ignore)
-                       break;
-                    else if(*mBlockingErrorResponse == QMessageBox::NoToAll)
-                       skipAllImages = true;
+                    QUrl ssRemotePath = mFlashpointInstall->imageRemoteUrl(FP::ImageType::Screenshot, addedGame->getId());
+                    mImageDownloadManager.appendTask(Qx::DownloadTask{ssRemotePath, logoLocalPath});
                 }
+                else
+                    emit progressMaximumChanged(--mMaximumProgressValue); // Already exists, remove download step from progress bar
             }
 
-            // Update progress dialog value
+            // Perform immediate image handling if applicable
+            if(mOptionSet.imageMode == Fe::Install::Reference)
+            {
+                if(mFrontendInstall->imageRefType() == Fe::Install::ImageRefType::Single)
+                {
+                    mFrontendInstall->referenceImage(FP::ImageType::Logo, logoLocalPath, *addedGame);
+                    mFrontendInstall->referenceImage(FP::ImageType::Screenshot, ssLocalPath, *addedGame);
+                }
+                else if(mFrontendInstall->imageRefType() == Fe::Install::ImageRefType::Platform)
+                {
+                    currentPlatformDoc->setGameImageReference(FP::ImageType::Logo, addedGame->getId(), logoLocalPath);
+                    currentPlatformDoc->setGameImageReference(FP::ImageType::Screenshot, addedGame->getId(), ssLocalPath);
+                }
+            }
+            else // Setup transfer tasks if applicable
+            {
+                QString logoDestPath = mFrontendInstall->imageDestinationPath(FP::ImageType::Logo, *addedGame);
+                QString ssDestPath = mFrontendInstall->imageDestinationPath(FP::ImageType::Screenshot, *addedGame);
+                mImageTransferJobs.append(ImageTransferJob{logoLocalPath, logoDestPath});
+                mImageTransferJobs.append(ImageTransferJob{ssLocalPath, ssDestPath});
+            }
+
+            // Update progress dialog value for game addition
             if(mCanceled)
             {
                 errorReport = Qx::GenericError();
@@ -325,9 +414,130 @@ ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& erro
     return Successful;
 }
 
+
+
+ImportWorker::ImportResult ImportWorker::processImages(Qx::GenericError& errorReport, const QList<FP::DB::QueryBuffer>& playlistSpecGameQueries)
+{
+    // Download images if applicable
+    if(mOptionSet.downloadImages && mImageDownloadManager.hasTasks())
+    {
+        // Update progress dialog label
+        emit progressStepChanged(STEP_DOWNLOADING_IMAGES);
+
+        // Configure manager
+        mImageDownloadManager.setMaxSimultaneous(2);
+        mImageDownloadManager.setOverwrite(false); // Should be no attempts to overwrite, but here just in case
+        mImageDownloadManager.setAutoAbort(false); // Get as many images as possible;
+
+        // Download progress tracker
+        int lastTaskCount = mImageDownloadManager.taskCount();
+
+        // Make connections
+        connect(&mImageDownloadManager, &Qx::SyncDownloadManager::sslErrors, this, [&](Qx::GenericError errorMsg, bool* abort) {
+            emit blockingErrorOccured(mBlockingErrorResponse, errorMsg, QMessageBox::Yes | QMessageBox::Abort);
+            *abort = *mBlockingErrorResponse == QMessageBox::Abort;
+        });
+
+        connect(&mImageDownloadManager, &Qx::SyncDownloadManager::authenticationRequired, this, &ImportWorker::authenticationRequired);
+
+        connect(&mImageDownloadManager, &Qx::SyncDownloadManager::downloadProgress, this, [this, &lastTaskCount](qint64 bytesCurrent) { // clazy:exclude=lambda-in-connect
+            Q_UNUSED(bytesCurrent); // Instead, track progress via tasks instead of bytes
+
+            int currentTaskCount = mImageDownloadManager.taskCount();
+            if(currentTaskCount < lastTaskCount)
+            {
+                mCurrentProgressValue += lastTaskCount - currentTaskCount;
+                lastTaskCount = currentTaskCount;
+                emit progressValueChanged(mCurrentProgressValue);
+            }
+        });
+
+        // Start download
+        Qx::SyncDownloadManager::Report downloadReport = mImageDownloadManager.processQueue();
+
+        // Handle result
+        if(!downloadReport.wasSuccessful())
+        {
+            // Notify GUI Thread of error
+            emit blockingErrorOccured(mBlockingErrorResponse, downloadReport.errorInfo(), QMessageBox::Abort | QMessageBox::Ignore);
+
+            // Check response
+            if(*mBlockingErrorResponse == QMessageBox::Abort)
+            {
+                errorReport = Qx::GenericError();
+                return Canceled;
+            }
+        }
+    }
+
+    // Import images if applicable
+    if(mOptionSet.imageMode == Fe::Install::Reference && mFrontendInstall->imageRefType() == Fe::Install::ImageRefType::Bulk)
+    {
+        // Update progress dialog label
+        emit progressStepChanged(STEP_SETTING_IMAGE_REFERENCES);
+
+        // Create playlist pecific platforms set
+        QStringList playlistSpecPlatforms;
+        for(const FP::DB::QueryBuffer& query : qAsConst(playlistSpecGameQueries))
+            playlistSpecPlatforms.append(query.source);
+
+        // Initiate frontend reference routine
+        Qx::GenericError referenceError = mFrontendInstall->bulkReferenceImages(QDir::toNativeSeparators(mFlashpointInstall->logosDirectory().absolutePath()),
+                                                                                QDir::toNativeSeparators(mFlashpointInstall->screenshotsDirectory().absolutePath()),
+                                                                                mImportSelections.platforms + playlistSpecPlatforms);
+        if(referenceError.isValid())
+        {
+            // Emit import failure
+            errorReport = referenceError;
+            return Failed;
+        }
+    }
+    else if(mOptionSet.imageMode != Fe::Install::Reference)
+    {
+        // Update progress dialog label
+        emit progressStepChanged(STEP_IMPORTING_IMAGES);
+
+        // Setup for image transfers
+        Qx::GenericError imageTransferError; // Error return reference
+        *mBlockingErrorResponse = QMessageBox::NoToAll; // Default to choice "NoToAll" incase the signal is not correctly connected using Qt::BlockingQueuedConnection
+        bool skipAllImages = false; // NoToAll response tracker
+
+        for(const ImageTransferJob& imageJob : qAsConst(mImageTransferJobs))
+        {
+            while(!skipAllImages && (imageTransferError = transferImage(mOptionSet.imageMode == Fe::Install::Link, imageJob.sourcePath, imageJob.destPath)).isValid())
+            {
+                // Notify GUI Thread of error
+                emit blockingErrorOccured(mBlockingErrorResponse, imageTransferError,
+                                          QMessageBox::Retry | QMessageBox::Ignore | QMessageBox::NoToAll);
+
+                // Check response
+                if(*mBlockingErrorResponse == QMessageBox::Ignore)
+                   break;
+                else if(*mBlockingErrorResponse == QMessageBox::NoToAll)
+                   skipAllImages = true;
+            }
+
+           // Update progress dialog value
+           if(mCanceled)
+           {
+               errorReport = Qx::GenericError();
+               return Canceled;
+           }
+           else
+               emit progressValueChanged(++mCurrentProgressValue);
+        }
+    }
+
+    // Report successful step completion
+    errorReport = Qx::GenericError();
+    return Successful;
+}
+
 //Public
 ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
 {
+    //-Setup----------------------------------------------------------------
+
     // Import step status
     ImportResult importStepStatus;
 
@@ -346,6 +556,8 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
 
     // Get flashpoint database
     FP::DB* fpDatabase = mFlashpointInstall->database();
+
+    //-Preloading-------------------------------------------------------------
 
     // Make initial playlists query
     queryError = fpDatabase->queryPlaylistsByName(playlistQueries, mImportSelections.playlists);
@@ -413,20 +625,50 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
        return Failed;
     }
 
-    // Determine workload
+    //-Determine Workload-------------------------------------------------
+    /* TODO: Maybe add weighting system (instead of all tasks just being a progress bar unit of 1) so that image
+     * operations aren't as dominant in worst case image scenarios (i.e. all to download and transfer)
+    */
     mCurrentProgressValue = 0;
-    mMaximumProgressValue = addAppQuery.size; // Additional App pre-load
-    for(const FP::DB::QueryBuffer& query : qAsConst(gameQueries)) // All games
+    int totalGameCount = 0;
+
+    // Additional App pre-load
+    mMaximumProgressValue = addAppQuery.size;
+
+    // All games
+    for(const FP::DB::QueryBuffer& query : qAsConst(gameQueries))
+    {
         mMaximumProgressValue += query.size;
-    for(const FP::DB::QueryBuffer& query : qAsConst(playlistSpecGameQueries)) // All playlist specific games
+        totalGameCount += query.size;
+    }
+
+    // All playlist specific games
+    for(const FP::DB::QueryBuffer& query : qAsConst(playlistSpecGameQueries))
+    {
         mMaximumProgressValue += query.size;
-    for(const FP::DB::QueryBuffer& query : qAsConst(playlistGameQueries)) // All playlist games
+        totalGameCount += query.size;
+    }
+
+    // Screenshot and Logo downloads
+    if(mOptionSet.downloadImages)
+        mMaximumProgressValue += totalGameCount * 2;
+
+    // Screenshot and Logo transfer
+    if(mOptionSet.imageMode != Fe::Install::ImageMode::Reference)
+        mMaximumProgressValue += totalGameCount * 2;
+
+    // All playlist games
+    for(const FP::DB::QueryBuffer& query : qAsConst(playlistGameQueries))
         mMaximumProgressValue += query.size;
-    mMaximumProgressValue += addAppQuery.size * gameQueries.size() + addAppQuery.size * playlistSpecGameQueries.size(); // All checks of Additional Apps
+
+    // All checks of Additional Apps
+    mMaximumProgressValue += addAppQuery.size * gameQueries.size() + addAppQuery.size * playlistSpecGameQueries.size();
 
     // Re-prep progress dialog
     emit progressMaximumChanged(mMaximumProgressValue);
     emit progressStepChanged(STEP_ADD_APP_PRELOAD);
+
+    //-Primary Import Stages-------------------------------------------------
 
     // Pre-load additional apps
     if((importStepStatus = preloadAddApps(errorReport, addAppQuery)) != Successful)
@@ -440,38 +682,9 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     if((importStepStatus = processGames(errorReport, playlistSpecGameQueries, true)) != Successful)
         return importStepStatus;
 
-    // Set image references if applicable
-    if(mOptionSet.imageMode == Fe::Install::Reference)
-    {
-        if(mFrontendInstall->imageRefType() == Fe::Install::ImageRefType::Single)
-        {
-            throw std::runtime_error("Not implemented");
-            //TODO Implement (also probably needs to go somewhere else), though probably best to leave
-            // like this until a frontend that needs it is found to make it easier to determine the
-            // best approach
-        }
-        else
-        {
-            // Update progress dialog label
-            emit progressStepChanged(STEP_SETTING_IMAGE_REFERENCES);
-
-            // Create playlist pecific platforms set
-            QStringList playlistSpecPlatforms;
-            for(const FP::DB::QueryBuffer& query : qAsConst(playlistSpecGameQueries))
-                playlistSpecPlatforms.append(query.source);
-
-            // Initiate frontend reference routine
-            Qx::GenericError referenceError = mFrontendInstall->bulkReferenceImages(QDir::toNativeSeparators(mFlashpointInstall->logosDirectory().absolutePath()),
-                                                                                    QDir::toNativeSeparators(mFlashpointInstall->screenshotsDirectory().absolutePath()),
-                                                                                    mImportSelections.platforms + playlistSpecPlatforms);
-            if(referenceError.isValid())
-            {
-                // Emit import failure
-                errorReport = referenceError;
-                return Failed;
-            }
-        }
-    }
+    // Process images
+    if((importStepStatus = processImages(errorReport, playlistSpecGameQueries)) != Successful)
+        return importStepStatus;
 
     // Process playlists
     if((importStepStatus = processPlaylists(errorReport, playlistGameQueries)) != Successful)

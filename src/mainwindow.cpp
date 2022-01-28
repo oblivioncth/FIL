@@ -145,17 +145,29 @@ void MainWindow::initializeEnableConditionMaps()
                (getSelectedPlaylistGameMode() ==  ImportWorker::ForceAll && mFrontendInstall->getExistingPlatforms().count() > 0);
     };
     mWidgetEnableConditionMap[ui->groupBox_imageMode] = [&](){ return mFrontendInstall && mFlashpointInstall; };
+
+    mWidgetEnableConditionMap[ui->radioButton_reference] = [&](){
+        return mFrontendInstall && mFlashpointInstall && mFrontendInstall->supportsImageMode(Fe::Install::ImageMode::Reference);
+    };
+    mWidgetEnableConditionMap[ui->radioButton_link] = [&](){
+        return mHasLinkPermissions && mFrontendInstall && mFlashpointInstall && mFrontendInstall->supportsImageMode(Fe::Install::ImageMode::Link);
+    };
+    mWidgetEnableConditionMap[ui->radioButton_reference] = [&](){
+        return mFrontendInstall && mFlashpointInstall && mFrontendInstall->supportsImageMode(Fe::Install::ImageMode::Copy);
+    };
+
     mWidgetEnableConditionMap[ui->pushButton_startImport] = [&](){ return getSelectedPlatforms().count() > 0 ||
                                                                           (getSelectedPlaylistGameMode() == ImportWorker::ForceAll && getSelectedPlaylists().count() > 0); };
 
     // Populate hashmap of action element enable conditions
+    mActionEnableConditionMap[ui->action_forceDownloadImages] = [&](){ return mFlashpointInstall && mFlashpointInstall->preferences().onDemandImages; };
     mActionEnableConditionMap[ui->action_editTagFilter] = [&](){ return mFrontendInstall && mFlashpointInstall; };
 }
 
 bool MainWindow::installMatchesTargetVersion(const FP::Install& fpInstall)
 {
     QString hash = fpInstall.launcherChecksum();
-    QString ver = fpInstall.versionString();
+    QString ver = fpInstall.nameVersionString();
 
     // Check for ultimate
     if(hash == TARGET_ULT_LAUNCHER_SHA256 && ver == TARGET_ULT_VER_STRING)
@@ -188,7 +200,7 @@ void MainWindow::validateInstall(QString installPath, Install install)
             if(mFrontendInstall)
             {
                 ui->icon_frontend_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
-                ui->label_frontendVersion->setText(mFrontendInstall->versionString());
+                ui->label_frontendVersion->setText(mFrontendInstall->name() + " " + mFrontendInstall->versionString());
             }
             else
                 invalidateInstall(install, true);
@@ -198,7 +210,7 @@ void MainWindow::validateInstall(QString installPath, Install install)
             mFlashpointInstall = std::make_shared<FP::Install>(installPath);
             if(mFlashpointInstall->isValid())
             {
-                ui->label_flashpointVersion->setText(mFlashpointInstall->versionString());
+                ui->label_flashpointVersion->setText(mFlashpointInstall->nameVersionString());
                 if(installMatchesTargetVersion(*mFlashpointInstall))
                     ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
                 else
@@ -473,9 +485,24 @@ void MainWindow::refreshEnableStates()
     for(i = mWidgetEnableConditionMap.constBegin(); i != mWidgetEnableConditionMap.constEnd(); i++)
         i.key()->setEnabled(i.value()());
 
+    // Special handling for image import modes
+    if(!ui->buttonGroup_imageMode->checkedButton()->isEnabled())
+    {
+        if(ui->radioButton_link->isEnabled())
+            ui->radioButton_link->setChecked(true);
+        else if(ui->radioButton_reference->isEnabled())
+            ui->radioButton_reference->setChecked(true);
+        else
+            ui->radioButton_copy->setChecked(true);
+    }
+
     QHash<QAction*, std::function<bool(void)>>::const_iterator j;
     for(j = mActionEnableConditionMap.constBegin(); j != mActionEnableConditionMap.constEnd(); j++)
         j.key()->setEnabled(j.value()());
+
+    // Special handling for force download images option
+    if(!ui->action_forceDownloadImages->isEnabled())
+        ui->action_forceDownloadImages->setChecked(false);
 }
 
 QStringList MainWindow::getSelectedPlatforms() const
@@ -507,7 +534,7 @@ FP::DB::InclusionOptions MainWindow::getSelectedInclusionOptions() const
 
 Fe::UpdateOptions MainWindow::getSelectedUpdateOptions() const
 {
-    return {ui->radioButton_onlyAdd->isChecked() ? Fe::OnlyNew : Fe::NewAndExisting, ui->checkBox_removeMissing->isChecked() };
+    return {ui->radioButton_onlyAdd->isChecked() ? Fe::ImportMode::OnlyNew : Fe::ImportMode::NewAndExisting, ui->checkBox_removeMissing->isChecked() };
 }
 
 Fe::Install::ImageMode MainWindow::getSelectedImageMode() const
@@ -518,6 +545,11 @@ Fe::Install::ImageMode MainWindow::getSelectedImageMode() const
 ImportWorker::PlaylistGameMode MainWindow::getSelectedPlaylistGameMode() const
 {
     return ui->radioButton_selectedPlatformsOnly->isChecked() ? ImportWorker::SelectedPlatform : ImportWorker::ForceAll;
+}
+
+bool MainWindow::getForceDownloadImages() const
+{
+    return ui->action_forceDownloadImages->isChecked();
 }
 
 void MainWindow::prepareImport()
@@ -575,12 +607,21 @@ void MainWindow::prepareImport()
         QApplication::processEvents();
 
         // Setup import worker
-        ImportWorker importWorker(mFlashpointInstall, mFrontendInstall,
-                                  {selPlatforms, selPlaylists},
-                                  {getSelectedUpdateOptions(), getSelectedImageMode(), getSelectedPlaylistGameMode(), getSelectedInclusionOptions()});
+        ImportWorker::ImportSelections impSel{selPlatforms, selPlaylists};
+        ImportWorker::OptionSet optSet{
+            getSelectedUpdateOptions(),
+            getSelectedImageMode(),
+            getForceDownloadImages(),
+            getSelectedPlaylistGameMode(),
+            getSelectedInclusionOptions()
+        };
+        ImportWorker importWorker(mFlashpointInstall, mFrontendInstall, impSel, optSet);
 
         // Setup blocking error connection
         connect(&importWorker, &ImportWorker::blockingErrorOccured, this, &MainWindow::handleBlockingError);
+
+        // Setup auth handler
+        connect(&importWorker, &ImportWorker::authenticationRequired, this, &MainWindow::handleAuthRequest);
 
         // Create process update connections
         connect(&importWorker, &ImportWorker::progressStepChanged, mImportProgressDialog.get(), &QProgressDialog::setLabelText);
@@ -963,6 +1004,22 @@ void MainWindow::handleBlockingError(std::shared_ptr<int> response, Qx::GenericE
     // If applicable return selection
     if(response)
         *response = userChoice;
+}
+
+void MainWindow::handleAuthRequest(QString prompt, QString* username, QString* password, bool* abort)
+{
+    Qx::LoginDialog ld;
+    ld.setPrompt(prompt);
+
+    int choice = ld.exec();
+
+    if(choice == QDialog::Accepted)
+    {
+        *username = ld.getUsername();
+        *password = ld.getPassword();
+    }
+    else
+        *abort = true;
 }
 
 void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx::GenericError errorReport)

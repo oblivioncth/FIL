@@ -83,16 +83,9 @@ QString Install::dataDocPath(Fe::DataDoc::Identifier identifier) const
         case Fe::DataDoc::Type::Config:
             return mDataDirectory.absoluteFilePath(identifier.docName());
             break;
+        default:
+                throw new std::invalid_argument("Fucntion argument was not of type Fe::DataDoc::Identifier");
     }
-}
-
-QString Install::imageDestinationPath(ImageType imageType, const Fe::Game& game) const
-{
-    return mPlatformImagesDirectory.absolutePath() + '/' +
-           game.getPlatform() + '/' +
-           imageType == Logo ? LOGO_PATH : SCREENSHOT_PATH + '/' +
-           game.getId().toString(QUuid::WithoutBraces) +
-           IMAGE_EXT;
 }
 
 std::shared_ptr<Fe::PlatformDocReader> Install::prepareOpenPlatformDoc(std::unique_ptr<Fe::PlatformDoc>& platformDoc, const QString& name, const Fe::UpdateOptions& updateOptions)
@@ -183,11 +176,11 @@ Qx::GenericError Install::savePlatformsDoc(std::unique_ptr<PlatformsDoc> documen
     return writeErrorStatus;
 }
 
-
 //Public:
 QString Install::name() const { return NAME; }
 QString Install::executablePath() const { return mRootDirectory.absoluteFilePath(MAIN_EXE_PATH); }
 Install::ImageRefType Install::imageRefType() const { return ImageRefType::Bulk; }
+bool Install::supportsImageMode(ImageMode imageMode) const { return IMAGE_MODES.contains(imageMode); }
 
 Qx::GenericError Install::populateExistingDocs(QStringList targetPlatforms, QStringList targetPlaylists)
 {
@@ -224,6 +217,15 @@ Qx::GenericError Install::populateExistingDocs(QStringList targetPlatforms, QStr
     return !existingCheck.wasSuccessful() ?
                 Qx::GenericError(Qx::GenericError::Critical, ERR_INSEPECTION, existingCheck.getOutcome(), existingCheck.getOutcomeInfo()) :
                 Qx::GenericError();
+}
+
+QString Install::imageDestinationPath(FP::ImageType imageType, const Fe::Game& game) const
+{
+    return mPlatformImagesDirectory.absolutePath() + '/' +
+           game.getPlatform() + '/' +
+           (imageType == FP::ImageType::Logo ? LOGO_PATH : SCREENSHOT_PATH) + '/' +
+           game.getId().toString(QUuid::WithoutBraces) +
+           IMAGE_EXT;
 }
 
 Qx::GenericError Install::bulkReferenceImages(QString logoRootPath, QString screenshotRootPath, QStringList platforms)
