@@ -127,6 +127,11 @@ PlatformDoc::PlatformDoc(Install* const parent, std::unique_ptr<QFile> docFile, 
 DataDoc::Type PlatformDoc::type() const { return Type::Platform; }
 
 //Public:
+void PlatformDoc::setGameImageReference(FP::ImageType, QUuid, QString)
+{
+    throw new std::exception("UNSUPPORTED");
+}
+
 const QHash<QUuid, std::shared_ptr<Game>>& PlatformDoc::getFinalGames() const { return mGamesFinal; }
 const QHash<QUuid, std::shared_ptr<AddApp>>& PlatformDoc::getFinalAddApps() const { return mAddAppsFinal; }
 

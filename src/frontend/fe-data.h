@@ -9,7 +9,7 @@
 namespace Fe
 {
 //-Enums----------------------------------------------------------------------------------------------------------
-enum ImportMode {OnlyNew, NewAndExisting};
+enum class ImportMode {OnlyNew, NewAndExisting};
 
 //-Structs---------------------------------------------------------------------------------------------------------
 struct UpdateOptions
@@ -21,6 +21,10 @@ struct UpdateOptions
 //-Classes-----------------------------------------------------------------------------------------------------------
 class DataDoc
 {
+    /* TODO: Consider making this a template class where T is the type argument for the doc's parent, so that the
+     * parent() method can return the type directly, without a derived document needing to cast to it's parent's type
+    */
+
     friend class Install;
     friend class DataDocReader;
     friend class DataDocWriter;
@@ -219,6 +223,8 @@ protected:
     virtual std::shared_ptr<AddApp> prepareAddApp(const FP::AddApp& game) = 0;
 
 public:
+    virtual void setGameImageReference(FP::ImageType imageType, QUuid gameId, QString sourcePath);
+
     const QHash<QUuid, std::shared_ptr<Game>>& getFinalGames() const;
     const QHash<QUuid, std::shared_ptr<AddApp>>& getFinalAddApps() const;
 
