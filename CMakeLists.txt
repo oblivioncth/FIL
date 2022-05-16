@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.21.1)
 
 project(OFILb VERSION 0.4.1.3 LANGUAGES CXX)
+set(TARGET_FP_VERSION 10.1.0.3)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -58,7 +59,6 @@ set(CXX_SOURCES
     src/launchbox/lb-items.cpp
     src/mainwindow.h
     src/mainwindow.cpp
-    src/version.h
     src/main.cpp
 )
 
@@ -85,26 +85,36 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/res"
     FILES ${QT_RESOURCES}
 )
 
-source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/res"
-    PREFIX "Windows Resources"
-    FILES ${WINDOWS_RESOURCES}
-)
-
 # Add executable target
-qt_add_executable(${PROJECT_NAME}
-    ${CXX_SOURCES}
-    ${QT_UI_RESOURCES}
-    ${QT_RESOURCES}
-    ${WINDOWS_RESOURCES}
+set(TARGET_NAME ${PROJECT_NAME})
+qt_add_executable(${TARGET_NAME} WIN32)
+
+# Add sources to target
+target_sources(${TARGET_NAME}
+    PRIVATE
+        ${CXX_SOURCES}
+        ${QT_UI_RESOURCES}
+        ${QT_RESOURCES}
 )
 
-# Set executable properties
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    WIN32_EXECUTABLE TRUE
+# Set target exe details
+include(WinExecutableDetails)
+set_win_executable_details(${TARGET_NAME}
+    ICON "res/icon/OFILb.ico"
+    FILE_VER ${PROJECT_VERSION}
+    PRODUCT_VER ${TARGET_FP_VERSION}
+    COMPANY_NAME "oblivioncth"
+    FILE_DESC "Flashpoint Importer for LaunchBox"
+    INTERNAL_NAME "OFILb"
+    COPYRIGHT "Open Source @ 2021 oblivioncth"
+    TRADEMARKS_ONE "All Rights Reserved"
+    TRADEMARKS_TWO "GNU AGPL V3"
+    ORIG_FILENAME "OFILb.exe"
+    PRODUCT_NAME "Oby's Flashpoint Importer for LaunchBox"
 )
 
 # Link target to libraries
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(${TARGET_NAME}
     PRIVATE
         Qt6::Core
         Qt6::Gui
