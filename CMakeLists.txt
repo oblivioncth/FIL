@@ -51,14 +51,20 @@ set(CXX_SOURCES
     src/flashpoint/fp-json.cpp
     src/flashpoint/fp-macro.h
     src/flashpoint/fp-macro.cpp
+    src/frontend/fe-data.h
+    src/frontend/fe-data.cpp
+    src/frontend/fe-install.h
+    src/frontend/fe-install.cpp
+    src/frontend/fe-items.h
+    src/frontend/fe-items.cpp
+    src/frontend/launchbox/lb-data.h
+    src/frontend/launchbox/lb-data.cpp
+    src/frontend/launchbox/lb-install.h
+    src/frontend/launchbox/lb-install.cpp
+    src/frontend/launchbox/lb-items.h
+    src/frontend/launchbox/lb-items.cpp
     src/import-worker.h
     src/import-worker.cpp
-    src/launchbox/lb-install.h
-    src/launchbox/lb-install.cpp
-    src/launchbox/lb-xml.h
-    src/launchbox/lb-xml.cpp
-    src/launchbox/lb-items.h
-    src/launchbox/lb-items.cpp
     src/mainwindow.h
     src/mainwindow.cpp
     src/main.cpp
