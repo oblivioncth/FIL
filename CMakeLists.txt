@@ -35,7 +35,7 @@ include(FetchQx)
 fetch_qx(v0.2)
 
 # Set app sources
-set(PROJECT_SOURCES
+set(CXX_SOURCES
     src/clifp.h
     src/clifp.cpp
     src/flashpoint/fp-db.h
@@ -60,13 +60,43 @@ set(PROJECT_SOURCES
     src/mainwindow.cpp
     src/version.h
     src/main.cpp
+)
+
+set(QT_UI_RESOURCES
     res/ui/mainwindow.ui
+)
+
+set(QT_RESOURCES
     res/resources.qrc
+)
+
+set(WINDOWS_RESOURCES
     res/resources.rc
 )
 
+# Organize sources for IDE
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/res/ui"
+    PREFIX "UI Resources"
+    FILES ${QT_UI_RESOURCES}
+)
+
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/res"
+    PREFIX "General Resources"
+    FILES ${QT_RESOURCES}
+)
+
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/res"
+    PREFIX "Windows Resources"
+    FILES ${WINDOWS_RESOURCES}
+)
+
 # Add executable target
-qt_add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
+qt_add_executable(${PROJECT_NAME}
+    ${CXX_SOURCES}
+    ${QT_UI_RESOURCES}
+    ${QT_RESOURCES}
+    ${WINDOWS_RESOURCES}
+)
 
 # Set executable properties
 set_target_properties(${PROJECT_NAME} PROPERTIES
