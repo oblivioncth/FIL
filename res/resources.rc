@@ -1,6 +1,6 @@
-IDI_ICON1               ICON    DISCARDABLE     "res/icon/OFILb.ico"
+IDI_ICON1               ICON    DISCARDABLE     "icon/OFILb.ico"
 
-#include "src\version.h"
+#include "..\src\version.h"
 #include "Windows.h"
 
 VS_VERSION_INFO VERSIONINFO

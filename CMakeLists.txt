@@ -60,9 +60,9 @@ set(PROJECT_SOURCES
     src/mainwindow.cpp
     src/version.h
     src/main.cpp
-    res/mainwindow.ui
-    resources.qrc
-    resources.rc
+    res/ui/mainwindow.ui
+    res/resources.qrc
+    res/resources.rc
 )
 
 # Add executable target
