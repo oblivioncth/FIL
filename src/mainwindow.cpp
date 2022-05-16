@@ -1,8 +1,12 @@
+// Standard Library Includes
+#include <assert.h>
+#include <filesystem>
+
+// Qt Includes
 #include <QSet>
 #include <QFile>
 #include <QFileDialog>
 #include <QtXml>
-#include <assert.h>
 #include <QFileInfo>
 #include <QPushButton>
 #include <QLineEdit>
@@ -10,10 +14,17 @@
 #include <QDesktopServices>
 #include <QUrl>
 #include <QShowEvent>
-#include <filesystem>
+
+// Qx Includes
+#include <qx/gui/qx-color.h>
+#include <qx/widgets/qx-treeinputdialog.h>
+#include <qx/windows/qx-filedetails.h>
+#include <qx/windows/qx-common-windows.h>
+
+// Project Includes
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "version.h"
+#include "project_vars.h"
 #include "clifp.h"
 #include "qx-windows.h"
 
@@ -39,7 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
         // Create local copy of internal CLIFp.exe since internal path cannot be used with WinAPI
         QString localCopyPath = tempDir.path() + '/' + CLIFp::EXE_NAME;
         if(QFile::copy(":/res/file/" + CLIFp::EXE_NAME, localCopyPath))
-            mInternalCLIFpVersion = Qx::getFileDetails(localCopyPath).getFileVersion();
+            mInternalCLIFpVersion = Qx::FileDetails::readFileDetails(localCopyPath).fileVersion();
     }
 
     // Abort if no version could be determined
@@ -52,9 +63,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // General setup
     ui->setupUi(this);
-    QApplication::setApplicationName(VER_PRODUCTNAME_STR);
+    QApplication::setApplicationName(PROJECT_FULL_NAME);
     mHasLinkPermissions = testForLinkPermissions();
-    setWindowTitle(VER_PRODUCTNAME_STR);
+    setWindowTitle(PROJECT_FULL_NAME);
     initializeEnableConditionMaps();
     initializeForms();
 
@@ -105,7 +116,7 @@ void MainWindow::initializeForms()
     mExistingItemColor = ui->label_existingItemColor->palette().color(QPalette::Window);
 
     // Add CLIFp version to deploy option
-    ui->action_deployCLIFp->setText(ui->action_deployCLIFp->text() +  " " + mInternalCLIFpVersion.toString(Qx::MMRB::StringFormat::NoTrailRBZero));
+    ui->action_deployCLIFp->setText(ui->action_deployCLIFp->text() +  " " + mInternalCLIFpVersion.normalized(2).toString());
 
     // Prepare help messages
     mArgedPlaylistGameModeHelp = MSG_PLAYLIST_GAME_MODE_HELP.arg(ui->radioButton_selectedPlatformsOnly->text(),
@@ -290,7 +301,7 @@ void MainWindow::generateTagSelectionOptions()
     QMap<int, Fp::Db::TagCategory> tagMap = mFlashpointInstall->database()->tags();
 
     // Create new model
-    mTagSelectionModel = std::make_unique<Qx::StandardItemModelX>();
+    mTagSelectionModel = std::make_unique<Qx::StandardItemModel>();
     mTagSelectionModel->setAutoTristate(true);
     mTagSelectionModel->setSortRole(Qt::DisplayRole);
 
@@ -303,7 +314,7 @@ void MainWindow::generateTagSelectionOptions()
     {
         QStandardItem* rootItem = new QStandardItem(QString(i->name));
         rootItem->setData(QBrush(i->color), Qt::BackgroundRole);
-        rootItem->setData(QBrush(Qx::Color::textColorFromBackgroundColor(i->color)), Qt::ForegroundRole);
+        rootItem->setData(QBrush(Qx::Color::textFromBackground(i->color)), Qt::ForegroundRole);
         rootItem->setCheckState(Qt::CheckState::Checked);
         rootItem->setCheckable(true);
         QMap<int, Fp::Db::Tag>::const_iterator j;
@@ -450,17 +461,18 @@ void MainWindow::postListError(QString mainText, QStringList detailedItems)
     listError.exec();
 }
 
-void MainWindow::postIOError(QString mainText, Qx::IOOpReport report)
+void MainWindow::postIOError(QString mainText, Qx::IoOpReport report)
 {
     QMessageBox ioErrorMsg;
     ioErrorMsg.setIcon(QMessageBox::Critical);
     ioErrorMsg.setText(mainText);
-    ioErrorMsg.setInformativeText(report.getOutcome());
+    ioErrorMsg.setInformativeText(report.outcome());
     ioErrorMsg.setStandardButtons(QMessageBox::Ok);
 
     ioErrorMsg.exec();
 }
 
+// TODO: Probably replace this with Qx::postError()
 int MainWindow::postGenericError(Qx::GenericError error, QMessageBox::StandardButtons choices)
 {
     // Prepare dialog
@@ -595,13 +607,11 @@ void MainWindow::prepareImport()
         mImportProgressDialog->setMinimumDuration(0); // Always show pd
         mImportProgressDialog->setValue(0); // Get pd to show
 
-        // Get taskbar progress indicator and set it up  TODO: Remove for Qt6
-        QWinTaskbarProgress* tbProgress = mWindowTaskbarButton->progress();
-        tbProgress->setMinimum(0);
-        tbProgress->setMaximum(10000); // Arbitrarily high maximum so initial percentage is 0
-        tbProgress->setValue(0);
-        tbProgress->resume(); // Ensure possible previous errors are cleared
-        tbProgress->setVisible(true);
+        // Setup taskbar button progress indicator
+        mWindowTaskbarButton->setProgressMinimum(0);
+        mWindowTaskbarButton->setProgressMaximum(10000); // Arbitrarily high maximum so initial percentage is 0
+        mWindowTaskbarButton->setProgressValue(0);
+        mWindowTaskbarButton->setProgressState(Qx::TaskbarButton::Normal);
 
         // Force show progress immediately
         QApplication::processEvents();
@@ -626,9 +636,9 @@ void MainWindow::prepareImport()
         // Create process update connections
         connect(&importWorker, &ImportWorker::progressStepChanged, mImportProgressDialog.get(), &QProgressDialog::setLabelText);
         connect(&importWorker, &ImportWorker::progressMaximumChanged, mImportProgressDialog.get(), &QProgressDialog::setMaximum);
-        connect(&importWorker, &ImportWorker::progressMaximumChanged, tbProgress, &QWinTaskbarProgress::setMaximum);
+        connect(&importWorker, &ImportWorker::progressMaximumChanged, mWindowTaskbarButton, &Qx::TaskbarButton::setProgressMaximum);
         connect(&importWorker, &ImportWorker::progressValueChanged, mImportProgressDialog.get(), &QProgressDialog::setValue);
-        connect(&importWorker, &ImportWorker::progressValueChanged, tbProgress, &QWinTaskbarProgress::setValue);
+        connect(&importWorker, &ImportWorker::progressValueChanged, mWindowTaskbarButton, &Qx::TaskbarButton::setProgressValue);
         connect(mImportProgressDialog.get(), &QProgressDialog::canceled, &importWorker, &ImportWorker::notifyCanceled);
 
         // Create UI update timer reset connection
@@ -737,8 +747,8 @@ void MainWindow::showTagSelectionDialog()
     tagSelectionDialog.setModel(mTagSelectionModel.get());
     tagSelectionDialog.setWindowFlags(tagSelectionDialog.windowFlags() & ~Qt::WindowContextHelpButtonHint);
     tagSelectionDialog.setWindowTitle(CAPTION_TAG_FILTER);
-    connect(&tagSelectionDialog, &Qx::TreeInputDialog::selectNoneClicked, mTagSelectionModel.get(), &Qx::StandardItemModelX::selectNone);
-    connect(&tagSelectionDialog, &Qx::TreeInputDialog::selectAllClicked, mTagSelectionModel.get(), &Qx::StandardItemModelX::selectAll);
+    connect(&tagSelectionDialog, &Qx::TreeInputDialog::selectNoneClicked, mTagSelectionModel.get(), &Qx::StandardItemModel::selectNone);
+    connect(&tagSelectionDialog, &Qx::TreeInputDialog::selectAllClicked, mTagSelectionModel.get(), &Qx::StandardItemModel::selectAll);
 
     // Present dialog and capture commitment choice
     int dc = tagSelectionDialog.exec();
@@ -766,8 +776,8 @@ void MainWindow::showEvent(QShowEvent* event)
     // Call standard function
     QMainWindow::showEvent(event);
 
-    // Configure taskbar button TODO: Remove for Qt6
-    mWindowTaskbarButton = new QWinTaskbarButton(this);
+    // Configure taskbar button
+    mWindowTaskbarButton = new Qx::TaskbarButton(this);
     mWindowTaskbarButton->setWindow(this->windowHandle());
 }
 
@@ -991,15 +1001,14 @@ void MainWindow::all_on_radioButton_clicked()
 
 void MainWindow::handleBlockingError(std::shared_ptr<int> response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices)
 {
-    // Get taskbar progress and indicate error TODO: Remove for Qt6
-    QWinTaskbarProgress* tbProgress = mWindowTaskbarButton->progress();
-    tbProgress->stop();
+    // Get taskbar progress and indicate error
+    mWindowTaskbarButton->setProgressState(Qx::TaskbarButton::Stopped);
 
     // Post error and get response
     int userChoice = postGenericError(blockingError, choices);
 
     // Clear taskbar error
-    tbProgress->resume();
+    mWindowTaskbarButton->setProgressState(Qx::TaskbarButton::Normal);
 
     // If applicable return selection
     if(response)
@@ -1026,8 +1035,8 @@ void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx:
 {
     // Close progress dialog and reset taskbar progress indicator
     mImportProgressDialog->close();
-    mWindowTaskbarButton->progress()->reset();
-    mWindowTaskbarButton->progress()->setVisible(false);
+    mWindowTaskbarButton->resetProgress();
+    mWindowTaskbarButton->setProgressState(Qx::TaskbarButton::Hidden);
 
     // Stop UI update timer
     //mUIUpdateWorkaroundTimer.stop();
