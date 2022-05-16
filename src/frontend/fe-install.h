@@ -1,10 +1,14 @@
 #ifndef FE_INSTALL_H
 #define FE_INSTALL_H
 
-#include "fe-data.h"
-#include "qx.h"
-
+// Qt Includes
 #include <QDir>
+
+// Qx Includes
+#include <qx/core/qx-genericerror.h>
+
+// Project Includes
+#include "fe-data.h"
 
 //-Macros-------------------------------------------------------------------------------------------------------------------
 #define REGISTER_FRONTEND(name, install) \

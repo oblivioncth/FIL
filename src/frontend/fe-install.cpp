@@ -1,10 +1,13 @@
+// Unit Include
 #include "fe-install.h"
 
-#include "qx-io.h"
-#include "qx-windows.h"
+// Qt Includes
 #include <QFileInfo>
 
-// Specifically for changing file permissions
+// Qx Includes
+#include <qx/windows/qx-filedetails.h>
+
+// Windows Includes (Specifically for changing file permissions)
 #include <atlstr.h>
 #include "Aclapi.h"
 #include "sddl.h"
@@ -182,10 +185,10 @@ QString Install::linkedClifpPath() const { return mLinkedClifpPath; }
 
 QString Install::versionString() const
 {
-    Qx::FileDetails exeDetails = Qx::getFileDetails(executablePath());
+    Qx::FileDetails exeDetails = Qx::FileDetails::readFileDetails(executablePath());
 
-    QString fileVersionStr = exeDetails.getStringTable().fileVersion;
-    QString productVersionStr = exeDetails.getStringTable().productVersion;
+    QString fileVersionStr = exeDetails.stringTable().fileVersion;
+    QString productVersionStr = exeDetails.stringTable().productVersion;
 
     if(!fileVersionStr.isEmpty())
         return fileVersionStr;
