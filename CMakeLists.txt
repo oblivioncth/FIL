@@ -126,4 +126,5 @@ target_link_libraries(${TARGET_NAME}
         Qx::Widgets
         Qx::Xml
         Qx::Windows
+        Qx::Windows-gui
 )
