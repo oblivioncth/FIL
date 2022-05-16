@@ -1,7 +1,12 @@
 #ifndef FE_ITEMS_H
 #define FE_ITEMS_H
 
-#include "qx.h"
+// Standard Library Includes
+#include <concepts>
+
+// Qt Includes
+#include <QHash>
+#include <QUuid>
 
 namespace Fe
 {
@@ -13,7 +18,8 @@ namespace Fe
 //-Namespace Global Classes-----------------------------------------------------------------------------------------
 class Item
 {
-    template <typename B, typename T, QX_ENABLE_IF_D(std::is_base_of<Item, T>)>
+    template <typename B, typename T>
+        requires std::derived_from<T, Item>
     friend class ItemBuilder;
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -30,7 +36,8 @@ public:
     void transferOtherFields(QHash<QString, QString>& otherFields);
 };
 
-template <typename B, typename T, QX_ENABLE_IF(std::is_base_of<Item, T>)>
+template <typename B, typename T>
+    requires std::derived_from<T, Item>
 class ItemBuilder
 {
 //-Instance Variables------------------------------------------------------------------------------------------
@@ -54,7 +61,8 @@ public:
 
 class BasicItem : public Item
 {
-    template <typename B, typename T, QX_ENABLE_IF_D(std::is_base_of<BasicItem, T>)>
+    template <typename B, typename T>
+        requires std::derived_from<T, BasicItem>
     friend class BasicItemBuilder;
 //-Instance Variables-----------------------------------------------------------------------------------------------
 protected:
@@ -72,7 +80,8 @@ public:
     QString getName() const;
 };
 
-template <typename B, typename T, QX_ENABLE_IF(std::is_base_of<BasicItem, T>)>
+template <typename B, typename T>
+    requires std::derived_from<T, BasicItem>
 class BasicItemBuilder : public ItemBuilder<B, T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
@@ -84,7 +93,8 @@ public:
 
 class Game : public BasicItem
 {
-    template <typename B, typename T, QX_ENABLE_IF_D(std::is_base_of<Game, T>)>
+    template <typename B, typename T>
+        requires std::derived_from<T, Game>
     friend class GameBuilder;
 //-Class Variables--------------------------------------------------------------------------------------------------
 protected:
@@ -105,7 +115,8 @@ public:
     QString getPlatform() const;
 };
 
-template <typename B, typename T, QX_ENABLE_IF(std::is_base_of<Game, T>)>
+template <typename B, typename T>
+    requires std::derived_from<T, Game>
 class GameBuilder : public BasicItemBuilder<B, T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
@@ -115,7 +126,8 @@ public:
 
 class AddApp : public BasicItem
 {
-    template <typename B, typename T, QX_ENABLE_IF_D(std::is_base_of<AddApp, T>)>
+    template <typename B, typename T>
+        requires std::derived_from<T, AddApp>
     friend class AddAppBuilder;
 //-Instance Variables-----------------------------------------------------------------------------------------------
 protected:
@@ -131,7 +143,8 @@ public:
     QUuid getGameId() const;
 };
 
-template <typename B, typename T, QX_ENABLE_IF(std::is_base_of<AddApp, T>)>
+template <typename B, typename T>
+    requires std::derived_from<T, AddApp>
 class AddAppBuilder : public BasicItemBuilder<B, T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
@@ -142,7 +155,8 @@ public:
 
 class PlaylistHeader : public BasicItem
 {
-    template <typename B, typename T, QX_ENABLE_IF_D(std::is_base_of<PlaylistHeader, T>)>
+    template <typename B, typename T>
+        requires std::derived_from<T, PlaylistHeader>
     friend class PlaylistHeaderBuilder;
 //-Constructor-------------------------------------------------------------------------------------------------
 protected:
@@ -150,13 +164,15 @@ protected:
     PlaylistHeader(QUuid id, QString name);
 };
 
-template <typename B, typename T, QX_ENABLE_IF(std::is_base_of<PlaylistHeader, T>)>
+template <typename B, typename T>
+    requires std::derived_from<T, PlaylistHeader>
 class PlaylistHeaderBuilder : public BasicItemBuilder<B, T>
 {};
 
 class PlaylistGame : public BasicItem
 {
-    template <typename B, typename T, QX_ENABLE_IF_D(std::is_base_of<PlaylistGame, T>)>
+    template <typename B, typename T>
+        requires std::derived_from<T, PlaylistGame>
     friend class PlaylistGameBuilder;
 //-Instance Variables-----------------------------------------------------------------------------------------------
 protected:
@@ -171,7 +187,8 @@ public:
     QUuid getGameId() const;
 };
 
-template <typename B, typename T, QX_ENABLE_IF(std::is_base_of<PlaylistGame, T>)>
+template <typename B, typename T>
+    requires std::derived_from<T, PlaylistGame>
 class PlaylistGameBuilder : public BasicItemBuilder<B, T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
