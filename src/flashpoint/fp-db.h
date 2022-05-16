@@ -1,9 +1,12 @@
 #ifndef FLASHPOINT_DB_H
 #define FLASHPOINT_DB_H
 
+// Qt Includes
 #include <QStringList>
 #include <QtSql>
-#include "qx.h"
+
+// Qx Includes
+#include <qx/core/qx-genericerror.h>
 
 namespace Fp
 {
