@@ -67,12 +67,6 @@ function(set_win_executable_details target)
         NEWLINE_STYLE UNIX
     )
 
-#    # Add file to group for IDE organization
-#    source_group(TREE "${GENERATED_DIR}"
-#        PREFIX "Windows Resources"
-#        FILES ${GENERATED_PATH}
-#    )
-
     # Add file to target
     target_sources(${target} PRIVATE "${GENERATED_PATH}")
 endfunction()

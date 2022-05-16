@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.21.1)
 
+# Project
 project(OFILb VERSION 0.4.1.3 LANGUAGES CXX)
 set(TARGET_FP_VERSION 10.1.0.3)
+set(FORMAL_NAME "Oby's Flashpoint Importer for LaunchBox")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -97,6 +99,14 @@ target_sources(${TARGET_NAME}
         ${QT_RESOURCES}
 )
 
+# Forward select project variables to C++ code
+include(ProjectVars)
+set_cxx_project_vars(${TARGET_NAME}
+    FULL_NAME "${FORMAL_NAME}"
+    SHORT_NAME "${PROJECT_NAME}"
+    TARGET_FP_VER ${TARGET_FP_VERSION}
+)
+
 # Set target exe details
 include(WinExecutableDetails)
 set_win_executable_details(${TARGET_NAME}
@@ -110,7 +120,7 @@ set_win_executable_details(${TARGET_NAME}
     TRADEMARKS_ONE "All Rights Reserved"
     TRADEMARKS_TWO "GNU AGPL V3"
     ORIG_FILENAME "OFILb.exe"
-    PRODUCT_NAME "Oby's Flashpoint Importer for LaunchBox"
+    PRODUCT_NAME "${FORMAL_NAME}"
 )
 
 # Link target to libraries
@@ -123,6 +133,7 @@ target_link_libraries(${TARGET_NAME}
         Qt6::Sql
         Qx::Core
         Qx::Io
+        Qx::Gui
         Qx::Widgets
         Qx::Xml
         Qx::Windows
