@@ -188,7 +188,7 @@ private:
 
     // Process monitoring
     std::unique_ptr<QProgressDialog> mImportProgressDialog;
-    Qx::TaskbarButton* mWindowTaskbarButton; // TODO: Remove for Qt6
+    Qx::TaskbarButton* mWindowTaskbarButton;
 
     //QTimer mUIUpdateWorkaroundTimer;
 
@@ -269,6 +269,7 @@ private slots:
 };
 
 //-Metatype Declarations-----------------------------------------------------------------------------------------
+//Q_DECLARE_METATYPE(std::shared_ptr<int>);
 Q_DECLARE_METATYPE(std::shared_ptr<int>);
 
 #endif // MAINWINDOW_H
