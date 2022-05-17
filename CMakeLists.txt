@@ -71,7 +71,7 @@ set(CXX_SOURCES
 )
 
 set(QT_UI_RESOURCES
-    res/ui/mainwindow.ui
+    src/mainwindow.ui
 )
 
 set(QT_RESOURCES
@@ -83,7 +83,7 @@ set(WINDOWS_RESOURCES
 )
 
 # Organize sources for IDE
-source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/res/ui"
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src"
     PREFIX "UI Resources"
     FILES ${QT_UI_RESOURCES}
 )
