@@ -25,7 +25,7 @@ bool operator== (const Json::StartStop& lhs, const Json::StartStop& rhs) noexcep
 }
 
 //-Hashing------------------------------------------------------------------------------------------------------
-uint qHash(const Json::StartStop& key, uint seed) noexcept
+size_t qHash(const Json::StartStop& key, size_t seed) noexcept
 {
     QtPrivate::QHashCombine hash;
     seed = hash(seed, key.path);
