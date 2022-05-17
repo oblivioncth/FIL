@@ -17,7 +17,9 @@
 
 // Qx Includes
 #include <qx/gui/qx-color.h>
+#include <qx/widgets/qx-common-widgets.h>
 #include <qx/widgets/qx-treeinputdialog.h>
+#include <qx/widgets/qx-logindialog.h>
 #include <qx/windows/qx-filedetails.h>
 #include <qx/windows/qx-common-windows.h>
 
@@ -26,8 +28,6 @@
 #include "ui_mainwindow.h"
 #include "project_vars.h"
 #include "clifp.h"
-#include "qx-windows.h"
-
 
 //===============================================================================================================
 // MAIN WINDOW
@@ -680,7 +680,7 @@ void MainWindow::revertAllFrontendChanges()
         else
         {
             currentError.setCaption(CAPTION_REVERT_ERR);
-            retryChoice = currentError.exec(QMessageBox::Retry | QMessageBox::Ignore | QMessageBox::Abort, QMessageBox::Retry);
+            retryChoice = Qx::postError(currentError, QMessageBox::Retry | QMessageBox::Ignore | QMessageBox::Abort, QMessageBox::Retry);
 
             if(retryChoice == QMessageBox::Ignore)
                 tempSkip = true;
@@ -1024,8 +1024,8 @@ void MainWindow::handleAuthRequest(QString prompt, QString* username, QString* p
 
     if(choice == QDialog::Accepted)
     {
-        *username = ld.getUsername();
-        *password = ld.getPassword();
+        *username = ld.username();
+        *password = ld.password();
     }
     else
         *abort = true;
