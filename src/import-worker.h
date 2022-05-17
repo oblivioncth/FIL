@@ -1,12 +1,16 @@
 #ifndef COREIMPORTWORKER_H
 #define COREIMPORTWORKER_H
 
+// Qt Includes
 #include <QObject>
 #include <QMessageBox>
+
+// Qx Includes
+#include <qx/network/qx-syncdownloadmanager.h>
+
+// Project Includes
 #include "flashpoint/fp-install.h"
 #include "frontend/fe-install.h"
-
-#include "qx-net.h"
 
 class ImportWorker : public QObject
 {

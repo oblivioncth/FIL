@@ -1,7 +1,11 @@
+// Unit Include
 #include "import-worker.h"
-#include "clifp.h"
 
+// Standard Library Includes
 #include <filesystem>
+
+// Project Includes
+#include "clifp.h"
 
 //===============================================================================================================
 // IMPORT WORKER

@@ -140,8 +140,9 @@ target_link_libraries(${TARGET_NAME}
         Qx::Core
         Qx::Io
         Qx::Gui
+        Qx::Network
         Qx::Widgets
-        Qx::Xml
         Qx::Windows
         Qx::Windows-gui
+        Qx::Xml
 )
