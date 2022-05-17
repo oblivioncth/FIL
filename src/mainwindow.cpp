@@ -39,9 +39,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     // Register metatypes
-    qRegisterMetaType<ImportWorker::ImportResult>("ImportResult");
-    qRegisterMetaType<Qx::GenericError>("GenericError)");
-    qRegisterMetaType<std::shared_ptr<int>>("shared_ptr<int>");
+    qRegisterMetaType<ImportWorker::ImportResult>();
+    qRegisterMetaType<Qx::GenericError>();
+    qRegisterMetaType<std::shared_ptr<int>>();
 
     // Get built-in CLIFp version
     QTemporaryDir tempDir;
