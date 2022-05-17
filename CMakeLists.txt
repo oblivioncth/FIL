@@ -78,10 +78,6 @@ set(QT_RESOURCES
     res/resources.qrc
 )
 
-set(WINDOWS_RESOURCES
-    res/resources.rc
-)
-
 # Organize sources for IDE
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src"
     PREFIX "UI Resources"
