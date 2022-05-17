@@ -1,14 +1,13 @@
 #ifndef LAUNCHBOX_INSTALL_H
 #define LAUNCHBOX_INSTALL_H
 
+// Qt Includes
 #include <QString>
 #include <QDir>
 #include <QSet>
 #include <QtXml>
 
-#include "qx-io.h"
-#include "qx-xml.h"
-
+// Project Includes
 #include "../fe-install.h"
 #include "lb-items.h"
 #include "lb-data.h"
@@ -34,7 +33,7 @@ public:
     static inline const QString SCREENSHOT_PATH = "Screenshot - Gameplay";
 
     // Files
-    static inline const QString XML_EXT = ".xml";
+    static inline const QString XML_EXT = "xml";
 
     // Support
     static inline const QSet<Fe::Install::ImageMode> IMAGE_MODES {

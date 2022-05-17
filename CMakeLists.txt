@@ -35,7 +35,7 @@ add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 
 # Fetch Qx (build and import from source)
 include(FetchQx)
-fetch_qx(v0.2)
+fetch_qx(4190a6b5376dc4f2d14fbd09a993d727aad6deb5) # dev commit
 
 # Set app sources
 set(CXX_SOURCES

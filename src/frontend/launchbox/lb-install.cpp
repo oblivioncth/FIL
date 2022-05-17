@@ -1,10 +1,18 @@
+// Unit Include
 #include "lb-install.h"
+
+// Standard Library Includes
+#include <filesystem>
+
+// Qt Includes
 #include <QFileInfo>
 #include <QDir>
 #include <qhashfunctions.h>
-#include <filesystem>
 
-// Specifically for changing XML permissions
+// Qx Includes
+#include <qx/io/qx-common-io.h>
+
+// Windows Includes (Specifically for changing XML permissions)
 #include <atlstr.h>
 #include "Aclapi.h"
 #include "sddl.h"
@@ -91,7 +99,7 @@ QString Install::dataDocPath(Fe::DataDoc::Identifier identifier) const
 std::shared_ptr<Fe::PlatformDocReader> Install::prepareOpenPlatformDoc(std::unique_ptr<Fe::PlatformDoc>& platformDoc, const QString& name, const Fe::UpdateOptions& updateOptions)
 {
     // Create doc file reference
-    std::unique_ptr<QFile> docFile = std::make_unique<QFile>(mPlatformsDirectory.absolutePath() + '/' + makeFileNameLBKosher(name) + XML_EXT);
+    std::unique_ptr<QFile> docFile = std::make_unique<QFile>(mPlatformsDirectory.absolutePath() + '/' + makeFileNameLBKosher(name) + "." + XML_EXT);
 
     // Construct unopened document
     platformDoc = std::make_unique<PlatformDoc>(this, std::move(docFile), name, updateOptions, DocKey{});
@@ -106,7 +114,7 @@ std::shared_ptr<Fe::PlatformDocReader> Install::prepareOpenPlatformDoc(std::uniq
 std::shared_ptr<Fe::PlaylistDocReader> Install::prepareOpenPlaylistDoc(std::unique_ptr<Fe::PlaylistDoc>& playlistDoc, const QString& name, const Fe::UpdateOptions& updateOptions)
 {
      // Create doc file reference
-    std::unique_ptr<QFile> docFile = std::make_unique<QFile>(mPlaylistsDirectory.absolutePath() + '/' + makeFileNameLBKosher(name) + XML_EXT);
+    std::unique_ptr<QFile> docFile = std::make_unique<QFile>(mPlaylistsDirectory.absolutePath() + '/' + makeFileNameLBKosher(name) + "." + XML_EXT);
 
     // Construct unopened document
     playlistDoc = std::make_unique<PlaylistDoc>(this, std::move(docFile), name, updateOptions, DocKey{});
@@ -188,34 +196,34 @@ Qx::GenericError Install::populateExistingDocs(QStringList targetPlatforms, QStr
     mExistingDocuments.clear();
 
     // Temp storage
-    QStringList existingList;
+    QFileInfoList existingList;
 
     // Check for platforms (Likely disolve Qx::getDirFileList in favor of QFileInfoList and QDir::entryInfoList())
-    Qx::IOOpReport existingCheck = Qx::getDirFileList(existingList, mPlatformsDirectory, {XML_EXT}, QDirIterator::Subdirectories);
+    Qx::IoOpReport existingCheck = Qx::dirContentInfoList(existingList, mPlatformsDirectory, {"*." + XML_EXT}, QDir::NoFilter, QDirIterator::Subdirectories);
     if(existingCheck.wasSuccessful())
-        for(const QString& platformPath : qAsConst(existingList))
+        for(const QFileInfo& platformFile : qAsConst(existingList))
             for(const QString& possibleMatch : targetPlatforms)
-                if(QFileInfo(platformPath).baseName() == makeFileNameLBKosher(possibleMatch))
+                if(platformFile.baseName() == makeFileNameLBKosher(possibleMatch))
                     mExistingDocuments.insert(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Platform, possibleMatch));
 
     // Check for playlists
     if(existingCheck.wasSuccessful())
-        existingCheck = Qx::getDirFileList(existingList, mPlaylistsDirectory, {XML_EXT}, QDirIterator::Subdirectories);
+        existingCheck = Qx::dirContentInfoList(existingList, mPlaylistsDirectory, {"*." + XML_EXT}, QDir::NoFilter, QDirIterator::Subdirectories);
     if(existingCheck.wasSuccessful())
-        for(const QString& playlistPath : qAsConst(existingList))
+        for(const QFileInfo& playlistFile : qAsConst(existingList))
             for(const QString& possibleMatch : targetPlaylists)
-                if(QFileInfo(playlistPath).baseName() == makeFileNameLBKosher(possibleMatch))
+                if(playlistFile.baseName() == makeFileNameLBKosher(possibleMatch))
                     mExistingDocuments.insert(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Playlist, possibleMatch));
 
     // Check for config docs
     if(existingCheck.wasSuccessful())
-        existingCheck = Qx::getDirFileList(existingList, mDataDirectory, {XML_EXT});
+        existingCheck = Qx::dirContentInfoList(existingList, mDataDirectory, {"*." + XML_EXT});
     if(existingCheck.wasSuccessful())
-        for(const QString& configDocPath : qAsConst(existingList))
-            mExistingDocuments.insert(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Config, QFileInfo(configDocPath).baseName()));
+        for(const QFileInfo& configDocFile : qAsConst(existingList))
+            mExistingDocuments.insert(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Config, configDocFile.baseName()));
 
     return !existingCheck.wasSuccessful() ?
-                Qx::GenericError(Qx::GenericError::Critical, ERR_INSEPECTION, existingCheck.getOutcome(), existingCheck.getOutcomeInfo()) :
+                Qx::GenericError(Qx::GenericError::Critical, ERR_INSEPECTION, existingCheck.outcome(), existingCheck.outcomeInfo()) :
                 Qx::GenericError();
 }
 
