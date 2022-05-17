@@ -1,7 +1,9 @@
+// Unit Include
 #include "lb-items.h"
+
+// Project Includes
 #include "../../flashpoint/fp-install.h"
 #include "../../clifp.h"
-#include "qx-io.h"
 
 namespace Lb
 {
