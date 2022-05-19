@@ -90,7 +90,7 @@
           <enum>Qt::PlainText</enum>
          </property>
          <property name="pixmap">
-          <pixmap>:/res/icon/No_Install.png</pixmap>
+          <pixmap resource="../res/resources.qrc">:/icon/No_Install.png</pixmap>
          </property>
          <property name="scaledContents">
           <bool>true</bool>
@@ -124,7 +124,7 @@
           <string/>
          </property>
          <property name="pixmap">
-          <pixmap>:/res/icon/No_Install.png</pixmap>
+          <pixmap resource="../res/resources.qrc">:/icon/No_Install.png</pixmap>
          </property>
          <property name="scaledContents">
           <bool>true</bool>
@@ -484,8 +484,8 @@
           <string>Help</string>
          </property>
          <property name="icon">
-          <iconset>
-           <normaloff>:/res/icon/Update_Mode_Info.png</normaloff>:/res/icon/Update_Mode_Info.png</iconset>
+          <iconset resource="../res/resources.qrc">
+           <normaloff>:/icon/Update_Mode_Info.png</normaloff>:/icon/Update_Mode_Info.png</iconset>
          </property>
          <attribute name="buttonGroup">
           <string notr="true">buttonGroup_imageMode</string>
@@ -579,8 +579,8 @@
           <string>Help</string>
          </property>
          <property name="icon">
-          <iconset>
-           <normaloff>:/res/icon/Update_Mode_Info.png</normaloff>:/res/icon/Update_Mode_Info.png</iconset>
+          <iconset resource="../res/resources.qrc">
+           <normaloff>:/icon/Update_Mode_Info.png</normaloff>:/icon/Update_Mode_Info.png</iconset>
          </property>
         </widget>
        </item>
@@ -836,8 +836,8 @@
           <string>Help</string>
          </property>
          <property name="icon">
-          <iconset>
-           <normaloff>:/res/icon/Update_Mode_Info.png</normaloff>:/res/icon/Update_Mode_Info.png</iconset>
+          <iconset resource="../res/resources.qrc">
+           <normaloff>:/icon/Update_Mode_Info.png</normaloff>:/icon/Update_Mode_Info.png</iconset>
          </property>
         </widget>
        </item>
@@ -963,8 +963,8 @@
   </widget>
   <action name="action_exit">
    <property name="icon">
-    <iconset>
-     <normaloff>:/res/icon/Exit.png</normaloff>:/res/icon/Exit.png</iconset>
+    <iconset resource="../res/resources.qrc">
+     <normaloff>:/icon/Exit.png</normaloff>:/icon/Exit.png</iconset>
    </property>
    <property name="text">
     <string>Exit</string>
@@ -972,8 +972,8 @@
   </action>
   <action name="action_goToOFLIbGitHub">
    <property name="icon">
-    <iconset>
-     <normaloff>:/res/icon/GitHub.png</normaloff>:/res/icon/GitHub.png</iconset>
+    <iconset resource="../res/resources.qrc">
+     <normaloff>:/icon/GitHub.png</normaloff>:/icon/GitHub.png</iconset>
    </property>
    <property name="text">
     <string>OFLIb (This Import Tool) GitHub</string>
@@ -981,8 +981,8 @@
   </action>
   <action name="action_goToCLIFpGitHub">
    <property name="icon">
-    <iconset>
-     <normaloff>:/res/icon/GitHub.png</normaloff>:/res/icon/GitHub.png</iconset>
+    <iconset resource="../res/resources.qrc">
+     <normaloff>:/icon/GitHub.png</normaloff>:/icon/GitHub.png</iconset>
    </property>
    <property name="text">
     <string>CLIFp (Command-line Interface) GitHub</string>
@@ -990,8 +990,8 @@
   </action>
   <action name="action_goToLBForums">
    <property name="icon">
-    <iconset>
-     <normaloff>:/res/icon/LaunchBox.png</normaloff>:/res/icon/LaunchBox.png</iconset>
+    <iconset resource="../res/resources.qrc">
+     <normaloff>:/icon/LaunchBox.png</normaloff>:/icon/LaunchBox.png</iconset>
    </property>
    <property name="text">
     <string>LaunchBox Forums Release Page</string>
@@ -999,8 +999,8 @@
   </action>
   <action name="action_deployCLIFp">
    <property name="icon">
-    <iconset>
-     <normaloff>:/res/icon/CLIFp.png</normaloff>:/res/icon/CLIFp.png</iconset>
+    <iconset resource="../res/resources.qrc">
+     <normaloff>:/icon/CLIFp.png</normaloff>:/icon/CLIFp.png</iconset>
    </property>
    <property name="text">
     <string>Deploy CLIFp</string>
@@ -1045,7 +1045,9 @@
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="../res/resources.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>pushButton_flashpointBrowse</sender>
