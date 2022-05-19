@@ -310,7 +310,7 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
             if (currentPlatformDoc->containsGame((*j).getParentId()))
             {
                currentPlatformDoc->addAddApp(*j);
-               j = mAddAppsCache.erase(j);
+               j = mAddAppsCache.erase(j); // clazy:exclude=strict-iterators Oversight of clazy since there's no QSet::erase(QSet::const_iterator) anymore
 
                // Reduce progress dialog maximum by total iterations cut from future platforms
                mMaximumProgressValue = mMaximumProgressValue - gameQueries.size() + i + 1; // Max = Max - (size - (i + 1))
