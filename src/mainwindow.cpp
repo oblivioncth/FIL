@@ -39,6 +39,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     // Register metatypes
+    //TODO: Test which of these are actually needed
     qRegisterMetaType<ImportWorker::ImportResult>();
     qRegisterMetaType<Qx::GenericError>();
     qRegisterMetaType<std::shared_ptr<int>>();

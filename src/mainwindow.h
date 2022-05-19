@@ -268,8 +268,4 @@ private slots:
     void handleImportResult(ImportWorker::ImportResult importResult, Qx::GenericError errorReport);
 };
 
-//-Metatype Declarations-----------------------------------------------------------------------------------------
-//Q_DECLARE_METATYPE(std::shared_ptr<int>);
-Q_DECLARE_METATYPE(std::shared_ptr<int>);
-
 #endif // MAINWINDOW_H
