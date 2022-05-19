@@ -50,7 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
     {
         // Create local copy of internal CLIFp.exe since internal path cannot be used with WinAPI
         QString localCopyPath = tempDir.path() + '/' + CLIFp::EXE_NAME;
-        if(QFile::copy(":/res/file/" + CLIFp::EXE_NAME, localCopyPath))
+        if(QFile::copy(":/file/" + CLIFp::EXE_NAME, localCopyPath))
             mInternalCLIFpVersion = Qx::FileDetails::readFileDetails(localCopyPath).fileVersion();
     }
 
@@ -211,7 +211,7 @@ void MainWindow::validateInstall(QString installPath, Install install)
             mFrontendInstall = Fe::Install::acquireMatch(installPath);
             if(mFrontendInstall)
             {
-                ui->icon_frontend_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
+                ui->icon_frontend_install_status->setPixmap(QPixmap(":/icon/Valid_Install.png"));
                 ui->label_frontendVersion->setText(mFrontendInstall->name() + " " + mFrontendInstall->versionString());
             }
             else
@@ -224,10 +224,10 @@ void MainWindow::validateInstall(QString installPath, Install install)
             {
                 ui->label_flashpointVersion->setText(mFlashpointInstall->nameVersionString());
                 if(installMatchesTargetVersion(*mFlashpointInstall))
-                    ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
+                    ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/icon/Valid_Install.png"));
                 else
                 {
-                    ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Mismatch_Install.png"));
+                    ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/icon/Mismatch_Install.png"));
                     QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_VER_NOT_TARGET);
                 }
             }
@@ -388,7 +388,7 @@ void MainWindow::invalidateInstall(Install install, bool informUser)
     {
         case Install::Frontend:
             mFrontendInstall.reset();
-            ui->icon_frontend_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
+            ui->icon_frontend_install_status->setPixmap(QPixmap(":/icon/Invalid_Install.png"));
             ui->label_frontendVersion->clear();
             if(informUser)
                 QMessageBox::critical(this, QApplication::applicationName(), MSG_FE_INSTALL_INVALID);
@@ -396,7 +396,7 @@ void MainWindow::invalidateInstall(Install install, bool informUser)
 
         case Install::Flashpoint:
             mFlashpointInstall.reset();
-            ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
+            ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/icon/Invalid_Install.png"));
             ui->label_flashpointVersion->clear();
             if(informUser)
                 postGenericError(mFlashpointInstall->error(), QMessageBox::Ok);
@@ -725,7 +725,7 @@ void MainWindow::standaloneCLIFpDeploy()
             {
                 // Deploy exe
                 QString deployError;
-                while(!CLIFp::deployCLIFp(deployError, tempFlashpointInstall, ":/res/file/CLIFp.exe"))
+                while(!CLIFp::deployCLIFp(deployError, tempFlashpointInstall, ":/file/CLIFp.exe"))
                     if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Retry) == QMessageBox::Cancel)
                         break;
             }
@@ -1010,7 +1010,7 @@ void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx:
         if(willDeploy)
         {
             QString deployError;
-            while(!CLIFp::deployCLIFp(deployError, *mFlashpointInstall, ":/res/file/CLIFp.exe"))
+            while(!CLIFp::deployCLIFp(deployError, *mFlashpointInstall, ":/file/CLIFp.exe"))
                 if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | QMessageBox::Ignore, QMessageBox::Retry) == QMessageBox::Ignore)
                     break;
         }
