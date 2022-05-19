@@ -173,9 +173,6 @@ private:
     std::shared_ptr<Fp::Install> mFlashpointInstall;
     Qx::VersionNumber mInternalCLIFpVersion;
 
-    int mLineEdit_frontendPath_blocker = 0; // Required due to an oversight with QLineEdit::editingFinished()
-    int mLineEdit_flashpointPath_blocker = 0; // Required due to an oversight with QLineEdit::editingFinished()
-
     QHash<QListWidgetItem*,Qt::CheckState> mPlatformItemCheckStates;
     QHash<QListWidgetItem*,Qt::CheckState> mPlaylistItemCheckStates;
     std::unique_ptr<Qx::StandardItemModel> mTagSelectionModel;
@@ -252,8 +249,6 @@ private slots:
     // Direct UI, start with "all" to avoid Qt calling "connectSlotsByName" on these slots (slots that start with "on_")
     void all_on_action_triggered();
     void all_on_lineEdit_editingFinished();
-    void all_on_lineEdit_textEdited();
-    void all_on_lineEdit_returnPressed();
     void all_on_pushButton_clicked();
     void all_on_listWidget_itemChanged(QListWidgetItem* item);
     void all_on_radioButton_clicked();

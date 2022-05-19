@@ -890,63 +890,11 @@ void MainWindow::all_on_lineEdit_editingFinished()
 
     // Determine sender and take corresponding action
     if(senderLineEdit == ui->lineEdit_frontendPath)
-    {
-        if(!mLineEdit_frontendPath_blocker)
-            checkManualInstallInput(Install::Frontend);
-        else
-            mLineEdit_frontendPath_blocker--;
-    }
-    else if(senderLineEdit == ui->lineEdit_flashpointPath)
-    {
-        if(!mLineEdit_flashpointPath_blocker)
-           checkManualInstallInput(Install::Flashpoint);
-        else
-            mLineEdit_flashpointPath_blocker--;
-    }
-    else
-        throw std::runtime_error("Unhandled use of all_on_linedEdit_textEdited() slot");
-}
-
-void MainWindow::all_on_lineEdit_textEdited() // Required due to an oversight with QLineEdit::editingFinished()
-{
-    // Get the object that called this slot
-    QLineEdit* senderLineEdit = qobject_cast<QLineEdit *>(sender());
-
-    // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
-    if(senderLineEdit == nullptr)
-        throw std::runtime_error("Pointer conversion to line edit failed");
-
-    // Determine sender and take corresponding action
-    if(senderLineEdit == ui->lineEdit_frontendPath)
-        mLineEdit_frontendPath_blocker = 0;
-    else if(senderLineEdit == ui->lineEdit_flashpointPath)
-        mLineEdit_flashpointPath_blocker = 0;
-    else
-        throw std::runtime_error("Unhandled use of all_on_linedEdit_textEdited() slot");
-}
-
-void MainWindow::all_on_lineEdit_returnPressed() // Required due to an oversight with QLineEdit::editingFinished()
-{
-    // Get the object that called this slot
-    QLineEdit* senderLineEdit = qobject_cast<QLineEdit *>(sender());
-
-    // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
-    if(senderLineEdit == nullptr)
-        throw std::runtime_error("Pointer conversion to line edit failed");
-
-    // Determine sender and take corresponding action
-    if(senderLineEdit == ui->lineEdit_frontendPath)
-    {
-        mLineEdit_frontendPath_blocker = 2;
         checkManualInstallInput(Install::Frontend);
-    }
     else if(senderLineEdit == ui->lineEdit_flashpointPath)
-    {
-        mLineEdit_flashpointPath_blocker = 2;
         checkManualInstallInput(Install::Flashpoint);
-    }
     else
-        throw std::runtime_error("Unhandled use of all_on_linedEdit_returnPressed() slot");
+        throw std::runtime_error("Unhandled use of all_on_linedEdit_textEdited() slot");
 }
 
 void MainWindow::all_on_listWidget_itemChanged(QListWidgetItem* item) // Proxy for "onItemChecked"

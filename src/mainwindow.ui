@@ -90,7 +90,7 @@
           <enum>Qt::PlainText</enum>
          </property>
          <property name="pixmap">
-          <pixmap resource="../resources_cmn.qrc">:/res/icon/No_Install.png</pixmap>
+          <pixmap>:/res/icon/No_Install.png</pixmap>
          </property>
          <property name="scaledContents">
           <bool>true</bool>
@@ -124,7 +124,7 @@
           <string/>
          </property>
          <property name="pixmap">
-          <pixmap resource="../resources_cmn.qrc">:/res/icon/No_Install.png</pixmap>
+          <pixmap>:/res/icon/No_Install.png</pixmap>
          </property>
          <property name="scaledContents">
           <bool>true</bool>
@@ -484,7 +484,7 @@
           <string>Help</string>
          </property>
          <property name="icon">
-          <iconset resource="../resources_cmn.qrc">
+          <iconset>
            <normaloff>:/res/icon/Update_Mode_Info.png</normaloff>:/res/icon/Update_Mode_Info.png</iconset>
          </property>
          <attribute name="buttonGroup">
@@ -579,7 +579,7 @@
           <string>Help</string>
          </property>
          <property name="icon">
-          <iconset resource="../resources_cmn.qrc">
+          <iconset>
            <normaloff>:/res/icon/Update_Mode_Info.png</normaloff>:/res/icon/Update_Mode_Info.png</iconset>
          </property>
         </widget>
@@ -836,7 +836,7 @@
           <string>Help</string>
          </property>
          <property name="icon">
-          <iconset resource="../resources_cmn.qrc">
+          <iconset>
            <normaloff>:/res/icon/Update_Mode_Info.png</normaloff>:/res/icon/Update_Mode_Info.png</iconset>
          </property>
         </widget>
@@ -929,7 +929,7 @@
      <x>0</x>
      <y>0</y>
      <width>648</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -963,7 +963,7 @@
   </widget>
   <action name="action_exit">
    <property name="icon">
-    <iconset resource="../resources_cmn.qrc">
+    <iconset>
      <normaloff>:/res/icon/Exit.png</normaloff>:/res/icon/Exit.png</iconset>
    </property>
    <property name="text">
@@ -972,7 +972,7 @@
   </action>
   <action name="action_goToOFLIbGitHub">
    <property name="icon">
-    <iconset resource="../resources_cmn.qrc">
+    <iconset>
      <normaloff>:/res/icon/GitHub.png</normaloff>:/res/icon/GitHub.png</iconset>
    </property>
    <property name="text">
@@ -981,7 +981,7 @@
   </action>
   <action name="action_goToCLIFpGitHub">
    <property name="icon">
-    <iconset resource="../resources_cmn.qrc">
+    <iconset>
      <normaloff>:/res/icon/GitHub.png</normaloff>:/res/icon/GitHub.png</iconset>
    </property>
    <property name="text">
@@ -990,7 +990,7 @@
   </action>
   <action name="action_goToLBForums">
    <property name="icon">
-    <iconset resource="../resources_cmn.qrc">
+    <iconset>
      <normaloff>:/res/icon/LaunchBox.png</normaloff>:/res/icon/LaunchBox.png</iconset>
    </property>
    <property name="text">
@@ -999,7 +999,7 @@
   </action>
   <action name="action_deployCLIFp">
    <property name="icon">
-    <iconset resource="../resources_cmn.qrc">
+    <iconset>
      <normaloff>:/res/icon/CLIFp.png</normaloff>:/res/icon/CLIFp.png</iconset>
    </property>
    <property name="text">
@@ -1045,9 +1045,7 @@
    </property>
   </action>
  </widget>
- <resources>
-  <include location="../resources_cmn.qrc"/>
- </resources>
+ <resources/>
  <connections>
   <connection>
    <sender>pushButton_flashpointBrowse</sender>
@@ -1110,70 +1108,6 @@
     <hint type="destinationlabel">
      <x>399</x>
      <y>299</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>lineEdit_frontendPath</sender>
-   <signal>textEdited(QString)</signal>
-   <receiver>MainWindow</receiver>
-   <slot>all_on_lineEdit_textEdited()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>225</x>
-     <y>91</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>248</x>
-     <y>316</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>lineEdit_flashpointPath</sender>
-   <signal>textEdited(QString)</signal>
-   <receiver>MainWindow</receiver>
-   <slot>all_on_lineEdit_textEdited()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>225</x>
-     <y>151</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>248</x>
-     <y>316</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>lineEdit_frontendPath</sender>
-   <signal>returnPressed()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>all_on_lineEdit_returnPressed()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>225</x>
-     <y>91</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>248</x>
-     <y>316</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>lineEdit_flashpointPath</sender>
-   <signal>returnPressed()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>all_on_lineEdit_returnPressed()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>225</x>
-     <y>151</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>248</x>
-     <y>316</y>
     </hint>
    </hints>
   </connection>
