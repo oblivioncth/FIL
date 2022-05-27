@@ -259,7 +259,7 @@ private slots:
 
     // Import Exception Handling
     void handleBlockingError(std::shared_ptr<int> response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices);
-    void handleAuthRequest(QString prompt, QString* username, QString* password, bool* abort);
+    void handleAuthRequest(QString prompt, QAuthenticator* authenticator);
     void handleImportResult(ImportWorker::ImportResult importResult, Qx::GenericError errorReport);
 };
 

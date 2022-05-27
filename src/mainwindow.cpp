@@ -964,7 +964,7 @@ void MainWindow::handleBlockingError(std::shared_ptr<int> response, Qx::GenericE
         *response = userChoice;
 }
 
-void MainWindow::handleAuthRequest(QString prompt, QString* username, QString* password, bool* abort)
+void MainWindow::handleAuthRequest(QString prompt, QAuthenticator* authenticator)
 {
     Qx::LoginDialog ld;
     ld.setPrompt(prompt);
@@ -973,11 +973,9 @@ void MainWindow::handleAuthRequest(QString prompt, QString* username, QString* p
 
     if(choice == QDialog::Accepted)
     {
-        *username = ld.username();
-        *password = ld.password();
+        authenticator->setUser(ld.username());
+        authenticator->setPassword(ld.password());
     }
-    else
-        *abort = true;
 }
 
 void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx::GenericError errorReport)

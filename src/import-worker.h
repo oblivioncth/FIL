@@ -6,7 +6,7 @@
 #include <QMessageBox>
 
 // Qx Includes
-#include <qx/network/qx-syncdownloadmanager.h>
+#include <qx/network/qx-downloadmanager.h>
 
 // Project Includes
 #include "flashpoint/fp-install.h"
@@ -136,7 +136,7 @@ signals:
 
     // Error handling
     void blockingErrorOccured(std::shared_ptr<int> response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices);
-    void authenticationRequired(QString prompt, QString* username, QString* password, bool* abort);
+    void authenticationRequired(QString prompt, QAuthenticator* authenticator);
 
     // Finished
     void importCompleted(ImportWorker::ImportResult importResult, Qx::GenericError errorReport);
