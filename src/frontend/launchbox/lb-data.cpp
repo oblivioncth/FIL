@@ -85,7 +85,7 @@ Qx::GenericError XmlDocWriter::writeOutOf()
     // Hook writer to document handle
     mStreamWriter.setDevice(sourceDocFile().get());
 
-    // Enable auto formating
+    // Enable auto formatting
     mStreamWriter.setAutoFormatting(true);
     mStreamWriter.setAutoFormattingIndent(2);
 
@@ -425,7 +425,7 @@ bool PlatformDocWriter::writeAddApp(const AddApp& addApp)
     // Write other tags
     writeOtherFields(addApp.getOtherFields());
 
-    // Close aditional app tag
+    // Close additional app tag
     mStreamWriter.writeEndElement();
 
     // Return error status

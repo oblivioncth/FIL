@@ -103,7 +103,7 @@ Game GameBuilder::build() { return mGameBlueprint; }
 //Public:
 AddApp::AddApp() {}
 
-//-Opperators----------------------------------------------------------------------------------------------------
+//-Operators----------------------------------------------------------------------------------------------------
 //Public:
 bool operator== (const AddApp& lhs, const AddApp& rhs) noexcept
 {

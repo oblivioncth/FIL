@@ -164,7 +164,7 @@ Qx::GenericError ImportWorker::transferImage(bool symlink, QString sourcePath, Q
             else if(QFile::exists(backupPath))
                 QFile::remove(backupPath);
             else
-                mFrontendInstall->addPurgeableImagePath(destinationPath); // Only queue image to be removed on failure if its new, so existing images arent deleted on revert
+                mFrontendInstall->addPurgeableImagePath(destinationPath); // Only queue image to be removed on failure if its new, so existing images aren't deleted on revert
         }
         else
         {
@@ -177,7 +177,7 @@ Qx::GenericError ImportWorker::transferImage(bool symlink, QString sourcePath, Q
             else if(QFile::exists(backupPath))
                 QFile::remove(backupPath);
             else
-                mFrontendInstall->addPurgeableImagePath(destinationPath); // Only queue image to be removed on failure if its new, so existing images arent deleted on revert
+                mFrontendInstall->addPurgeableImagePath(destinationPath); // Only queue image to be removed on failure if its new, so existing images aren't deleted on revert
         }
     }
 
@@ -199,7 +199,7 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
         std::unique_ptr<Fe::PlatformDoc> currentPlatformDoc;
         Qx::GenericError platformReadError = mFrontendInstall->openPlatformDoc(currentPlatformDoc, currentPlatformGameResult.source, mOptionSet.updateOptions);
 
-        // Stop import if error occured
+        // Stop import if error occurred
         if(platformReadError.isValid())
         {
             // Emit import failure
@@ -332,7 +332,7 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
         // Finalize document
         currentPlatformDoc->finalize();
 
-        // Forefit doucment lease and save it
+        // Forfeit document lease and save it
         Qx::GenericError saveError;
         if((saveError = mFrontendInstall->savePlatformDoc(std::move(currentPlatformDoc))).isValid())
         {
@@ -361,7 +361,7 @@ ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& erro
         std::unique_ptr<Fe::PlaylistDoc> currentPlaylistDoc;
         Qx::GenericError playlistReadError = mFrontendInstall->openPlaylistDoc(currentPlaylistDoc, currentPlaylist.getTitle(), mOptionSet.updateOptions);
 
-        // Stop import if error occured
+        // Stop import if error occurred
         if(playlistReadError.isValid())
         {
             errorReport = playlistReadError;
@@ -404,7 +404,7 @@ ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& erro
         // Finalize document
         currentPlaylistDoc->finalize();
 
-        // Forefit doucment lease and save it
+        // Forfeit document lease and save it
         Qx::GenericError saveError;
         if((saveError = mFrontendInstall->savePlaylistDoc(std::move(currentPlaylistDoc))).isValid())
         {
@@ -480,7 +480,7 @@ ImportWorker::ImportResult ImportWorker::processImages(Qx::GenericError& errorRe
         // Update progress dialog label
         emit progressStepChanged(STEP_SETTING_IMAGE_REFERENCES);
 
-        // Create playlist pecific platforms set
+        // Create playlist specific platforms set
         QStringList playlistSpecPlatforms;
         for(const Fp::Db::QueryBuffer& query : qAsConst(playlistSpecGameQueries))
             playlistSpecPlatforms.append(query.source);
@@ -503,7 +503,7 @@ ImportWorker::ImportResult ImportWorker::processImages(Qx::GenericError& errorRe
 
         // Setup for image transfers
         Qx::GenericError imageTransferError; // Error return reference
-        *mBlockingErrorResponse = QMessageBox::NoToAll; // Default to choice "NoToAll" incase the signal is not correctly connected using Qt::BlockingQueuedConnection
+        *mBlockingErrorResponse = QMessageBox::NoToAll; // Default to choice "NoToAll" in case the signal is not correctly connected using Qt::BlockingQueuedConnection
         bool skipAllImages = false; // NoToAll response tracker
 
         for(const ImageTransferJob& imageJob : qAsConst(mImageTransferJobs))
@@ -555,13 +555,13 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     Fp::Db::QueryBuffer playlistQueries;
     QList<Fp::Db::QueryBuffer> playlistGameQueries;
 
-    // Link Clifp to frontend
+    // Link CLIFp to frontend
     mFrontendInstall->linkClifpPath(CLIFp::standardCLIFpPath(*mFlashpointInstall));
 
     // Get flashpoint database
     Fp::Db* fpDatabase = mFlashpointInstall->database();
 
-    //-Preloading-------------------------------------------------------------
+    //-Pre-loading-------------------------------------------------------------
 
     // Make initial playlists query
     queryError = fpDatabase->queryPlaylistsByName(playlistQueries, mImportSelections.playlists);

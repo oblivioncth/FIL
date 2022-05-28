@@ -11,7 +11,7 @@ namespace Fp
 // DB::TAG_CATEGORY
 //===============================================================================================================
 
-//-Opperators----------------------------------------------------------------------------------------------------
+//-Operators----------------------------------------------------------------------------------------------------
 //Public:
 bool operator< (const Db::TagCategory& lhs, const Db::TagCategory& rhs) noexcept { return lhs.name < rhs.name; }
 
@@ -85,7 +85,7 @@ Db::Db(QString databaseName, const Key&) :
     validityGuard.dismiss();
 }
 
-//-Desctructor------------------------------------------------------------------------------------------------
+//-Destructor------------------------------------------------------------------------------------------------
 //Public:
 Db::~Db()
 {
@@ -194,7 +194,7 @@ QSqlError Db::checkDatabaseForRequiredTables(QSet<QString>& missingTablesReturnB
     QSqlDatabase fpDB = getThreadConnection();
     QStringList existingTables = fpDB.tables();
 
-    // Return if DB error occured
+    // Return if DB error occurred
     if(fpDB.lastError().isValid())
         return fpDB.lastError();
 
@@ -615,7 +615,7 @@ QSqlError Db::queryEntryById(QueryBuffer& resultBuffer, QUuid appId) const
     if((queryError = makeNonBindQuery(resultBuffer, &fpDB, mainQueryCommand, sizeQueryCommand)).isValid())
         return queryError;
 
-    // Return result if one or more results were found (reciever handles situation in latter case)
+    // Return result if one or more results were found (receiver handles situation in latter case)
     if(resultBuffer.size >= 1)
         return QSqlError();
 

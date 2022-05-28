@@ -92,7 +92,7 @@ QString Install::dataDocPath(Fe::DataDoc::Identifier identifier) const
             return mDataDirectory.absoluteFilePath(identifier.docName());
             break;
         default:
-                throw new std::invalid_argument("Fucntion argument was not of type Fe::DataDoc::Identifier");
+                throw new std::invalid_argument("Function argument was not of type Fe::DataDoc::Identifier");
     }
 }
 
@@ -198,7 +198,7 @@ Qx::GenericError Install::populateExistingDocs(QStringList targetPlatforms, QStr
     // Temp storage
     QFileInfoList existingList;
 
-    // Check for platforms (Likely disolve Qx::getDirFileList in favor of QFileInfoList and QDir::entryInfoList())
+    // Check for platforms (Likely dissolve Qx::getDirFileList in favor of QFileInfoList and QDir::entryInfoList())
     Qx::IoOpReport existingCheck = Qx::dirContentInfoList(existingList, mPlatformsDirectory, {"*." + XML_EXT}, QDir::NoFilter, QDirIterator::Subdirectories);
     if(existingCheck.wasSuccessful())
         for(const QFileInfo& platformFile : qAsConst(existingList))
@@ -242,7 +242,7 @@ Qx::GenericError Install::bulkReferenceImages(QString logoRootPath, QString scre
     std::unique_ptr<PlatformsDoc> platformConfigXML;
     Qx::GenericError platformConfigReadError = openPlatformsDoc(platformConfigXML);
 
-    // Stop import if error occured
+    // Stop import if error occurred
     if(platformConfigReadError.isValid())
         return platformConfigReadError;
 

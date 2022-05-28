@@ -53,10 +53,10 @@ private:
     static inline const QString MSG_UPDATE_MODE_HELP = "<b>%1</b> - Only games not already present in your collection will be added, existing entries will be left completely untouched.<br>"
                                                        "<br>"
                                                        "<b>%2</b> - Games not already present in your collection will be added and existing entries will have their descriptive metadata (i.e. Title, Author, Images etc.) replaced by the "
-                                                       "the details present in the target Flashpoint version; however, personal metadata (i.e. Playcount, Acheivements, etc.) will not be altered.<br>"
+                                                       "the details present in the target Flashpoint version; however, personal metadata (i.e. Playcount, Achievements, etc.) will not be altered.<br>"
                                                        "<br>"
                                                        "<b>%3</b> - Games in your collection that are not present in the target version of Flashpoint will be removed (only for selected items). You will no longer be able to play such "
-                                                       "games if this option is unchecked, but this may be useful for archival purposes or incase you later want to revert to a previous version of Flashpoint and maintain the entries personal "
+                                                       "games if this option is unchecked, but this may be useful for archival purposes or in case you later want to revert to a previous version of Flashpoint and maintain the entries personal "
                                                        "metadata. Note that this option will still cause missing games to be removed even if you are going backwards to a previous version of FP, as implied above. Additionally, this option will "
                                                        "remove any existing Extreme games in your collection, for the select platforms, if you have the <i>%4</i> option unselected.";
 
@@ -66,13 +66,13 @@ private:
                                                       "<b>Import Speed:</b> Very Slow<br>"
                                                       "<b>Image Cache Build Speed:</b> Fast<br>"
                                                       "<br>"
-                                                      "<b>%2</b> - Your frontend platform configuration will be altered so that the relavent image folders within Flashpoint are directly referenced by its media scanner, requiring no "
+                                                      "<b>%2</b> - Your frontend platform configuration will be altered so that the relevant image folders within Flashpoint are directly referenced by its media scanner, requiring no "
                                                       "extra space and causing no overhead.<br>"
                                                       "<b>Space Consumption:</b> None<br>"
                                                       "<b>Import Speed:</b> Fast<br>"
                                                       "<b>Image Cache Build Speed:</b> Very Slow<br>"
                                                       "<br>"
-                                                      "<b>%3</b> - A symbolic link to each relavent image from Flashpoint will be created in your frontend installation. These appear like the real files to the frontend, adding only a miniscle "
+                                                      "<b>%3</b> - A symbolic link to each relevant image from Flashpoint will be created in your frontend installation. These appear like the real files to the frontend, adding only a minuscule "
                                                       "amount of overhead when it loads images and require almost no extra disk space to store.<br>"
                                                       "<b>Space Consumption:</b> Near-zero<br>"
                                                       "<b>Import Speed:</b> Slow<br>"
@@ -82,34 +82,34 @@ private:
     static inline const QString MSG_FE_INSTALL_INVALID = "The specified directory either doesn't contain a valid frontend install, or it contains a version that is incompatible with this tool.";
     static inline const QString MSG_FP_INSTALL_INVALID = "The specified directory either doesn't contain a valid Flashpoint install, or it contains a version that is incompatible with this tool.";
     static inline const QString MSG_FP_VER_NOT_TARGET = "The selected Flashpoint install contains a version of Flashpoint that is different from the target version (" PROJECT_TARGET_FP_VER "), but appears to have a compatible structure. "
-                                                                "You may proceed at your own risk as the tool is not guarnteed to work correctly in this circumstance. Please use a newer version of " PROJECT_SHORT_NAME " if available.";
+                                                                "You may proceed at your own risk as the tool is not guaranteed to work correctly in this circumstance. Please use a newer version of " PROJECT_SHORT_NAME " if available.";
 
     static inline const QString MSG_INSTALL_CONTENTS_CHANGED = "The contents of your installs have been changed since the initial scan and therefore must be re-evaluated. You will need to make your selections again.";
 
     // Messages - General import procedure
-    static inline const QString MSG_PRE_EXISTING_IMPORT = "One or more existing Platforms/Playlists may be affected by this import. These will be altered even if they did not orignate from this program (i.e. if you "
+    static inline const QString MSG_PRE_EXISTING_IMPORT = "One or more existing Platforms/Playlists may be affected by this import. These will be altered even if they did not originate from this program (i.e. if you "
                                                           "already happened to have a Platform/Playlist with the same name as one present in Flashpoint).\n"
                                                           "\n"
                                                           "Are you sure you want to proceed?";
     static inline const QString MSG_FRONTEND_CLOSE_PROMPT = "The importer has detected that the selected frontend is running. It must be closed in order to continue. If recently closed, wait a few moments before trying to proceed again as it performs significant cleanup in the background.";
-    static inline const QString MSG_POST_IMPORT = "The Flashpoint import has completed succesfully. Next time you start the frontend it may take longer than usual as it will have to fill in some default fields for the imported Platforms/Playlists.\n"
+    static inline const QString MSG_POST_IMPORT = "The Flashpoint import has completed successfully. Next time you start the frontend it may take longer than usual as it will have to fill in some default fields for the imported Platforms/Playlists.\n"
                                                   "\n"
                                                   "If you wish to import further selections or update to a newer version of Flashpoint, simply re-run this procedure after pointing it to the desired Flashpoint installation.";
     // Initial import status
     static inline const QString STEP_FP_DB_INITIAL_QUERY = "Making initial Flashpoint database queries...";
 
     // Messages - FP General
-    static inline const QString MSG_FP_CLOSE_PROMPT = "It is strongly recommended to close Flashpoint before proceeding as it can severely slow or interfer with the import process";
+    static inline const QString MSG_FP_CLOSE_PROMPT = "It is strongly recommended to close Flashpoint before proceeding as it can severely slow or interfere with the import process";
 
     // Messages - FP Database read
     static inline const QString MSG_FP_DB_MISSING_TABLE = "The Flashpoint database is missing tables critical to the import process.";
     static inline const QString MSG_FP_DB_TABLE_MISSING_COLUMN = "The Flashpoint database tables are missing columns critical to the import process.";
-    static inline const QString MSG_FP_DB_UNEXPECTED_ERROR = "An unexpected SQL error occured while reading the Flashpoint database:";
+    static inline const QString MSG_FP_DB_UNEXPECTED_ERROR = "An unexpected SQL error occurred while reading the Flashpoint database:";
 
     // Messages - FP CLIFp
     static inline const QString MSG_FP_CLFIP_WILL_DOWNGRADE = "The existing version of " + CLIFp::EXE_NAME +  " in your Flashpoint install is newer than the version package with this tool.\n"
                                                               "\n"
-                                                              "Replacing it with the packaged Version (downgrade) will likely cause compatability issues unless you are specifically re-importing are downgrading your Flashpoint install to a previous version.\n"
+                                                              "Replacing it with the packaged Version (downgrade) will likely cause compatibility issues unless you are specifically re-importing are downgrading your Flashpoint install to a previous version.\n"
                                                               "\n"
                                                               "Do you wish to downgrade " + CLIFp::EXE_NAME + "?";
 
@@ -120,13 +120,13 @@ private:
                                                            "If you choose to ignore this you will have to place CLIFp in your Flashpoint install directory manually.";
 
     // Messages - Revert
-    static inline const QString MSG_HAVE_TO_REVERT = "Due to previous unrecoverable errors, all changes that occured during import will now be reverted (other than existing images that were replaced with newer versions).\n"
+    static inline const QString MSG_HAVE_TO_REVERT = "Due to previous unrecoverable errors, all changes that occurred during import will now be reverted (other than existing images that were replaced with newer versions).\n"
                                                      "\n"
-                                                     "Aftewards, check to see if there is a newer version of " PROJECT_SHORT_NAME " and try again using that version. If not ask for help on the relavent forums where this tool was released (see Help).\n"
+                                                     "Afterwards, check to see if there is a newer version of " PROJECT_SHORT_NAME " and try again using that version. If not ask for help on the relevant forums where this tool was released (see Help).\n"
                                                      "\n"
-                                                     "If you beleive this to be due to a bug with this software, please submit an issue to its GitHub page (listed under help)";
+                                                     "If you believe this to be due to a bug with this software, please submit an issue to its GitHub page (listed under help)";
 
-    static inline const QString MSG_USER_CANCELED = "Import canceled by user, all changes that occured during import will now be reverted (other than existing images that were replaced with newer versions).";
+    static inline const QString MSG_USER_CANCELED = "Import canceled by user, all changes that occurred during import will now be reverted (other than existing images that were replaced with newer versions).";
 
     // Dialog captions
     static inline const QString CAPTION_GENERAL_FATAL_ERROR = "Fatal Error!";

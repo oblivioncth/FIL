@@ -17,7 +17,7 @@ namespace Fp
 // JSON::START_STOP
 //===============================================================================================================
 
-//-Opperators----------------------------------------------------------------------------------------------------
+//-Operators----------------------------------------------------------------------------------------------------
 //Public:
 bool operator== (const Json::StartStop& lhs, const Json::StartStop& rhs) noexcept
 {
@@ -277,7 +277,7 @@ Qx::GenericError Json::ServicesReader::parseServerDaemon(ServerDaemon& serverBuf
     if(QFileInfo(serverBuffer.filename).suffix().isEmpty())
         serverBuffer.filename += ".exe";
 
-    // Resolve macros for relavent variables
+    // Resolve macros for relevant variables
     serverBuffer.path = mHostMacroResolver->resolve(serverBuffer.path);
     for(QString& arg : serverBuffer.arguments)
         arg = mHostMacroResolver->resolve(arg);
@@ -326,7 +326,7 @@ Qx::GenericError Json::ServicesReader::parseStartStop(StartStop& startStopBuffer
     if(QFileInfo(startStopBuffer.filename).suffix().isEmpty())
         startStopBuffer.filename += ".exe";
 
-    // Resolve macros for relavent variables
+    // Resolve macros for relevant variables
     startStopBuffer.path = mHostMacroResolver->resolve(startStopBuffer.path);
     for(QString& arg : startStopBuffer.arguments)
         arg = mHostMacroResolver->resolve(arg);

@@ -145,7 +145,7 @@ void MainWindow::initializeForms()
 
 void MainWindow::initializeEnableConditionMaps()
 {
-    // Populate hashmap of widget element enable conditions
+    // Populate hash-map of widget element enable conditions
     mWidgetEnableConditionMap[ui->groupBox_importSelection] = [&](){ return mFrontendInstall && mFlashpointInstall; };
     mWidgetEnableConditionMap[ui->groupBox_playlistGameMode] = [&](){ return getSelectedPlaylists().count() > 0; };
     mWidgetEnableConditionMap[ui->groupBox_updateMode] = [&](){
@@ -167,7 +167,7 @@ void MainWindow::initializeEnableConditionMaps()
     mWidgetEnableConditionMap[ui->pushButton_startImport] = [&](){ return getSelectedPlatforms().count() > 0 ||
                                                                           (getSelectedPlaylistGameMode() == ImportWorker::ForceAll && getSelectedPlaylists().count() > 0); };
 
-    // Populate hashmap of action element enable conditions
+    // Populate hash-map of action element enable conditions
     mActionEnableConditionMap[ui->action_forceDownloadImages] = [&](){ return mFlashpointInstall && mFlashpointInstall->preferences().onDemandImages; };
     mActionEnableConditionMap[ui->action_editTagFilter] = [&](){ return mFrontendInstall && mFlashpointInstall; };
 }
@@ -285,7 +285,7 @@ void MainWindow::populateImportSelectionBoxes()
     }
 
     // Disable update mode box and import start button since no items will be selected after this operation
-    // TODO: See if these are needed or can be done away with since ideall this should be handled by ui enabled hash map
+    // TODO: See if these are needed or can be done away with since ideal this should be handled by ui enabled hash map
     ui->groupBox_updateMode->setEnabled(false);
     ui->pushButton_startImport->setEnabled(false);
 }
@@ -295,7 +295,7 @@ void MainWindow::generateTagSelectionOptions()
     // Ensure old options are dropped
     mTagSelectionModel.reset();
 
-    // Get tag hiearchy
+    // Get tag hierarchy
     QMap<int, Fp::Db::TagCategory> tagMap = mFlashpointInstall->database()->tags();
 
     // Create new model
@@ -783,7 +783,7 @@ void MainWindow::all_on_action_triggered()
     // Get the object that called this slot
     QAction* senderAction = qobject_cast<QAction *>(sender());
 
-    // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
+    // Ensure the signal that triggered this slot belongs to the above class by checking for null pointer
     if(senderAction == nullptr)
         throw std::runtime_error("Pointer conversion to action failed");
 
@@ -809,7 +809,7 @@ void MainWindow::all_on_pushButton_clicked()
     // Get the object that called this slot
     QPushButton* senderPushButton = qobject_cast<QPushButton *>(sender());
 
-    // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
+    // Ensure the signal that triggered this slot belongs to the above class by checking for null pointer
     if(senderPushButton == nullptr)
         throw std::runtime_error("Pointer conversion to push button failed");
 
@@ -875,7 +875,7 @@ void MainWindow::all_on_lineEdit_editingFinished()
     // Get the object that called this slot
     QLineEdit* senderLineEdit = qobject_cast<QLineEdit*>(sender());
 
-    // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
+    // Ensure the signal that triggered this slot belongs to the above class by checking for null pointer
     if(senderLineEdit == nullptr)
         throw std::runtime_error("Pointer conversion to line edit failed");
 
@@ -893,7 +893,7 @@ void MainWindow::all_on_listWidget_itemChanged(QListWidgetItem* item) // Proxy f
     // Get the object that called this slot
     QListWidget* senderListWidget = qobject_cast<QListWidget*>(sender());
 
-    // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
+    // Ensure the signal that triggered this slot belongs to the above class by checking for null pointer
     if(senderListWidget == nullptr)
         throw std::runtime_error("Pointer conversion to list widget failed");
 
@@ -924,7 +924,7 @@ void MainWindow::all_on_radioButton_clicked()
     // Get the object that called this slot
     QRadioButton* senderRadioButton = qobject_cast<QRadioButton*>(sender());
 
-    // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
+    // Ensure the signal that triggered this slot belongs to the above class by checking for null pointer
     if(senderRadioButton == nullptr)
         throw std::runtime_error("Pointer conversion to radio button failed");
 

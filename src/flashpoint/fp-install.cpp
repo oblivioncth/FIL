@@ -32,7 +32,7 @@ Install::Install(QString installPath) :
 
     //-Check install validity--------------------------------------------
 
-    // Check for file existance
+    // Check for file existence
     const QList<const QFile*> filesToCheck{
         mDatabaseFile.get(),
         mConfigJsonFile.get(),

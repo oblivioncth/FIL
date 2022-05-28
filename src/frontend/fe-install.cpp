@@ -123,7 +123,7 @@ Qx::GenericError Install::openDataDocument(DataDoc* docToOpen, std::shared_ptr<D
                 openReadError = errorTemplate.setSecondaryInfo(docToOpen->mDocumentFile->errorString());
         }
 
-        // Add lease to ledger if no error occured while readding
+        // Add lease to ledger if no error occurred while reading
         if(!openReadError.isValid())
             mLeasedDocuments.insert(docToOpen->identifier());
     }
@@ -169,7 +169,7 @@ Qx::GenericError Install::saveDataDocument(DataDoc* docToSave, std::shared_ptr<D
     // Close document file
     docToSave->mDocumentFile->close();
 
-    // Set document perfmissions
+    // Set document permissions
     allowUserWriteOnFile(docToSave->mDocumentFile->fileName());
 
     // Remove handle reservation
@@ -277,7 +277,7 @@ void Install::addPurgeableImagePath(QString imagePath)
     /*TODO: This feels ugly, but due to the fact that a game's info is pulled before a transfer
      *      may be possible (i.e. if the image needs to be downloaded), and the info is needed
      *      to determine an images destination path (and caching game info in import worker also
-     *      feels crudy), this seemed like the best way to handle tracking modified images short
+     *      feels cruddy), this seemed like the best way to handle tracking modified images short
      *      of moving the image transfer duty back into Fe::Install, adding image transfers to a
      *      queue within Fe::Install when the game info is pulled, and then later when ImportWorker
      *      would performed the transfers, call a function to have Fe::Install initiate them. Though,

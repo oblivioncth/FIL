@@ -41,7 +41,7 @@ public:
 
     // Base errors
     static inline const QString ERR_UNSUPPORTED_FEATURE = "A feature unsupported by the frontend was called upon!";
-    static inline const QString ERR_INSEPECTION = "An unexpected error occured while inspecting the frontend.";
+    static inline const QString ERR_INSEPECTION = "An unexpected error occurred while inspecting the frontend.";
 
     // Images Errors
     static inline const QString ERR_IMAGE_WONT_BACKUP = R"(Cannot rename the an existing image for backup:)";
@@ -78,7 +78,7 @@ public:
 
 //-Class Functions------------------------------------------------------------------------------------------------------
 private:
-    // Registry put behind function call to avoid SIOF since otherwise initialization of static registry before calls to registerFrontend would not be guarenteed
+    // Registry put behind function call to avoid SIOF since otherwise initialization of static registry before calls to registerFrontend would not be guaranteed
     static QMap<QString, InstallFactory*>& registry();
 
     static void allowUserWriteOnFile(QString filePath);
