@@ -1,8 +1,17 @@
 #ifndef FE_DATA
 #define FE_DATA
 
+// Standard Library Includes
+#include <concepts>
+
+// Qt Includes
 #include <QFile>
 
+// Qx Includes
+#include <qx/core/qx-genericerror.h>
+#include <qx/utility/qx-macros.h>
+
+// Project Includes
 #include "fe-items.h"
 #include "../flashpoint/fp-items.h"
 
@@ -155,7 +164,8 @@ protected:
 protected:
     virtual void finalizeDerived() = 0; // Should maybe be option via default empty implementation
 
-    template <typename T, typename K, QX_ENABLE_IF(std::is_base_of<Item, T>)>
+    template <typename T, typename K>
+        requires std::derived_from<T, Item>
     void finalizeUpdateableItems(QHash<K, std::shared_ptr<T>>& existingItems,
                                  QHash<K, std::shared_ptr<T>>& finalItems)
     {
@@ -167,7 +177,8 @@ protected:
         existingItems.clear();
     }
 
-    template <typename T, typename K, QX_ENABLE_IF(std::is_base_of<Item, T>)>
+    template <typename T, typename K>
+        requires std::derived_from<T, Item>
     void addUpdateableItem(QHash<K, std::shared_ptr<T>>& existingItems,
                            QHash<K, std::shared_ptr<T>>& finalItems,
                            K key,

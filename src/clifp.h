@@ -1,9 +1,15 @@
 #ifndef CLIFP_H
 #define CLIFP_H
 
+// Qt Includes
 #include <QUuid>
+
+// Qx Includes
+#include <qx/core/qx-versionnumber.h>
+
+// Project Includes
 #include "flashpoint/fp-install.h"
-#include "qx.h"
+
 
 class CLIFp
 {
@@ -29,7 +35,7 @@ public:
 public:
     static QString standardCLIFpPath(const Fp::Install& fpInstall);
     static bool hasCLIFp(const Fp::Install& fpInstall);
-    static Qx::MMRB currentCLIFpVersion(const Fp::Install& fpInstall);
+    static Qx::VersionNumber currentCLIFpVersion(const Fp::Install& fpInstall);
     static bool deployCLIFp(QString& errorMsg, const Fp::Install& fpInstall, QString sourcePath);
 
     static QString parametersFromStandard(QString originalAppPath, QString originalAppParams);

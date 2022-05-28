@@ -1,7 +1,16 @@
+// Unit Include
 #include "lb-data.h"
+
+// Standard Library Includes
+#include <memory>
+
+// Qx Includes
+#include <qx/xml/qx-xmlstreamreadererror.h>
+#include <qx/xml/qx-common-xml.h>
+
+// Project Includes
 #include "lb-install.h"
 
-# include <memory>
 
 namespace Lb
 {
@@ -42,7 +51,7 @@ Qx::GenericError XmlDocReader::readInto()
     else
         readError = Qx::XmlStreamReaderError(mStreamReader.error());
 
-    return readError.isValid() ? Qx::GenericError(Qx::GenericError::Critical, mPrimaryError, readError.getText()) :
+    return readError.isValid() ? Qx::GenericError(Qx::GenericError::Critical, mPrimaryError, readError.text()) :
                                  Qx::GenericError();
 }
 

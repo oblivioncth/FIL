@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icon/Invalid_Install.png</file>
+        <file>icon/Mismatch_Install.png</file>
+        <file>icon/No_Install.png</file>
+        <file>icon/Valid_Install.png</file>
+        <file>icon/Update_Mode_Info.png</file>
+        <file>icon/CLIFp.png</file>
+        <file>icon/Exit.png</file>
+        <file>icon/GitHub.png</file>
+        <file>icon/LaunchBox.png</file>
+        <file>file/CLIFp.exe</file>
+    </qresource>
+</RCC>

@@ -1,12 +1,15 @@
 #ifndef FLASHPOINT_INSTALL_H
 #define FLASHPOINT_INSTALL_H
 
+// Qt Includes
 #include <QString>
 #include <QDir>
 #include <QFile>
 #include <QtSql>
-#include "qx.h"
 
+// Qx Includes
+
+// Project Includes
 #include "fp-json.h"
 #include "fp-macro.h"
 #include "fp-db.h"

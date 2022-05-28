@@ -1,7 +1,11 @@
+// Unit Include
 #include "clifp.h"
+
+// Qx Includes
+#include <qx/windows/qx-filedetails.h>
+
+// Project Includes
 #include "flashpoint/fp-install.h"
-#include "qx-io.h"
-#include "qx-windows.h"
 
 //===============================================================================================================
 // CLIFp
@@ -17,12 +21,12 @@ bool CLIFp::hasCLIFp(const Fp::Install& fpInstall)
     return presentInfo.exists() && presentInfo.isFile();
 }
 
-Qx::MMRB CLIFp::currentCLIFpVersion(const Fp::Install& fpInstall)
+Qx::VersionNumber CLIFp::currentCLIFpVersion(const Fp::Install& fpInstall)
 {
     if(!hasCLIFp(fpInstall))
-        return Qx::MMRB();
+        return Qx::VersionNumber();
     else
-        return Qx::getFileDetails(standardCLIFpPath(fpInstall)).getFileVersion();
+        return Qx::FileDetails::readFileDetails(standardCLIFpPath(fpInstall)).fileVersion();
 }
 
 bool CLIFp::deployCLIFp(QString& errorMsg, const Fp::Install& fpInstall, QString sourcePath)

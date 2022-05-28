@@ -1,12 +1,16 @@
 #ifndef LAUNCHBOX_ITEMS_H
 #define LAUNCHBOX_ITEMS_H
 
+// Qt Includes
 #include <QString>
 #include <QDateTime>
 #include <QSet>
+
+// Qx Includes
+
+// Project Includes
 #include "../fe-items.h"
 #include "../../flashpoint/fp-items.h"
-#include "qx.h"
 
 namespace Lb
 {

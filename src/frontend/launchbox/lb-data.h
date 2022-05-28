@@ -2,13 +2,17 @@
 #define LAUNCHBOX_XML_H
 
 #pragma warning( disable : 4250 )
+
+// Qt Includes
 #include <QString>
 #include <QFile>
 #include <memory>
+#include <QXmlStreamReader>
 
-#include "qx.h"
-#include "qx-xml.h"
+// Qx Includes
+#include <qx/core/qx-freeindextracker.h>
 
+// Project Includes
 #include "lb-items.h"
 #include "../fe-data.h"
 

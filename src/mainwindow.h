@@ -1,18 +1,24 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+// Qt Includes
 #include <QMainWindow>
 #include <QListWidgetItem>
 #include <QProgressDialog>
 #include <QMessageBox>
-#include <QWinTaskbarButton>
-#include <QWinTaskbarProgress>
-#include "version.h"
+
+// Qx Includes
+#include <qx/core/qx-genericerror.h>
+#include <qx/core/qx-versionnumber.h>
+#include <qx/io/qx-common-io.h>
+#include <qx/widgets/qx-standarditemmodel.h>
+#include <qx/windows-gui/qx-taskbarbutton.h>
+
+// Project Includes
+#include "project_vars.h"
 #include "frontend/fe-install.h"
 #include "flashpoint/fp-install.h"
 #include "import-worker.h"
-#include "qx-io.h"
-#include "qx-widgets.h"
 #include "clifp.h"
 
 QT_BEGIN_NAMESPACE
@@ -30,9 +36,6 @@ private:
 
 //-Class Variables--------------------------------------------------------------------------------------------
 private:
-    // Constants
-    //static const int IMPORT_UI_UPD_INTERVAL = 17; // Workaround update tick speed in ms
-
     // UI Text
     static inline const QString REQUIRE_ELEV = " [Run as Admin/Dev Mode]";
 
@@ -78,8 +81,8 @@ private:
     // Messages - Input
     static inline const QString MSG_FE_INSTALL_INVALID = "The specified directory either doesn't contain a valid frontend install, or it contains a version that is incompatible with this tool.";
     static inline const QString MSG_FP_INSTALL_INVALID = "The specified directory either doesn't contain a valid Flashpoint install, or it contains a version that is incompatible with this tool.";
-    static inline const QString MSG_FP_VER_NOT_TARGET = "The selected Flashpoint install contains a version of Flashpoint that is different from the target version (" VER_PRODUCTVERSION_STR "), but appears to have a compatible structure. "
-                                                                "You may proceed at your own risk as the tool is not guarnteed to work correctly in this circumstance. Please use a newer version of " VER_INTERNALNAME_STR " if available.";
+    static inline const QString MSG_FP_VER_NOT_TARGET = "The selected Flashpoint install contains a version of Flashpoint that is different from the target version (" PROJECT_TARGET_FP_VER "), but appears to have a compatible structure. "
+                                                                "You may proceed at your own risk as the tool is not guarnteed to work correctly in this circumstance. Please use a newer version of " PROJECT_SHORT_NAME " if available.";
 
     static inline const QString MSG_INSTALL_CONTENTS_CHANGED = "The contents of your installs have been changed since the initial scan and therefore must be re-evaluated. You will need to make your selections again.";
 
@@ -119,7 +122,7 @@ private:
     // Messages - Revert
     static inline const QString MSG_HAVE_TO_REVERT = "Due to previous unrecoverable errors, all changes that occured during import will now be reverted (other than existing images that were replaced with newer versions).\n"
                                                      "\n"
-                                                     "Aftewards, check to see if there is a newer version of " VER_INTERNALNAME_STR " and try again using that version. If not ask for help on the relavent forums where this tool was released (see Help).\n"
+                                                     "Aftewards, check to see if there is a newer version of " PROJECT_SHORT_NAME " and try again using that version. If not ask for help on the relavent forums where this tool was released (see Help).\n"
                                                      "\n"
                                                      "If you beleive this to be due to a bug with this software, please submit an issue to its GitHub page (listed under help)";
 
@@ -165,14 +168,11 @@ private:
 
     std::shared_ptr<Fe::Install> mFrontendInstall;
     std::shared_ptr<Fp::Install> mFlashpointInstall;
-    Qx::MMRB mInternalCLIFpVersion;
-
-    int mLineEdit_frontendPath_blocker = 0; // Required due to an oversight with QLineEdit::editingFinished()
-    int mLineEdit_flashpointPath_blocker = 0; // Required due to an oversight with QLineEdit::editingFinished()
+    Qx::VersionNumber mInternalCLIFpVersion;
 
     QHash<QListWidgetItem*,Qt::CheckState> mPlatformItemCheckStates;
     QHash<QListWidgetItem*,Qt::CheckState> mPlaylistItemCheckStates;
-    std::unique_ptr<Qx::StandardItemModelX> mTagSelectionModel;
+    std::unique_ptr<Qx::StandardItemModel> mTagSelectionModel;
 
     bool mHasLinkPermissions = false;
 
@@ -182,9 +182,7 @@ private:
 
     // Process monitoring
     std::unique_ptr<QProgressDialog> mImportProgressDialog;
-    QWinTaskbarButton* mWindowTaskbarButton; // TODO: Remove for Qt6
-
-    //QTimer mUIUpdateWorkaroundTimer;
+    Qx::TaskbarButton* mWindowTaskbarButton;
 
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
@@ -216,7 +214,7 @@ private:
 
     void postSqlError(QString mainText, QSqlError sqlError);
     void postListError(QString mainText, QStringList detailedItems);
-    void postIOError(QString mainText, Qx::IOOpReport report);
+    void postIOError(QString mainText, Qx::IoOpReport report);
     int postGenericError(Qx::GenericError error, QMessageBox::StandardButtons choices = QMessageBox::Ok);
 
     void refreshEnableStates();
@@ -246,23 +244,14 @@ private slots:
     // Direct UI, start with "all" to avoid Qt calling "connectSlotsByName" on these slots (slots that start with "on_")
     void all_on_action_triggered();
     void all_on_lineEdit_editingFinished();
-    void all_on_lineEdit_textEdited();
-    void all_on_lineEdit_returnPressed();
     void all_on_pushButton_clicked();
     void all_on_listWidget_itemChanged(QListWidgetItem* item);
     void all_on_radioButton_clicked();
 
-    // Workaround update
-    //void resetUpdateTimer();
-    //void updateUI();
-
     // Import Exception Handling
     void handleBlockingError(std::shared_ptr<int> response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices);
-    void handleAuthRequest(QString prompt, QString* username, QString* password, bool* abort);
+    void handleAuthRequest(QString prompt, QAuthenticator* authenticator);
     void handleImportResult(ImportWorker::ImportResult importResult, Qx::GenericError errorReport);
 };
-
-//-Metatype Declarations-----------------------------------------------------------------------------------------
-Q_DECLARE_METATYPE(std::shared_ptr<int>);
 
 #endif // MAINWINDOW_H

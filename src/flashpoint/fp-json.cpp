@@ -1,7 +1,14 @@
+// Unit Includes
 #include "fp-json.h"
-#include "qx-io.h"
 
+// Qt Includes
 #include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+
+// Qx Includes
+#include <qx/core/qx-json.h>
+#include <qx/io/qx-common-io.h>
 
 namespace Fp
 {
@@ -18,7 +25,7 @@ bool operator== (const Json::StartStop& lhs, const Json::StartStop& rhs) noexcep
 }
 
 //-Hashing------------------------------------------------------------------------------------------------------
-uint qHash(const Json::StartStop& key, uint seed) noexcept
+size_t qHash(const Json::StartStop& key, size_t seed) noexcept
 {
     QtPrivate::QHashCombine hash;
     seed = hash(seed, key.path);
@@ -45,10 +52,10 @@ Qx::GenericError Json::SettingsReader::readInto()
 {
     // Load original JSON file
     QByteArray settingsData;
-    Qx::IOOpReport settingsLoadReport = Qx::readAllBytesFromFile(settingsData, *mSourceJsonFile);
+    Qx::IoOpReport settingsLoadReport = Qx::readBytesFromFile(settingsData, *mSourceJsonFile);
 
     if(!settingsLoadReport.wasSuccessful())
-        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mSourceJsonFile->fileName()), settingsLoadReport.getOutcomeInfo());
+        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mSourceJsonFile->fileName()), settingsLoadReport.outcomeInfo());
 
     // Parse original JSON data
     QJsonParseError parseError;
@@ -78,7 +85,7 @@ Json::ConfigReader::ConfigReader(Config* targetConfig, std::shared_ptr<QFile> so
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-Qx::GenericError Json::ConfigReader::parseDocument(const QJsonDocument &configDoc)
+Qx::GenericError Json::ConfigReader::parseDocument(const QJsonDocument& configDoc)
 {
     // Get derivation specific target
     Config* targetConfig = static_cast<Config*>(mTargetSettings);

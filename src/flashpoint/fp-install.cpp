@@ -1,6 +1,8 @@
+// Unit Include
 #include "fp-install.h"
-#include "qx-io.h"
-#include "qx-windows.h"
+
+// Qx Includes
+#include <qx/io/qx-common-io.h>
 
 namespace Fp
 {
@@ -125,11 +127,11 @@ Qx::GenericError Install::appInvolvesSecurePlayer(bool& involvesBuffer, QFileInf
     {
         // Check if bat uses secure player
         QFile batFile(appInfo.absoluteFilePath());
-        Qx::IOOpReport readReport = Qx::fileContainsString(involvesBuffer, batFile, SECURE_PLAYER_INFO.baseName());
+        Qx::IoOpReport readReport = Qx::fileContainsString(involvesBuffer, batFile, SECURE_PLAYER_INFO.baseName());
 
         // Check for read errors
         if(!readReport.wasSuccessful())
-            return Qx::GenericError(Qx::GenericError::Critical, readReport.getOutcome(), readReport.getOutcomeInfo());
+            return Qx::GenericError(Qx::GenericError::Critical, readReport.outcome(), readReport.outcomeInfo());
         else
             return Qx::GenericError();
     }

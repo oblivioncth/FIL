@@ -1,7 +1,11 @@
+// Unit Include
 #include "import-worker.h"
-#include "clifp.h"
 
+// Standard Library Includes
 #include <filesystem>
+
+// Project Includes
+#include "clifp.h"
 
 //===============================================================================================================
 // IMPORT WORKER
@@ -306,7 +310,7 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
             if (currentPlatformDoc->containsGame((*j).getParentId()))
             {
                currentPlatformDoc->addAddApp(*j);
-               j = mAddAppsCache.erase(j);
+               j = mAddAppsCache.erase(j); // clazy:exclude=strict-iterators Oversight of clazy since there's no QSet::erase(QSet::const_iterator) anymore
 
                // Reduce progress dialog maximum by total iterations cut from future platforms
                mMaximumProgressValue = mMaximumProgressValue - gameQueries.size() + i + 1; // Max = Max - (size - (i + 1))
@@ -427,15 +431,15 @@ ImportWorker::ImportResult ImportWorker::processImages(Qx::GenericError& errorRe
         // Configure manager
         mImageDownloadManager.setMaxSimultaneous(2);
         mImageDownloadManager.setOverwrite(false); // Should be no attempts to overwrite, but here just in case
-        mImageDownloadManager.setAutoAbort(false); // Get as many images as possible;
+        mImageDownloadManager.setStopOnError(false); // Get as many images as possible;
 
         // Download progress tracker
         int lastTaskCount = mImageDownloadManager.taskCount();
 
         // Make connections
-        connect(&mImageDownloadManager, &Qx::SyncDownloadManager::sslErrors, this, [&](Qx::GenericError errorMsg, bool* abort) {
+        connect(&mImageDownloadManager, &Qx::SyncDownloadManager::sslErrors, this, [&](Qx::GenericError errorMsg, bool* ignore) {
             emit blockingErrorOccured(mBlockingErrorResponse, errorMsg, QMessageBox::Yes | QMessageBox::Abort);
-            *abort = *mBlockingErrorResponse == QMessageBox::Abort;
+            *ignore = *mBlockingErrorResponse == QMessageBox::Yes;
         });
 
         connect(&mImageDownloadManager, &Qx::SyncDownloadManager::authenticationRequired, this, &ImportWorker::authenticationRequired);
@@ -453,7 +457,7 @@ ImportWorker::ImportResult ImportWorker::processImages(Qx::GenericError& errorRe
         });
 
         // Start download
-        Qx::SyncDownloadManager::Report downloadReport = mImageDownloadManager.processQueue();
+        Qx::DownloadManagerReport downloadReport = mImageDownloadManager.processQueue();
 
         // Handle result
         if(!downloadReport.wasSuccessful())

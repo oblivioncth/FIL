@@ -1,10 +1,15 @@
 #ifndef FLASHPOINT_JSON_H
 #define FLASHPOINT_JSON_H
 
+// Qt Includes
 #include <QString>
+#include <QSet>
 #include <QFile>
-#include "qx.h"
 
+// Qx Includes
+#include <qx/core/qx-genericerror.h>
+
+// Project Includes
 #include "fp-macro.h"
 
 namespace Fp
