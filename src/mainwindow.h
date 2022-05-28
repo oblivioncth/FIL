@@ -36,9 +36,6 @@ private:
 
 //-Class Variables--------------------------------------------------------------------------------------------
 private:
-    // Constants
-    //static const int IMPORT_UI_UPD_INTERVAL = 17; // Workaround update tick speed in ms
-
     // UI Text
     static inline const QString REQUIRE_ELEV = " [Run as Admin/Dev Mode]";
 
@@ -187,8 +184,6 @@ private:
     std::unique_ptr<QProgressDialog> mImportProgressDialog;
     Qx::TaskbarButton* mWindowTaskbarButton;
 
-    //QTimer mUIUpdateWorkaroundTimer;
-
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
     MainWindow(QWidget *parent = nullptr);
@@ -252,10 +247,6 @@ private slots:
     void all_on_pushButton_clicked();
     void all_on_listWidget_itemChanged(QListWidgetItem* item);
     void all_on_radioButton_clicked();
-
-    // Workaround update
-    //void resetUpdateTimer();
-    //void updateUI();
 
     // Import Exception Handling
     void handleBlockingError(std::shared_ptr<int> response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices);

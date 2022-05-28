@@ -70,10 +70,6 @@ MainWindow::MainWindow(QWidget *parent) :
     initializeEnableConditionMaps();
     initializeForms();
 
-    // Setup UI update workaround timer
-    //mUIUpdateWorkaroundTimer.setInterval(IMPORT_UI_UPD_INTERVAL);
-    //connect(&mUIUpdateWorkaroundTimer, &QTimer::timeout, this, &MainWindow::updateUI); // Process events at minimum rate
-
     // Check if Flashpoint is running
     if(Qx::processIsRunning(QFileInfo(Fp::Install::LAUNCHER_PATH).fileName()))
         QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_CLOSE_PROMPT);
@@ -289,6 +285,7 @@ void MainWindow::populateImportSelectionBoxes()
     }
 
     // Disable update mode box and import start button since no items will be selected after this operation
+    // TODO: See if these are needed or can be done away with since ideall this should be handled by ui enabled hash map
     ui->groupBox_updateMode->setEnabled(false);
     ui->pushButton_startImport->setEnabled(false);
 }
@@ -642,14 +639,8 @@ void MainWindow::prepareImport()
         connect(&importWorker, &ImportWorker::progressValueChanged, mWindowTaskbarButton, &Qx::TaskbarButton::setProgressValue);
         connect(mImportProgressDialog.get(), &QProgressDialog::canceled, &importWorker, &ImportWorker::notifyCanceled);
 
-        // Create UI update timer reset connection
-        //connect(&importWorker, &ImportWorker::progressValueChanged, this, &MainWindow::resetUpdateTimer); // Reset refresh timer since setValue already processes events
-
         // Import error tracker
         Qx::GenericError importError;
-
-        // Start UI update timer
-        //mUIUpdateWorkaroundTimer.start();
 
         // Start import and forward result to handler
         ImportWorker::ImportResult importResult = importWorker.doImport(importError);
@@ -927,9 +918,6 @@ void MainWindow::all_on_listWidget_itemChanged(QListWidgetItem* item) // Proxy f
     else
         throw std::runtime_error("Unhandled use of all_on_listWidget_itemChanged() slot");
 }
-
-//void MainWindow::resetUpdateTimer() { mUIUpdateWorkaroundTimer.start(); }
-//void MainWindow::updateUI() { QApplication::processEvents(); }
 
 void MainWindow::all_on_radioButton_clicked()
 {
