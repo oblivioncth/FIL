@@ -37,6 +37,31 @@ add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 include(FetchQx)
 fetch_qx(ae48c53243bb1b2140196026bbc72aff3e56fbd9) # dev commit
 
+# Fetch CLIFp (build and import from source)
+include(FetchCLIFp)
+fetch_clifp(7b6a734aa9d963a941bb5b5223435122eaf09da4) # dev commit
+
+# Setup copy of CLIFp executable to OFILb generated resources directory after its built
+# ...
+# This statement creates a command that is known to be able to create the appropraite
+# output file (CLIFP.exe) by copying it from the CLIFp build. The command depends on
+# CLIFp having been built in-order to be invoked
+set(CLIFP_RES_PATH "${CMAKE_CURRENT_BINARY_DIR}/res/file/CLIFp.exe")
+add_custom_command(OUTPUT
+        "${CLIFP_RES_PATH}"
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:CLIFp::CLIFp>
+        "${CLIFP_RES_PATH}"
+    DEPENDS CLIFp::CLIFp
+)
+
+# This statement creates a target by itself does nothing, but since it depends on
+# on a file that the above command is known to be able to create, it will invoke
+# the command automatically when run
+add_custom_target(ofilb_copy_clifp
+    ALL
+    DEPENDS "${CLIFP_RES_PATH}"
+)
+
 # Set app sources
 set(CXX_SOURCES
     src/clifp.h
@@ -101,12 +126,43 @@ target_sources(${TARGET_NAME}
         ${QT_RESOURCES}
 )
 
+# Link target to libraries
+target_link_libraries(${TARGET_NAME}
+    PRIVATE
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Widgets
+        Qt6::Xml
+        Qt6::Sql
+        Qx::Core
+        Qx::Io
+        Qx::Gui
+        Qx::Network
+        Qx::Widgets
+        Qx::Windows
+        Qx::Windows-gui
+        Qx::Xml
+)
+
+# Note that the executable depends on CLIFp being copied into its build dir
+add_dependencies(${TARGET_NAME} ofilb_copy_clifp)
+
 # Forward select project variables to C++ code
 include(ProjectVars)
 set_cxx_project_vars(${TARGET_NAME}
     FULL_NAME "\"${FORMAL_NAME}\""
     SHORT_NAME "\"${PROJECT_NAME}\""
     TARGET_FP_VER_STR "\"${TARGET_FP_VERSION}\""
+)
+
+# Generate resource collection for CLIFp
+get_target_property(CLIFP_PATH CLIFp::CLIFp IMPORTED_LOCATION)
+include(GeneratedResources)
+add_generated_resources_collection(${TARGET_NAME}
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/res"
+    PREFIX "/"
+    FILES
+        PATH "file/CLIFp.exe"
 )
 
 # Set target exe details
@@ -125,20 +181,5 @@ set_win_executable_details(${TARGET_NAME}
     PRODUCT_NAME "${FORMAL_NAME}"
 )
 
-# Link target to libraries
-target_link_libraries(${TARGET_NAME}
-    PRIVATE
-        Qt6::Core
-        Qt6::Gui
-        Qt6::Widgets
-        Qt6::Xml
-        Qt6::Sql
-        Qx::Core
-        Qx::Io
-        Qx::Gui
-        Qx::Network
-        Qx::Widgets
-        Qx::Windows
-        Qx::Windows-gui
-        Qx::Xml
-)
+
+
