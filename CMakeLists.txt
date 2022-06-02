@@ -104,9 +104,9 @@ target_sources(${TARGET_NAME}
 # Forward select project variables to C++ code
 include(ProjectVars)
 set_cxx_project_vars(${TARGET_NAME}
-    FULL_NAME "${FORMAL_NAME}"
-    SHORT_NAME "${PROJECT_NAME}"
-    TARGET_FP_VER ${TARGET_FP_VERSION}
+    FULL_NAME "\"${FORMAL_NAME}\""
+    SHORT_NAME "\"${PROJECT_NAME}\""
+    TARGET_FP_VER_STR "\"${TARGET_FP_VERSION}\""
 )
 
 # Set target exe details
