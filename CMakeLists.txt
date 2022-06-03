@@ -168,7 +168,7 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/res"
 
 # Name here needs to be as unique as possible for when this project is inlcuded
 # in another via FetchContent or add_subdirectory (prevent target clashes)
-set(TARGET_NAME ${PROJECT_NAME})
+set(TARGET_NAME ${PROJECT_NAME_LC}_${PROJECT_NAME_LC})
 
 # Add executable target
 qt_add_executable(${TARGET_NAME} WIN32)
