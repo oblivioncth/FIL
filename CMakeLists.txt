@@ -35,7 +35,7 @@ add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 
 # Fetch Qx (build and import from source)
 include(FetchQx)
-fetch_qx(ae48c53243bb1b2140196026bbc72aff3e56fbd9) # dev commit
+fetch_qx(b82df604af3e8bbcff09f7a29528c50718ba0623) # dev commit
 
 # Fetch CLIFp (build and import from source)
 include(FetchCLIFp)
@@ -54,7 +54,7 @@ add_custom_command(OUTPUT
     DEPENDS CLIFp::CLIFp
 )
 
-# This statement creates a target by itself does nothing, but since it depends on
+# This statement creates a target that by itself does nothing, but since it depends
 # on a file that the above command is known to be able to create, it will invoke
 # the command automatically when run
 add_custom_target(ofilb_copy_clifp
