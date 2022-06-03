@@ -1,11 +1,30 @@
+#================= Project Setup ==========================
+
+# CMake
 cmake_minimum_required(VERSION 3.21.1)
 
 # Project
-project(OFILb VERSION 0.4.1.3 LANGUAGES CXX)
-set(TARGET_FP_VERSION 10.1.0.3)
+# NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
+set(OFILB_BASE_VERSION 0.4.1.3) # Required for CI/CD
+project(OFILb
+    VERSION ${OFILB_BASE_VERSION}
+    LANGUAGES CXX
+    DESCRIPTION "Flashpoint importer for LaunchBox"
+)
 set(FORMAL_NAME "Oby's Flashpoint Importer for LaunchBox")
+string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LC)
+string(TOUPPER ${PROJECT_NAME} PROJECT_NAME_UC)
 
+set(TARGET_FP_VERSION 10.1.0.3)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+# Check if top level
+if(${PROJECT_IS_TOP_LEVEL})
+    message(STATUS "NOTE: ${PROJECT_NAME} is being configured as a top-level project")
+else()
+    set(SUB_PROJ_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
+    message(STATUS "NOTE: ${PROJECT_NAME} is being configured as a sub-project")
+endif()
 
 # C++
 set(CMAKE_CXX_STANDARD 20)
@@ -20,6 +39,39 @@ enable_language("RC")
 # Add local modules
 set(PROJ_SCRIPTS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${PROJ_SCRIPTS_PATH}/module")
+
+# General Variables
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+  set(TARGET_ARCH x64)
+else()
+  set(TARGET_ARCH x86)
+endif()
+
+#--------------------Setup Paths-------------------
+
+# Cmake scripts
+set(FILE_TEMPLATES_PATH "${PROJ_SCRIPTS_PATH}/file_templates")
+
+# Install (override the CMake default, but not a user set value)
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/out/install"
+           CACHE PATH "Project install path" FORCE
+    )
+endif()
+
+# Package
+set(PACKAGE_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/out/dist")
+
+#------------Set Global Build Rules----------------
+
+# Clean install when clean target is ran
+set_directory_properties(PROPERTIES ADDITIONAL_CLEAN_FILES "${CMAKE_INSTALL_PREFIX}")
+
+# Versioning
+include(VerboseVersioning)
+setup_verbose_versioning(PROJECT_VERSION_VERBOSE)
+
+#================= Build =========================
 
 # Import Qt
 find_package(Qt6 REQUIRED COMPONENTS
@@ -114,9 +166,16 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/res"
     FILES ${QT_RESOURCES}
 )
 
-# Add executable target
+# Name here needs to be as unique as possible for when this project is inlcuded
+# in another via FetchContent or add_subdirectory (prevent target clashes)
 set(TARGET_NAME ${PROJECT_NAME})
+
+# Add executable target
 qt_add_executable(${TARGET_NAME} WIN32)
+
+# Make alias target so target can be referred to with its friendly
+# export name both internally and when part of another build tree
+add_executable(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${TARGET_NAME})
 
 # Add sources to target
 target_sources(${TARGET_NAME}
@@ -142,6 +201,13 @@ target_link_libraries(${TARGET_NAME}
         Qx::Windows
         Qx::Windows-gui
         Qx::Xml
+)
+
+# Configure target properties
+set_target_properties(${TARGET_NAME} PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    OUTPUT_NAME "${PROJECT_NAME}"
+    EXPORT_NAME "${PROJECT_NAME}"
 )
 
 # Note that the executable depends on CLIFp being copied into its build dir
@@ -181,5 +247,64 @@ set_win_executable_details(${TARGET_NAME}
     PRODUCT_NAME "${FORMAL_NAME}"
 )
 
+#--------------------Package Config-----------------------
 
+# Create config file
+configure_file("${FILE_TEMPLATES_PATH}/${PROJECT_NAME}Config.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}Config.cmake"
+    @ONLY
+)
 
+# Create version config file
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}ConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMinorVersion
+)
+
+#================= Install ==========================
+
+# Install executable
+install(TARGETS ${TARGET_NAME}
+    CONFIGURATIONS Release
+    COMPONENT ${TARGET_NAME}
+    EXPORT ${PROJECT_NAME}Targets
+    ${SUB_PROJ_EXCLUDE_FROM_ALL} # "EXCLUDE_FROM_ALL" if project is not top-level
+    RUNTIME DESTINATION bin
+)
+
+# Install package target export
+install(EXPORT ${PROJECT_NAME}Targets
+    CONFIGURATIONS Release
+    COMPONENT ${TARGET_NAME}
+    FILE "${PROJECT_NAME}Targets.cmake"
+    NAMESPACE ${PROJECT_NAME}::
+    DESTINATION cmake
+    ${SUB_PROJ_EXCLUDE_FROM_ALL} # "EXCLUDE_FROM_ALL" if project is not top-level
+)
+
+# Install package config
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}Config.cmake"
+    CONFIGURATIONS Release
+    COMPONENT ${TARGET_NAME}
+    DESTINATION cmake
+    ${SUB_PROJ_EXCLUDE_FROM_ALL} # "EXCLUDE_FROM_ALL" if project is not top-level
+)
+
+#========Export For In-tree Builds =================
+# For in source builds
+export(EXPORT ${PROJECT_NAME}Targets
+    FILE "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}Targets.cmake"
+)
+
+#====================== CPack ==============================
+
+set(CPACK_PACKAGE_VENDOR "oblivioncth")
+set(CPACK_PACKAGE_DIRECTORY "${PACKAGE_PREFIX}")
+set(CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}_${PROJECT_VERSION_VERBOSE}_${CMAKE_SYSTEM_NAME}_${TARGET_ARCH}")
+set(CPACK_GENERATOR "ZIP")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+include(CPack)
