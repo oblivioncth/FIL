@@ -72,7 +72,7 @@ set(PACKAGE_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/out/dist")
 set_directory_properties(PROPERTIES ADDITIONAL_CLEAN_FILES "${CMAKE_INSTALL_PREFIX}")
 
 # Versioning
-include(VerboseVersioning)
+include(OFILb/VerboseVersioning)
 setup_verbose_versioning(PROJECT_VERSION_VERBOSE)
 
 #================= Build =========================
@@ -90,11 +90,11 @@ find_package(Qt6 REQUIRED COMPONENTS
 add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 
 # Fetch Qx (build and import from source)
-include(FetchQx)
+include(OFILb/FetchQx)
 fetch_qx(d3f0a902f0d8c2cb2f2a73a60d5d869c3c6a8a20) # dev commit
 
 # Fetch CLIFp (build and import from source)
-include(FetchCLIFp)
+include(OFILb/FetchCLIFp)
 fetch_clifp(7b6a734aa9d963a941bb5b5223435122eaf09da4) # dev commit
 
 # Setup copy of CLIFp executable to OFILb generated resources directory after its built
@@ -218,7 +218,7 @@ set_target_properties(${TARGET_NAME} PROPERTIES
 add_dependencies(${TARGET_NAME} ofilb_copy_clifp)
 
 # Forward select project variables to C++ code
-include(ProjectVars)
+include(OFILb/ProjectVars)
 set_cxx_project_vars(${TARGET_NAME}
     FULL_NAME "\"${FORMAL_NAME}\""
     SHORT_NAME "\"${PROJECT_NAME}\""
@@ -227,7 +227,7 @@ set_cxx_project_vars(${TARGET_NAME}
 
 # Generate resource collection for CLIFp
 get_target_property(CLIFP_PATH CLIFp::CLIFp IMPORTED_LOCATION)
-include(GeneratedResources)
+include(OFILb/GeneratedResources)
 add_generated_resources_collection(${TARGET_NAME}
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/res"
     PREFIX "/"
@@ -236,7 +236,7 @@ add_generated_resources_collection(${TARGET_NAME}
 )
 
 # Set target exe details
-include(WinExecutableDetails)
+include(OFILb/WinExecutableDetails)
 set_win_executable_details(${TARGET_NAME}
     ICON "res/icon/OFILb.ico"
     FILE_VER ${PROJECT_VERSION}
