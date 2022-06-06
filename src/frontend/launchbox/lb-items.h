@@ -6,11 +6,11 @@
 #include <QDateTime>
 #include <QSet>
 
-// Qx Includes
+// libfp Includes
+#include <fp/flashpoint/fp-items.h>
 
 // Project Includes
 #include "../fe-items.h"
-#include "../../flashpoint/fp-items.h"
 
 namespace Lb
 {

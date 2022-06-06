@@ -14,10 +14,12 @@
 #include <qx/widgets/qx-standarditemmodel.h>
 #include <qx/windows-gui/qx-taskbarbutton.h>
 
+// libfp Includes
+#include <fp/flashpoint/fp-install.h>
+
 // Project Includes
 #include "project_vars.h"
 #include "frontend/fe-install.h"
-#include "flashpoint/fp-install.h"
 #include "import-worker.h"
 #include "clifp.h"
 

@@ -4,8 +4,8 @@
 // Qx Includes
 #include <qx/windows/qx-filedetails.h>
 
-// Project Includes
-#include "flashpoint/fp-install.h"
+// libfp Includes
+#include <fp/flashpoint/fp-install.h>
 
 //===============================================================================================================
 // CLIFp
