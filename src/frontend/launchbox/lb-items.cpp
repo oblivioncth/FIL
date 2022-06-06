@@ -2,7 +2,6 @@
 #include "lb-items.h"
 
 // Project Includes
-#include "../../flashpoint/fp-install.h"
 #include "../../clifp.h"
 
 namespace Lb

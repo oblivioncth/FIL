@@ -8,8 +8,10 @@
 // Qx Includes
 #include <qx/network/qx-downloadmanager.h>
 
+// libfp Includes
+#include <fp/flashpoint/fp-install.h>
+
 // Project Includes
-#include "flashpoint/fp-install.h"
 #include "frontend/fe-install.h"
 
 class ImportWorker : public QObject

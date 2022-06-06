@@ -11,9 +11,11 @@
 #include <qx/core/qx-genericerror.h>
 #include <qx/utility/qx-macros.h>
 
+// libfp Includes
+#include <fp/flashpoint/fp-items.h>
+
 // Project Includes
 #include "fe-items.h"
-#include "../flashpoint/fp-items.h"
 
 namespace Fe
 {

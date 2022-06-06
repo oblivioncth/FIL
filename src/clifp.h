@@ -7,8 +7,8 @@
 // Qx Includes
 #include <qx/core/qx-versionnumber.h>
 
-// Project Includes
-#include "flashpoint/fp-install.h"
+// libfp Includes
+#include <fp/flashpoint/fp-install.h>
 
 
 class CLIFp

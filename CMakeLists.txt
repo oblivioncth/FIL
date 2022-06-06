@@ -93,9 +93,13 @@ add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 include(OFILb/FetchQx)
 fetch_qx(541ec4359dfc6c8961fb973f4964840344fa0145) # dev commit
 
+# Fetch libfp (build and import from source)
+include(OFILb/Fetchlibfp)
+fetch_libfp(3e3d2aa2cc442f429a57ef185c032624b5a035a1)
+
 # Fetch CLIFp (build and import from source)
 include(OFILb/FetchCLIFp)
-fetch_clifp(7b6a734aa9d963a941bb5b5223435122eaf09da4) # dev commit
+fetch_clifp(1a4caceb9a98ba975fed7ea1cf9eb7f5bd3419ef) # dev commit
 
 # Setup copy of CLIFp executable to OFILb generated resources directory after its built
 # ...
@@ -122,16 +126,6 @@ add_custom_target(ofilb_copy_clifp
 set(CXX_SOURCES
     src/clifp.h
     src/clifp.cpp
-    src/flashpoint/fp-db.h
-    src/flashpoint/fp-db.cpp
-    src/flashpoint/fp-install.h
-    src/flashpoint/fp-install.cpp
-    src/flashpoint/fp-items.h
-    src/flashpoint/fp-items.cpp
-    src/flashpoint/fp-json.h
-    src/flashpoint/fp-json.cpp
-    src/flashpoint/fp-macro.h
-    src/flashpoint/fp-macro.cpp
     src/frontend/fe-data.h
     src/frontend/fe-data.cpp
     src/frontend/fe-install.h
@@ -205,6 +199,7 @@ target_link_libraries(${TARGET_NAME}
         Qx::Windows
         Qx::Windows-gui
         Qx::Xml
+        Fp::Flashpoint
 )
 
 # Configure target properties
