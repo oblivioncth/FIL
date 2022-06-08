@@ -27,6 +27,7 @@ public:
     static inline const QString PLATFORMS_PATH = "Data/Platforms";
     static inline const QString PLAYLISTS_PATH = "Data/Playlists";
     static inline const QString DATA_PATH = "Data";
+    static inline const QString CORE_PATH = "Core";
     static inline const QString MAIN_EXE_PATH = "LaunchBox.exe";
     static inline const QString PLATFORM_IMAGES_PATH = "Images";
     static inline const QString LOGO_PATH = "Box - Front";
@@ -50,6 +51,7 @@ private:
     QDir mPlatformsDirectory;
     QDir mPlaylistsDirectory;
     QDir mPlatformImagesDirectory;
+    QDir mCoreDirectory;
 
     // Other trackers
     Qx::FreeIndexTracker<int> mLbDatabaseIdTracker = Qx::FreeIndexTracker<int>(0, -1, {});
@@ -85,6 +87,7 @@ public:
     QString executablePath() const override;
     ImageRefType imageRefType() const override;
     bool supportsImageMode(ImageMode imageMode) const override;
+    QString versionString() const override;
 
     Qx::GenericError populateExistingDocs(QStringList targetPlatforms, QStringList targetPlaylists) override;
 

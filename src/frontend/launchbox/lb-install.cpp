@@ -11,6 +11,9 @@
 
 // Qx Includes
 #include <qx/io/qx-common-io.h>
+#include <qx/core/qx-json.h>
+#include <qx/core/qx-versionnumber.h>
+#include <qx/windows/qx-filedetails.h>
 
 // Windows Includes (Specifically for changing XML permissions)
 #include <atlstr.h>
@@ -33,6 +36,7 @@ Install::Install(QString installPath) :
     // Initialize files and directories;
     mPlatformImagesDirectory = QDir(installPath + '/' + PLATFORM_IMAGES_PATH);
     mDataDirectory = QDir(installPath + '/' + DATA_PATH);
+    mCoreDirectory = QDir(installPath + '/' + CORE_PATH);
     mPlatformsDirectory = QDir(installPath + '/' + PLATFORMS_PATH);
     mPlaylistsDirectory = QDir(installPath + '/' + PLAYLISTS_PATH);
 
@@ -189,6 +193,43 @@ QString Install::name() const { return NAME; }
 QString Install::executablePath() const { return mRootDirectory.absoluteFilePath(MAIN_EXE_PATH); }
 Install::ImageRefType Install::imageRefType() const { return ImageRefType::Bulk; }
 bool Install::supportsImageMode(ImageMode imageMode) const { return IMAGE_MODES.contains(imageMode); }
+
+QString Install::versionString() const
+{
+    // Try LaunchBox.deps.json
+    QFile depsJson(mCoreDirectory.path() + "/" + "LaunchBox.deps.json");
+    QByteArray settingsData;
+    Qx::IoOpReport settingsLoadReport = Qx::readBytesFromFile(settingsData, depsJson);
+
+    if(settingsLoadReport.wasSuccessful())
+    {
+        // Parse original JSON data
+        QJsonObject settingsObj = QJsonDocument::fromJson(settingsData).object();
+
+        if(!settingsObj.isEmpty())
+        {
+            // Get key that should have version
+            QList<QJsonValue> res = Qx::Json::findAllValues(QJsonValue(settingsObj), "Unbroken.LaunchBox.Windows");
+
+            if(!res.isEmpty() && res.first().isString())
+            {
+                // Check for valid version number
+                Qx::VersionNumber ver = Qx::VersionNumber::fromString(res.first().toString());
+
+                if(!ver.isNull())
+                    return ver.toString();
+            }
+        }
+    }
+
+    // Try unins000.exe
+    Qx::FileDetails uninsDetails = Qx::FileDetails::readFileDetails(mRootDirectory.path() + "/" + "unins000.exe");
+    if(!uninsDetails.isNull())
+        return uninsDetails.productVersion().toString();
+
+    // Fallback to generic method
+    return Fe::Install::versionString();
+}
 
 Qx::GenericError Install::populateExistingDocs(QStringList targetPlatforms, QStringList targetPlaylists)
 {
