@@ -215,6 +215,13 @@ PlatformDocWriter::PlatformDocWriter(DataDoc* sourceDoc) :
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
+/* NOTE: Right now mPlaylistHeader is left uninitialized (unless done so explicitly by a derivative). This is fine,
+ * as currently 'void PlaylistDoc::setPlaylistHeader(Fp::Playlist playlist)' checks to see if an existing header
+ * is present before performing a field transfer (i.e. in case the playlist doc didn't already exist); however,
+ * if more parts of the process end up needing to interact with a doc that has a potentially null playlist header,
+ * it may be better to require a value for it in this base class' constructor so that all derivatives must provide
+ * a default (likely null/empty) playlist header.
+ */
 PlaylistDoc::PlaylistDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions) :
     UpdateableDoc(parent, std::move(docFile), docName, updateOptions)
 {}
@@ -234,7 +241,11 @@ void PlaylistDoc::setPlaylistHeader(Fp::Playlist playlist)
 {
     std::shared_ptr<PlaylistHeader> fePlaylistHeader = preparePlaylistHeader(playlist);
 
-    fePlaylistHeader->transferOtherFields(mPlaylistHeader->getOtherFields());
+    // Ensure doc already existed before transferring (null check)
+    if(mPlaylistHeader)
+        fePlaylistHeader->transferOtherFields(mPlaylistHeader->getOtherFields());
+
+    // Set instance header to new one
     mPlaylistHeader = fePlaylistHeader;
 }
 
