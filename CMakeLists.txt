@@ -95,7 +95,7 @@ fetch_qx(7a958f983af66bf8074b6ab4395f525a9660c3a3) # dev commit
 
 # Fetch libfp (build and import from source)
 include(OFILb/Fetchlibfp)
-fetch_libfp(1c0020d1ecf81212bb34321886ca9523c5bd1e0c)
+fetch_libfp(654c3ce0be9e066486963c9ea36c606333da5be7)
 
 # Fetch CLIFp (build and import from source)
 include(OFILb/FetchCLIFp)
