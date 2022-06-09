@@ -982,9 +982,6 @@ void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx:
     mWindowTaskbarButton->resetProgress();
     mWindowTaskbarButton->setProgressState(Qx::TaskbarButton::Hidden);
 
-    // Stop UI update timer
-    //mUIUpdateWorkaroundTimer.stop();
-
     // Post error report if present
     if(errorReport.isValid())
         Qx::postError(errorReport, QMessageBox::Ok);
