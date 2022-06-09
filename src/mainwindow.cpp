@@ -356,7 +356,7 @@ bool MainWindow::parseFrontendData()
 
     // IO Error Check
     if(existingCheck.isValid())
-        postGenericError(existingCheck);
+        Qx::postError(existingCheck);
 
     // Return true on success
     return !existingCheck.isValid();
@@ -407,7 +407,7 @@ void MainWindow::invalidateInstall(Install install, bool informUser)
             ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/icon/Invalid_Install.png"));
             ui->label_flashpointVersion->clear();
             if(informUser)
-                postGenericError(mFlashpointInstall->error(), QMessageBox::Ok);
+                Qx::postError(mFlashpointInstall->error(), QMessageBox::Ok);
             break;
     }
 }
@@ -479,25 +479,6 @@ void MainWindow::postIOError(QString mainText, Qx::IoOpReport report)
     ioErrorMsg.setStandardButtons(QMessageBox::Ok);
 
     ioErrorMsg.exec();
-}
-
-// TODO: Probably replace this with Qx::postError()
-int MainWindow::postGenericError(Qx::GenericError error, QMessageBox::StandardButtons choices)
-{
-    // Prepare dialog
-    QMessageBox genericErrorMessage;
-    if(!error.caption().isEmpty())
-        genericErrorMessage.setWindowTitle(error.caption());
-    if(!error.primaryInfo().isEmpty())
-        genericErrorMessage.setText(error.primaryInfo());
-    if(!error.secondaryInfo().isEmpty())
-        genericErrorMessage.setInformativeText(error.secondaryInfo());
-    if(!error.detailedInfo().isEmpty())
-        genericErrorMessage.setDetailedText(error.detailedInfo());
-    genericErrorMessage.setStandardButtons(choices);
-    genericErrorMessage.setIcon(error.errorLevel() == Qx::GenericError::Warning ? QMessageBox::Warning : QMessageBox::Critical);
-
-    return genericErrorMessage.exec();
 }
 
 void MainWindow::refreshEnableStates()
@@ -750,7 +731,7 @@ void MainWindow::standaloneCLIFpDeploy()
             }
         }
         else
-            postGenericError(tempFlashpointInstall.error(), QMessageBox::Ok);
+            Qx::postError(tempFlashpointInstall.error(), QMessageBox::Ok);
     }
 }
 void MainWindow::showTagSelectionDialog()
@@ -970,7 +951,7 @@ void MainWindow::handleBlockingError(std::shared_ptr<int> response, Qx::GenericE
     mWindowTaskbarButton->setProgressState(Qx::TaskbarButton::Stopped);
 
     // Post error and get response
-    int userChoice = postGenericError(blockingError, choices);
+    int userChoice = Qx::postError(blockingError, choices);
 
     // Clear taskbar error
     mWindowTaskbarButton->setProgressState(Qx::TaskbarButton::Normal);
@@ -1006,7 +987,7 @@ void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx:
 
     // Post error report if present
     if(errorReport.isValid())
-        postGenericError(errorReport, QMessageBox::Ok);
+        Qx::postError(errorReport, QMessageBox::Ok);
 
     if(importResult == ImportWorker::Successful)
     {

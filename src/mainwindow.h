@@ -217,7 +217,6 @@ private:
     void postSqlError(QString mainText, QSqlError sqlError);
     void postListError(QString mainText, QStringList detailedItems);
     void postIOError(QString mainText, Qx::IoOpReport report);
-    int postGenericError(Qx::GenericError error, QMessageBox::StandardButtons choices = QMessageBox::Ok);
 
     void refreshEnableStates();
     void refreshCheckStates();
