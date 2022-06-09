@@ -131,12 +131,14 @@ void MainWindow::initializeForms()
     // Setup main forms
     ui->label_flashpointVersion->clear();
     ui->label_frontendVersion->clear();
-    ui->radioButton_link->setEnabled(mHasLinkPermissions);
-    ui->radioButton_link->setChecked(mHasLinkPermissions);
+
+    // If no link permissions, inform user
     if(!mHasLinkPermissions)
         ui->radioButton_link->setText(ui->radioButton_link->text().append(REQUIRE_ELEV));
-    ui->radioButton_reference->setChecked(!mHasLinkPermissions);
+
+    // Perform standard widget updates
     refreshEnableStates();
+    refreshCheckStates();
 
     // TODO: THIS IS FOR DEBUG PURPOSES
     //checkLaunchBoxInput("C:/Users/Player/Desktop/LBTest/LaunchBox");
@@ -145,6 +147,12 @@ void MainWindow::initializeForms()
 
 void MainWindow::initializeEnableConditionMaps()
 {
+    /* TODO: When Qt6 ports built-in widgets to use the C++ bindable properties system, it
+     * would be great to convert this approach to using those instead, though this gets
+     * tricky when checking for things that aren't easy to make a QProperty, such as when
+     * checking for if the Install pointers are assigned
+     */
+
     // Populate hash-map of widget element enable conditions
     mWidgetEnableConditionMap[ui->groupBox_importSelection] = [&](){ return mFrontendInstall && mFlashpointInstall; };
     mWidgetEnableConditionMap[ui->groupBox_playlistGameMode] = [&](){ return getSelectedPlaylists().count() > 0; };
@@ -246,6 +254,9 @@ void MainWindow::gatherInstallInfo()
 
         // Generate tab selection model
         generateTagSelectionOptions();
+
+        // Ensure valid image mode
+        refreshCheckStates();
 
         // Advance to next input stage
         refreshEnableStates();
@@ -495,23 +506,40 @@ void MainWindow::refreshEnableStates()
     for(i = mWidgetEnableConditionMap.constBegin(); i != mWidgetEnableConditionMap.constEnd(); i++)
         i.key()->setEnabled(i.value()());
 
-    // Special handling for image import modes
-    if(!ui->buttonGroup_imageMode->checkedButton()->isEnabled())
-    {
-        if(ui->radioButton_link->isEnabled())
-            ui->radioButton_link->setChecked(true);
-        else if(ui->radioButton_reference->isEnabled())
-            ui->radioButton_reference->setChecked(true);
-        else
-            ui->radioButton_copy->setChecked(true);
-    }
-
     QHash<QAction*, std::function<bool(void)>>::const_iterator j;
     for(j = mActionEnableConditionMap.constBegin(); j != mActionEnableConditionMap.constEnd(); j++)
         j.key()->setEnabled(j.value()());
+}
 
-    // Special handling for force download images option
-    if(!ui->action_forceDownloadImages->isEnabled())
+void MainWindow::refreshCheckStates()
+{
+    // Move image mode selection to next preferred option if the current one is invalid
+    // (if there is no front end install yet, assume all modes are otherwise valid)
+    QList<Fe::Install::ImageMode> validModes;
+
+    if(mHasLinkPermissions && (!mFrontendInstall || mFrontendInstall->supportsImageMode(Fe::Install::ImageMode::Link)))
+            validModes.append(Fe::Install::ImageMode::Link);
+    if(!mFrontendInstall || mFrontendInstall->supportsImageMode(Fe::Install::ImageMode::Reference))
+            validModes.append(Fe::Install::ImageMode::Reference);
+    if(!mFrontendInstall || mFrontendInstall->supportsImageMode(Fe::Install::ImageMode::Copy))
+            validModes.append(Fe::Install::ImageMode::Copy);
+
+    Fe::Install::ImageMode im = getSelectedImageMode();
+
+    if(!validModes.contains(im))
+    {
+        if(validModes.contains(Fe::Install::ImageMode::Link))
+            ui->radioButton_link->setChecked(true);
+        else if(validModes.contains(Fe::Install::ImageMode::Reference))
+            ui->radioButton_reference->setChecked(true);
+        else if(validModes.contains(Fe::Install::ImageMode::Copy))
+            ui->radioButton_copy->setChecked(true);
+        else
+            throw std::runtime_error("At least one image import mode must be available!");
+    }
+
+    // Ensure that the force download images option is unchecked if not supported
+    if(ui->action_forceDownloadImages->isChecked() && mFlashpointInstall && !mFlashpointInstall->preferences().onDemandImages)
         ui->action_forceDownloadImages->setChecked(false);
 }
 

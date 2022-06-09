@@ -220,6 +220,7 @@ private:
     int postGenericError(Qx::GenericError error, QMessageBox::StandardButtons choices = QMessageBox::Ok);
 
     void refreshEnableStates();
+    void refreshCheckStates();
 
     QStringList getSelectedPlatforms() const;
     QStringList getSelectedPlaylists() const;
