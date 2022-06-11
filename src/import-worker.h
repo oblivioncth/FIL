@@ -19,6 +19,16 @@ class ImportWorker : public QObject
     Q_OBJECT // Required for classes that use Qt elements
 
 //-Class Enums---------------------------------------------------------------------------------------------------
+private:
+    enum ProgressGroup{
+        AddAppPreload,
+        AddAppMatchImport,
+        ImageDownload,
+        ImageTransfer,
+        GameImport,
+        PlaylistGameMatchImport
+    };
+
 public:
     enum ImportResult {Failed, Canceled, Successful};
     enum PlaylistGameMode {SelectedPlatform, ForceAll};
@@ -94,8 +104,8 @@ private:
     QList<ImageTransferJob> mImageTransferJobs;
 
     // Progress Tracking
-    int mCurrentProgressValue;
-    int mMaximumProgressValue;
+    Qx::Cumulation<ProgressGroup, quint64> mCurrentProgress;
+    Qx::Cumulation<ProgressGroup, quint64> mTotalProgress;
 
     // Cancel Status
     bool mCanceled = false;
@@ -112,12 +122,15 @@ public:
 
 //-Instance Functions---------------------------------------------------------------------------------------------------------
 private:
+    void initializeProgressTrackerGroup(ProgressGroup group, quint64 scaler);
     const QList<QUuid> preloadPlaylists(Fp::Db::QueryBuffer& playlistQuery);
     const QList<QUuid> getPlaylistSpecificGameIds(Fp::Db::QueryBuffer& playlistGameIdQuery);
     Qx::GenericError transferImage(bool symlink, QString sourcePath, QString destPath);
+    ImportResult processPlatformGames(Qx::GenericError& errorReport, std::unique_ptr<Fe::PlatformDoc>& platformDoc, Fp::Db::QueryBuffer& gameQueryResult);
+    ImportResult processPlatformAddApps(Qx::GenericError& errorReport, std::unique_ptr<Fe::PlatformDoc>& platformDoc);
 
     ImportResult preloadAddApps(Qx::GenericError& errorReport, Fp::Db::QueryBuffer& addAppQuery);
-    ImportResult processGames(Qx::GenericError& errorReport, QList<Fp::Db::QueryBuffer>& gameQueries, bool playlistSpecific);
+    ImportResult processGames(Qx::GenericError& errorReport, QList<Fp::Db::QueryBuffer>& primary, QList<Fp::Db::QueryBuffer>& playlistSpecific);
     ImportResult processPlaylists(Qx::GenericError& errorReport, QList<Fp::Db::QueryBuffer>& playlistGameQueries);
     ImportResult processImages(Qx::GenericError& errorReport, const QList<Fp::Db::QueryBuffer>& playlistSpecGameQueries);
 
