@@ -507,9 +507,6 @@ ImportWorker::ImportResult ImportWorker::processImages(Qx::GenericError& errorRe
         mImageDownloadManager.setOverwrite(false); // Should be no attempts to overwrite, but here just in case
         mImageDownloadManager.setStopOnError(false); // Get as many images as possible;
 
-        // Download progress tracker
-        int lastTaskCount = mImageDownloadManager.taskCount();
-
         // Make connections
         connect(&mImageDownloadManager, &Qx::SyncDownloadManager::sslErrors, this, [&](Qx::GenericError errorMsg, bool* ignore) {
             emit blockingErrorOccured(mBlockingErrorResponse, errorMsg, QMessageBox::Yes | QMessageBox::Abort);
@@ -518,17 +515,8 @@ ImportWorker::ImportResult ImportWorker::processImages(Qx::GenericError& errorRe
 
         connect(&mImageDownloadManager, &Qx::SyncDownloadManager::authenticationRequired, this, &ImportWorker::authenticationRequired);
 
-        connect(&mImageDownloadManager, &Qx::SyncDownloadManager::downloadProgress, this, [this, &lastTaskCount](qint64 bytesCurrent) { // clazy:exclude=lambda-in-connect
-            Q_UNUSED(bytesCurrent); // Instead, track progress via tasks instead of bytes
-
-            int currentTaskCount = mImageDownloadManager.taskCount();
-            if(currentTaskCount < lastTaskCount)
-            {
-                quint64 additionalTaskProgress = lastTaskCount - currentTaskCount;
-                mCurrentProgress.increase(ProgressGroup::ImageDownload, additionalTaskProgress);
-                lastTaskCount = currentTaskCount;
-                emit progressValueChanged(mCurrentProgress.total());
-            }
+        connect(&mImageDownloadManager, &Qx::SyncDownloadManager::downloadFinished, this, [this]() { // clazy:exclude=lambda-in-connect
+                emit progressValueChanged(mCurrentProgress.increment(ProgressGroup::ImageDownload));
         });
 
         // Start download
