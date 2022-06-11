@@ -22,12 +22,12 @@ ImportWorker::ImportWorker(std::shared_ptr<Fp::Install> fpInstallForWork,
       mOptionSet(optionSet)
 {
     // Initialize progress trackers
-    initializeProgressTrackerGroup(ProgressGroup::AddAppPreload, 1);
+    initializeProgressTrackerGroup(ProgressGroup::AddAppPreload, 2);
     initializeProgressTrackerGroup(ProgressGroup::AddAppMatchImport, 1);
-    initializeProgressTrackerGroup(ProgressGroup::ImageDownload, 1);
-    initializeProgressTrackerGroup(ProgressGroup::ImageTransfer, 1);
-    initializeProgressTrackerGroup(ProgressGroup::GameImport, 1);
-    initializeProgressTrackerGroup(ProgressGroup::PlaylistGameMatchImport, 1);
+    initializeProgressTrackerGroup(ProgressGroup::ImageDownload, 2);
+    initializeProgressTrackerGroup(ProgressGroup::ImageTransfer, 2);
+    initializeProgressTrackerGroup(ProgressGroup::GameImport, 2);
+    initializeProgressTrackerGroup(ProgressGroup::PlaylistGameMatchImport, 2);
 }
 
 //-Instance Functions--------------------------------------------------------------------------------------------
