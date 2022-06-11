@@ -492,8 +492,6 @@ ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& erro
     return Successful;
 }
 
-
-
 ImportWorker::ImportResult ImportWorker::processImages(Qx::GenericError& errorReport, const QList<Fp::Db::QueryBuffer>& playlistSpecGameQueries)
 {
     // Download images if applicable

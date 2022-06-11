@@ -605,7 +605,7 @@ void MainWindow::prepareImport()
     if(!feRunning)
     {
         // Create progress dialog, set initial state and show
-        mImportProgressDialog = std::make_unique<QProgressDialog>(STEP_FP_DB_INITIAL_QUERY, "Cancel", 0, 10000, this); // Arbitrarily high maximum so initial percentage is 0
+        mImportProgressDialog = std::make_unique<QProgressDialog>(STEP_FP_DB_INITIAL_QUERY, "Cancel", 0, 0, this);
         mImportProgressDialog->setWindowTitle(CAPTION_IMPORTING);
         mImportProgressDialog->setWindowModality(Qt::WindowModal);
         mImportProgressDialog->setWindowFlags(mImportProgressDialog->windowFlags() & ~Qt::WindowContextHelpButtonHint);
@@ -616,9 +616,9 @@ void MainWindow::prepareImport()
 
         // Setup taskbar button progress indicator
         mWindowTaskbarButton->setProgressMinimum(0);
-        mWindowTaskbarButton->setProgressMaximum(10000); // Arbitrarily high maximum so initial percentage is 0
+        mWindowTaskbarButton->setProgressMaximum(0);
         mWindowTaskbarButton->setProgressValue(0);
-        mWindowTaskbarButton->setProgressState(Qx::TaskbarButton::Normal);
+        mWindowTaskbarButton->setProgressState(Qx::TaskbarButton::Busy);
 
         // Force show progress immediately
         QApplication::processEvents();
