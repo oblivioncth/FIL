@@ -82,18 +82,20 @@ void Install::softResetDerived()
 
 QString Install::dataDocPath(Fe::DataDoc::Identifier identifier) const
 {
+    QString fileName = makeFileNameLBKosher(identifier.docName()) + "." + XML_EXT;
+
     switch(identifier.docType())
     {
         case Fe::DataDoc::Type::Platform:
-            return mPlatformsDirectory.absoluteFilePath(identifier.docName());
+            return mPlatformsDirectory.absoluteFilePath(fileName);
             break;
 
         case Fe::DataDoc::Type::Playlist:
-            return mPlaylistsDirectory.absoluteFilePath(identifier.docName());
+            return mPlaylistsDirectory.absoluteFilePath(fileName);
             break;
 
         case Fe::DataDoc::Type::Config:
-            return mDataDirectory.absoluteFilePath(identifier.docName());
+            return mDataDirectory.absoluteFilePath(fileName);
             break;
         default:
                 throw new std::invalid_argument("Function argument was not of type Fe::DataDoc::Identifier");
@@ -103,7 +105,8 @@ QString Install::dataDocPath(Fe::DataDoc::Identifier identifier) const
 std::shared_ptr<Fe::PlatformDocReader> Install::prepareOpenPlatformDoc(std::unique_ptr<Fe::PlatformDoc>& platformDoc, const QString& name, const Fe::UpdateOptions& updateOptions)
 {
     // Create doc file reference
-    std::unique_ptr<QFile> docFile = std::make_unique<QFile>(mPlatformsDirectory.absolutePath() + '/' + makeFileNameLBKosher(name) + "." + XML_EXT);
+    Fe::DataDoc::Identifier docId(Fe::DataDoc::Type::Platform, name);
+    std::unique_ptr<QFile> docFile = std::make_unique<QFile>(dataDocPath(docId));
 
     // Construct unopened document
     platformDoc = std::make_unique<PlatformDoc>(this, std::move(docFile), name, updateOptions, DocKey{});
@@ -118,7 +121,8 @@ std::shared_ptr<Fe::PlatformDocReader> Install::prepareOpenPlatformDoc(std::uniq
 std::shared_ptr<Fe::PlaylistDocReader> Install::prepareOpenPlaylistDoc(std::unique_ptr<Fe::PlaylistDoc>& playlistDoc, const QString& name, const Fe::UpdateOptions& updateOptions)
 {
      // Create doc file reference
-    std::unique_ptr<QFile> docFile = std::make_unique<QFile>(mPlaylistsDirectory.absolutePath() + '/' + makeFileNameLBKosher(name) + "." + XML_EXT);
+    Fe::DataDoc::Identifier docId(Fe::DataDoc::Type::Playlist, name);
+    std::unique_ptr<QFile> docFile = std::make_unique<QFile>(dataDocPath(docId));
 
     // Construct unopened document
     playlistDoc = std::make_unique<PlaylistDoc>(this, std::move(docFile), name, updateOptions, DocKey{});
