@@ -512,6 +512,7 @@ ImportWorker::ImportResult ImportWorker::processImages(Qx::GenericError& errorRe
         });
 
         connect(&mImageDownloadManager, &Qx::SyncDownloadManager::authenticationRequired, this, &ImportWorker::authenticationRequired);
+        connect(&mImageDownloadManager, &Qx::SyncDownloadManager::proxyAuthenticationRequired, this, &ImportWorker::authenticationRequired);
 
         connect(&mImageDownloadManager, &Qx::SyncDownloadManager::downloadFinished, this, [this]() { // clazy:exclude=lambda-in-connect
                 emit progressValueChanged(mCurrentProgress.increment(ProgressGroup::ImageDownload));
