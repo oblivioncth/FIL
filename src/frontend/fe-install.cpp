@@ -117,7 +117,7 @@ Qx::GenericError Install::openDataDocument(DataDoc* docToOpen, std::shared_ptr<D
         if(mExistingDocuments.contains(docToOpen->identifier()))
         {
             // Open File
-            if(docToOpen->mDocumentFile->open(QFile::ReadOnly))
+            if(docToOpen->mDocumentFile->open(QFile::ReadWrite))
                 openReadError = docReader->readInto();
             else
                 openReadError = errorTemplate.setSecondaryInfo(docToOpen->mDocumentFile->errorString());
@@ -157,11 +157,9 @@ Qx::GenericError Install::saveDataDocument(DataDoc* docToSave, std::shared_ptr<D
     // Add file to modified list
     mModifiedDocuments.insert(docToSave->identifier());
 
-    // Open and clear document file
-    if(!docToSave->mDocumentFile->open(QFile::WriteOnly))
+    // Clear document file
+    if(!docToSave->clearFile())
         return errorTemplate.setSecondaryInfo(docToSave->mDocumentFile->errorString());
-
-    docToSave->clearFile();
 
     // Write to file
     Qx::GenericError saveWriteError = docWriter->writeOutOf();

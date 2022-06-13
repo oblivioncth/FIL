@@ -109,7 +109,7 @@ public:
     Identifier identifier() const;
     QString errorString(StandardError error) const;
 
-    void clearFile();
+    bool clearFile();
 };
 QX_SCOPED_ENUM_HASH_FUNC(DataDoc::Type);
 QX_SCOPED_ENUM_HASH_FUNC(DataDoc::StandardError);

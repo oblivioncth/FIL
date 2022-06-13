@@ -69,7 +69,7 @@ QString DataDoc::errorString(StandardError error) const
     return formattedError;
 }
 
-void DataDoc::clearFile() { mDocumentFile->resize(0); }
+bool DataDoc::clearFile(){ return mDocumentFile->resize(0); } // resize() automatically seeks to new end
 
 //===============================================================================================================
 // DataDocReader
