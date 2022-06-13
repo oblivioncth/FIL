@@ -504,6 +504,7 @@ ImportWorker::ImportResult ImportWorker::processImages(Qx::GenericError& errorRe
         mImageDownloadManager.setMaxSimultaneous(2);
         mImageDownloadManager.setOverwrite(false); // Should be no attempts to overwrite, but here just in case
         mImageDownloadManager.setStopOnError(false); // Get as many images as possible;
+        mImageDownloadManager.setSkipEnumeration(true); // Since progress is being tracked by task count, pre-enumeration of download size is unnecessary
 
         // Make connections
         connect(&mImageDownloadManager, &Qx::SyncDownloadManager::sslErrors, this, [&](Qx::GenericError errorMsg, bool* ignore) {
