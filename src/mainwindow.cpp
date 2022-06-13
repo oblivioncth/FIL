@@ -240,6 +240,8 @@ void MainWindow::validateInstall(QString installPath, Install install)
             break;
     }
 
+    refreshEnableStates();
+
     if(mFrontendInstall && mFlashpointInstall)
         gatherInstallInfo();
 }
@@ -390,7 +392,6 @@ void MainWindow::invalidateInstall(Install install, bool informUser)
 {
     clearListWidgets();
     mTagSelectionModel.reset(); // Void tag selection model
-    refreshEnableStates();
 
     switch(install)
     {
@@ -410,6 +411,8 @@ void MainWindow::invalidateInstall(Install install, bool informUser)
                 Qx::postError(mFlashpointInstall->error(), QMessageBox::Ok);
             break;
     }
+
+    refreshEnableStates();
 }
 
 void MainWindow::clearListWidgets()
