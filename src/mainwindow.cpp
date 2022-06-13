@@ -396,19 +396,19 @@ void MainWindow::invalidateInstall(Install install, bool informUser)
     switch(install)
     {
         case Install::Frontend:
-            mFrontendInstall.reset();
             ui->icon_frontend_install_status->setPixmap(QPixmap(":/icon/Invalid_Install.png"));
             ui->label_frontendVersion->clear();
             if(informUser)
                 QMessageBox::critical(this, QApplication::applicationName(), MSG_FE_INSTALL_INVALID);
+            mFrontendInstall.reset();
             break;
 
         case Install::Flashpoint:
-            mFlashpointInstall.reset();
             ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/icon/Invalid_Install.png"));
             ui->label_flashpointVersion->clear();
             if(informUser)
                 Qx::postError(mFlashpointInstall->error(), QMessageBox::Ok);
+            mFlashpointInstall.reset();
             break;
     }
 
