@@ -77,6 +77,7 @@ public:
     static inline const QString IMAGE_EXT = ".png";
 
     // Images Errors
+    static inline const QString ERR_IMAGE_SRC_UNAVAILABLE = R"(An expected source image does not exist.)";
     static inline const QString ERR_IMAGE_WONT_BACKUP = R"(Cannot rename the an existing image for backup:)";
     static inline const QString ERR_IMAGE_WONT_COPY = R"(Cannot copy the image "%1" to its destination:)";
     static inline const QString ERR_IMAGE_WONT_LINK = R"(Cannot create a symbolic link for "%1" at:)";

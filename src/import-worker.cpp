@@ -86,14 +86,17 @@ const QList<QUuid> ImportWorker::getPlaylistSpecificGameIds(Fp::Db::QueryBuffer&
 Qx::GenericError ImportWorker::transferImage(bool symlink, QString sourcePath, QString destinationPath)
 {
     // Image info
-    QFileInfo destinationInfo(destinationPath);
     QFileInfo sourceInfo(sourcePath);
+    QFileInfo destinationInfo(destinationPath);
     QDir destinationDir(destinationInfo.absolutePath());
     bool destinationOccupied = destinationInfo.exists() && (destinationInfo.isFile() || destinationInfo.isSymLink());
-    bool sourceAvailable = sourceInfo.exists();
+
+    // Return if source in unexpectedly missing (i.e. download failure)
+    if(!QFile::exists(sourcePath))
+        return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_SRC_UNAVAILABLE, sourcePath, QString(), CAPTION_IMAGE_ERR);
 
     // Return if image is already up-to-date
-    if(sourceAvailable && destinationOccupied)
+    if(destinationOccupied)
     {
         if(destinationInfo.isSymLink() && symlink)
             return Qx::GenericError();
@@ -119,41 +122,38 @@ Qx::GenericError ImportWorker::transferImage(bool symlink, QString sourcePath, Q
     QString backupPath = destinationInfo.absolutePath() + '/' + destinationInfo.baseName() + Fe::Install::MODIFIED_FILE_EXT;
 
     // Temporarily backup image if it already exists (also acts as deletion marking in case images for the title were removed in an update)
-    if(destinationOccupied && sourceAvailable)
+    if(destinationOccupied)
         if(!QFile::rename(destinationPath, backupPath)) // Temp backup
             return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_BACKUP, destinationPath, QString(), CAPTION_IMAGE_ERR);
 
     // Linking error tracker
     std::error_code linkError;
 
-    // Handle transfer if source is available
-    if(sourceAvailable)
+    // Handle transfer
+    if(symlink)
     {
-        if(symlink)
+        if(!QFile::copy(sourcePath, destinationPath))
         {
-            if(!QFile::copy(sourcePath, destinationPath))
-            {
-                QFile::rename(backupPath, destinationPath); // Restore Backup
-                return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_COPY.arg(sourcePath), destinationPath, QString(), CAPTION_IMAGE_ERR);
-            }
-            else if(QFile::exists(backupPath))
-                QFile::remove(backupPath);
-            else
-                mFrontendInstall->addPurgeableImagePath(destinationPath); // Only queue image to be removed on failure if its new, so existing images aren't deleted on revert
+            QFile::rename(backupPath, destinationPath); // Restore Backup
+            return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_COPY.arg(sourcePath), destinationPath, QString(), CAPTION_IMAGE_ERR);
         }
+        else if(QFile::exists(backupPath))
+            QFile::remove(backupPath);
         else
+            mFrontendInstall->addPurgeableImagePath(destinationPath); // Only queue image to be removed on failure if its new, so existing images aren't deleted on revert
+    }
+    else
+    {
+        std::filesystem::create_symlink(sourcePath.toStdString(), destinationPath.toStdString(), linkError);
+        if(linkError)
         {
-            std::filesystem::create_symlink(sourcePath.toStdString(), destinationPath.toStdString(), linkError);
-            if(linkError)
-            {
-                QFile::rename(backupPath, destinationPath); // Restore Backup
-                return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_LINK.arg(sourcePath), destinationPath, QString(), CAPTION_IMAGE_ERR);
-            }
-            else if(QFile::exists(backupPath))
-                QFile::remove(backupPath);
-            else
-                mFrontendInstall->addPurgeableImagePath(destinationPath); // Only queue image to be removed on failure if its new, so existing images aren't deleted on revert
+            QFile::rename(backupPath, destinationPath); // Restore Backup
+            return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_LINK.arg(sourcePath), destinationPath, QString(), CAPTION_IMAGE_ERR);
         }
+        else if(QFile::exists(backupPath))
+            QFile::remove(backupPath);
+        else
+            mFrontendInstall->addPurgeableImagePath(destinationPath); // Only queue image to be removed on failure if its new, so existing images aren't deleted on revert
     }
 
     // Return null error on success
@@ -200,24 +200,24 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& 
         mImportedGameIdsCache.insert(addedGame->getId());
 
         // Get image information
-        QString logoLocalPath = mFlashpointInstall->imageLocalPath(Fp::ImageType::Logo, addedGame->getId());
-        QString ssLocalPath =  mFlashpointInstall->imageLocalPath(Fp::ImageType::Screenshot, addedGame->getId());
+        QFileInfo logoLocalInfo(mFlashpointInstall->imageLocalPath(Fp::ImageType::Logo, addedGame->getId()));
+        QFileInfo ssLocalInfo(mFlashpointInstall->imageLocalPath(Fp::ImageType::Screenshot, addedGame->getId()));
 
         // Setup image downloads if applicable
         if(mOptionSet.downloadImages)
         {
-            if(!QFileInfo::exists(logoLocalPath))
+            if(!logoLocalInfo.exists())
             {
                 QUrl logoRemotePath = mFlashpointInstall->imageRemoteUrl(Fp::ImageType::Logo, addedGame->getId());
-                mImageDownloadManager.appendTask(Qx::DownloadTask{logoRemotePath, logoLocalPath});
+                mImageDownloadManager.appendTask(Qx::DownloadTask{logoRemotePath, logoLocalInfo.path()});
             }
             else
                 emit progressMaximumChanged(mTotalProgress.decrement(ProgressGroup::ImageDownload)); // Already exists, remove download step from progress bar
 
-            if(!QFileInfo::exists(ssLocalPath))
+            if(!ssLocalInfo.exists())
             {
                 QUrl ssRemotePath = mFlashpointInstall->imageRemoteUrl(Fp::ImageType::Screenshot, addedGame->getId());
-                mImageDownloadManager.appendTask(Qx::DownloadTask{ssRemotePath, ssLocalPath});
+                mImageDownloadManager.appendTask(Qx::DownloadTask{ssRemotePath, ssLocalInfo.path()});
             }
             else
                 emit progressMaximumChanged(mTotalProgress.decrement(ProgressGroup::ImageDownload)); // Already exists, remove download step from progress bar
@@ -228,22 +228,32 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& 
         {
             if(mFrontendInstall->imageRefType() == Fe::Install::ImageRefType::Single)
             {
-                mFrontendInstall->referenceImage(Fp::ImageType::Logo, logoLocalPath, *addedGame);
-                mFrontendInstall->referenceImage(Fp::ImageType::Screenshot, ssLocalPath, *addedGame);
+                mFrontendInstall->referenceImage(Fp::ImageType::Logo, logoLocalInfo.path(), *addedGame);
+                mFrontendInstall->referenceImage(Fp::ImageType::Screenshot, ssLocalInfo.path(), *addedGame);
             }
             else if(mFrontendInstall->imageRefType() == Fe::Install::ImageRefType::Platform)
             {
-                platformDoc->setGameImageReference(Fp::ImageType::Logo, addedGame->getId(), logoLocalPath);
-                platformDoc->setGameImageReference(Fp::ImageType::Screenshot, addedGame->getId(), ssLocalPath);
+                platformDoc->setGameImageReference(Fp::ImageType::Logo, addedGame->getId(), logoLocalInfo.path());
+                platformDoc->setGameImageReference(Fp::ImageType::Screenshot, addedGame->getId(), ssLocalInfo.path());
             }
         }
         else // Setup transfer tasks if applicable
         {
-            QString logoDestPath = mFrontendInstall->imageDestinationPath(Fp::ImageType::Logo, *addedGame);
-            QString ssDestPath = mFrontendInstall->imageDestinationPath(Fp::ImageType::Screenshot, *addedGame);
-            mImageTransferJobs.append(ImageTransferJob{logoLocalPath, logoDestPath});
-            mImageTransferJobs.append(ImageTransferJob{ssLocalPath, ssDestPath});
-            // NOTE: Download maximum change not needed here as they were already added in original task size determination
+            if(logoLocalInfo.exists() || mOptionSet.downloadImages)
+            {
+                QString logoDestPath = mFrontendInstall->imageDestinationPath(Fp::ImageType::Logo, *addedGame);
+                mImageTransferJobs.append(ImageTransferJob{logoLocalInfo.path(), logoDestPath});
+            }
+            else
+                mTotalProgress.decrement(ProgressGroup::ImageTransfer); // Can't transfer image that doesn't/won't exist
+
+            if(ssLocalInfo.exists() || mOptionSet.downloadImages)
+            {
+                QString ssDestPath = mFrontendInstall->imageDestinationPath(Fp::ImageType::Screenshot, *addedGame);
+                mImageTransferJobs.append(ImageTransferJob{ssLocalInfo.path(), ssDestPath});
+            }
+            else
+                mTotalProgress.decrement(ProgressGroup::ImageTransfer);
         }
 
         // Update progress dialog value for game addition
