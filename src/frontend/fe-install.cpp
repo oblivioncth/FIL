@@ -157,9 +157,19 @@ Qx::GenericError Install::saveDataDocument(DataDoc* docToSave, std::shared_ptr<D
     // Add file to modified list
     mModifiedDocuments.insert(docToSave->identifier());
 
-    // Clear document file
-    if(!docToSave->clearFile())
-        return errorTemplate.setSecondaryInfo(docToSave->mDocumentFile->errorString());
+    // Create and open document file if its a new document, otherwise clear existing
+    if(!docToSave->mDocumentFile->isOpen())
+    {
+        // Attempt open
+        if(!docToSave->mDocumentFile->open(QIODevice::WriteOnly))
+            return errorTemplate.setSecondaryInfo(docToSave->mDocumentFile->errorString());
+    }
+    else
+    {
+        // Attempt clear
+        if(!docToSave->clearFile())
+            return errorTemplate.setSecondaryInfo(docToSave->mDocumentFile->errorString());
+    }
 
     // Write to file
     Qx::GenericError saveWriteError = docWriter->writeOutOf();
