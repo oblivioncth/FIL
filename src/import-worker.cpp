@@ -85,6 +85,12 @@ const QList<QUuid> ImportWorker::getPlaylistSpecificGameIds(Fp::Db::QueryBuffer&
 
 Qx::GenericError ImportWorker::transferImage(bool symlink, QString sourcePath, QString destinationPath)
 {
+    /* TODO: Ideally the error handlers here don't need to include "Retry?" text and therefore need less use of QString::arg(); however, this largely
+     * would require use of a button labeled "Ignore All" so that the errors could presented as is without a prompt, with the prompt being inferred
+     * through the button choices "Retry", "Ignore", and "Ignore All", but currently the last is not a standard button and due to how Qx::GenericError
+     * is implemented custom buttons aren't feasible. Honestly maybe just try adding it to Qt and see if its accepted.
+     */
+
     // Image info
     QFileInfo sourceInfo(sourcePath);
     QFileInfo destinationInfo(destinationPath);
@@ -93,7 +99,7 @@ Qx::GenericError ImportWorker::transferImage(bool symlink, QString sourcePath, Q
 
     // Return if source in unexpectedly missing (i.e. download failure)
     if(!QFile::exists(sourcePath))
-        return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_SRC_UNAVAILABLE, sourcePath, QString(), CAPTION_IMAGE_ERR);
+        return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_SRC_UNAVAILABLE.arg(sourcePath), IMAGE_RETRY_PROMPT, QString(), CAPTION_IMAGE_ERR);
 
     // Return if image is already up-to-date
     if(destinationOccupied)
@@ -116,7 +122,7 @@ Qx::GenericError ImportWorker::transferImage(bool symlink, QString sourcePath, Q
 
     // Ensure destination path exists
     if(!destinationDir.mkpath("."))
-        return Qx::GenericError(Qx::GenericError::Error, ERR_CANT_MAKE_DIR, destinationDir.absolutePath(), QString(), CAPTION_IMAGE_ERR);
+        return Qx::GenericError(Qx::GenericError::Error, ERR_CANT_MAKE_DIR.arg(destinationDir.absolutePath()), IMAGE_RETRY_PROMPT, QString(), CAPTION_IMAGE_ERR);
 
     // Determine backup path
     QString backupPath = destinationInfo.absolutePath() + '/' + destinationInfo.baseName() + Fe::Install::MODIFIED_FILE_EXT;
@@ -124,7 +130,7 @@ Qx::GenericError ImportWorker::transferImage(bool symlink, QString sourcePath, Q
     // Temporarily backup image if it already exists (also acts as deletion marking in case images for the title were removed in an update)
     if(destinationOccupied)
         if(!QFile::rename(destinationPath, backupPath)) // Temp backup
-            return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_BACKUP, destinationPath, QString(), CAPTION_IMAGE_ERR);
+            return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_BACKUP.arg(destinationPath), IMAGE_RETRY_PROMPT, QString(), CAPTION_IMAGE_ERR);
 
     // Linking error tracker
     std::error_code linkError;
@@ -135,7 +141,7 @@ Qx::GenericError ImportWorker::transferImage(bool symlink, QString sourcePath, Q
         if(!QFile::copy(sourcePath, destinationPath))
         {
             QFile::rename(backupPath, destinationPath); // Restore Backup
-            return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_COPY.arg(sourcePath), destinationPath, QString(), CAPTION_IMAGE_ERR);
+            return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_COPY.arg(sourcePath, destinationPath), IMAGE_RETRY_PROMPT, QString(), CAPTION_IMAGE_ERR);
         }
         else if(QFile::exists(backupPath))
             QFile::remove(backupPath);
@@ -148,7 +154,7 @@ Qx::GenericError ImportWorker::transferImage(bool symlink, QString sourcePath, Q
         if(linkError)
         {
             QFile::rename(backupPath, destinationPath); // Restore Backup
-            return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_LINK.arg(sourcePath), destinationPath, QString(), CAPTION_IMAGE_ERR);
+            return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_LINK.arg(sourcePath, destinationPath), IMAGE_RETRY_PROMPT, QString(), CAPTION_IMAGE_ERR);
         }
         else if(QFile::exists(backupPath))
             QFile::remove(backupPath);
@@ -578,21 +584,21 @@ ImportWorker::ImportResult ImportWorker::processImages(Qx::GenericError& errorRe
         // Setup for image transfers
         Qx::GenericError imageTransferError; // Error return reference
         *mBlockingErrorResponse = QMessageBox::NoToAll; // Default to choice "NoToAll" in case the signal is not correctly connected using Qt::BlockingQueuedConnection
-        bool skipAllImages = false; // NoToAll response tracker
+        bool ignoreAllTransferErrors = false; // NoToAll response tracker
 
         for(const ImageTransferJob& imageJob : qAsConst(mImageTransferJobs))
         {
-            while(!skipAllImages && (imageTransferError = transferImage(mOptionSet.imageMode == Fe::Install::Link, imageJob.sourcePath, imageJob.destPath)).isValid())
+            while((imageTransferError = transferImage(mOptionSet.imageMode == Fe::Install::Link, imageJob.sourcePath, imageJob.destPath)).isValid() && !ignoreAllTransferErrors)
             {
                 // Notify GUI Thread of error
                 emit blockingErrorOccured(mBlockingErrorResponse, imageTransferError,
-                                          QMessageBox::Retry | QMessageBox::Ignore | QMessageBox::NoToAll);
+                                          QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
 
                 // Check response
-                if(*mBlockingErrorResponse == QMessageBox::Ignore)
+                if(*mBlockingErrorResponse == QMessageBox::No)
                    break;
                 else if(*mBlockingErrorResponse == QMessageBox::NoToAll)
-                   skipAllImages = true;
+                   ignoreAllTransferErrors = true;
             }
 
            // Update progress dialog value

@@ -77,12 +77,13 @@ public:
     static inline const QString IMAGE_EXT = ".png";
 
     // Images Errors
-    static inline const QString ERR_IMAGE_SRC_UNAVAILABLE = R"(An expected source image does not exist.)";
-    static inline const QString ERR_IMAGE_WONT_BACKUP = R"(Cannot rename the an existing image for backup:)";
-    static inline const QString ERR_IMAGE_WONT_COPY = R"(Cannot copy the image "%1" to its destination:)";
-    static inline const QString ERR_IMAGE_WONT_LINK = R"(Cannot create a symbolic link for "%1" at:)";
-    static inline const QString ERR_CANT_MAKE_DIR = R"(Could not create the following image directory. Make sure you have write permissions at that location.)";
+    static inline const QString ERR_IMAGE_SRC_UNAVAILABLE = R"(An Expected source image does not exist.\n%1)";
+    static inline const QString ERR_IMAGE_WONT_BACKUP = R"(Cannot rename an existing image for backup.\n%1)";
+    static inline const QString ERR_IMAGE_WONT_COPY = R"(Cannot copy the image\n\n%1\n\nto\n\n%2)";
+    static inline const QString ERR_IMAGE_WONT_LINK = R"(Cannot create a symbolic link from\n\n%1\n\n%2)";
+    static inline const QString ERR_CANT_MAKE_DIR = R"(Could not create the following image directory. Make sure you have write permissions at that location.\n%1)";
     static inline const QString CAPTION_IMAGE_ERR = "Error importing game image(s)";
+    static inline const QString IMAGE_RETRY_PROMPT = "Retry?";
 
 
 //-Instance Variables--------------------------------------------------------------------------------------------
