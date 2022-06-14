@@ -92,7 +92,6 @@ Qx::GenericError ImportWorker::transferImage(bool symlink, QString sourcePath, Q
      */
 
     // Image info
-    QFileInfo sourceInfo(sourcePath);
     QFileInfo destinationInfo(destinationPath);
     QDir destinationDir(destinationInfo.absolutePath());
     bool destinationOccupied = destinationInfo.exists() && (destinationInfo.isFile() || destinationInfo.isSymLink());
