@@ -126,7 +126,7 @@ public:
 
 //-Instance Functions---------------------------------------------------------------------------------------------------------
 private:
-    void initializeProgressGroup(const QString& groupName, quint64 weight);
+    Qx::ProgressGroup* initializeProgressGroup(const QString& groupName, quint64 weight);
     const QList<QUuid> preloadPlaylists(Fp::Db::QueryBuffer& playlistQuery);
     const QList<QUuid> getPlaylistSpecificGameIds(Fp::Db::QueryBuffer& playlistGameIdQuery);
     Qx::GenericError transferImage(bool symlink, QString sourcePath, QString destPath);

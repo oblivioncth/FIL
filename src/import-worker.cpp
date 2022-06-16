@@ -20,24 +20,17 @@ ImportWorker::ImportWorker(std::shared_ptr<Fp::Install> fpInstallForWork,
       mFrontendInstall(feInstallForWork),
       mImportSelections(importSelections),
       mOptionSet(optionSet)
-{
-    // Initialize progress trackers
-    initializeProgressGroup(Pg::AddAppPreload, 2);
-    initializeProgressGroup(Pg::AddAppMatchImport, 1);
-    initializeProgressGroup(Pg::ImageDownload, 3);
-    initializeProgressGroup(Pg::ImageTransfer, 3);
-    initializeProgressGroup(Pg::GameImport, 2);
-    initializeProgressGroup(Pg::PlaylistGameMatchImport, 2);
-}
+{}
 
 //-Instance Functions--------------------------------------------------------------------------------------------
 //Private:
-void ImportWorker::initializeProgressGroup(const QString& groupName, quint64 weight)
+Qx::ProgressGroup* ImportWorker::initializeProgressGroup(const QString& groupName, quint64 weight)
 {
    Qx::ProgressGroup* pg = mProgressManager.addGroup(groupName);
    pg->setWeight(weight);
    pg->setValue(0);
    pg->setMaximum(0);
+   return pg;
 }
 
 const QList<QUuid> ImportWorker::preloadPlaylists(Fp::Db::QueryBuffer& playlistQuery)
@@ -716,41 +709,52 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     quint64 totalGameCount = 0;
 
     // Additional App pre-load
-    mProgressManager.group(Pg::AddAppPreload)->setMaximum(addAppQuery.size);
+    Qx::ProgressGroup* pgAddAppPreload = initializeProgressGroup(Pg::AddAppPreload, 2);
+    pgAddAppPreload->setMaximum(addAppQuery.size);
+
+    // Initialize game query progress group since there will always be at least one game to import
+    Qx::ProgressGroup* pgGameImport = initializeProgressGroup(Pg::GameImport, 2);
 
     // All games
     for(const Fp::Db::QueryBuffer& query : qAsConst(gameQueries))
     {
-        mProgressManager.group(Pg::GameImport)->increaseMaximum(query.size);
+        pgGameImport->increaseMaximum(query.size);
         totalGameCount += query.size;
     }
 
     // All playlist specific games
     for(const Fp::Db::QueryBuffer& query : qAsConst(playlistSpecGameQueries))
     {
-        mProgressManager.group(Pg::GameImport)->increaseMaximum(query.size);
+        pgGameImport->increaseMaximum(query.size);
         totalGameCount += query.size;
     }
 
     // Screenshot and Logo downloads
     if(mOptionSet.downloadImages)
-        mProgressManager.group(Pg::ImageDownload)->setMaximum(totalGameCount * 2);
-    else
-        mProgressManager.removeGroup(Pg::ImageDownload);
+    {
+        Qx::ProgressGroup* pgImageDownload = initializeProgressGroup(Pg::ImageDownload, 3);
+        pgImageDownload->setMaximum(totalGameCount * 2);
+    }
 
     // Screenshot and Logo transfer
     if(mOptionSet.imageMode != Fe::Install::ImageMode::Reference)
-        mProgressManager.group(Pg::ImageTransfer)->setMaximum(totalGameCount * 2);
-    else
-        mProgressManager.removeGroup(Pg::ImageTransfer);
+    {
+        Qx::ProgressGroup* pgImageTransfer = initializeProgressGroup(Pg::ImageTransfer, 3);
+        pgImageTransfer->setMaximum(totalGameCount * 2);
+    }
 
     // All playlist games
-    for(const Fp::Db::QueryBuffer& query : qAsConst(playlistGameQueries))
-        mProgressManager.group(Pg::PlaylistGameMatchImport)->increaseMaximum(query.size);
+    if(!playlistGameQueries.isEmpty())
+    {
+        Qx::ProgressGroup* pgPlaylistGameMatchImport = initializeProgressGroup(Pg::PlaylistGameMatchImport, 2);
+        for(const Fp::Db::QueryBuffer& query : qAsConst(playlistGameQueries))
+            pgPlaylistGameMatchImport->increaseMaximum(query.size);
+    }
 
     // All checks of Additional Apps
+    Qx::ProgressGroup* pgAddAppMatchImport = initializeProgressGroup(Pg::PlaylistGameMatchImport, 1);
     quint64 passes = addAppQuery.size * (gameQueries.size() + playlistSpecGameQueries.size());
-    mProgressManager.group(Pg::AddAppMatchImport)->setMaximum(passes);
+    pgAddAppMatchImport->setMaximum(passes);
 
     // Forward progress manager signal
     connect(&mProgressManager, &Qx::GroupedProgressManager::valueChanged, this, &ImportWorker::progressValueChanged);
