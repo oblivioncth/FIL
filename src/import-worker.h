@@ -7,6 +7,7 @@
 
 // Qx Includes
 #include <qx/network/qx-downloadmanager.h>
+#include <qx/core/qx-groupedprogressmanager.h>
 
 // libfp Includes
 #include <fp/flashpoint/fp-install.h>
@@ -19,19 +20,22 @@ class ImportWorker : public QObject
     Q_OBJECT // Required for classes that use Qt elements
 
 //-Class Enums---------------------------------------------------------------------------------------------------
-private:
-    enum ProgressGroup{
-        AddAppPreload,
-        AddAppMatchImport,
-        ImageDownload,
-        ImageTransfer,
-        GameImport,
-        PlaylistGameMatchImport
-    };
-
 public:
     enum ImportResult {Failed, Canceled, Successful};
     enum PlaylistGameMode {SelectedPlatform, ForceAll};
+
+//-Inner Classes------------------------------------------------------------------------------------------------
+private:
+    class Pg
+    {
+    public:
+        static inline const QString AddAppPreload = "AddAppPreload";
+        static inline const QString AddAppMatchImport = "AddAppMatchImport";
+        static inline const QString ImageDownload = "ImageDownload";
+        static inline const QString ImageTransfer = "ImageTransfer";
+        static inline const QString GameImport = "GameImport";
+        static inline const QString PlaylistGameMatchImport = "PlaylistGameMatchImport";
+    };
 
 //-Class Structs-------------------------------------------------------------------------------------------------
 public:
@@ -85,7 +89,6 @@ public:
     static inline const QString CAPTION_IMAGE_ERR = "Error importing game image(s)";
     static inline const QString IMAGE_RETRY_PROMPT = "Retry?";
 
-
 //-Instance Variables--------------------------------------------------------------------------------------------
 private:
     // Install links
@@ -106,8 +109,7 @@ private:
     QList<ImageTransferJob> mImageTransferJobs;
 
     // Progress Tracking
-    Qx::Cumulation<ProgressGroup, quint64> mCurrentProgress;
-    Qx::Cumulation<ProgressGroup, quint64> mTotalProgress;
+    Qx::GroupedProgressManager mProgressManager;
 
     // Cancel Status
     bool mCanceled = false;
@@ -124,7 +126,7 @@ public:
 
 //-Instance Functions---------------------------------------------------------------------------------------------------------
 private:
-    void initializeProgressTrackerGroup(ProgressGroup group, quint64 scaler);
+    void initializeProgressGroup(const QString& groupName, quint64 weight);
     const QList<QUuid> preloadPlaylists(Fp::Db::QueryBuffer& playlistQuery);
     const QList<QUuid> getPlaylistSpecificGameIds(Fp::Db::QueryBuffer& playlistGameIdQuery);
     Qx::GenericError transferImage(bool symlink, QString sourcePath, QString destPath);

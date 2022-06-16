@@ -22,20 +22,22 @@ ImportWorker::ImportWorker(std::shared_ptr<Fp::Install> fpInstallForWork,
       mOptionSet(optionSet)
 {
     // Initialize progress trackers
-    initializeProgressTrackerGroup(ProgressGroup::AddAppPreload, 2);
-    initializeProgressTrackerGroup(ProgressGroup::AddAppMatchImport, 1);
-    initializeProgressTrackerGroup(ProgressGroup::ImageDownload, 2);
-    initializeProgressTrackerGroup(ProgressGroup::ImageTransfer, 2);
-    initializeProgressTrackerGroup(ProgressGroup::GameImport, 2);
-    initializeProgressTrackerGroup(ProgressGroup::PlaylistGameMatchImport, 2);
+    initializeProgressGroup(Pg::AddAppPreload, 1);
+    initializeProgressGroup(Pg::AddAppMatchImport, 1);
+    initializeProgressGroup(Pg::ImageDownload, 1);
+    initializeProgressGroup(Pg::ImageTransfer, 1);
+    initializeProgressGroup(Pg::GameImport, 1);
+    initializeProgressGroup(Pg::PlaylistGameMatchImport, 1);
 }
 
 //-Instance Functions--------------------------------------------------------------------------------------------
 //Private:
-void ImportWorker::initializeProgressTrackerGroup(ProgressGroup group, quint64 scaler)
+void ImportWorker::initializeProgressGroup(const QString& groupName, quint64 weight)
 {
-    mCurrentProgress.insert(group, 0, scaler);
-    mTotalProgress.insert(group, 0, scaler);
+   Qx::ProgressGroup* pg = mProgressManager.addGroup(groupName);
+   pg->setWeight(weight);
+   pg->setValue(0);
+   pg->setMaximum(0);
 }
 
 const QList<QUuid> ImportWorker::preloadPlaylists(Fp::Db::QueryBuffer& playlistQuery)
@@ -217,7 +219,7 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& 
                 mImageDownloadManager.appendTask(Qx::DownloadTask{logoRemotePath, logoLocalInfo.path()});
             }
             else
-                emit progressMaximumChanged(mTotalProgress.decrement(ProgressGroup::ImageDownload)); // Already exists, remove download step from progress bar
+                mProgressManager.group(Pg::ImageDownload)->decrementMaximum(); // Already exists, remove download step from progress bar
 
             if(!ssLocalInfo.exists())
             {
@@ -225,7 +227,7 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& 
                 mImageDownloadManager.appendTask(Qx::DownloadTask{ssRemotePath, ssLocalInfo.path()});
             }
             else
-                emit progressMaximumChanged(mTotalProgress.decrement(ProgressGroup::ImageDownload)); // Already exists, remove download step from progress bar
+                mProgressManager.group(Pg::ImageDownload)->decrementMaximum(); // Already exists, remove download step from progress bar
         }
 
         // Perform immediate image handling if applicable
@@ -250,7 +252,7 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& 
                 mImageTransferJobs.append(ImageTransferJob{logoLocalInfo.path(), logoDestPath});
             }
             else
-                mTotalProgress.decrement(ProgressGroup::ImageTransfer); // Can't transfer image that doesn't/won't exist
+                mProgressManager.group(Pg::ImageTransfer)->decrementMaximum(); // Can't transfer image that doesn't/won't exist
 
             if(ssLocalInfo.exists() || mOptionSet.downloadImages)
             {
@@ -258,7 +260,7 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& 
                 mImageTransferJobs.append(ImageTransferJob{ssLocalInfo.path(), ssDestPath});
             }
             else
-                mTotalProgress.decrement(ProgressGroup::ImageTransfer);
+                mProgressManager.group(Pg::ImageTransfer)->decrementMaximum();
         }
 
         // Update progress dialog value for game addition
@@ -268,7 +270,7 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& 
             return Canceled;
         }
         else
-            emit progressValueChanged(mCurrentProgress.increment(GameImport));
+            mProgressManager.group(Pg::GameImport)->incrementValue();
     }
 
     // Report successful step completion
@@ -297,7 +299,7 @@ ImportWorker::ImportResult ImportWorker::processPlatformAddApps(Qx::GenericError
             return Canceled;
         }
         else
-            emit progressValueChanged(mCurrentProgress.increment(ProgressGroup::AddAppMatchImport));
+            mProgressManager.group(Pg::AddAppMatchImport)->incrementValue();
     }
 
     // Report successful step completion
@@ -336,7 +338,7 @@ ImportWorker::ImportResult ImportWorker::preloadAddApps(Qx::GenericError& errorR
            return Canceled;
         }
         else
-            emit progressValueChanged(mCurrentProgress.increment(ProgressGroup::AddAppPreload));
+            mProgressManager.group(Pg::AddAppPreload)->incrementValue();
     }
 
     // Report successful step completion
@@ -400,8 +402,7 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
              */
             qsizetype consumedAddApps = preAddAppCacheSize - mAddAppsCache.size();
             quint64 progressReduction = consumedAddApps * (remainingPlatforms - 1); // Don't count current list
-            mTotalProgress.reduce(ProgressGroup::AddAppMatchImport, progressReduction);
-            emit progressMaximumChanged(mTotalProgress.total());
+            mProgressManager.group(Pg::AddAppMatchImport)->decreaseMaximum(progressReduction);
 
             //---Finalize document----------------------------------
             currentPlatformDoc->finalize();
@@ -487,7 +488,7 @@ ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& erro
                 return Canceled;
             }
             else
-                emit progressValueChanged(mCurrentProgress.increment(ProgressGroup::PlaylistGameMatchImport));
+                mProgressManager.group(Pg::PlaylistGameMatchImport)->incrementValue();
         }
 
         // Finalize document
@@ -532,7 +533,7 @@ ImportWorker::ImportResult ImportWorker::processImages(Qx::GenericError& errorRe
         connect(&mImageDownloadManager, &Qx::SyncDownloadManager::proxyAuthenticationRequired, this, &ImportWorker::authenticationRequired);
 
         connect(&mImageDownloadManager, &Qx::SyncDownloadManager::downloadFinished, this, [this]() { // clazy:exclude=lambda-in-connect
-                emit progressValueChanged(mCurrentProgress.increment(ProgressGroup::ImageDownload));
+                mProgressManager.group(Pg::ImageDownload)->incrementValue();
         });
 
         // Start download
@@ -607,7 +608,7 @@ ImportWorker::ImportResult ImportWorker::processImages(Qx::GenericError& errorRe
                return Canceled;
            }
            else
-               emit progressValueChanged(mCurrentProgress.increment(ProgressGroup::ImageTransfer));
+               mProgressManager.group(Pg::ImageTransfer)->incrementValue();
         }
     }
 
@@ -715,40 +716,47 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     quint64 totalGameCount = 0;
 
     // Additional App pre-load
-    mTotalProgress.setValue(ProgressGroup::AddAppPreload, addAppQuery.size);
+    mProgressManager.group(Pg::AddAppPreload)->setMaximum(addAppQuery.size);
 
     // All games
     for(const Fp::Db::QueryBuffer& query : qAsConst(gameQueries))
     {
-        mTotalProgress.increase(ProgressGroup::GameImport, query.size);
+        mProgressManager.group(Pg::GameImport)->increaseMaximum(query.size);
         totalGameCount += query.size;
     }
 
     // All playlist specific games
     for(const Fp::Db::QueryBuffer& query : qAsConst(playlistSpecGameQueries))
     {
-        mTotalProgress.increase(ProgressGroup::GameImport, query.size);
+        mProgressManager.group(Pg::GameImport)->increaseMaximum(query.size);
         totalGameCount += query.size;
     }
 
     // Screenshot and Logo downloads
     if(mOptionSet.downloadImages)
-        mTotalProgress.setValue(ProgressGroup::ImageDownload, totalGameCount * 2);
+        mProgressManager.group(Pg::ImageDownload)->setMaximum(totalGameCount * 2);
+    else
+        mProgressManager.removeGroup(Pg::ImageDownload);
 
     // Screenshot and Logo transfer
     if(mOptionSet.imageMode != Fe::Install::ImageMode::Reference)
-        mTotalProgress.setValue(ProgressGroup::ImageTransfer, totalGameCount * 2);
+        mProgressManager.group(Pg::ImageTransfer)->setMaximum(totalGameCount * 2);
+    else
+        mProgressManager.removeGroup(Pg::ImageTransfer);
 
     // All playlist games
     for(const Fp::Db::QueryBuffer& query : qAsConst(playlistGameQueries))
-        mTotalProgress.increase(ProgressGroup::PlaylistGameMatchImport, query.size);
+        mProgressManager.group(Pg::PlaylistGameMatchImport)->increaseMaximum(query.size);
 
     // All checks of Additional Apps
     quint64 passes = addAppQuery.size * (gameQueries.size() + playlistSpecGameQueries.size());
-    mTotalProgress.setValue(ProgressGroup::AddAppMatchImport, passes);
+    mProgressManager.group(Pg::AddAppMatchImport)->setMaximum(passes);
 
-    // Re-prep progress dialog
-    emit progressMaximumChanged(mTotalProgress.total());
+    // Forward progress manager signal
+    connect(&mProgressManager, &Qx::GroupedProgressManager::valueChanged, this, &ImportWorker::progressValueChanged);
+
+    // Perform manual emission of total progress signal to indicate progress was calculated
+    emit progressMaximumChanged(mProgressManager.maximum());
     emit progressStepChanged(STEP_ADD_APP_PRELOAD);
 
     //-Primary Import Stages-------------------------------------------------
