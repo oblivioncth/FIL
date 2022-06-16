@@ -752,7 +752,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     }
 
     // All checks of Additional Apps
-    Qx::ProgressGroup* pgAddAppMatchImport = initializeProgressGroup(Pg::PlaylistGameMatchImport, 1);
+    Qx::ProgressGroup* pgAddAppMatchImport = initializeProgressGroup(Pg::AddAppMatchImport, 1);
     quint64 passes = addAppQuery.size * (gameQueries.size() + playlistSpecGameQueries.size());
     pgAddAppMatchImport->setMaximum(passes);
 
