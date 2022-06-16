@@ -91,7 +91,7 @@ add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 
 # Fetch Qx (build and import from source)
 include(OFILb/FetchQx)
-fetch_qx(2ef37f39963ff9ee012e9e9d8f0d25110be78e6d) # dev commit
+fetch_qx(6ca6c96ce49de2adfd7461b4be621e8b291a875b) # dev commit
 
 # Fetch libfp (build and import from source)
 include(OFILb/Fetchlibfp)
