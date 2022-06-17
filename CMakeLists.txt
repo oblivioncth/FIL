@@ -15,7 +15,7 @@ set(FORMAL_NAME "Oby's Flashpoint Importer for LaunchBox")
 string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LC)
 string(TOUPPER ${PROJECT_NAME} PROJECT_NAME_UC)
 
-set(TARGET_FP_VERSION 10.1.0.3)
+set(TARGET_FP_VERSION_PREFIX 10.1)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # C++
@@ -95,7 +95,7 @@ fetch_qx(6ca6c96ce49de2adfd7461b4be621e8b291a875b) # dev commit
 
 # Fetch libfp (build and import from source)
 include(OFILb/Fetchlibfp)
-fetch_libfp(654c3ce0be9e066486963c9ea36c606333da5be7)
+fetch_libfp(279974f05ef81ef3c6b277f2717ca70e4b78c425)
 
 # Fetch CLIFp (build and import from source)
 include(OFILb/FetchCLIFp)
@@ -217,7 +217,7 @@ include(OFILb/ProjectVars)
 set_cxx_project_vars(${TARGET_NAME}
     FULL_NAME "\"${FORMAL_NAME}\""
     SHORT_NAME "\"${PROJECT_NAME}\""
-    TARGET_FP_VER_STR "\"${TARGET_FP_VERSION}\""
+    TARGET_FP_VER_PFX_STR "\"${TARGET_FP_VERSION_PREFIX}\""
 )
 
 # Generate resource collection for CLIFp
@@ -235,7 +235,7 @@ include(OFILb/WinExecutableDetails)
 set_win_executable_details(${TARGET_NAME}
     ICON "res/icon/OFILb.ico"
     FILE_VER ${PROJECT_VERSION}
-    PRODUCT_VER ${TARGET_FP_VERSION}
+    PRODUCT_VER ${TARGET_FP_VERSION_PREFIX}
     COMPANY_NAME "oblivioncth"
     FILE_DESC "Flashpoint Importer for LaunchBox"
     INTERNAL_NAME "OFILb"

@@ -180,18 +180,10 @@ void MainWindow::initializeEnableConditionMaps()
     mActionEnableConditionMap[ui->action_editTagFilter] = [&](){ return mFrontendInstall && mFlashpointInstall; };
 }
 
-bool MainWindow::installMatchesTargetVersion(const Fp::Install& fpInstall)
+bool MainWindow::installMatchesTargetSeries(const Fp::Install& fpInstall)
 {
-    QString hash = fpInstall.launcherChecksum();
-    QString ver = fpInstall.nameVersionString();
-
-    // Check for ultimate
-    if(hash == TARGET_ULT_LAUNCHER_SHA256 && ver == TARGET_ULT_VER_STRING)
-        return true;
-    else if(hash == TARGET_INF_LAUNCHER_SHA256 && ver == TARGET_INF_VER_STRING) // Check for infinity
-        return true;
-    else
-        return false;
+    Qx::VersionNumber fpVersion = fpInstall.version();
+    return TARGET_FP_VERSION_PREFIX.isPrefixOf(fpVersion);
 }
 
 void MainWindow::checkManualInstallInput(Install install)
@@ -227,7 +219,7 @@ void MainWindow::validateInstall(QString installPath, Install install)
             if(mFlashpointInstall->isValid())
             {
                 ui->label_flashpointVersion->setText(mFlashpointInstall->nameVersionString());
-                if(installMatchesTargetVersion(*mFlashpointInstall))
+                if(installMatchesTargetSeries(*mFlashpointInstall))
                     ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/icon/Valid_Install.png"));
                 else
                 {
@@ -710,7 +702,7 @@ void MainWindow::standaloneCLIFpDeploy()
         Fp::Install tempFlashpointInstall(selectedDir);
         if(tempFlashpointInstall.isValid())
         {
-            if(!installMatchesTargetVersion(tempFlashpointInstall))
+            if(!installMatchesTargetSeries(tempFlashpointInstall))
                 QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_VER_NOT_TARGET);
 
             bool willDeploy = true;

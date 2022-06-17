@@ -83,7 +83,7 @@ private:
     // Messages - Input
     static inline const QString MSG_FE_INSTALL_INVALID = "The specified directory either doesn't contain a valid frontend install, or it contains a version that is incompatible with this tool.";
     static inline const QString MSG_FP_INSTALL_INVALID = "The specified directory either doesn't contain a valid Flashpoint install, or it contains a version that is incompatible with this tool.";
-    static inline const QString MSG_FP_VER_NOT_TARGET = "The selected Flashpoint install contains a version of Flashpoint that is different from the target version (" PROJECT_TARGET_FP_VER_STR "), but appears to have a compatible structure. "
+    static inline const QString MSG_FP_VER_NOT_TARGET = "The selected Flashpoint install contains a version of Flashpoint that is different from the target version series (" PROJECT_TARGET_FP_VER_PFX_STR "), but appears to have a compatible structure. "
                                                                 "You may proceed at your own risk as the tool is not guaranteed to work correctly in this circumstance. Please use a newer version of " PROJECT_SHORT_NAME " if available.";
 
     static inline const QString MSG_INSTALL_CONTENTS_CHANGED = "The contents of your installs have been changed since the initial scan and therefore must be re-evaluated. You will need to make your selections again.";
@@ -150,11 +150,7 @@ private:
     static inline const QUrl URL_LB_FORUMS =  QUrl("https://forums.launchbox-app.com/files/file/2652-obbys-flashpoint-importer-for-launchbox");
 
     // Flashpoint version check
-    static inline const QString TARGET_ULT_LAUNCHER_SHA256 = "517650459ba34cd87f5643281d132237af419e0c00c46dad5f0dfb7c37bc6188";
-    static inline const QString TARGET_INF_LAUNCHER_SHA256 = "ec90eee88448071eef65365604c16d437522f23fe1a5b21dd3dc972bc47cf9af";
-    static inline const QString TARGET_ULT_VER_STRING = R"(Flashpoint 10.1.0.3 Ultimate - "Absence II")";
-    static inline const QString TARGET_INF_VER_STRING = R"(Flashpoint 10.1.0.3 Infinity - "Absence II")";
-
+    static inline const Qx::VersionNumber TARGET_FP_VERSION_PREFIX = Qx::VersionNumber::fromString(PROJECT_TARGET_FP_VER_PFX_STR);
 
     // User Roles
     static inline const int USER_ROLE_TAG_ID = 0x200; // Value chosen arbitrarily (must be > 0x100)
@@ -199,7 +195,7 @@ private:
     bool testForLinkPermissions();
     void initializeForms();
     void initializeEnableConditionMaps();
-    bool installMatchesTargetVersion(const Fp::Install& fpInstall);
+    bool installMatchesTargetSeries(const Fp::Install& fpInstall);
     void checkManualInstallInput(Install install);
     void validateInstall(QString installPath, Install install);
     void gatherInstallInfo();
