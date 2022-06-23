@@ -242,7 +242,7 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& 
             if(logoLocalInfo.exists() || mOptionSet.downloadImages)
             {
                 QString logoDestPath = mFrontendInstall->imageDestinationPath(Fp::ImageType::Logo, *addedGame);
-                mImageTransferJobs.append(ImageTransferJob{logoLocalInfo.path(), logoDestPath});
+                mImageTransferJobs.append(ImageTransferJob{logoLocalInfo.absoluteFilePath(), logoDestPath});
             }
             else
                 mProgressManager.group(Pg::ImageTransfer)->decrementMaximum(); // Can't transfer image that doesn't/won't exist
@@ -250,7 +250,7 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& 
             if(ssLocalInfo.exists() || mOptionSet.downloadImages)
             {
                 QString ssDestPath = mFrontendInstall->imageDestinationPath(Fp::ImageType::Screenshot, *addedGame);
-                mImageTransferJobs.append(ImageTransferJob{ssLocalInfo.path(), ssDestPath});
+                mImageTransferJobs.append(ImageTransferJob{ssLocalInfo.absoluteFilePath(), ssDestPath});
             }
             else
                 mProgressManager.group(Pg::ImageTransfer)->decrementMaximum();
