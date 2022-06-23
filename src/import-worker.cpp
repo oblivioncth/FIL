@@ -132,10 +132,11 @@ Qx::GenericError ImportWorker::transferImage(bool symlink, QString sourcePath, Q
     // Handle transfer
     if(symlink)
     {
-        if(!QFile::copy(sourcePath, destinationPath))
+        std::filesystem::create_symlink(sourcePath.toStdString(), destinationPath.toStdString(), linkError);
+        if(linkError)
         {
             QFile::rename(backupPath, destinationPath); // Restore Backup
-            return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_COPY.arg(sourcePath, destinationPath), IMAGE_RETRY_PROMPT, QString(), CAPTION_IMAGE_ERR);
+            return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_LINK.arg(sourcePath, destinationPath), IMAGE_RETRY_PROMPT, QString(), CAPTION_IMAGE_ERR);
         }
         else if(QFile::exists(backupPath))
             QFile::remove(backupPath);
@@ -144,11 +145,10 @@ Qx::GenericError ImportWorker::transferImage(bool symlink, QString sourcePath, Q
     }
     else
     {
-        std::filesystem::create_symlink(sourcePath.toStdString(), destinationPath.toStdString(), linkError);
-        if(linkError)
+        if(!QFile::copy(sourcePath, destinationPath))
         {
             QFile::rename(backupPath, destinationPath); // Restore Backup
-            return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_LINK.arg(sourcePath, destinationPath), IMAGE_RETRY_PROMPT, QString(), CAPTION_IMAGE_ERR);
+            return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_COPY.arg(sourcePath, destinationPath), IMAGE_RETRY_PROMPT, QString(), CAPTION_IMAGE_ERR);
         }
         else if(QFile::exists(backupPath))
             QFile::remove(backupPath);
