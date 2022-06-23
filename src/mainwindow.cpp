@@ -291,11 +291,6 @@ void MainWindow::populateImportSelectionBoxes()
         if(mFrontendInstall->getExistingPlaylists().contains(currentItem->text()))
             currentItem->setBackground(QBrush(mExistingItemColor));
     }
-
-    // Disable update mode box and import start button since no items will be selected after this operation
-    // TODO: See if these are needed or can be done away with since ideal this should be handled by ui enabled hash map
-    ui->groupBox_updateMode->setEnabled(false);
-    ui->pushButton_startImport->setEnabled(false);
 }
 
 void MainWindow::generateTagSelectionOptions()
