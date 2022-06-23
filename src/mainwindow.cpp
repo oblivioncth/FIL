@@ -38,11 +38,14 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    // Register metatypes
-    //TODO: Test which of these are actually needed
-    qRegisterMetaType<ImportWorker::ImportResult>();
-    qRegisterMetaType<Qx::GenericError>();
-    qRegisterMetaType<std::shared_ptr<int>>();
+    /*Register metatypes
+     * NOTE: Qt docs note these should be needed, as always, but since Qt6 signals/slots with these types seem to
+     * work fine without the following calls.
+     * See https://forum.qt.io/topic/136627/undocumented-automatic-metatype-registration-in-qt6
+     */
+    //qRegisterMetaType<ImportWorker::ImportResult>();
+    //qRegisterMetaType<Qx::GenericError>();
+    //qRegisterMetaType<std::shared_ptr<int>>();
 
     // Get built-in CLIFp version
     QTemporaryDir tempDir;
