@@ -703,9 +703,6 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     }
 
     //-Determine Workload-------------------------------------------------
-    /* TODO: Maybe add weighting system (instead of all tasks just being a progress bar unit of 1) so that image
-     * operations aren't as dominant in worst case image scenarios (i.e. all to download and transfer)
-    */
     quint64 totalGameCount = 0;
 
     // Additional App pre-load
