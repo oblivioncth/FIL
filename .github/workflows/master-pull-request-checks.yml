@@ -9,17 +9,17 @@ jobs:
     name: Ensure higher version than last tag has been set
     runs-on: windows-latest
     env:
-      ofilb_src_suffix: OFILb/Source/
-      ofilb_src_dir: ${{ github.workspace }}/OFILb/Source/
+      ofilb_src_suffix: FIL/Source/
+      ofilb_src_dir: ${{ github.workspace }}/FIL/Source/
     steps:
-    - name: Checkout OFILb
+    - name: Checkout FIL
       uses: actions/checkout@v3
       with:
         path: ${{ env.ofilb_src_suffix }}
         fetch-depth: 0 # Required for tag search to find previous tag
     - name: Compare versions
       env:
-        match_start: set\(OFILB_BASE_VERSION
+        match_start: set\(FIL_BASE_VERSION
         match_end: \)
       run: |
         cd "${{ env.ofilb_src_dir }}"

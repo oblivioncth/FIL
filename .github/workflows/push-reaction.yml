@@ -1,4 +1,4 @@
-name: OFILb Push Reaction
+name: FIL Push Reaction
 on:
   workflow_dispatch:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   trigger-windows-build:
-    name: Build OFILb (Windows)
-    uses: ./.github/workflows/build-ofilb-windows.yml
+    name: Build FIL (Windows)
+    uses: ./.github/workflows/build-fil-windows.yml
     secrets:
       qt_static_dec_key: ${{ secrets.QT_WINDOWS_STATIC_DECRYPT_KEY }}

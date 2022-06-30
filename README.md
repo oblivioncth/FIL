@@ -1,5 +1,5 @@
-# OFILb (Obby's Flashpoint Importer for LaunchBox)
-OFILb (pronounced "Awful-B") is an importer tool for [LaunchBox](https://www.launchbox-app.com/) that allows one to add platforms and playlists from [BlueMaxima's Flashpoint](https://bluemaxima.org/flashpoint/) project to their collection. It is fully automated and only requires the user to provide the paths to the LaunchBox/Flashpoint installs, choose which Platforms/Playlists they wish to import, and select between a few import mode options. Once the import is started the current progress is displayed and any errors that occur are shown to the user, with resolvable errors including a prompt for what the user would like to do. After the process has completed LaunchBox can be started and the games from Flashpoint can be played like those from any other Platform.
+# FIL (Obby's Flashpoint Importer for LaunchBox)
+FIL (pronounced "Awful-B") is an importer tool for [LaunchBox](https://www.launchbox-app.com/) that allows one to add platforms and playlists from [BlueMaxima's Flashpoint](https://bluemaxima.org/flashpoint/) project to their collection. It is fully automated and only requires the user to provide the paths to the LaunchBox/Flashpoint installs, choose which Platforms/Playlists they wish to import, and select between a few import mode options. Once the import is started the current progress is displayed and any errors that occur are shown to the user, with resolvable errors including a prompt for what the user would like to do. After the process has completed LaunchBox can be started and the games from Flashpoint can be played like those from any other Platform.
 
 For Platforms, the importer is capable of importing each game/animation along with any additional apps, images, and most of the metadata fields (i.e. Title, Description, etc, see below).
 
@@ -8,7 +8,7 @@ This utility makes use of its sister project [CLIFp (Command-line Interface for 
 
 Before making any changes to your LaunchBox collection any XML files that will be altered are automatically backed up (only one backup is maintained at once so any previous backup will be overwritten) and if any unrecoverable errors occur during the import any partial changes are reverted and the backups are restored; however, while LaunchBox itself also makes periodic backups of your XML data **it is strongly suggested that  you consider making a manual backup of your LaunchBox\Data folder to be safe.** No responsibility is held for the loss of data due to use of this tool.
 
-OFILb can safely be used multiple times on the same collection to update the selected Platforms and Playlists if that have already been imported previously. The method with which to handle existing entries is selected within the program before each import.
+FIL can safely be used multiple times on the same collection to update the selected Platforms and Playlists if that have already been imported previously. The method with which to handle existing entries is selected within the program before each import.
 
 The import time will vary, correlated with how many Platforms/Playlists you have selected, but more significantly the image mode you choose, which is expanded on later. Importing the entire collection usually takes 5-10 minutes with the recommended settings but can take longer with a more basic PC. The vast majority of the processing time is due to the plethora of images that have to be copied/symlinked when games processed so the speed of your storage device is the most significant factor. Running the importer for updates should be significantly faster it first checks to see if the source image from the new import source is actually different than your current one before copying/linking it.
 
@@ -19,7 +19,7 @@ You will still be able to use the standard Flashpoint launcher as normal after c
 This tool was made with the express purpose of using it with Flashpoint Ultimate (i.e. all games/animations pre-downloaded), but since the 0.2 rewrite of CLIFp it should work with Infinity as well. Just note that use with Infinity is less rigorously tested.
 
 ### General
-While testing for 100% compatibility is infeasible given the size of Flashpoint, OFILb was designed with full compatibility in mind.
+While testing for 100% compatibility is infeasible given the size of Flashpoint, FIL was designed with full compatibility in mind.
 
 The ":message:" feature of Flashpoint, commonly used to automatically show usage instructions for some games before they are started, is supported. The entries that use it are added as additional-apps to their respective games as they once were when Flashpoint came packaged with LaunchBox. All messages are displayed in a pop-up dialog via CLIFp.
 
@@ -30,7 +30,7 @@ Since Flashpoint originally used LaunchBox as its launcher, most fields within F
 ### Version Matching
 Each release of this application targets a specific version or versions of BlueMaxima's Flashpoint and while newer releases will sometimes contain general improvements to functionality, they will largely be created to match the changes made between each Flashpoint release and therefore maintain compatibility. These matches are shown below:
 
-| OFILb Version      |Included CLIFp Version | Target Flashpoint Version       |
+| FIL Version      |Included CLIFp Version | Target Flashpoint Version       |
 |--------------------|-----------------------|---------------------------------|
 | 0.1                | 0.1                   | 8.1 ("Spirit of Adventure")     |
 | 0.1.1              | 0.1.1                 | 8.2 ("Approaching Planet Nine") |
@@ -41,7 +41,7 @@ Each release of this application targets a specific version or versions of BlueM
 | 0.4.1              | 0.8                   | 10.1 ("Absence - II")           |
 | 0.4.1.1 - 0.4.1.3  | 0.8                   | 10.1.0.3 ("Absence - II")       |
 
-Using a version of OFILb that does not target the version of Flashpoint you wish to use it with is highly discouraged as some features may not work correctly or at all and in some cases the utility may fail to function entirely or even damage the Flashpoint install it is used with.
+Using a version of FIL that does not target the version of Flashpoint you wish to use it with is highly discouraged as some features may not work correctly or at all and in some cases the utility may fail to function entirely or even damage the Flashpoint install it is used with.
 
 ### Metadata Fields
 
@@ -90,7 +90,7 @@ The symbolic link related options for handling images require the importer to be
 
 **Example:**
 
-![OFILb Example Usage](https://i.imgur.com/OuKuThO.png)
+![FIL Example Usage](https://i.imgur.com/OuKuThO.png)
 
 
 ### Tag Filter

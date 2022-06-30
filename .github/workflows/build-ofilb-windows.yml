@@ -1,4 +1,4 @@
-name: Build OFILb - Windows (Qt 6.3.0)
+name: Build FIL - Windows (Qt 6.3.0)
 on:
   workflow_call:
     secrets:
@@ -7,18 +7,18 @@ on:
         required: true
     outputs:
       qt_static_artifact_name:
-        description: "OFILb (Qt static) build artifact"
-        value: ${{ jobs.build-ofilb.outputs.qt_static_artifact_name }}
+        description: "FIL (Qt static) build artifact"
+        value: ${{ jobs.build-fil.outputs.qt_static_artifact_name }}
 env:
   qt_install_dir: ${{ github.workspace }}/Qt/Install
   qt_download_dir: ${{ github.workspace }}/Qt/Download
-  ofilb_src_suffix: OFILb/Source
-  ofilb_src_dir: ${{ github.workspace }}/OFILb/Source
-  ofilb_build_dir: ${{ github.workspace }}/OFILb/Build
+  ofilb_src_suffix: FIL/Source
+  ofilb_src_dir: ${{ github.workspace }}/FIL/Source
+  ofilb_build_dir: ${{ github.workspace }}/FIL/Build
 
 jobs:
-  build-ofilb:
-    name: Build OFILb - Windows (Release)
+  build-fil:
+    name: Build FIL - Windows (Release)
     strategy:
       matrix:
         qt_linkage: [static]
@@ -68,12 +68,12 @@ jobs:
     - name: Extract Qt Install
       if: steps.cache-qt.outputs.cache-hit != 'true'
       run: 7z x ${{ env.qt_install_dest }} -o${{ env.qt_install_dir }}
-    - name: Checkout OFILb
+    - name: Checkout FIL
       uses: actions/checkout@v3
       with:
         path: ${{ env.ofilb_src_suffix }}
         fetch-depth: 0 # Required for verbose versioning to work correctly
-    - name: Build/Install OFILb
+    - name: Build/Install FIL
       working-directory: ${{ env.ofilb_src_dir }}
       shell: cmd
       run: |
@@ -83,17 +83,17 @@ jobs:
         CALL "${{ env.qt_cmake }}" -G "${{ env.cmake_gen }}" -S "${{ env.ofilb_src_dir}}" -B "${{ env.ofilb_build_dir }}"  
         echo "Changing to build directory..."
         cd "%ofilb_build_dir%"
-        echo "Building OFILb release..."
+        echo "Building FIL release..."
         cmake --build . --target all --config Release
-        echo "Installing OFILb Release..."
+        echo "Installing FIL Release..."
         cmake --build . --target install --config Release
-        echo "Packaging OFILb..."
+        echo "Packaging FIL..."
         cpack -C "Release"
         echo "Build complete."
-    - name: Get OFILb artifact name
+    - name: Get FIL artifact name
       id: get_artifact_name
       run: echo "::set-output name=${{ env.artifact_output_var }}::$((Get-ChildItem -Path "${{ env.ofilb_package_path }}" -Filter *.zip)[0].BaseName)"
-    - name: Upload OFILb build artifact
+    - name: Upload FIL build artifact
       uses: actions/upload-artifact@v3
       with:
         name: ${{ steps.get_artifact_name.outputs[env.artifact_output_var] }}
