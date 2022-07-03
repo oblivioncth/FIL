@@ -11,14 +11,22 @@
 #include "fe-data.h"
 
 //-Macros-------------------------------------------------------------------------------------------------------------------
-#define REGISTER_FRONTEND(name, install) \
-    class install##Factory : public Fe::InstallFactory \
+#define REGISTER_FRONTEND(fe_name, fe_install, fe_icon_path, fe_helpUrl) \
+    class fe_install##Factory : public Fe::InstallFactory \
     { \
     public: \
-        install##Factory() { Fe::Install::registerInstall(name, this); } \
-        virtual std::shared_ptr<Fe::Install> produce(QString installPath) { return std::make_shared<install>(installPath); } \
+        fe_install##Factory() \
+        { \
+            Install::Entry entry { \
+                .factory = this, \
+                .iconPath = fe_icon_path, \
+                .helpUrl = fe_helpUrl \
+            }; \
+            Fe::Install::registerInstall(fe_name, entry); \
+        } \
+        virtual std::shared_ptr<Fe::Install> produce(QString installPath) const { return std::make_shared<fe_install>(installPath); } \
     }; \
-    static install##Factory _##install##Factory;
+    static fe_install##Factory _##install##Factory;
 
 namespace Fe
 {
@@ -28,6 +36,15 @@ class InstallFactory;
 
 class Install
 {
+//-Class Structs------------------------------------------------------------------------------------------------------
+public:
+    struct Entry
+    {
+        const InstallFactory* factory;
+        const QString* iconPath;
+        const QUrl* helpUrl;
+    };
+
 //-Class Enums---------------------------------------------------------------------------------------------------
 public:
     enum ImageMode {Copy, Reference, Link};
@@ -78,13 +95,12 @@ public:
 
 //-Class Functions------------------------------------------------------------------------------------------------------
 private:
-    // Registry put behind function call to avoid SIOF since otherwise initialization of static registry before calls to registerFrontend would not be guaranteed
-    static QMap<QString, InstallFactory*>& registry();
-
     static void allowUserWriteOnFile(QString filePath);
 
 public:
-    static void registerInstall(QString name, InstallFactory* factory);
+    // NOTE: Registry put behind function call to avoid SIOF since otherwise initialization of static registry before calls to registerFrontend would not be guaranteed
+    static QMap<QString, Entry>& registry();
+    static void registerInstall(QString name, Entry entry);
     static std::shared_ptr<Install> acquireMatch(const QString& installPath);
 
 //-Instance Functions---------------------------------------------------------------------------------------------------------
@@ -142,7 +158,7 @@ class InstallFactory
 {
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    virtual std::shared_ptr<Install> produce(QString installPath) = 0;
+    virtual std::shared_ptr<Install> produce(QString installPath) const = 0;
 };
 
 }

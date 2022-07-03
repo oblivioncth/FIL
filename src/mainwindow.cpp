@@ -72,6 +72,7 @@ MainWindow::MainWindow(QWidget *parent) :
     setWindowTitle(PROJECT_FULL_NAME);
     initializeEnableConditionMaps();
     initializeForms();
+    initializeFrontendHelpActions();
 
     // Check if Flashpoint is running
     if(Qx::processIsRunning(QFileInfo(Fp::Install::LAUNCHER_PATH).fileName()))
@@ -181,6 +182,22 @@ void MainWindow::initializeEnableConditionMaps()
     // Populate hash-map of action element enable conditions
     mActionEnableConditionMap[ui->action_forceDownloadImages] = [&](){ return mFlashpointInstall && mFlashpointInstall->preferences().onDemandImages; };
     mActionEnableConditionMap[ui->action_editTagFilter] = [&](){ return mFrontendInstall && mFlashpointInstall; };
+}
+
+void MainWindow::initializeFrontendHelpActions()
+{
+    // Add install help link for each registered install
+    auto i = Fe::Install::registry().cbegin();
+    auto end = Fe::Install::registry().cend();
+
+    for(; i != end; i++)
+    {
+        QAction* feHelpAction = new QAction(ui->menu_frontendHelp);
+        feHelpAction->setObjectName(MENU_FE_HELP_OBJ_NAME_TEMPLATE.arg(i.key()));
+        feHelpAction->setText(i.key());
+        feHelpAction->setIcon(QIcon(*(i->iconPath)));
+        ui->menu_frontendHelp->addAction(feHelpAction);
+    }
 }
 
 bool MainWindow::installMatchesTargetSeries(const Fp::Install& fpInstall)
@@ -798,8 +815,6 @@ void MainWindow::all_on_action_triggered()
         QDesktopServices::openUrl(URL_CLIFP_GITHUB);
     else if(senderAction == ui->action_goToOFLIbGitHub)
         QDesktopServices::openUrl(URL_OFLIB_GITHUB);
-    else if(senderAction == ui->action_goToLBForums)
-        QDesktopServices::openUrl(URL_LB_FORUMS);
     else if(senderAction == ui->action_editTagFilter)
         showTagSelectionDialog();
     else
@@ -936,6 +951,37 @@ void MainWindow::all_on_radioButton_clicked()
         refreshEnableStates();
     else
         throw std::runtime_error("Unhandled use of all_on_radioButton_clicked() slot");
+}
+
+void MainWindow::all_on_menu_triggered(QAction *action)
+{
+    // Get the object that called this slot
+    QMenu* senderMenu = qobject_cast<QMenu*>(sender());
+
+    // Ensure the signal that triggered this slot belongs to the above class by checking for null pointer
+    if(senderMenu == nullptr)
+        throw std::runtime_error("Pointer conversion to menu failed");
+
+    if(senderMenu == ui->menu_frontendHelp)
+    {
+        // Get associated help URL and open it
+        QRegularExpressionMatch frontendMatch = MENU_FE_HELP_KEY_REGEX.match(action->objectName());
+
+        if(frontendMatch.hasMatch())
+        {
+            QString frontendName = frontendMatch.captured("frontend");
+            if(!frontendName.isNull() && Fe::Install::registry().contains(frontendName))
+            {
+                const QUrl* helpUrl = Fe::Install::registry()[frontendName].helpUrl;
+                QDesktopServices::openUrl(*helpUrl);
+                return;
+            }
+        }
+
+        qWarning("Frontend help action name could not be determined.");
+    }
+    else
+        throw std::runtime_error("Unhandled use of all_on_menu_triggered() slot");
 }
 
 void MainWindow::handleBlockingError(std::shared_ptr<int> response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices)

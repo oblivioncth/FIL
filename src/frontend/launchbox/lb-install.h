@@ -5,6 +5,7 @@
 #include <QString>
 #include <QDir>
 #include <QSet>
+#include <QIcon>
 #include <QtXml>
 
 // Project Includes
@@ -22,6 +23,8 @@ class Install : public Fe::Install
 public:
     // Identity
     static inline const QString NAME = "LaunchBox";
+    static inline const QString ICON_PATH = ":/icon/frontend/LaunchBox.svg";
+    static inline const QUrl HELP_URL = QUrl("https://forums.launchbox-app.com/files/file/2652-obbys-flashpoint-importer-for-launchbox");
 
     // Paths
     static inline const QString PLATFORMS_PATH = "Data/Platforms";
@@ -94,7 +97,7 @@ public:
     QString imageDestinationPath(Fp::ImageType imageType, const Fe::Game& game) const override;
     Qx::GenericError bulkReferenceImages(QString logoRootPath, QString screenshotRootPath, QStringList platforms) override;
 };
-REGISTER_FRONTEND(Install::NAME, Install);
+REGISTER_FRONTEND(Install::NAME, Install, &Install::ICON_PATH, &Install::HELP_URL);
 
 }
 
