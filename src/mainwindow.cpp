@@ -213,9 +213,9 @@ bool MainWindow::installMatchesTargetSeries(const Fp::Install& fpInstall)
     return TARGET_FP_VERSION_PREFIX.isPrefixOf(fpVersion);
 }
 
-void MainWindow::checkManualInstallInput(Install install)
+void MainWindow::checkManualInstallInput(InstallType install)
 {
-    QLineEdit* pathSource = install == Install::Frontend ?
+    QLineEdit* pathSource = install == InstallType::Frontend ?
                             ui->lineEdit_frontendPath :
                             ui->lineEdit_flashpointPath;
 
@@ -226,11 +226,11 @@ void MainWindow::checkManualInstallInput(Install install)
         invalidateInstall(install, false);
 }
 
-void MainWindow::validateInstall(QString installPath, Install install)
+void MainWindow::validateInstall(QString installPath, InstallType install)
 {
     switch(install)
     {
-        case Install::Frontend:
+        case InstallType::Frontend:
             mFrontendInstall = Fe::Install::acquireMatch(installPath);
             if(mFrontendInstall)
             {
@@ -241,7 +241,7 @@ void MainWindow::validateInstall(QString installPath, Install install)
                 invalidateInstall(install, true);
             break;
 
-        case Install::Flashpoint:
+        case InstallType::Flashpoint:
             mFlashpointInstall = std::make_shared<Fp::Install>(installPath);
             if(mFlashpointInstall->isValid())
             {
@@ -283,7 +283,7 @@ void MainWindow::gatherInstallInfo()
         refreshEnableStates();
     }
     else
-        invalidateInstall(Install::Frontend, false);
+        invalidateInstall(InstallType::Frontend, false);
 }
 
 void MainWindow::populateImportSelectionBoxes()
@@ -398,18 +398,18 @@ bool MainWindow::installsHaveChanged()
 void MainWindow::redoInputChecks()
 {
     // Check existing locations again
-    validateInstall(mFrontendInstall->getPath(), Install::Frontend);
-    validateInstall(mFlashpointInstall->fullPath(), Install::Flashpoint);
+    validateInstall(mFrontendInstall->getPath(), InstallType::Frontend);
+    validateInstall(mFlashpointInstall->fullPath(), InstallType::Flashpoint);
 }
 
-void MainWindow::invalidateInstall(Install install, bool informUser)
+void MainWindow::invalidateInstall(InstallType install, bool informUser)
 {
     clearListWidgets();
     mTagSelectionModel.reset(); // Void tag selection model
 
     switch(install)
     {
-        case Install::Frontend:
+        case InstallType::Frontend:
             ui->icon_frontend_install_status->setPixmap(QPixmap(":/icon/Invalid_Install.png"));
             ui->label_frontendVersion->clear();
             if(informUser)
@@ -417,7 +417,7 @@ void MainWindow::invalidateInstall(Install install, bool informUser)
             mFrontendInstall.reset();
             break;
 
-        case Install::Flashpoint:
+        case InstallType::Flashpoint:
             ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/icon/Invalid_Install.png"));
             ui->label_flashpointVersion->clear();
             if(informUser)
@@ -846,7 +846,7 @@ void MainWindow::all_on_pushButton_clicked()
         if(!selectedDir.isEmpty())
         {
             ui->lineEdit_frontendPath->setText(QDir::toNativeSeparators(selectedDir));
-            validateInstall(selectedDir, Install::Frontend);
+            validateInstall(selectedDir, InstallType::Frontend);
         }
     }
     else if(senderPushButton == ui->pushButton_flashpointBrowse)
@@ -857,7 +857,7 @@ void MainWindow::all_on_pushButton_clicked()
         if(!selectedDir.isEmpty())
         {
             ui->lineEdit_flashpointPath->setText(QDir::toNativeSeparators(selectedDir));
-            validateInstall(selectedDir, Install::Flashpoint);
+            validateInstall(selectedDir, InstallType::Flashpoint);
         }
     }
     else if(senderPushButton == ui->pushButton_selectAll_platforms)
@@ -905,9 +905,9 @@ void MainWindow::all_on_lineEdit_editingFinished()
 
     // Determine sender and take corresponding action
     if(senderLineEdit == ui->lineEdit_frontendPath)
-        checkManualInstallInput(Install::Frontend);
+        checkManualInstallInput(InstallType::Frontend);
     else if(senderLineEdit == ui->lineEdit_flashpointPath)
-        checkManualInstallInput(Install::Flashpoint);
+        checkManualInstallInput(InstallType::Flashpoint);
     else
         throw std::runtime_error("Unhandled use of all_on_linedEdit_textEdited() slot");
 }

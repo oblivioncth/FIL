@@ -34,7 +34,7 @@ class MainWindow : public QMainWindow
 //-Class Enums------------------------------------------------------------------------------------------------
 private:
     enum class InputStage {Paths, Imports};
-    enum class Install {Frontend, Flashpoint};
+    enum class InstallType {Frontend, Flashpoint};
 
 //-Class Variables--------------------------------------------------------------------------------------------
 private:
@@ -200,8 +200,8 @@ private:
     void initializeEnableConditionMaps();
     void initializeFrontendHelpActions();
     bool installMatchesTargetSeries(const Fp::Install& fpInstall);
-    void checkManualInstallInput(Install install);
-    void validateInstall(QString installPath, Install install);
+    void checkManualInstallInput(InstallType install);
+    void validateInstall(QString installPath, InstallType install);
     void gatherInstallInfo();
     void populateImportSelectionBoxes();
     void generateTagSelectionOptions();
@@ -209,7 +209,7 @@ private:
     bool installsHaveChanged();
     void redoInputChecks();
 
-    void invalidateInstall(Install install, bool informUser);
+    void invalidateInstall(InstallType install, bool informUser);
     void clearListWidgets();
     bool isExistingPlatformSelected();
     bool isExistingPlaylistSelected();
