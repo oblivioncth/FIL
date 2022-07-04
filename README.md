@@ -1,4 +1,4 @@
-# FIL (Obby's Flashpoint Importer for LaunchBox)
+# FIL (Flashpoint Importer for Launchers)
 <img align="left" src="https://i.imgur.com/WZbXSO2.png" width=25%>
 FIL  is an importer tool for several launchers/frontends that allows one to add platforms and playlists from [BlueMaxima's Flashpoint](https://bluemaxima.org/flashpoint/) project to their collection. It is fully automated and only requires the user to provide the paths to their launcher and Flashpoint installs, choose which Platforms/Playlists they wish to import, and select between a few import mode options. Once the import is started the current progress is displayed and any errors that occur are shown to the user, with resolvable errors including a prompt for what the user would like to do. After the process has completed, the specified launcher can be started and the games from Flashpoint can be played like those from any other Platform.
 
@@ -40,8 +40,9 @@ The title of each [release](github.com/oblivioncth/FIL/releases) will indicate w
 
 ### Metadata Fields
 
-Currently the following fields in LaunchBox will be populated for each game, which is limited by what is available within Flashpoint:
+Currently the following fields will be populated for each game, which is limited by what is available within Flashpoint:
 
+**LaunchBox:**
 - Title
 - Series
 - Developer
