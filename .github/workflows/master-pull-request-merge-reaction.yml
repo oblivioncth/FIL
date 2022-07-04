@@ -7,7 +7,7 @@ on:
 env:
   ci_bot_username: ObyBotCI
   ci_bot_email: 104651589+ObyBotCI@users.noreply.github.com
-  ofilb_qts_win_artifact_path: ${{ github.workspace }}/OFILbQtSWin
+  fil_qts_win_artifact_path: ${{ github.workspace }}/FILQtSWin
   
 jobs:
   tag_master_and_sync_dev:
@@ -41,7 +41,7 @@ jobs:
     - name: Tag master with new version tag
       id: tag_master
       env:
-        match_start: set\(OFILB_BASE_VERSION
+        match_start: set\(FIL_BASE_VERSION
         match_end: \)
       run: |
         $project_lists = Get-Content -Raw CMakeLists.txt
@@ -72,7 +72,7 @@ jobs:
         git merge master --ff-only
         git push
   
-  build_ofilb_release_windows:
+  build_fil_release_windows:
     name: Build FIL Release (Windows)
     needs: tag_master_and_sync_dev
     if: github.event.pull_request.merged == true
@@ -82,21 +82,21 @@ jobs:
 
   create-release:
     name: Create GitHub release
-    needs: [build_ofilb_release_windows, tag_master_and_sync_dev]
+    needs: [build_fil_release_windows, tag_master_and_sync_dev]
     if: github.event.pull_request.merged == true
     runs-on: windows-latest
     steps:
     - name: Set release artifact names
       run: |
-        echo "release_qts_win_package_name=${{ needs.build_ofilb_release_windows.outputs.qt_static_artifact_name }}" >> $Env:GITHUB_ENV
+        echo "release_qts_win_package_name=${{ needs.build_fil_release_windows.outputs.qt_static_artifact_name }}" >> $Env:GITHUB_ENV
     - name: Download built static FIL artifact (Windows)
       uses: actions/download-artifact@v3
       with:
         name: ${{ env.release_qts_win_package_name }}
-        path: ${{ env.ofilb_qts_win_artifact_path }}
+        path: ${{ env.fil_qts_win_artifact_path }}
     - name: Zip up release artifacts
       run: |
-        7z a "${{ env.release_qts_win_package_name }}.zip" "${{ env.ofilb_qts_win_artifact_path }}/*"
+        7z a "${{ env.release_qts_win_package_name }}.zip" "${{ env.fil_qts_win_artifact_path }}/*"
     - name: Generate release
       uses: softprops/action-gh-release@v1
       with:
