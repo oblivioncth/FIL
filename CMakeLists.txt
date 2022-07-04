@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.21.1)
 
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
-set(FIL_BASE_VERSION 0.4.1.3) # Required for CI/CD
+set(FIL_BASE_VERSION 0.5) # Required for CI/CD
 project(FIL
     VERSION ${FIL_BASE_VERSION}
     LANGUAGES CXX
@@ -91,15 +91,15 @@ add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 
 # Fetch Qx (build and import from source)
 include(FIL/FetchQx)
-fetch_qx(6ca6c96ce49de2adfd7461b4be621e8b291a875b) # dev commit
+fetch_qx("v0.3.0.3")
 
 # Fetch libfp (build and import from source)
 include(FIL/Fetchlibfp)
-fetch_libfp(279974f05ef81ef3c6b277f2717ca70e4b78c425)
+fetch_libfp("v0.1")
 
 # Fetch CLIFp (build and import from source)
 include(FIL/FetchCLIFp)
-fetch_clifp(1a4caceb9a98ba975fed7ea1cf9eb7f5bd3419ef) # dev commit
+fetch_clifp("v0.8.1")
 
 # Setup copy of CLIFp executable to FIL generated resources directory after its built
 # ...

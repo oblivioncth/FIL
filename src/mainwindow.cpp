@@ -29,6 +29,13 @@
 #include "project_vars.h"
 #include "clifp.h"
 
+/* TODO: Consider having this tool deploy a .ini file (or the like) into the target launcher install
+ * (with the exact location probably being guided by the specific Install child) that saves the settings
+ * used for the import, so that they can be loaded again when that install is targeted by future versions
+ * of the tool. Would have to account for an initial import vs update (likely just leaving the update settings
+ * blank). Wouldn't be a huge difference but could be a nice little time saver.
+ */
+
 //===============================================================================================================
 // MAIN WINDOW
 //===============================================================================================================
