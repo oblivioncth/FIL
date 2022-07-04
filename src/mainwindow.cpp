@@ -1,8 +1,12 @@
+// Standard Library Includes
+#include <assert.h>
+#include <filesystem>
+
+// Qt Includes
 #include <QSet>
 #include <QFile>
 #include <QFileDialog>
 #include <QtXml>
-#include <assert.h>
 #include <QFileInfo>
 #include <QPushButton>
 #include <QLineEdit>
@@ -10,25 +14,38 @@
 #include <QDesktopServices>
 #include <QUrl>
 #include <QShowEvent>
-#include <filesystem>
+
+// Qx Includes
+#include <qx/gui/qx-color.h>
+#include <qx/widgets/qx-common-widgets.h>
+#include <qx/widgets/qx-treeinputdialog.h>
+#include <qx/widgets/qx-logindialog.h>
+#include <qx/windows/qx-filedetails.h>
+#include <qx/windows/qx-common-windows.h>
+
+// Project Includes
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "version.h"
+#include "project_vars.h"
 #include "clifp.h"
-#include "qx-windows.h"
-
 
 //===============================================================================================================
 // MAIN WINDOW
 //===============================================================================================================
 
 //-Constructor---------------------------------------------------------------------------------------------------
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
+MainWindow::MainWindow(QWidget *parent) :
+    QMainWindow(parent),
+    ui(new Ui::MainWindow)
 {
-    // Register metatypes
-    qRegisterMetaType<ImportWorker::ImportResult>("ImportResult");
-    qRegisterMetaType<Qx::GenericError>("GenericError)");
-    qRegisterMetaType<std::shared_ptr<int>>("shared_ptr<int>");
+    /*Register metatypes
+     * NOTE: Qt docs note these should be needed, as always, but since Qt6 signals/slots with these types seem to
+     * work fine without the following calls.
+     * See https://forum.qt.io/topic/136627/undocumented-automatic-metatype-registration-in-qt6
+     */
+    //qRegisterMetaType<ImportWorker::ImportResult>();
+    //qRegisterMetaType<Qx::GenericError>();
+    //qRegisterMetaType<std::shared_ptr<int>>();
 
     // Get built-in CLIFp version
     QTemporaryDir tempDir;
@@ -36,8 +53,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     {
         // Create local copy of internal CLIFp.exe since internal path cannot be used with WinAPI
         QString localCopyPath = tempDir.path() + '/' + CLIFp::EXE_NAME;
-        if(QFile::copy(":/res/file/" + CLIFp::EXE_NAME, localCopyPath))
-            mInternalCLIFpVersion = Qx::getFileDetails(localCopyPath).getFileVersion();
+        if(QFile::copy(":/file/" + CLIFp::EXE_NAME, localCopyPath))
+            mInternalCLIFpVersion = Qx::FileDetails::readFileDetails(localCopyPath).fileVersion();
     }
 
     // Abort if no version could be determined
@@ -50,18 +67,15 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     // General setup
     ui->setupUi(this);
-    QApplication::setApplicationName(VER_PRODUCTNAME_STR);
+    QApplication::setApplicationName(PROJECT_FULL_NAME);
     mHasLinkPermissions = testForLinkPermissions();
-    setWindowTitle(VER_PRODUCTNAME_STR);
+    setWindowTitle(PROJECT_FULL_NAME);
     initializeEnableConditionMaps();
     initializeForms();
-
-    // Setup UI update workaround timer
-    //mUIUpdateWorkaroundTimer.setInterval(IMPORT_UI_UPD_INTERVAL);
-    //connect(&mUIUpdateWorkaroundTimer, &QTimer::timeout, this, &MainWindow::updateUI); // Process events at minimum rate
+    initializeFrontendHelpActions();
 
     // Check if Flashpoint is running
-    if(Qx::processIsRunning(QFileInfo(FP::Install::LAUNCHER_PATH).fileName()))
+    if(Qx::processIsRunning(QFileInfo(Fp::Install::LAUNCHER_PATH).fileName()))
         QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_CLOSE_PROMPT);
 
     mInitCompleted = true;
@@ -103,7 +117,7 @@ void MainWindow::initializeForms()
     mExistingItemColor = ui->label_existingItemColor->palette().color(QPalette::Window);
 
     // Add CLIFp version to deploy option
-    ui->action_deployCLIFp->setText(ui->action_deployCLIFp->text() +  " " + mInternalCLIFpVersion.toString(Qx::MMRB::StringFormat::NoTrailRBZero));
+    ui->action_deployCLIFp->setText(ui->action_deployCLIFp->text() +  " " + mInternalCLIFpVersion.normalized(2).toString());
 
     // Prepare help messages
     mArgedPlaylistGameModeHelp = MSG_PLAYLIST_GAME_MODE_HELP.arg(ui->radioButton_selectedPlatformsOnly->text(),
@@ -119,130 +133,135 @@ void MainWindow::initializeForms()
                                                    ui->radioButton_link->text());
 
     // Setup main forms
-    ui->radioButton_link->setEnabled(mHasLinkPermissions);
-    ui->radioButton_link->setChecked(mHasLinkPermissions);
+    ui->label_flashpointVersion->clear();
+    ui->label_frontendVersion->clear();
+
+    // If no link permissions, inform user
     if(!mHasLinkPermissions)
         ui->radioButton_link->setText(ui->radioButton_link->text().append(REQUIRE_ELEV));
-    ui->radioButton_reference->setChecked(!mHasLinkPermissions);
-    refreshEnableStates();
 
-    // TODO: THIS IS FOR DEBUG PURPOSES
+    // Perform standard widget updates
+    refreshEnableStates();
+    refreshCheckStates();
+
+    // NOTE: THIS IS FOR DEBUG PURPOSES
     //checkLaunchBoxInput("C:/Users/Player/Desktop/LBTest/LaunchBox");
     //checkFlashpointInput("D:/FP/Flashpoint 8.1 Ultimate");
 }
 
 void MainWindow::initializeEnableConditionMaps()
 {
-    // Populate hashmap of widget element enable conditions
-    mWidgetEnableConditionMap[ui->groupBox_importSelection] = [&](){ return mLaunchBoxInstall && mFlashpointInstall; };
+    /* TODO: When Qt6 ports built-in widgets to use the C++ bindable properties system, it
+     * would be great to convert this approach to using those instead, though this gets
+     * tricky when checking for things that aren't easy to make a QProperty, such as when
+     * checking for if the Install pointers are assigned
+     */
+
+    // Populate hash-map of widget element enable conditions
+    mWidgetEnableConditionMap[ui->groupBox_importSelection] = [&](){ return mFrontendInstall && mFlashpointInstall; };
     mWidgetEnableConditionMap[ui->groupBox_playlistGameMode] = [&](){ return getSelectedPlaylists().count() > 0; };
     mWidgetEnableConditionMap[ui->groupBox_updateMode] = [&](){
         return isExistingPlatformSelected() || isExistingPlaylistSelected() ||
-               (getSelectedPlaylistGameMode() ==  LB::Install::ForceAll && mLaunchBoxInstall->getExistingPlatforms().count() > 0);
+               (getSelectedPlaylistGameMode() ==  ImportWorker::ForceAll && mFrontendInstall->getExistingPlatforms().count() > 0);
     };
-    mWidgetEnableConditionMap[ui->groupBox_imageMode] = [&](){ return mLaunchBoxInstall && mFlashpointInstall; };
-    mWidgetEnableConditionMap[ui->pushButton_startImport] = [&](){ return getSelectedPlatforms().count() > 0 ||
-                                                                          (getSelectedPlaylistGameMode() == LB::Install::ForceAll && getSelectedPlaylists().count() > 0); };
+    mWidgetEnableConditionMap[ui->groupBox_imageMode] = [&](){ return mFrontendInstall && mFlashpointInstall; };
 
-    // Populate hashmap of action element enable conditions
-    mActionEnableConditionMap[ui->action_editTagFilter] = [&](){ return mLaunchBoxInstall && mFlashpointInstall; };
+    mWidgetEnableConditionMap[ui->radioButton_reference] = [&](){
+        return mFrontendInstall && mFlashpointInstall && mFrontendInstall->supportsImageMode(Fe::Install::ImageMode::Reference);
+    };
+    mWidgetEnableConditionMap[ui->radioButton_link] = [&](){
+        return mHasLinkPermissions && mFrontendInstall && mFlashpointInstall && mFrontendInstall->supportsImageMode(Fe::Install::ImageMode::Link);
+    };
+    mWidgetEnableConditionMap[ui->radioButton_reference] = [&](){
+        return mFrontendInstall && mFlashpointInstall && mFrontendInstall->supportsImageMode(Fe::Install::ImageMode::Copy);
+    };
+
+    mWidgetEnableConditionMap[ui->pushButton_startImport] = [&](){ return getSelectedPlatforms().count() > 0 ||
+                                                                          (getSelectedPlaylistGameMode() == ImportWorker::ForceAll && getSelectedPlaylists().count() > 0); };
+
+    // Populate hash-map of action element enable conditions
+    mActionEnableConditionMap[ui->action_forceDownloadImages] = [&](){ return mFlashpointInstall && mFlashpointInstall->preferences().onDemandImages; };
+    mActionEnableConditionMap[ui->action_editTagFilter] = [&](){ return mFrontendInstall && mFlashpointInstall; };
 }
 
-bool MainWindow::installMatchesTargetVersion(const FP::Install& fpInstall)
+void MainWindow::initializeFrontendHelpActions()
 {
-    QString hash = fpInstall.launcherChecksum();
-    QString ver = fpInstall.versionString();
+    // Add install help link for each registered install
+    auto i = Fe::Install::registry().cbegin();
+    auto end = Fe::Install::registry().cend();
 
-    // Check for ultimate
-    if(hash == TARGET_ULT_LAUNCHER_SHA256 && ver == TARGET_ULT_VER_STRING)
-        return true;
-    else if(hash == TARGET_INF_LAUNCHER_SHA256 && ver == TARGET_INF_VER_STRING) // Check for infinity
-        return true;
-    else
-        return false;
+    for(; i != end; i++)
+    {
+        QAction* feHelpAction = new QAction(ui->menu_frontendHelp);
+        feHelpAction->setObjectName(MENU_FE_HELP_OBJ_NAME_TEMPLATE.arg(i.key()));
+        feHelpAction->setText(i.key());
+        feHelpAction->setIcon(QIcon(*(i->iconPath)));
+        ui->menu_frontendHelp->addAction(feHelpAction);
+    }
+}
+
+bool MainWindow::installMatchesTargetSeries(const Fp::Install& fpInstall)
+{
+    Qx::VersionNumber fpVersion = fpInstall.version();
+    return TARGET_FP_VERSION_PREFIX.isPrefixOf(fpVersion);
 }
 
 void MainWindow::checkManualInstallInput(Install install)
 {
-    QLineEdit* pathSource;
-    QLabel* installStatusIcon;
-
-    switch(install)
-    {
-        case Install::LaunchBox:
-            mLaunchBoxInstall.reset(); // Detach from previous install if present
-            pathSource = ui->lineEdit_launchBoxPath;
-            installStatusIcon = ui->icon_launchBox_install_status;
-            break;
-
-        case Install::Flashpoint:
-            mFlashpointInstall.reset(); // Detach from previous install if present
-            pathSource = ui->lineEdit_flashpointPath;
-            installStatusIcon = ui->icon_flashpoint_install_status;
-            break;
-    }
+    QLineEdit* pathSource = install == Install::Frontend ?
+                            ui->lineEdit_frontendPath :
+                            ui->lineEdit_flashpointPath;
 
     QDir selectedDir = QDir::cleanPath(QDir::fromNativeSeparators(pathSource->text()));
     if(!pathSource->text().isEmpty() && selectedDir.exists())
         validateInstall(selectedDir.absolutePath(), install);
     else
-    {
-        installStatusIcon->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-        clearListWidgets();
-        mTagSelectionModel.reset(); // Void tag selection model
-        refreshEnableStates();
-    }
+        invalidateInstall(install, false);
 }
 
 void MainWindow::validateInstall(QString installPath, Install install)
 {
     switch(install)
     {
-        case Install::LaunchBox:
-            mLaunchBoxInstall = std::make_shared<LB::Install>(installPath);
-            if(mLaunchBoxInstall->isValid())
-                ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
-            else
+        case Install::Frontend:
+            mFrontendInstall = Fe::Install::acquireMatch(installPath);
+            if(mFrontendInstall)
             {
-                ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-                clearListWidgets();
-                mTagSelectionModel.reset(); // Void tag selection model
-                refreshEnableStates();
-                QMessageBox::critical(this, QApplication::applicationName(), MSG_LB_INSTALL_INVALID);
+                ui->icon_frontend_install_status->setPixmap(QPixmap(":/icon/Valid_Install.png"));
+                ui->label_frontendVersion->setText(mFrontendInstall->name() + " " + mFrontendInstall->versionString());
             }
+            else
+                invalidateInstall(install, true);
             break;
 
         case Install::Flashpoint:
-            mFlashpointInstall = std::make_shared<FP::Install>(installPath);
+            mFlashpointInstall = std::make_shared<Fp::Install>(installPath);
             if(mFlashpointInstall->isValid())
             {
-                if(installMatchesTargetVersion(*mFlashpointInstall))
-                    ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Valid_Install.png"));
+                ui->label_flashpointVersion->setText(mFlashpointInstall->nameVersionString());
+                if(installMatchesTargetSeries(*mFlashpointInstall))
+                    ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/icon/Valid_Install.png"));
                 else
                 {
-                    ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Mismatch_Install.png"));
+                    ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/icon/Mismatch_Install.png"));
                     QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_VER_NOT_TARGET);
                 }
             }
             else
-            {
-                ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-                clearListWidgets();
-                mTagSelectionModel.reset(); // Void tag selection model
-                refreshEnableStates();
-                postGenericError(mFlashpointInstall->error(), QMessageBox::Ok);
-            }
+                invalidateInstall(install, true);
             break;
     }
 
-    if(mLaunchBoxInstall && mFlashpointInstall)
+    refreshEnableStates();
+
+    if(mFrontendInstall && mFlashpointInstall)
         gatherInstallInfo();
 }
 
 void MainWindow::gatherInstallInfo()
 {
     // Get data in order but only continue if each step is successful
-    if(parseLaunchBoxData())
+    if(parseFrontendData())
     {
         // Show selection options
         populateImportSelectionBoxes();
@@ -250,17 +269,14 @@ void MainWindow::gatherInstallInfo()
         // Generate tab selection model
         generateTagSelectionOptions();
 
+        // Ensure valid image mode
+        refreshCheckStates();
+
         // Advance to next input stage
         refreshEnableStates();
     }
     else
-    {
-        mLaunchBoxInstall.reset();
-        ui->icon_launchBox_install_status->setPixmap(QPixmap(":/res/icon/Invalid_Install.png"));
-        clearListWidgets();
-        mTagSelectionModel.reset(); // Void tag selection model
-        refreshEnableStates();
-    }
+        invalidateInstall(Install::Frontend, false);
 }
 
 void MainWindow::populateImportSelectionBoxes()
@@ -279,7 +295,7 @@ void MainWindow::populateImportSelectionBoxes()
         currentItem->setFlags(currentItem->flags() | Qt::ItemIsUserCheckable);
         currentItem->setCheckState(Qt::Unchecked);
 
-        if(mLaunchBoxInstall->getExistingPlatforms().contains(currentItem->text()))
+        if(mFrontendInstall->getExistingPlatforms().contains(currentItem->text()))
             currentItem->setBackground(QBrush(mExistingItemColor));
     }
 
@@ -289,13 +305,9 @@ void MainWindow::populateImportSelectionBoxes()
         currentItem->setFlags(currentItem->flags() | Qt::ItemIsUserCheckable);
         currentItem->setCheckState(Qt::Unchecked);
 
-        if(mLaunchBoxInstall->getExistingPlaylists().contains(currentItem->text()))
+        if(mFrontendInstall->getExistingPlaylists().contains(currentItem->text()))
             currentItem->setBackground(QBrush(mExistingItemColor));
     }
-
-    // Disable update mode box and import start button since no items will be selected after this operation
-    ui->groupBox_updateMode->setEnabled(false);
-    ui->pushButton_startImport->setEnabled(false);
 }
 
 void MainWindow::generateTagSelectionOptions()
@@ -303,27 +315,27 @@ void MainWindow::generateTagSelectionOptions()
     // Ensure old options are dropped
     mTagSelectionModel.reset();
 
-    // Get tag hiearchy
-    QMap<int, FP::DB::TagCategory> tagMap = mFlashpointInstall->database()->tags();
+    // Get tag hierarchy
+    QMap<int, Fp::Db::TagCategory> tagMap = mFlashpointInstall->database()->tags();
 
     // Create new model
-    mTagSelectionModel = std::make_unique<Qx::StandardItemModelX>();
+    mTagSelectionModel = std::make_unique<Qx::StandardItemModel>();
     mTagSelectionModel->setAutoTristate(true);
     mTagSelectionModel->setSortRole(Qt::DisplayRole);
 
     // Populate model
     QStandardItem* modelRoot = mTagSelectionModel->invisibleRootItem();
-    QMap<int, FP::DB::TagCategory>::const_iterator i;
+    QMap<int, Fp::Db::TagCategory>::const_iterator i;
 
     // Add root tag categories
     for(i = tagMap.constBegin(); i != tagMap.constEnd(); ++i)
     {
         QStandardItem* rootItem = new QStandardItem(QString(i->name));
         rootItem->setData(QBrush(i->color), Qt::BackgroundRole);
-        rootItem->setData(QBrush(Qx::Color::textColorFromBackgroundColor(i->color)), Qt::ForegroundRole);
+        rootItem->setData(QBrush(Qx::Color::textFromBackground(i->color)), Qt::ForegroundRole);
         rootItem->setCheckState(Qt::CheckState::Checked);
         rootItem->setCheckable(true);
-        QMap<int, FP::DB::Tag>::const_iterator j;
+        QMap<int, Fp::Db::Tag>::const_iterator j;
 
         // Add child tags
         for(j = i->tags.constBegin(); j != i->tags.constEnd(); ++j)
@@ -343,34 +355,34 @@ void MainWindow::generateTagSelectionOptions()
     mTagSelectionModel->sort(0);
 }
 
-bool MainWindow::parseLaunchBoxData()
+bool MainWindow::parseFrontendData()
 {
     // IO Error check instance
-    Qx::IOOpReport existingCheck;
+    Qx::GenericError existingCheck;
 
     // Get list of existing platforms and playlists
-    existingCheck = mLaunchBoxInstall->populateExistingDocs(mFlashpointInstall->database()->platformList(), mFlashpointInstall->database()->playlistList());
+    existingCheck = mFrontendInstall->populateExistingDocs(mFlashpointInstall->database()->platformList(), mFlashpointInstall->database()->playlistList());
 
     // IO Error Check
-    if(!existingCheck.wasSuccessful())
-        postIOError(MSG_LB_XML_UNEXPECTED_ERROR, existingCheck);
+    if(existingCheck.isValid())
+        Qx::postError(existingCheck);
 
     // Return true on success
-    return existingCheck.wasSuccessful();
+    return !existingCheck.isValid();
 }
 
 bool MainWindow::installsHaveChanged()
 {
     // TODO: Make this check more thorough
 
-    // Check LB existing items
-    QSet<QString> currentPlatforms = mLaunchBoxInstall->getExistingPlatforms();
-    QSet<QString> currentPlaylists = mLaunchBoxInstall->getExistingPlaylists();
+    // Check frontend existing items
+    QSet<QString> currentPlatforms = mFrontendInstall->getExistingPlatforms();
+    QSet<QString> currentPlaylists = mFrontendInstall->getExistingPlaylists();
 
-    if(!mLaunchBoxInstall->populateExistingDocs(mFlashpointInstall->database()->platformList(), mFlashpointInstall->database()->playlistList()).wasSuccessful())
+    if(mFrontendInstall->populateExistingDocs(mFlashpointInstall->database()->platformList(), mFlashpointInstall->database()->playlistList()).isValid())
         return true;
 
-    if(currentPlatforms != mLaunchBoxInstall->getExistingPlatforms() || currentPlaylists != mLaunchBoxInstall->getExistingPlaylists())
+    if(currentPlatforms != mFrontendInstall->getExistingPlatforms() || currentPlaylists != mFrontendInstall->getExistingPlaylists())
         return true;
 
     return false;
@@ -378,13 +390,36 @@ bool MainWindow::installsHaveChanged()
 
 void MainWindow::redoInputChecks()
 {
-    // Get existing locations
-    QString launchBoxPath = mLaunchBoxInstall->getPath();
-    QString flashpointPath = mFlashpointInstall->fullPath();
+    // Check existing locations again
+    validateInstall(mFrontendInstall->getPath(), Install::Frontend);
+    validateInstall(mFlashpointInstall->fullPath(), Install::Flashpoint);
+}
 
-    // Check them again
-    validateInstall(launchBoxPath, Install::LaunchBox);
-    validateInstall(flashpointPath, Install::Flashpoint);
+void MainWindow::invalidateInstall(Install install, bool informUser)
+{
+    clearListWidgets();
+    mTagSelectionModel.reset(); // Void tag selection model
+
+    switch(install)
+    {
+        case Install::Frontend:
+            ui->icon_frontend_install_status->setPixmap(QPixmap(":/icon/Invalid_Install.png"));
+            ui->label_frontendVersion->clear();
+            if(informUser)
+                QMessageBox::critical(this, QApplication::applicationName(), MSG_FE_INSTALL_INVALID);
+            mFrontendInstall.reset();
+            break;
+
+        case Install::Flashpoint:
+            ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/icon/Invalid_Install.png"));
+            ui->label_flashpointVersion->clear();
+            if(informUser)
+                Qx::postError(mFlashpointInstall->error(), QMessageBox::Ok);
+            mFlashpointInstall.reset();
+            break;
+    }
+
+    refreshEnableStates();
 }
 
 void MainWindow::clearListWidgets()
@@ -401,7 +436,7 @@ bool MainWindow::isExistingPlatformSelected()
     for(int i = 0; i < ui->listWidget_platformChoices->count(); i++)
     {
         if(ui->listWidget_platformChoices->item(i)->checkState() == Qt::Checked &&
-           mLaunchBoxInstall->getExistingPlatforms().contains(ui->listWidget_platformChoices->item(i)->text()))
+           mFrontendInstall->getExistingPlatforms().contains(ui->listWidget_platformChoices->item(i)->text()))
             return true;
     }
 
@@ -415,7 +450,7 @@ bool MainWindow::isExistingPlaylistSelected()
     for(int i = 0; i < ui->listWidget_playlistChoices->count(); i++)
     {
         if(ui->listWidget_playlistChoices->item(i)->checkState() == Qt::Checked &&
-           mLaunchBoxInstall->getExistingPlaylists().contains(ui->listWidget_playlistChoices->item(i)->text()))
+           mFrontendInstall->getExistingPlaylists().contains(ui->listWidget_playlistChoices->item(i)->text()))
             return true;
     }
 
@@ -445,33 +480,15 @@ void MainWindow::postListError(QString mainText, QStringList detailedItems)
     listError.exec();
 }
 
-void MainWindow::postIOError(QString mainText, Qx::IOOpReport report)
+void MainWindow::postIOError(QString mainText, Qx::IoOpReport report)
 {
     QMessageBox ioErrorMsg;
     ioErrorMsg.setIcon(QMessageBox::Critical);
     ioErrorMsg.setText(mainText);
-    ioErrorMsg.setInformativeText(report.getOutcome());
+    ioErrorMsg.setInformativeText(report.outcome());
     ioErrorMsg.setStandardButtons(QMessageBox::Ok);
 
     ioErrorMsg.exec();
-}
-
-int MainWindow::postGenericError(Qx::GenericError error, QMessageBox::StandardButtons choices)
-{
-    // Prepare dialog
-    QMessageBox genericErrorMessage;
-    if(!error.caption().isEmpty())
-        genericErrorMessage.setWindowTitle(error.caption());
-    if(!error.primaryInfo().isEmpty())
-        genericErrorMessage.setText(error.primaryInfo());
-    if(!error.secondaryInfo().isEmpty())
-        genericErrorMessage.setInformativeText(error.secondaryInfo());
-    if(!error.detailedInfo().isEmpty())
-        genericErrorMessage.setDetailedText(error.detailedInfo());
-    genericErrorMessage.setStandardButtons(choices);
-    genericErrorMessage.setIcon(error.errorLevel() == Qx::GenericError::Warning ? QMessageBox::Warning : QMessageBox::Critical);
-
-    return genericErrorMessage.exec();
 }
 
 void MainWindow::refreshEnableStates()
@@ -483,6 +500,38 @@ void MainWindow::refreshEnableStates()
     QHash<QAction*, std::function<bool(void)>>::const_iterator j;
     for(j = mActionEnableConditionMap.constBegin(); j != mActionEnableConditionMap.constEnd(); j++)
         j.key()->setEnabled(j.value()());
+}
+
+void MainWindow::refreshCheckStates()
+{
+    // Move image mode selection to next preferred option if the current one is invalid
+    // (if there is no front end install yet, assume all modes are otherwise valid)
+    QList<Fe::Install::ImageMode> validModes;
+
+    if(mHasLinkPermissions && (!mFrontendInstall || mFrontendInstall->supportsImageMode(Fe::Install::ImageMode::Link)))
+            validModes.append(Fe::Install::ImageMode::Link);
+    if(!mFrontendInstall || mFrontendInstall->supportsImageMode(Fe::Install::ImageMode::Reference))
+            validModes.append(Fe::Install::ImageMode::Reference);
+    if(!mFrontendInstall || mFrontendInstall->supportsImageMode(Fe::Install::ImageMode::Copy))
+            validModes.append(Fe::Install::ImageMode::Copy);
+
+    Fe::Install::ImageMode im = getSelectedImageMode();
+
+    if(!validModes.contains(im))
+    {
+        if(validModes.contains(Fe::Install::ImageMode::Link))
+            ui->radioButton_link->setChecked(true);
+        else if(validModes.contains(Fe::Install::ImageMode::Reference))
+            ui->radioButton_reference->setChecked(true);
+        else if(validModes.contains(Fe::Install::ImageMode::Copy))
+            ui->radioButton_copy->setChecked(true);
+        else
+            throw std::runtime_error("At least one image import mode must be available!");
+    }
+
+    // Ensure that the force download images option is unchecked if not supported
+    if(ui->action_forceDownloadImages->isChecked() && mFlashpointInstall && !mFlashpointInstall->preferences().onDemandImages)
+        ui->action_forceDownloadImages->setChecked(false);
 }
 
 QStringList MainWindow::getSelectedPlatforms() const
@@ -507,24 +556,29 @@ QStringList MainWindow::getSelectedPlaylists() const
     return selectedPlaylists;
 }
 
-FP::DB::InclusionOptions MainWindow::getSelectedInclusionOptions() const
+Fp::Db::InclusionOptions MainWindow::getSelectedInclusionOptions() const
 {
     return {generateTagExlusionSet(), ui->action_includeAnimations->isChecked()};
 }
 
-LB::UpdateOptions MainWindow::getSelectedUpdateOptions() const
+Fe::UpdateOptions MainWindow::getSelectedUpdateOptions() const
 {
-    return {ui->radioButton_onlyAdd->isChecked() ? LB::OnlyNew : LB::NewAndExisting, ui->checkBox_removeMissing->isChecked() };
+    return {ui->radioButton_onlyAdd->isChecked() ? Fe::ImportMode::OnlyNew : Fe::ImportMode::NewAndExisting, ui->checkBox_removeMissing->isChecked() };
 }
 
-LB::Install::ImageMode MainWindow::getSelectedImageMode() const
+Fe::Install::ImageMode MainWindow::getSelectedImageMode() const
 {
-    return ui->radioButton_copy->isChecked() ? LB::Install::Copy : ui->radioButton_reference->isChecked() ? LB::Install::Reference : LB::Install::Link;
+    return ui->radioButton_copy->isChecked() ? Fe::Install::Copy : ui->radioButton_reference->isChecked() ? Fe::Install::Reference : Fe::Install::Link;
 }
 
-LB::Install::PlaylistGameMode MainWindow::getSelectedPlaylistGameMode() const
+ImportWorker::PlaylistGameMode MainWindow::getSelectedPlaylistGameMode() const
 {
-    return ui->radioButton_selectedPlatformsOnly->isChecked() ? LB::Install::SelectedPlatform : LB::Install::ForceAll;
+    return ui->radioButton_selectedPlatformsOnly->isChecked() ? ImportWorker::SelectedPlatform : ImportWorker::ForceAll;
+}
+
+bool MainWindow::getForceDownloadImages() const
+{
+    return ui->action_forceDownloadImages->isChecked();
 }
 
 void MainWindow::prepareImport()
@@ -541,27 +595,27 @@ void MainWindow::prepareImport()
     QStringList selPlatforms = getSelectedPlatforms();
     QStringList selPlaylists = getSelectedPlaylists();
 
-    if(mLaunchBoxInstall->getExistingPlatforms().intersects(QSet<QString>(selPlatforms.begin(), selPlatforms.end())) ||
-       mLaunchBoxInstall->getExistingPlaylists().intersects(QSet<QString>(selPlaylists.begin(), selPlaylists.end())) ||
-       (getSelectedPlaylistGameMode() == LB::Install::ForceAll && mLaunchBoxInstall->getExistingPlatforms().count() > 0))
+    if(mFrontendInstall->getExistingPlatforms().intersects(QSet<QString>(selPlatforms.begin(), selPlatforms.end())) ||
+       mFrontendInstall->getExistingPlaylists().intersects(QSet<QString>(selPlaylists.begin(), selPlaylists.end())) ||
+       (getSelectedPlaylistGameMode() == ImportWorker::ForceAll && mFrontendInstall->getExistingPlatforms().count() > 0))
         if(QMessageBox::warning(this, QApplication::applicationName(), MSG_PRE_EXISTING_IMPORT, QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel) == QMessageBox::Cancel)
             return;
 
     // Warn user if Flashpoint is running
     // Check if Flashpoint is running
-    if(Qx::processIsRunning(QFileInfo(FP::Install::LAUNCHER_PATH).fileName()))
+    if(Qx::processIsRunning(QFileInfo(Fp::Install::LAUNCHER_PATH).fileName()))
         QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_CLOSE_PROMPT);
 
-    // Only allow proceeding if LB isn't running
-    bool lbRunning;
-    while((lbRunning = Qx::processIsRunning(LB::Install::MAIN_EXE_PATH)))
-        if(QMessageBox::critical(this, QApplication::applicationName(), MSG_LB_CLOSE_PROMPT, QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Retry) == QMessageBox::Cancel)
+    // Only allow proceeding if frontend isn't running
+    bool feRunning;
+    while((feRunning = Qx::processIsRunning(mFrontendInstall->executablePath())))
+        if(QMessageBox::critical(this, QApplication::applicationName(), MSG_FRONTEND_CLOSE_PROMPT, QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Retry) == QMessageBox::Cancel)
             break;
 
-    if(!lbRunning)
+    if(!feRunning)
     {
         // Create progress dialog, set initial state and show
-        mImportProgressDialog = std::make_unique<QProgressDialog>(STEP_FP_DB_INITIAL_QUERY, "Cancel", 0, 10000, this); // Arbitrarily high maximum so initial percentage is 0
+        mImportProgressDialog = std::make_unique<QProgressDialog>(STEP_FP_DB_INITIAL_QUERY, "Cancel", 0, 0, this);
         mImportProgressDialog->setWindowTitle(CAPTION_IMPORTING);
         mImportProgressDialog->setWindowModality(Qt::WindowModal);
         mImportProgressDialog->setWindowFlags(mImportProgressDialog->windowFlags() & ~Qt::WindowContextHelpButtonHint);
@@ -570,41 +624,42 @@ void MainWindow::prepareImport()
         mImportProgressDialog->setMinimumDuration(0); // Always show pd
         mImportProgressDialog->setValue(0); // Get pd to show
 
-        // Get taskbar progress indicator and set it up  TODO: Remove for Qt6
-        QWinTaskbarProgress* tbProgress = mWindowTaskbarButton->progress();
-        tbProgress->setMinimum(0);
-        tbProgress->setMaximum(10000); // Arbitrarily high maximum so initial percentage is 0
-        tbProgress->setValue(0);
-        tbProgress->resume(); // Ensure possible previous errors are cleared
-        tbProgress->setVisible(true);
+        // Setup taskbar button progress indicator
+        mWindowTaskbarButton->setProgressMinimum(0);
+        mWindowTaskbarButton->setProgressMaximum(0);
+        mWindowTaskbarButton->setProgressValue(0);
+        mWindowTaskbarButton->setProgressState(Qx::TaskbarButton::Busy);
 
         // Force show progress immediately
         QApplication::processEvents();
 
         // Setup import worker
-        ImportWorker importWorker(mFlashpointInstall, mLaunchBoxInstall,
-                                  {selPlatforms, selPlaylists},
-                                  {getSelectedUpdateOptions(), getSelectedImageMode(), getSelectedPlaylistGameMode(), getSelectedInclusionOptions()});
+        ImportWorker::ImportSelections impSel{selPlatforms, selPlaylists};
+        ImportWorker::OptionSet optSet{
+            getSelectedUpdateOptions(),
+            getSelectedImageMode(),
+            getForceDownloadImages(),
+            getSelectedPlaylistGameMode(),
+            getSelectedInclusionOptions()
+        };
+        ImportWorker importWorker(mFlashpointInstall, mFrontendInstall, impSel, optSet);
 
         // Setup blocking error connection
         connect(&importWorker, &ImportWorker::blockingErrorOccured, this, &MainWindow::handleBlockingError);
 
+        // Setup auth handler
+        connect(&importWorker, &ImportWorker::authenticationRequired, this, &MainWindow::handleAuthRequest);
+
         // Create process update connections
         connect(&importWorker, &ImportWorker::progressStepChanged, mImportProgressDialog.get(), &QProgressDialog::setLabelText);
         connect(&importWorker, &ImportWorker::progressMaximumChanged, mImportProgressDialog.get(), &QProgressDialog::setMaximum);
-        connect(&importWorker, &ImportWorker::progressMaximumChanged, tbProgress, &QWinTaskbarProgress::setMaximum);
+        connect(&importWorker, &ImportWorker::progressMaximumChanged, mWindowTaskbarButton, &Qx::TaskbarButton::setProgressMaximum);
         connect(&importWorker, &ImportWorker::progressValueChanged, mImportProgressDialog.get(), &QProgressDialog::setValue);
-        connect(&importWorker, &ImportWorker::progressValueChanged, tbProgress, &QWinTaskbarProgress::setValue);
+        connect(&importWorker, &ImportWorker::progressValueChanged, mWindowTaskbarButton, &Qx::TaskbarButton::setProgressValue);
         connect(mImportProgressDialog.get(), &QProgressDialog::canceled, &importWorker, &ImportWorker::notifyCanceled);
-
-        // Create UI update timer reset connection
-        //connect(&importWorker, &ImportWorker::progressValueChanged, this, &MainWindow::resetUpdateTimer); // Reset refresh timer since setValue already processes events
 
         // Import error tracker
         Qx::GenericError importError;
-
-        // Start UI update timer
-        //mUIUpdateWorkaroundTimer.start();
 
         // Start import and forward result to handler
         ImportWorker::ImportResult importResult = importWorker.doImport(importError);
@@ -612,42 +667,35 @@ void MainWindow::prepareImport()
     }
 }
 
-void MainWindow::revertAllLaunchBoxChanges()
+void MainWindow::revertAllFrontendChanges()
 {
     // Trackers
     bool tempSkip = false;
     bool alwaysSkip = false;
-    QString currentError;
+    Qx::GenericError currentError;
     int retryChoice;
 
-    // Revert error Message
-    QMessageBox revertError;
-    revertError.setWindowTitle(CAPTION_REVERT_ERR);
-    revertError.setInformativeText("Retry?");
-    revertError.setStandardButtons(QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
-    revertError.setDefaultButton(QMessageBox::Yes);
-
     // Progress
-    QProgressDialog reversionProgress(CAPTION_REVERT, QString(), 0, mLaunchBoxInstall->getRevertQueueCount(), this);
+    QProgressDialog reversionProgress(CAPTION_REVERT, QString(), 0, mFrontendInstall->getRevertQueueCount(), this);
     reversionProgress.setWindowModality(Qt::WindowModal);
     reversionProgress.setAutoReset(false);
 
-    while(mLaunchBoxInstall->revertNextChange(currentError, alwaysSkip || tempSkip) != 0)
+    while(mFrontendInstall->revertNextChange(currentError, alwaysSkip || tempSkip) != 0)
     {
         // Check for error
-        if(currentError.isNull())
+        if(!currentError.isValid())
         {
             tempSkip = false;
             reversionProgress.setValue(reversionProgress.value() + 1);
         }
         else
         {
-            revertError.setText(currentError);
-            retryChoice = revertError.exec();
+            currentError.setCaption(CAPTION_REVERT_ERR);
+            retryChoice = Qx::postError(currentError, QMessageBox::Retry | QMessageBox::Ignore | QMessageBox::Abort, QMessageBox::Retry);
 
-            if(retryChoice == QMessageBox::No)
+            if(retryChoice == QMessageBox::Ignore)
                 tempSkip = true;
-            else if(retryChoice == QMessageBox::NoToAll)
+            else if(retryChoice == QMessageBox::Abort)
                 alwaysSkip = true;
         }
     }
@@ -656,7 +704,7 @@ void MainWindow::revertAllLaunchBoxChanges()
     reversionProgress.close();
 
     // Reset instance
-    mLaunchBoxInstall->softReset();
+    mFrontendInstall->softReset();
 }
 
 void MainWindow::standaloneCLIFpDeploy()
@@ -666,10 +714,10 @@ void MainWindow::standaloneCLIFpDeploy()
 
     if(!selectedDir.isEmpty())
     {
-        FP::Install tempFlashpointInstall(selectedDir);
+        Fp::Install tempFlashpointInstall(selectedDir);
         if(tempFlashpointInstall.isValid())
         {
-            if(!installMatchesTargetVersion(tempFlashpointInstall))
+            if(!installMatchesTargetSeries(tempFlashpointInstall))
                 QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_VER_NOT_TARGET);
 
             bool willDeploy = true;
@@ -687,13 +735,13 @@ void MainWindow::standaloneCLIFpDeploy()
             {
                 // Deploy exe
                 QString deployError;
-                while(!CLIFp::deployCLIFp(deployError, tempFlashpointInstall, ":/res/file/CLIFp.exe"))
+                while(!CLIFp::deployCLIFp(deployError, tempFlashpointInstall, ":/file/CLIFp.exe"))
                     if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Retry) == QMessageBox::Cancel)
                         break;
             }
         }
         else
-            postGenericError(tempFlashpointInstall.error(), QMessageBox::Ok);
+            Qx::postError(tempFlashpointInstall.error(), QMessageBox::Ok);
     }
 }
 void MainWindow::showTagSelectionDialog()
@@ -710,8 +758,8 @@ void MainWindow::showTagSelectionDialog()
     tagSelectionDialog.setModel(mTagSelectionModel.get());
     tagSelectionDialog.setWindowFlags(tagSelectionDialog.windowFlags() & ~Qt::WindowContextHelpButtonHint);
     tagSelectionDialog.setWindowTitle(CAPTION_TAG_FILTER);
-    connect(&tagSelectionDialog, &Qx::TreeInputDialog::selectNoneClicked, mTagSelectionModel.get(), &Qx::StandardItemModelX::selectNone);
-    connect(&tagSelectionDialog, &Qx::TreeInputDialog::selectAllClicked, mTagSelectionModel.get(), &Qx::StandardItemModelX::selectAll);
+    connect(&tagSelectionDialog, &Qx::TreeInputDialog::selectNoneClicked, mTagSelectionModel.get(), &Qx::StandardItemModel::selectNone);
+    connect(&tagSelectionDialog, &Qx::TreeInputDialog::selectAllClicked, mTagSelectionModel.get(), &Qx::StandardItemModel::selectAll);
 
     // Present dialog and capture commitment choice
     int dc = tagSelectionDialog.exec();
@@ -739,8 +787,8 @@ void MainWindow::showEvent(QShowEvent* event)
     // Call standard function
     QMainWindow::showEvent(event);
 
-    // Configure taskbar button TODO: Remove for Qt6
-    mWindowTaskbarButton = new QWinTaskbarButton(this);
+    // Configure taskbar button
+    mWindowTaskbarButton = new Qx::TaskbarButton(this);
     mWindowTaskbarButton->setWindow(this->windowHandle());
 }
 
@@ -754,7 +802,7 @@ void MainWindow::all_on_action_triggered()
     // Get the object that called this slot
     QAction* senderAction = qobject_cast<QAction *>(sender());
 
-    // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
+    // Ensure the signal that triggered this slot belongs to the above class by checking for null pointer
     if(senderAction == nullptr)
         throw std::runtime_error("Pointer conversion to action failed");
 
@@ -767,8 +815,6 @@ void MainWindow::all_on_action_triggered()
         QDesktopServices::openUrl(URL_CLIFP_GITHUB);
     else if(senderAction == ui->action_goToOFLIbGitHub)
         QDesktopServices::openUrl(URL_OFLIB_GITHUB);
-    else if(senderAction == ui->action_goToLBForums)
-        QDesktopServices::openUrl(URL_LB_FORUMS);
     else if(senderAction == ui->action_editTagFilter)
         showTagSelectionDialog();
     else
@@ -780,20 +826,20 @@ void MainWindow::all_on_pushButton_clicked()
     // Get the object that called this slot
     QPushButton* senderPushButton = qobject_cast<QPushButton *>(sender());
 
-    // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
+    // Ensure the signal that triggered this slot belongs to the above class by checking for null pointer
     if(senderPushButton == nullptr)
         throw std::runtime_error("Pointer conversion to push button failed");
 
     // Determine sender and take corresponding action
-    if(senderPushButton == ui->pushButton_launchBoxBrowse)
+    if(senderPushButton == ui->pushButton_frontendBrowse)
     {
-        QString selectedDir = QFileDialog::getExistingDirectory(this, CAPTION_LAUNCHBOX_BROWSE,
-                                                                (QFileInfo::exists(ui->lineEdit_launchBoxPath->text()) ? ui->lineEdit_launchBoxPath->text() : QDir::currentPath()));
+        QString selectedDir = QFileDialog::getExistingDirectory(this, CAPTION_FRONTEND_BROWSE,
+                                                                (QFileInfo::exists(ui->lineEdit_frontendPath->text()) ? ui->lineEdit_frontendPath->text() : QDir::currentPath()));
 
         if(!selectedDir.isEmpty())
         {
-            ui->lineEdit_launchBoxPath->setText(QDir::toNativeSeparators(selectedDir));
-            validateInstall(selectedDir, Install::LaunchBox);
+            ui->lineEdit_frontendPath->setText(QDir::toNativeSeparators(selectedDir));
+            validateInstall(selectedDir, Install::Frontend);
         }
     }
     else if(senderPushButton == ui->pushButton_flashpointBrowse)
@@ -846,69 +892,17 @@ void MainWindow::all_on_lineEdit_editingFinished()
     // Get the object that called this slot
     QLineEdit* senderLineEdit = qobject_cast<QLineEdit*>(sender());
 
-    // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
+    // Ensure the signal that triggered this slot belongs to the above class by checking for null pointer
     if(senderLineEdit == nullptr)
         throw std::runtime_error("Pointer conversion to line edit failed");
 
     // Determine sender and take corresponding action
-    if(senderLineEdit == ui->lineEdit_launchBoxPath)
-    {
-        if(!mLineEdit_launchBoxPath_blocker)
-            checkManualInstallInput(Install::LaunchBox);
-        else
-            mLineEdit_launchBoxPath_blocker--;
-    }
+    if(senderLineEdit == ui->lineEdit_frontendPath)
+        checkManualInstallInput(Install::Frontend);
     else if(senderLineEdit == ui->lineEdit_flashpointPath)
-    {
-        if(!mLineEdit_flashpointPath_blocker)
-           checkManualInstallInput(Install::Flashpoint);
-        else
-            mLineEdit_flashpointPath_blocker--;
-    }
-    else
-        throw std::runtime_error("Unhandled use of all_on_linedEdit_textEdited() slot");
-}
-
-void MainWindow::all_on_lineEdit_textEdited() // Required due to an oversight with QLineEdit::editingFinished()
-{
-    // Get the object that called this slot
-    QLineEdit* senderLineEdit = qobject_cast<QLineEdit *>(sender());
-
-    // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
-    if(senderLineEdit == nullptr)
-        throw std::runtime_error("Pointer conversion to line edit failed");
-
-    // Determine sender and take corresponding action
-    if(senderLineEdit == ui->lineEdit_launchBoxPath)
-        mLineEdit_launchBoxPath_blocker = 0;
-    else if(senderLineEdit == ui->lineEdit_flashpointPath)
-        mLineEdit_flashpointPath_blocker = 0;
-    else
-        throw std::runtime_error("Unhandled use of all_on_linedEdit_textEdited() slot");
-}
-
-void MainWindow::all_on_lineEdit_returnPressed() // Required due to an oversight with QLineEdit::editingFinished()
-{
-    // Get the object that called this slot
-    QLineEdit* senderLineEdit = qobject_cast<QLineEdit *>(sender());
-
-    // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
-    if(senderLineEdit == nullptr)
-        throw std::runtime_error("Pointer conversion to line edit failed");
-
-    // Determine sender and take corresponding action
-    if(senderLineEdit == ui->lineEdit_launchBoxPath)
-    {
-        mLineEdit_launchBoxPath_blocker = 2;
-        checkManualInstallInput(Install::LaunchBox);
-    }
-    else if(senderLineEdit == ui->lineEdit_flashpointPath)
-    {
-        mLineEdit_flashpointPath_blocker = 2;
         checkManualInstallInput(Install::Flashpoint);
-    }
     else
-        throw std::runtime_error("Unhandled use of all_on_linedEdit_returnPressed() slot");
+        throw std::runtime_error("Unhandled use of all_on_linedEdit_textEdited() slot");
 }
 
 void MainWindow::all_on_listWidget_itemChanged(QListWidgetItem* item) // Proxy for "onItemChecked"
@@ -916,7 +910,7 @@ void MainWindow::all_on_listWidget_itemChanged(QListWidgetItem* item) // Proxy f
     // Get the object that called this slot
     QListWidget* senderListWidget = qobject_cast<QListWidget*>(sender());
 
-    // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
+    // Ensure the signal that triggered this slot belongs to the above class by checking for null pointer
     if(senderListWidget == nullptr)
         throw std::runtime_error("Pointer conversion to list widget failed");
 
@@ -942,15 +936,12 @@ void MainWindow::all_on_listWidget_itemChanged(QListWidgetItem* item) // Proxy f
         throw std::runtime_error("Unhandled use of all_on_listWidget_itemChanged() slot");
 }
 
-//void MainWindow::resetUpdateTimer() { mUIUpdateWorkaroundTimer.start(); }
-//void MainWindow::updateUI() { QApplication::processEvents(); }
-
 void MainWindow::all_on_radioButton_clicked()
 {
     // Get the object that called this slot
     QRadioButton* senderRadioButton = qobject_cast<QRadioButton*>(sender());
 
-    // Ensure the signal that trigged this slot belongs to the above class by checking for null pointer
+    // Ensure the signal that triggered this slot belongs to the above class by checking for null pointer
     if(senderRadioButton == nullptr)
         throw std::runtime_error("Pointer conversion to radio button failed");
 
@@ -962,36 +953,77 @@ void MainWindow::all_on_radioButton_clicked()
         throw std::runtime_error("Unhandled use of all_on_radioButton_clicked() slot");
 }
 
+void MainWindow::all_on_menu_triggered(QAction *action)
+{
+    // Get the object that called this slot
+    QMenu* senderMenu = qobject_cast<QMenu*>(sender());
+
+    // Ensure the signal that triggered this slot belongs to the above class by checking for null pointer
+    if(senderMenu == nullptr)
+        throw std::runtime_error("Pointer conversion to menu failed");
+
+    if(senderMenu == ui->menu_frontendHelp)
+    {
+        // Get associated help URL and open it
+        QRegularExpressionMatch frontendMatch = MENU_FE_HELP_KEY_REGEX.match(action->objectName());
+
+        if(frontendMatch.hasMatch())
+        {
+            QString frontendName = frontendMatch.captured("frontend");
+            if(!frontendName.isNull() && Fe::Install::registry().contains(frontendName))
+            {
+                const QUrl* helpUrl = Fe::Install::registry()[frontendName].helpUrl;
+                QDesktopServices::openUrl(*helpUrl);
+                return;
+            }
+        }
+
+        qWarning("Frontend help action name could not be determined.");
+    }
+    else
+        throw std::runtime_error("Unhandled use of all_on_menu_triggered() slot");
+}
+
 void MainWindow::handleBlockingError(std::shared_ptr<int> response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices)
 {
-    // Get taskbar progress and indicate error TODO: Remove for Qt6
-    QWinTaskbarProgress* tbProgress = mWindowTaskbarButton->progress();
-    tbProgress->stop();
+    // Get taskbar progress and indicate error
+    mWindowTaskbarButton->setProgressState(Qx::TaskbarButton::Stopped);
 
     // Post error and get response
-    int userChoice = postGenericError(blockingError, choices);
+    int userChoice = Qx::postError(blockingError, choices);
 
     // Clear taskbar error
-    tbProgress->resume();
+    mWindowTaskbarButton->setProgressState(Qx::TaskbarButton::Normal);
 
     // If applicable return selection
     if(response)
         *response = userChoice;
 }
 
+void MainWindow::handleAuthRequest(QString prompt, QAuthenticator* authenticator)
+{
+    Qx::LoginDialog ld;
+    ld.setPrompt(prompt);
+
+    int choice = ld.exec();
+
+    if(choice == QDialog::Accepted)
+    {
+        authenticator->setUser(ld.username());
+        authenticator->setPassword(ld.password());
+    }
+}
+
 void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx::GenericError errorReport)
 {
     // Close progress dialog and reset taskbar progress indicator
     mImportProgressDialog->close();
-    mWindowTaskbarButton->progress()->reset();
-    mWindowTaskbarButton->progress()->setVisible(false);
-
-    // Stop UI update timer
-    //mUIUpdateWorkaroundTimer.stop();
+    mWindowTaskbarButton->resetProgress();
+    mWindowTaskbarButton->setProgressState(Qx::TaskbarButton::Hidden);
 
     // Post error report if present
     if(errorReport.isValid())
-        postGenericError(errorReport, QMessageBox::Ok);
+        Qx::postError(errorReport, QMessageBox::Ok);
 
     if(importResult == ImportWorker::Successful)
     {
@@ -1009,7 +1041,7 @@ void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx:
         if(willDeploy)
         {
             QString deployError;
-            while(!CLIFp::deployCLIFp(deployError, *mFlashpointInstall, ":/res/file/CLIFp.exe"))
+            while(!CLIFp::deployCLIFp(deployError, *mFlashpointInstall, ":/file/CLIFp.exe"))
                 if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | QMessageBox::Ignore, QMessageBox::Retry) == QMessageBox::Ignore)
                     break;
         }
@@ -1023,12 +1055,12 @@ void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx:
     else if(importResult == ImportWorker::Canceled)
     {
         QMessageBox::critical(this, CAPTION_REVERT, MSG_USER_CANCELED);
-        revertAllLaunchBoxChanges();
+        revertAllFrontendChanges();
     }
     else
     {
         // Show general next steps message
         QMessageBox::warning(this, CAPTION_REVERT, MSG_HAVE_TO_REVERT);
-        revertAllLaunchBoxChanges();
+        revertAllFrontendChanges();
     }
 }

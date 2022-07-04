@@ -28,7 +28,7 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Version (please complete the following information):**
-- OFILb version
+- FIL version
 - CLIFp version (if different from the included version)
 - Flashpoint version (including whether you are using Ultimate or Infinity)
 
