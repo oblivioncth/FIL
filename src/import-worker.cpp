@@ -1,4 +1,10 @@
+// Unit Include
 #include "import-worker.h"
+
+// Standard Library Includes
+#include <filesystem>
+
+// Project Includes
 #include "clifp.h"
 
 //===============================================================================================================
@@ -6,20 +12,30 @@
 //===============================================================================================================
 
 //-Constructor---------------------------------------------------------------------------------------------------
-ImportWorker::ImportWorker(std::shared_ptr<FP::Install> fpInstallForWork,
-                           std::shared_ptr<LB::Install> lbInstallForWork,
+ImportWorker::ImportWorker(std::shared_ptr<Fp::Install> fpInstallForWork,
+                           std::shared_ptr<Fe::Install> feInstallForWork,
                            ImportSelections importSelections,
-                           OptionSet optionSet)
-    : mFlashpointInstall(fpInstallForWork),
-      mLaunchBoxInstall(lbInstallForWork),
+                           OptionSet optionSet) :
+      mFlashpointInstall(fpInstallForWork),
+      mFrontendInstall(feInstallForWork),
       mImportSelections(importSelections),
-      mOptionSet(optionSet) {}
+      mOptionSet(optionSet)
+{}
 
 //-Instance Functions--------------------------------------------------------------------------------------------
-//Private
-const QList<QUuid> ImportWorker::preloadPlaylists(FP::DB::QueryBuffer& playlistQuery)
+//Private:
+Qx::ProgressGroup* ImportWorker::initializeProgressGroup(const QString& groupName, quint64 weight)
 {
-    QList<QUuid> targetPlaylistIDs;
+   Qx::ProgressGroup* pg = mProgressManager.addGroup(groupName);
+   pg->setWeight(weight);
+   pg->setValue(0);
+   pg->setMaximum(0);
+   return pg;
+}
+
+const QList<QUuid> ImportWorker::preloadPlaylists(Fp::Db::QueryBuffer& playlistQuery)
+{
+    QList<QUuid> targetPlaylistIds;
 
     for(int i = 0; i < playlistQuery.size; i++)
     {
@@ -27,59 +43,264 @@ const QList<QUuid> ImportWorker::preloadPlaylists(FP::DB::QueryBuffer& playlistQ
         playlistQuery.result.next();
 
         // Form playlist from record
-        FP::PlaylistBuilder fpPb;
-        fpPb.wID(playlistQuery.result.value(FP::DB::Table_Playlist::COL_ID).toString());
-        fpPb.wTitle(playlistQuery.result.value(FP::DB::Table_Playlist::COL_TITLE).toString());
-        fpPb.wDescription(playlistQuery.result.value(FP::DB::Table_Playlist::COL_DESCRIPTION).toString());
-        fpPb.wAuthor(playlistQuery.result.value(FP::DB::Table_Playlist::COL_AUTHOR).toString());
+        Fp::PlaylistBuilder fpPb;
+        fpPb.wId(playlistQuery.result.value(Fp::Db::Table_Playlist::COL_ID).toString());
+        fpPb.wTitle(playlistQuery.result.value(Fp::Db::Table_Playlist::COL_TITLE).toString());
+        fpPb.wDescription(playlistQuery.result.value(Fp::Db::Table_Playlist::COL_DESCRIPTION).toString());
+        fpPb.wAuthor(playlistQuery.result.value(Fp::Db::Table_Playlist::COL_AUTHOR).toString());
 
         // Build playlist
-        FP::Playlist playlist = fpPb.build();
+        Fp::Playlist playlist = fpPb.build();
 
         // Add to cache
-        mPlaylistsCache[playlist.getID()] = playlist;
+        mPlaylistsCache[playlist.getId()] = playlist;
 
         // Add to ID list
-        targetPlaylistIDs.append(playlist.getID());
+        targetPlaylistIds.append(playlist.getId());
     }
 
-    return targetPlaylistIDs;
+    return targetPlaylistIds;
 }
 
-//const QMultiHash<QUuid, int> generateGameTagMap(FP::DB::QueryBuffer& gameTagsQuery)
-//{
-//    QMultiHash<QUuid, int> tagMap;
-
-//    for(int i = 0; i < gameTagsQuery.size; i++)
-//    {
-//        // Advance to next record
-//        gameTagsQuery.result.next();
-
-//        // Add game and tag ID to map
-//        tagMap.insert(QUuid(gameTagsQuery.result.value(FP::DB::Table_Game_Tags_Tag::COL_GAME_ID).toString()),
-//                      gameTagsQuery.result.value(FP::DB::Table_Game_Tags_Tag::COL_TAG_ID).toInt());
-//    }
-
-//    return tagMap;
-//}
-
-const QList<QUuid> ImportWorker::getPlaylistSpecificGameIDs(FP::DB::QueryBuffer& playlistGameIDQuery)
+const QList<QUuid> ImportWorker::getPlaylistSpecificGameIds(Fp::Db::QueryBuffer& playlistGameIdQuery)
 {
-    QList<QUuid> playlistSpecGameIDs;
+    QList<QUuid> playlistSpecGameIds;
 
-    for(int i = 0; i < playlistGameIDQuery.size; i++)
+    for(int i = 0; i < playlistGameIdQuery.size; i++)
     {
         // Advance to next record
-        playlistGameIDQuery.result.next();
+        playlistGameIdQuery.result.next();
 
         // Add ID to list
-        playlistSpecGameIDs.append(QUuid(playlistGameIDQuery.result.value(FP::DB::Table_Playlist_Game::COL_GAME_ID).toString()));
+        playlistSpecGameIds.append(QUuid(playlistGameIdQuery.result.value(Fp::Db::Table_Playlist_Game::COL_GAME_ID).toString()));
     }
 
-    return playlistSpecGameIDs;
+    return playlistSpecGameIds;
 }
 
-ImportWorker::ImportResult ImportWorker::preloadAddApps(Qx::GenericError& errorReport, FP::DB::QueryBuffer& addAppQuery)
+Qx::GenericError ImportWorker::transferImage(bool symlink, QString sourcePath, QString destinationPath)
+{
+    /* TODO: Ideally the error handlers here don't need to include "Retry?" text and therefore need less use of QString::arg(); however, this largely
+     * would require use of a button labeled "Ignore All" so that the errors could presented as is without a prompt, with the prompt being inferred
+     * through the button choices "Retry", "Ignore", and "Ignore All", but currently the last is not a standard button and due to how Qx::GenericError
+     * is implemented custom buttons aren't feasible. Honestly maybe just try adding it to Qt and see if its accepted.
+     */
+
+    // Image info
+    QFileInfo destinationInfo(destinationPath);
+    QDir destinationDir(destinationInfo.absolutePath());
+    bool destinationOccupied = destinationInfo.exists() && (destinationInfo.isFile() || destinationInfo.isSymLink());
+
+    // Return if source in unexpectedly missing (i.e. download failure)
+    if(!QFile::exists(sourcePath))
+        return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_SRC_UNAVAILABLE.arg(sourcePath), IMAGE_RETRY_PROMPT, QString(), CAPTION_IMAGE_ERR);
+
+    // Return if image is already up-to-date
+    if(destinationOccupied)
+    {
+        if(destinationInfo.isSymLink() && symlink)
+            return Qx::GenericError();
+        else
+        {
+            QFile source(sourcePath);
+            QFile destination(destinationPath);
+            QString sourceChecksum;
+            QString destinationChecksum;
+
+            if(Qx::calculateFileChecksum(sourceChecksum, source, QCryptographicHash::Md5).wasSuccessful() &&
+               Qx::calculateFileChecksum(destinationChecksum, destination, QCryptographicHash::Md5).wasSuccessful() &&
+               sourceChecksum.compare(destinationChecksum, Qt::CaseInsensitive) == 0)
+                return Qx::GenericError();
+        }
+    }
+
+    // Ensure destination path exists
+    if(!destinationDir.mkpath("."))
+        return Qx::GenericError(Qx::GenericError::Error, ERR_CANT_MAKE_DIR.arg(destinationDir.absolutePath()), IMAGE_RETRY_PROMPT, QString(), CAPTION_IMAGE_ERR);
+
+    // Determine backup path
+    QString backupPath = destinationInfo.absolutePath() + '/' + destinationInfo.baseName() + Fe::Install::MODIFIED_FILE_EXT;
+
+    // Temporarily backup image if it already exists (also acts as deletion marking in case images for the title were removed in an update)
+    if(destinationOccupied)
+        if(!QFile::rename(destinationPath, backupPath)) // Temp backup
+            return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_BACKUP.arg(destinationPath), IMAGE_RETRY_PROMPT, QString(), CAPTION_IMAGE_ERR);
+
+    // Linking error tracker
+    std::error_code linkError;
+
+    // Handle transfer
+    if(symlink)
+    {
+        std::filesystem::create_symlink(sourcePath.toStdString(), destinationPath.toStdString(), linkError);
+        if(linkError)
+        {
+            QFile::rename(backupPath, destinationPath); // Restore Backup
+            return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_LINK.arg(sourcePath, destinationPath), IMAGE_RETRY_PROMPT, QString(), CAPTION_IMAGE_ERR);
+        }
+        else if(QFile::exists(backupPath))
+            QFile::remove(backupPath);
+        else
+            mFrontendInstall->addPurgeableImagePath(destinationPath); // Only queue image to be removed on failure if its new, so existing images aren't deleted on revert
+    }
+    else
+    {
+        if(!QFile::copy(sourcePath, destinationPath))
+        {
+            QFile::rename(backupPath, destinationPath); // Restore Backup
+            return Qx::GenericError(Qx::GenericError::Error, ERR_IMAGE_WONT_COPY.arg(sourcePath, destinationPath), IMAGE_RETRY_PROMPT, QString(), CAPTION_IMAGE_ERR);
+        }
+        else if(QFile::exists(backupPath))
+            QFile::remove(backupPath);
+        else
+            mFrontendInstall->addPurgeableImagePath(destinationPath); // Only queue image to be removed on failure if its new, so existing images aren't deleted on revert
+    }
+
+    // Return null error on success
+    return Qx::GenericError();
+}
+
+ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& errorReport, std::unique_ptr<Fe::PlatformDoc>& platformDoc, Fp::Db::QueryBuffer& gameQueryResult)
+{
+    // Add/Update games
+    for(int j = 0; j < gameQueryResult.size; j++)
+    {
+        // Advance to next record
+        gameQueryResult.result.next();
+
+        // Form game from record
+        Fp::GameBuilder fpGb;
+        fpGb.wId(gameQueryResult.result.value(Fp::Db::Table_Game::COL_ID).toString());
+        fpGb.wTitle(gameQueryResult.result.value(Fp::Db::Table_Game::COL_TITLE).toString());
+        fpGb.wSeries(gameQueryResult.result.value(Fp::Db::Table_Game::COL_SERIES).toString());
+        fpGb.wDeveloper(gameQueryResult.result.value(Fp::Db::Table_Game::COL_DEVELOPER).toString());
+        fpGb.wPublisher(gameQueryResult.result.value(Fp::Db::Table_Game::COL_PUBLISHER).toString());
+        fpGb.wDateAdded(gameQueryResult.result.value(Fp::Db::Table_Game::COL_DATE_ADDED).toString());
+        fpGb.wDateModified(gameQueryResult.result.value(Fp::Db::Table_Game::COL_DATE_MODIFIED).toString());
+        fpGb.wPlatform(gameQueryResult.result.value(Fp::Db::Table_Game::COL_PLATFORM).toString());
+        fpGb.wBroken(gameQueryResult.result.value(Fp::Db::Table_Game::COL_BROKEN).toString());
+        fpGb.wPlayMode(gameQueryResult.result.value(Fp::Db::Table_Game::COL_PLAY_MODE).toString());
+        fpGb.wStatus(gameQueryResult.result.value(Fp::Db::Table_Game::COL_STATUS).toString());
+        fpGb.wNotes(gameQueryResult.result.value(Fp::Db::Table_Game::COL_NOTES).toString());
+        fpGb.wSource(gameQueryResult.result.value(Fp::Db::Table_Game::COL_SOURCE).toString());
+        fpGb.wAppPath(gameQueryResult.result.value(Fp::Db::Table_Game::COL_APP_PATH).toString());
+        fpGb.wLaunchCommand(gameQueryResult.result.value(Fp::Db::Table_Game::COL_LAUNCH_COMMAND).toString());
+        fpGb.wReleaseDate(gameQueryResult.result.value(Fp::Db::Table_Game::COL_RELEASE_DATE).toString());
+        fpGb.wVersion(gameQueryResult.result.value(Fp::Db::Table_Game::COL_VERSION).toString());
+        fpGb.wOriginalDescription(gameQueryResult.result.value(Fp::Db::Table_Game::COL_ORIGINAL_DESC).toString());
+        fpGb.wLanguage(gameQueryResult.result.value(Fp::Db::Table_Game::COL_LANGUAGE).toString());
+        fpGb.wOrderTitle(gameQueryResult.result.value(Fp::Db::Table_Game::COL_ORDER_TITLE).toString());
+        fpGb.wLibrary(gameQueryResult.result.value(Fp::Db::Table_Game::COL_LIBRARY).toString());
+
+        // Build FP game and add to document
+        Fp::Game builtGame = fpGb.build();
+        const Fe::Game* addedGame = platformDoc->addGame(builtGame);
+
+        // Add ID to imported game cache
+        mImportedGameIdsCache.insert(addedGame->getId());
+
+        // Get image information
+        QFileInfo logoLocalInfo(mFlashpointInstall->imageLocalPath(Fp::ImageType::Logo, addedGame->getId()));
+        QFileInfo ssLocalInfo(mFlashpointInstall->imageLocalPath(Fp::ImageType::Screenshot, addedGame->getId()));
+
+        // Setup image downloads if applicable
+        if(mOptionSet.downloadImages)
+        {
+            if(!logoLocalInfo.exists())
+            {
+                QUrl logoRemotePath = mFlashpointInstall->imageRemoteUrl(Fp::ImageType::Logo, addedGame->getId());
+                mImageDownloadManager.appendTask(Qx::DownloadTask{logoRemotePath, logoLocalInfo.path()});
+            }
+            else
+                mProgressManager.group(Pg::ImageDownload)->decrementMaximum(); // Already exists, remove download step from progress bar
+
+            if(!ssLocalInfo.exists())
+            {
+                QUrl ssRemotePath = mFlashpointInstall->imageRemoteUrl(Fp::ImageType::Screenshot, addedGame->getId());
+                mImageDownloadManager.appendTask(Qx::DownloadTask{ssRemotePath, ssLocalInfo.path()});
+            }
+            else
+                mProgressManager.group(Pg::ImageDownload)->decrementMaximum(); // Already exists, remove download step from progress bar
+        }
+
+        // Perform immediate image handling if applicable
+        if(mOptionSet.imageMode == Fe::Install::Reference)
+        {
+            if(mFrontendInstall->imageRefType() == Fe::Install::ImageRefType::Single)
+            {
+                mFrontendInstall->referenceImage(Fp::ImageType::Logo, logoLocalInfo.path(), *addedGame);
+                mFrontendInstall->referenceImage(Fp::ImageType::Screenshot, ssLocalInfo.path(), *addedGame);
+            }
+            else if(mFrontendInstall->imageRefType() == Fe::Install::ImageRefType::Platform)
+            {
+                platformDoc->setGameImageReference(Fp::ImageType::Logo, addedGame->getId(), logoLocalInfo.path());
+                platformDoc->setGameImageReference(Fp::ImageType::Screenshot, addedGame->getId(), ssLocalInfo.path());
+            }
+        }
+        else // Setup transfer tasks if applicable
+        {
+            if(logoLocalInfo.exists() || mOptionSet.downloadImages)
+            {
+                QString logoDestPath = mFrontendInstall->imageDestinationPath(Fp::ImageType::Logo, *addedGame);
+                mImageTransferJobs.append(ImageTransferJob{logoLocalInfo.absoluteFilePath(), logoDestPath});
+            }
+            else
+                mProgressManager.group(Pg::ImageTransfer)->decrementMaximum(); // Can't transfer image that doesn't/won't exist
+
+            if(ssLocalInfo.exists() || mOptionSet.downloadImages)
+            {
+                QString ssDestPath = mFrontendInstall->imageDestinationPath(Fp::ImageType::Screenshot, *addedGame);
+                mImageTransferJobs.append(ImageTransferJob{ssLocalInfo.absoluteFilePath(), ssDestPath});
+            }
+            else
+                mProgressManager.group(Pg::ImageTransfer)->decrementMaximum();
+        }
+
+        // Update progress dialog value for game addition
+        if(mCanceled)
+        {
+            errorReport = Qx::GenericError();
+            return Canceled;
+        }
+        else
+            mProgressManager.group(Pg::GameImport)->incrementValue();
+    }
+
+    // Report successful step completion
+    errorReport = Qx::GenericError();
+    return Successful;
+}
+
+ImportWorker::ImportResult ImportWorker::processPlatformAddApps(Qx::GenericError& errorReport, std::unique_ptr<Fe::PlatformDoc>& platformDoc)
+{
+    // Add applicable additional apps
+    for (QSet<Fp::AddApp>::iterator j = mAddAppsCache.begin(); j != mAddAppsCache.end();)
+    {
+        // If the current platform doc contains the game this add app belongs to, convert and add it, then remove it from cache
+        if (platformDoc->containsGame((*j).getParentId()))
+        {
+           platformDoc->addAddApp(*j);
+           j = mAddAppsCache.erase(j); // clazy:exclude=strict-iterators Oversight of clazy since there's no QSet::erase(QSet::const_iterator) anymore
+        }
+        else
+           ++j;
+
+        // Update progress dialog value
+        if(mCanceled)
+        {
+            errorReport = Qx::GenericError();
+            return Canceled;
+        }
+        else
+            mProgressManager.group(Pg::AddAppMatchImport)->incrementValue();
+    }
+
+    // Report successful step completion
+    errorReport = Qx::GenericError();
+    return Successful;
+}
+
+ImportWorker::ImportResult ImportWorker::preloadAddApps(Qx::GenericError& errorReport, Fp::Db::QueryBuffer& addAppQuery)
 {
     mAddAppsCache.reserve(addAppQuery.size);
     for(int i = 0; i < addAppQuery.size; i++)
@@ -88,17 +309,17 @@ ImportWorker::ImportResult ImportWorker::preloadAddApps(Qx::GenericError& errorR
         addAppQuery.result.next();
 
         // Form additional app from record
-        FP::AddAppBuilder fpAab;
-        fpAab.wID(addAppQuery.result.value(FP::DB::Table_Add_App::COL_ID).toString());
-        fpAab.wAppPath(addAppQuery.result.value(FP::DB::Table_Add_App::COL_APP_PATH).toString());
-        fpAab.wAutorunBefore(addAppQuery.result.value(FP::DB::Table_Add_App::COL_AUTORUN).toString());
-        fpAab.wLaunchCommand(addAppQuery.result.value(FP::DB::Table_Add_App::COL_LAUNCH_COMMAND).toString());
-        fpAab.wName(addAppQuery.result.value(FP::DB::Table_Add_App::COL_NAME).toString());
-        fpAab.wWaitExit(addAppQuery.result.value(FP::DB::Table_Add_App::COL_WAIT_EXIT).toString());
-        fpAab.wParentID(addAppQuery.result.value(FP::DB::Table_Add_App::COL_PARENT_ID).toString());
+        Fp::AddAppBuilder fpAab;
+        fpAab.wId(addAppQuery.result.value(Fp::Db::Table_Add_App::COL_ID).toString());
+        fpAab.wAppPath(addAppQuery.result.value(Fp::Db::Table_Add_App::COL_APP_PATH).toString());
+        fpAab.wAutorunBefore(addAppQuery.result.value(Fp::Db::Table_Add_App::COL_AUTORUN).toString());
+        fpAab.wLaunchCommand(addAppQuery.result.value(Fp::Db::Table_Add_App::COL_LAUNCH_COMMAND).toString());
+        fpAab.wName(addAppQuery.result.value(Fp::Db::Table_Add_App::COL_NAME).toString());
+        fpAab.wWaitExit(addAppQuery.result.value(Fp::Db::Table_Add_App::COL_WAIT_EXIT).toString());
+        fpAab.wParentId(addAppQuery.result.value(Fp::Db::Table_Add_App::COL_PARENT_ID).toString());
 
         // Build additional app
-        FP::AddApp additionalApp = fpAab.build();
+        Fp::AddApp additionalApp = fpAab.build();
 
         // Add to cache
         mAddAppsCache.insert(additionalApp);
@@ -110,7 +331,7 @@ ImportWorker::ImportResult ImportWorker::preloadAddApps(Qx::GenericError& errorR
            return Canceled;
         }
         else
-            emit progressValueChanged(++mCurrentProgressValue);
+            mProgressManager.group(Pg::AddAppPreload)->incrementValue();
     }
 
     // Report successful step completion
@@ -118,255 +339,120 @@ ImportWorker::ImportResult ImportWorker::preloadAddApps(Qx::GenericError& errorR
     return Successful;
 }
 
-ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorReport, QList<FP::DB::QueryBuffer>& gameQueries, bool playlistSpecific)
-{
-    for(int i = 0; i < gameQueries.size(); i++)
+ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorReport, QList<Fp::Db::QueryBuffer>& primary, QList<Fp::Db::QueryBuffer>& playlistSpecific)
+{    
+    // Status tracking
+    ImportResult platformImportStatus;
+
+    // Track total platforms that have been handled
+    qsizetype remainingPlatforms = primary.size() + playlistSpecific.size();
+
+    // Use lambda to handle both lists due to major overlap
+    struct StepLabels
     {
-        // Get current result
-        FP::DB::QueryBuffer& currentPlatformGameResult = gameQueries[i];
+        const QString& games;
+        const QString& addApps;
+    };
 
-        // Update progress dialog label
-        emit progressStepChanged((playlistSpecific ? STEP_IMPORTING_PLAYLIST_SPEC_GAMES : STEP_IMPORTING_PLATFORM_GAMES).arg(currentPlatformGameResult.source));
+    auto platformsHandler = [&remainingPlatforms, &errorReport, this](QList<Fp::Db::QueryBuffer>& platformQueryResults, StepLabels labels) -> ImportResult {
+        ImportResult result;
 
-        // Open LB platform doc
-        LB::Xml::DataDocHandle docRequest = {LB::Xml::PlatformDoc::TYPE_NAME, currentPlatformGameResult.source};
-        std::unique_ptr<LB::Xml::PlatformDoc> currentPlatformXML;
-        Qx::XmlStreamReaderError platformReadError = mLaunchBoxInstall->openPlatformDoc(currentPlatformXML, docRequest.docName, mOptionSet.updateOptions);
-
-        // Stop import if error occured
-        if(platformReadError.isValid())
+        for(int i = 0; i < platformQueryResults.size(); i++)
         {
-            // Emit import failure
-            errorReport = Qx::GenericError(Qx::GenericError::Critical, LB::Xml::formatDataDocError(MSG_LB_XML_UNEXPECTED_ERROR, docRequest),
-                                           platformReadError.getText());
-            return Failed;
-        }
+            Fp::Db::QueryBuffer& currentQueryResult = platformQueryResults[i];
 
-        // Setup for ensuring image sub-directories exist
-        QString imageDirError; // Error return reference
-        *mBlockingErrorResponse = QMessageBox::No; // Default to choice "No" incase the signal is not correctly connected using Qt::BlockingQueuedConnection
+            // Open frontend platform doc
+            std::unique_ptr<Fe::PlatformDoc> currentPlatformDoc;
+            Qx::GenericError platformReadError = mFrontendInstall->openPlatformDoc(currentPlatformDoc, currentQueryResult.source, mOptionSet.updateOptions);
 
-        // Check image sub-directories
-        while(!mLaunchBoxInstall->ensureImageDirectories(imageDirError, currentPlatformGameResult.source))
-        {
-            // Notify GUI Thread of error
-            emit blockingErrorOccured(mBlockingErrorResponse, Qx::GenericError(Qx::GenericError::Error, imageDirError, "Retry?", QString(), CAPTION_IMAGE_ERR),
-                                      QMessageBox::Yes | QMessageBox::No);
-
-            // Check response
-            if(*mBlockingErrorResponse == QMessageBox::No)
-               break;
-        }
-
-        // Add/Update games
-        for(int j = 0; j < currentPlatformGameResult.size; j++)
-        {
-            // Advance to next record
-            currentPlatformGameResult.result.next();
-
-            // Form game from record
-            FP::GameBuilder fpGb;
-            fpGb.wID(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_ID).toString());
-            fpGb.wTitle(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_TITLE).toString());
-            fpGb.wSeries(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_SERIES).toString());
-            fpGb.wDeveloper(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_DEVELOPER).toString());
-            fpGb.wPublisher(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_PUBLISHER).toString());
-            fpGb.wDateAdded(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_DATE_ADDED).toString());
-            fpGb.wDateModified(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_DATE_MODIFIED).toString());
-            fpGb.wPlatform(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_PLATFORM).toString());
-            fpGb.wBroken(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_BROKEN).toString());
-            fpGb.wPlayMode(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_PLAY_MODE).toString());
-            fpGb.wStatus(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_STATUS).toString());
-            fpGb.wNotes(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_NOTES).toString());
-            fpGb.wSource(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_SOURCE).toString());
-            fpGb.wAppPath(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_APP_PATH).toString());
-            fpGb.wLaunchCommand(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_LAUNCH_COMMAND).toString());
-            fpGb.wReleaseDate(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_RELEASE_DATE).toString());
-            fpGb.wVersion(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_VERSION).toString());
-            fpGb.wOriginalDescription(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_ORIGINAL_DESC).toString());
-            fpGb.wLanguage(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_LANGUAGE).toString());
-            fpGb.wOrderTitle(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_ORDER_TITLE).toString());
-            fpGb.wLibrary(currentPlatformGameResult.result.value(FP::DB::Table_Game::COL_LIBRARY).toString());
-
-            // Convert and convert FP game to LB game and add to document
-            FP::Game builtGame = fpGb.build();
-            LB::Game convertedGame = LB::Game(fpGb.build(), CLIFp::standardCLIFpPath(*mFlashpointInstall));
-            currentPlatformXML->addGame(convertedGame);
-
-            // Add language as custom field
-            LB::CustomFieldBuilder lbCfb;
-            lbCfb.wGameID(builtGame.getID());
-            lbCfb.wName(LB::CustomField::LANGUAGE);
-            lbCfb.wValue(builtGame.getLanguage());
-            currentPlatformXML->addCustomField(lbCfb.build());
-
-            // Setup for ensuring image sub-directories exist
-            QString imageTransferError; // Error return reference
-            *mBlockingErrorResponse = QMessageBox::NoToAll; // Default to choice "NoToAll" incase the signal is not correctly connected using Qt::BlockingQueuedConnection
-            bool skipAllImages = false; // NoToAll response tracker
-
-            // Transfer game images if applicable
-            if(mOptionSet.imageMode != LB::Install::Reference)
+            // Stop import if error occurred
+            if(platformReadError.isValid())
             {
-                while(!skipAllImages && !mLaunchBoxInstall->transferLogo(imageTransferError, mOptionSet.imageMode, mFlashpointInstall->logosDirectory(), convertedGame))
-                {
-                    // Notify GUI Thread of error
-                    emit blockingErrorOccured(mBlockingErrorResponse, Qx::GenericError(Qx::GenericError::Error, imageTransferError, "Retry?", QString(), CAPTION_IMAGE_ERR),
-                                              QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
-
-                    // Check response
-                    if(*mBlockingErrorResponse == QMessageBox::No)
-                       break;
-                    else if(*mBlockingErrorResponse == QMessageBox::NoToAll)
-                       skipAllImages = true;
-                }
-
-                while(!skipAllImages && !mLaunchBoxInstall->transferScreenshot(imageTransferError, mOptionSet.imageMode, mFlashpointInstall->screenshootsDirectory(), convertedGame))
-                {
-                    // Notify GUI Thread of error
-                    emit blockingErrorOccured(mBlockingErrorResponse, Qx::GenericError(Qx::GenericError::Error, imageTransferError, "Retry?", QString(), CAPTION_IMAGE_ERR),
-                                              QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
-
-                    // Check response
-                    if(*mBlockingErrorResponse == QMessageBox::No)
-                       break;
-                    else if(*mBlockingErrorResponse == QMessageBox::NoToAll)
-                       skipAllImages = true;
-                }
+                // Emit import failure
+                errorReport = platformReadError;
+                return Failed;
             }
 
-            // Update progress dialog value
-            if(mCanceled)
+            //---Import games---------------------------------------
+            emit progressStepChanged(labels.games.arg(currentQueryResult.source));
+            if((result = processPlatformGames(errorReport, currentPlatformDoc, currentQueryResult)) != Successful)
+                return result;
+
+            //---Import additional apps----------------------------
+            emit progressStepChanged(labels.addApps.arg(currentQueryResult.source));
+
+            // Note current cache size
+            qsizetype preAddAppCacheSize = mAddAppsCache.size();
+
+            // Import platform additional apps
+            if((result = processPlatformAddApps(errorReport, currentPlatformDoc)) != Successful)
+                return result;
+
+            /*
+             * Account for reduced total progress due to consumed additional apps.
+             * All platforms have to scan the entire additional app cache so each following platform
+             * won't need to check the additional apps that were imported by this one
+             */
+            qsizetype consumedAddApps = preAddAppCacheSize - mAddAppsCache.size();
+            quint64 progressReduction = consumedAddApps * (remainingPlatforms - 1); // Don't count current list
+            mProgressManager.group(Pg::AddAppMatchImport)->decreaseMaximum(progressReduction);
+
+            //---Finalize document----------------------------------
+            currentPlatformDoc->finalize();
+
+            // Forfeit document lease and save it
+            Qx::GenericError saveError;
+            if((saveError = mFrontendInstall->savePlatformDoc(std::move(currentPlatformDoc))).isValid())
             {
-                errorReport = Qx::GenericError();
-                return Canceled;
+                errorReport = saveError;
+                return Failed;
             }
-            else
-                emit progressValueChanged(++mCurrentProgressValue);
+
+            // Reduce remaining platform count
+            remainingPlatforms--;
         }
 
-        // Update progress dialog label
-        emit progressStepChanged((playlistSpecific ? STEP_IMPORTING_PLAYLIST_SPEC_ADD_APPS : STEP_IMPORTING_PLATFORM_ADD_APPS).arg(currentPlatformGameResult.source));
+        // Return success
+        errorReport = Qx::GenericError();
+        return Successful;
+    };
 
-        // Add applicable additional apps
-        for (QSet<FP::AddApp>::iterator j = mAddAppsCache.begin(); j != mAddAppsCache.end();)
-        {
-            // If the current platform doc contains the game this add app belongs to, convert and add it, then remove it from cache
-            if (currentPlatformXML->containsGame((*j).getParentID()))
-            {
-               currentPlatformXML->addAddApp(LB::AddApp(*j, CLIFp::standardCLIFpPath(*mFlashpointInstall)));
-               j = mAddAppsCache.erase(j);
+    // Import primary platforms
+    if((platformImportStatus = platformsHandler(primary, {.games = STEP_IMPORTING_PLATFORM_GAMES, .addApps = STEP_IMPORTING_PLATFORM_ADD_APPS })) != Successful)
+        return platformImportStatus;
 
-               // Reduce progress dialog maximum by total iterations cut from future platforms
-               mMaximumProgressValue = mMaximumProgressValue - gameQueries.size() + i + 1; // Max = Max - (size - (i + 1))
-               emit progressMaximumChanged(mMaximumProgressValue);
-            }
-            else
-               ++j;
+    // Import playlist specific platforms
+    if((platformImportStatus = platformsHandler(playlistSpecific, {.games = STEP_IMPORTING_PLAYLIST_GAMES, .addApps = STEP_IMPORTING_PLAYLIST_SPEC_ADD_APPS })) != Successful)
+        return platformImportStatus;
 
-            // Update progress dialog value
-            if(mCanceled)
-            {
-                errorReport = Qx::GenericError();
-                return Canceled;
-            }
-            else
-                emit progressValueChanged(++mCurrentProgressValue);
-        }
-
-        // Finalize document
-        currentPlatformXML->finalize();
-
-        // Add final game details to Playlist Game lookup cache
-        for (QHash<QUuid, LB::Game>::const_iterator i = currentPlatformXML->getFinalGames().constBegin();
-             i != currentPlatformXML->getFinalGames().constEnd(); ++i)
-           mPlaylistGameDetailsCache[i.key()] = {i.value().getTitle(), QFileInfo(i.value().getAppPath()).fileName(), i.value().getPlatform()};
-
-        // Forefit doucment lease and save it
-        QString saveError;
-        if(!mLaunchBoxInstall->savePlatformDoc(saveError, std::move(currentPlatformXML)))
-        {
-            errorReport = Qx::GenericError(Qx::GenericError::Critical,
-                                           LB::Xml::formatDataDocError(LB::Xml::ERR_WRITE_FAILED, docRequest), saveError);
-            return Failed;
-        }
-
-    }
-
-    // Report successful step completion
+    // Return success
     errorReport = Qx::GenericError();
     return Successful;
 }
 
-ImportWorker::ImportResult ImportWorker::setImageReferences(Qx::GenericError& errorReport, QStringList platforms)
+ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& errorReport, QList<Fp::Db::QueryBuffer>& playlistGameQueries)
 {
-    // Open platforms document
-    std::unique_ptr<LB::Xml::PlatformsDoc> platformConfigXML;
-    LB::Xml::DataDocHandle requestHandle = {LB::Xml::PlatformsDoc::TYPE_NAME, LB::Xml::PlatformsDoc::STD_NAME}; // For errors only
-    Qx::XmlStreamReaderError platformConfigReadError = mLaunchBoxInstall->openPlatformsDoc(platformConfigXML);
-
-    // Stop import if error occured
-    if(platformConfigReadError.isValid())
-    {
-        // Emit import failure
-        errorReport = Qx::GenericError(Qx::GenericError::Critical, LB::Xml::formatDataDocError(MSG_LB_XML_UNEXPECTED_ERROR, requestHandle),
-                                       platformConfigReadError.getText());
-        return Failed;
-    }
-
-    // Set media folder paths and ensure document contains platform or else image paths will be ignored
-    for(const QString& platform : platforms)
-    {
-        platformConfigXML->setMediaFolder(platform, LB::Install::LOGO_PATH, QDir::toNativeSeparators(mFlashpointInstall->logosDirectory().absolutePath()));
-        platformConfigXML->setMediaFolder(platform, LB::Install::SCREENSHOT_PATH,  QDir::toNativeSeparators(mFlashpointInstall->screenshootsDirectory().absolutePath()));
-
-        if(!platformConfigXML->containsPlatform(platform))
-        {
-            LB::PlatformBuilder pb;
-            pb.wName(platform);
-            platformConfigXML->addPlatform(pb.build());
-        }
-    }
-
-    // Save platforms document
-    QString saveError;
-    if(!mLaunchBoxInstall->savePlatformsDoc(saveError, std::move(platformConfigXML)))
-    {
-        errorReport = Qx::GenericError(Qx::GenericError::Critical,
-                                       LB::Xml::formatDataDocError(LB::Xml::ERR_WRITE_FAILED, requestHandle), saveError);
-        return Failed;
-    }
-
-    // Report successful step completion
-    errorReport = Qx::GenericError();
-    return Successful;
-}
-
-ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& errorReport, QList<FP::DB::QueryBuffer>& playlistGameQueries)
-{
-    for(FP::DB::QueryBuffer& currentPlaylistGameResult : playlistGameQueries)
+    for(Fp::Db::QueryBuffer& currentPlaylistGameResult : playlistGameQueries)
     {
         // Get corresponding playlist from cache
-        FP::Playlist currentPlaylist = mPlaylistsCache.value(QUuid(currentPlaylistGameResult.source));
+        Fp::Playlist currentPlaylist = mPlaylistsCache.value(QUuid(currentPlaylistGameResult.source));
 
         // Update progress dialog label
         emit progressStepChanged(STEP_IMPORTING_PLAYLIST_GAMES.arg(currentPlaylist.getTitle()));
 
-        // Open LB playlist doc
-        LB::Xml::DataDocHandle docRequest = {LB::Xml::PlaylistDoc::TYPE_NAME, currentPlaylist.getTitle()};
-        std::unique_ptr<LB::Xml::PlaylistDoc> currentPlaylistXML;
-        Qx::XmlStreamReaderError playlistReadError = mLaunchBoxInstall->openPlaylistDoc(currentPlaylistXML, docRequest.docName, mOptionSet.updateOptions);
+        // Open frontend playlist doc
+        std::unique_ptr<Fe::PlaylistDoc> currentPlaylistDoc;
+        Qx::GenericError playlistReadError = mFrontendInstall->openPlaylistDoc(currentPlaylistDoc, currentPlaylist.getTitle(), mOptionSet.updateOptions);
 
-        // Stop import if error occured
+        // Stop import if error occurred
         if(playlistReadError.isValid())
         {
-            errorReport = Qx::GenericError(Qx::GenericError::Critical,
-                                           LB::Xml::formatDataDocError(MSG_LB_XML_UNEXPECTED_ERROR, docRequest), playlistReadError.getText());
+            errorReport = playlistReadError;
             return Failed;
         }
 
         // Convert and set playlist header
-        currentPlaylistXML->setPlaylistHeader(LB::PlaylistHeader(currentPlaylist));
+        currentPlaylistDoc->setPlaylistHeader(currentPlaylist);
 
         // Add/Update playlist games
         for(int i = 0; i < currentPlaylistGameResult.size; i++)
@@ -375,17 +461,17 @@ ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& erro
             currentPlaylistGameResult.result.next();
 
             // Only process the playlist game if it was included in import
-            if(mPlaylistGameDetailsCache.contains(QUuid(currentPlaylistGameResult.result.value(FP::DB::Table_Playlist_Game::COL_GAME_ID).toString())))
+            if(mImportedGameIdsCache.contains(QUuid(currentPlaylistGameResult.result.value(Fp::Db::Table_Playlist_Game::COL_GAME_ID).toString())))
             {
                 // Form game from record
-                FP::PlaylistGameBuilder fpPgb;
-                fpPgb.wID(currentPlaylistGameResult.result.value(FP::DB::Table_Playlist_Game::COL_ID).toString());
-                fpPgb.wPlaylistID(currentPlaylistGameResult.result.value(FP::DB::Table_Playlist_Game::COL_PLAYLIST_ID).toString());
-                fpPgb.wOrder(currentPlaylistGameResult.result.value(FP::DB::Table_Playlist_Game::COL_ORDER).toString());
-                fpPgb.wGameID(currentPlaylistGameResult.result.value(FP::DB::Table_Playlist_Game::COL_GAME_ID).toString());
+                Fp::PlaylistGameBuilder fpPgb;
+                fpPgb.wId(currentPlaylistGameResult.result.value(Fp::Db::Table_Playlist_Game::COL_ID).toString());
+                fpPgb.wPlaylistId(currentPlaylistGameResult.result.value(Fp::Db::Table_Playlist_Game::COL_PLAYLIST_ID).toString());
+                fpPgb.wOrder(currentPlaylistGameResult.result.value(Fp::Db::Table_Playlist_Game::COL_ORDER).toString());
+                fpPgb.wGameId(currentPlaylistGameResult.result.value(Fp::Db::Table_Playlist_Game::COL_GAME_ID).toString());
 
-                // Build FP playlist game, convert to LB and add
-                currentPlaylistXML->addPlaylistGame(LB::PlaylistGame(fpPgb.build(), mPlaylistGameDetailsCache));
+                // Build FP playlist game and add
+                currentPlaylistDoc->addPlaylistGame(fpPgb.build());
             }
 
             // Update progress dialog value
@@ -395,19 +481,127 @@ ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& erro
                 return Canceled;
             }
             else
-                emit progressValueChanged(++mCurrentProgressValue);
+                mProgressManager.group(Pg::PlaylistGameMatchImport)->incrementValue();
         }
 
         // Finalize document
-        currentPlaylistXML->finalize();
+        currentPlaylistDoc->finalize();
 
-        // Forefit doucment lease and save it
-        QString saveError;
-        if(!mLaunchBoxInstall->savePlaylistDoc(saveError, std::move(currentPlaylistXML)))
+        // Forfeit document lease and save it
+        Qx::GenericError saveError;
+        if((saveError = mFrontendInstall->savePlaylistDoc(std::move(currentPlaylistDoc))).isValid())
         {
-            errorReport = Qx::GenericError(Qx::GenericError::Critical,
-                                           LB::Xml::formatDataDocError(LB::Xml::ERR_WRITE_FAILED, docRequest), saveError);
+            errorReport = saveError;
             return Failed;
+        }
+    }
+
+    // Report successful step completion
+    errorReport = Qx::GenericError();
+    return Successful;
+}
+
+ImportWorker::ImportResult ImportWorker::processImages(Qx::GenericError& errorReport, const QList<Fp::Db::QueryBuffer>& playlistSpecGameQueries)
+{
+    // Download images if applicable
+    if(mOptionSet.downloadImages && mImageDownloadManager.hasTasks())
+    {
+        // Update progress dialog label
+        emit progressStepChanged(STEP_DOWNLOADING_IMAGES);
+
+        // Configure manager
+        mImageDownloadManager.setMaxSimultaneous(2);
+        mImageDownloadManager.setOverwrite(false); // Should be no attempts to overwrite, but here just in case
+        mImageDownloadManager.setStopOnError(false); // Get as many images as possible;
+        mImageDownloadManager.setSkipEnumeration(true); // Since progress is being tracked by task count, pre-enumeration of download size is unnecessary
+        mImageDownloadManager.setTransferTimeout(5000); // 5 seconds max to start downloading image before moving on
+
+        // Make connections
+        connect(&mImageDownloadManager, &Qx::SyncDownloadManager::sslErrors, this, [&](Qx::GenericError errorMsg, bool* ignore) {
+            emit blockingErrorOccured(mBlockingErrorResponse, errorMsg, QMessageBox::Yes | QMessageBox::Abort);
+            *ignore = *mBlockingErrorResponse == QMessageBox::Yes;
+        });
+
+        connect(&mImageDownloadManager, &Qx::SyncDownloadManager::authenticationRequired, this, &ImportWorker::authenticationRequired);
+        connect(&mImageDownloadManager, &Qx::SyncDownloadManager::proxyAuthenticationRequired, this, &ImportWorker::authenticationRequired);
+
+        connect(&mImageDownloadManager, &Qx::SyncDownloadManager::downloadFinished, this, [this]() { // clazy:exclude=lambda-in-connect
+                mProgressManager.group(Pg::ImageDownload)->incrementValue();
+        });
+
+        // Start download
+        Qx::DownloadManagerReport downloadReport = mImageDownloadManager.processQueue();
+
+        // Handle result
+        if(!downloadReport.wasSuccessful())
+        {
+            // Notify GUI Thread of error
+            emit blockingErrorOccured(mBlockingErrorResponse, downloadReport.errorInfo(), QMessageBox::Abort | QMessageBox::Ignore);
+
+            // Check response
+            if(*mBlockingErrorResponse == QMessageBox::Abort)
+            {
+                errorReport = Qx::GenericError();
+                return Canceled;
+            }
+        }
+    }
+
+    // Import images if applicable
+    if(mOptionSet.imageMode == Fe::Install::Reference && mFrontendInstall->imageRefType() == Fe::Install::ImageRefType::Bulk)
+    {
+        // Update progress dialog label
+        emit progressStepChanged(STEP_SETTING_IMAGE_REFERENCES);
+
+        // Create playlist specific platforms set
+        QStringList playlistSpecPlatforms;
+        for(const Fp::Db::QueryBuffer& query : qAsConst(playlistSpecGameQueries))
+            playlistSpecPlatforms.append(query.source);
+
+        // Initiate frontend reference routine
+        Qx::GenericError referenceError = mFrontendInstall->bulkReferenceImages(QDir::toNativeSeparators(mFlashpointInstall->logosDirectory().absolutePath()),
+                                                                                QDir::toNativeSeparators(mFlashpointInstall->screenshotsDirectory().absolutePath()),
+                                                                                mImportSelections.platforms + playlistSpecPlatforms);
+        if(referenceError.isValid())
+        {
+            // Emit import failure
+            errorReport = referenceError;
+            return Failed;
+        }
+    }
+    else if(mOptionSet.imageMode != Fe::Install::Reference)
+    {
+        // Update progress dialog label
+        emit progressStepChanged(STEP_IMPORTING_IMAGES);
+
+        // Setup for image transfers
+        Qx::GenericError imageTransferError; // Error return reference
+        *mBlockingErrorResponse = QMessageBox::NoToAll; // Default to choice "NoToAll" in case the signal is not correctly connected using Qt::BlockingQueuedConnection
+        bool ignoreAllTransferErrors = false; // NoToAll response tracker
+
+        for(const ImageTransferJob& imageJob : qAsConst(mImageTransferJobs))
+        {
+            while((imageTransferError = transferImage(mOptionSet.imageMode == Fe::Install::Link, imageJob.sourcePath, imageJob.destPath)).isValid() && !ignoreAllTransferErrors)
+            {
+                // Notify GUI Thread of error
+                emit blockingErrorOccured(mBlockingErrorResponse, imageTransferError,
+                                          QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
+
+                // Check response
+                if(*mBlockingErrorResponse == QMessageBox::No)
+                   break;
+                else if(*mBlockingErrorResponse == QMessageBox::NoToAll)
+                   ignoreAllTransferErrors = true;
+            }
+
+           // Update progress dialog value
+           if(mCanceled)
+           {
+               errorReport = Qx::GenericError();
+               return Canceled;
+           }
+           else
+               mProgressManager.group(Pg::ImageTransfer)->incrementValue();
         }
     }
 
@@ -419,6 +613,8 @@ ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& erro
 //Public
 ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
 {
+    //-Setup----------------------------------------------------------------
+
     // Import step status
     ImportResult importStepStatus;
 
@@ -426,14 +622,19 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     QSqlError queryError;
 
     // Initial query buffers
-    QList<FP::DB::QueryBuffer> gameQueries;
-    QList<FP::DB::QueryBuffer> playlistSpecGameQueries;
-    FP::DB::QueryBuffer addAppQuery;
-    FP::DB::QueryBuffer playlistQueries;
-    QList<FP::DB::QueryBuffer> playlistGameQueries;
+    QList<Fp::Db::QueryBuffer> gameQueries;
+    QList<Fp::Db::QueryBuffer> playlistSpecGameQueries;
+    Fp::Db::QueryBuffer addAppQuery;
+    Fp::Db::QueryBuffer playlistQueries;
+    QList<Fp::Db::QueryBuffer> playlistGameQueries;
+
+    // Link CLIFp to frontend
+    mFrontendInstall->linkClifpPath(CLIFp::standardCLIFpPath(*mFlashpointInstall));
 
     // Get flashpoint database
-    FP::DB* fpDatabase = mFlashpointInstall->database();
+    Fp::Db* fpDatabase = mFlashpointInstall->database();
+
+    //-Pre-loading-------------------------------------------------------------
 
     // Make initial playlists query
     queryError = fpDatabase->queryPlaylistsByName(playlistQueries, mImportSelections.playlists);
@@ -444,7 +645,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     }
 
     // Pre-load Playlists, add to cache and create ID list
-    const QList<QUuid> targetPlaylistIDs = preloadPlaylists(playlistQueries);
+    const QList<QUuid> targetPlaylistIds = preloadPlaylists(playlistQueries);
 
     // Make initial game query
     queryError = fpDatabase->queryGamesByPlatform(gameQueries, mImportSelections.platforms, mOptionSet.inclusionOptions);
@@ -455,12 +656,12 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     }
 
     // Make initial playlist specific game query if applicable
-    if(mOptionSet.playlistMode == LB::Install::PlaylistGameMode::ForceAll)
+    if(mOptionSet.playlistMode == PlaylistGameMode::ForceAll)
     {
-        FP::DB::QueryBuffer pgIDQuery;
+        Fp::Db::QueryBuffer pgIdQuery;
 
         // Make playlist game ID query
-        queryError = fpDatabase->queryPlaylistGameIDs(pgIDQuery, targetPlaylistIDs);
+        queryError = fpDatabase->queryPlaylistGameIds(pgIdQuery, targetPlaylistIds);
         if(queryError.isValid())
         {
             errorReport = Qx::GenericError(Qx::GenericError::Critical, MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());
@@ -468,7 +669,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         }
 
         // Get playlist game ID list
-        const QList<QUuid> targetPlaylistGameIDs = getPlaylistSpecificGameIDs(pgIDQuery);
+        const QList<QUuid> targetPlaylistGameIds = getPlaylistSpecificGameIds(pgIdQuery);
 
         // Make unselected platforms list
         QStringList availablePlatforms = fpDatabase->platformList();
@@ -477,7 +678,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
             unselectedPlatforms.removeAll(selPlatform);
 
         // Make game query
-        queryError = fpDatabase->queryGamesByPlatform(playlistSpecGameQueries, unselectedPlatforms, mOptionSet.inclusionOptions, targetPlaylistGameIDs);
+        queryError = fpDatabase->queryGamesByPlatform(playlistSpecGameQueries, unselectedPlatforms, mOptionSet.inclusionOptions, targetPlaylistGameIds);
         if(queryError.isValid())
         {
             errorReport = Qx::GenericError(Qx::GenericError::Critical, MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());
@@ -494,54 +695,84 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     }
 
     // Make initial playlist games query
-    queryError = fpDatabase->queryPlaylistGamesByPlaylist(playlistGameQueries, targetPlaylistIDs);
+    queryError = fpDatabase->queryPlaylistGamesByPlaylist(playlistGameQueries, targetPlaylistIds);
     if(queryError.isValid())
     {
        errorReport = Qx::GenericError(Qx::GenericError::Critical, MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());
        return Failed;
     }
 
-    // Determine workload
-    mCurrentProgressValue = 0;
-    mMaximumProgressValue = addAppQuery.size; // Additional App pre-load
-    for(const FP::DB::QueryBuffer& query : qAsConst(gameQueries)) // All games
-        mMaximumProgressValue += query.size;
-    for(const FP::DB::QueryBuffer& query : qAsConst(playlistSpecGameQueries)) // All playlist specific games
-        mMaximumProgressValue += query.size;
-    for(const FP::DB::QueryBuffer& query : qAsConst(playlistGameQueries)) // All playlist games
-        mMaximumProgressValue += query.size;
-    mMaximumProgressValue += addAppQuery.size * gameQueries.size() + addAppQuery.size * playlistSpecGameQueries.size(); // All checks of Additional Apps
+    //-Determine Workload-------------------------------------------------
+    quint64 totalGameCount = 0;
 
-    // Re-prep progress dialog
-    emit progressMaximumChanged(mMaximumProgressValue);
+    // Additional App pre-load
+    Qx::ProgressGroup* pgAddAppPreload = initializeProgressGroup(Pg::AddAppPreload, 2);
+    pgAddAppPreload->setMaximum(addAppQuery.size);
+
+    // Initialize game query progress group since there will always be at least one game to import
+    Qx::ProgressGroup* pgGameImport = initializeProgressGroup(Pg::GameImport, 2);
+
+    // All games
+    for(const Fp::Db::QueryBuffer& query : qAsConst(gameQueries))
+    {
+        pgGameImport->increaseMaximum(query.size);
+        totalGameCount += query.size;
+    }
+
+    // All playlist specific games
+    for(const Fp::Db::QueryBuffer& query : qAsConst(playlistSpecGameQueries))
+    {
+        pgGameImport->increaseMaximum(query.size);
+        totalGameCount += query.size;
+    }
+
+    // Screenshot and Logo downloads
+    if(mOptionSet.downloadImages)
+    {
+        Qx::ProgressGroup* pgImageDownload = initializeProgressGroup(Pg::ImageDownload, 3);
+        pgImageDownload->setMaximum(totalGameCount * 2);
+    }
+
+    // Screenshot and Logo transfer
+    if(mOptionSet.imageMode != Fe::Install::ImageMode::Reference)
+    {
+        Qx::ProgressGroup* pgImageTransfer = initializeProgressGroup(Pg::ImageTransfer, 3);
+        pgImageTransfer->setMaximum(totalGameCount * 2);
+    }
+
+    // All playlist games
+    if(!playlistGameQueries.isEmpty())
+    {
+        Qx::ProgressGroup* pgPlaylistGameMatchImport = initializeProgressGroup(Pg::PlaylistGameMatchImport, 2);
+        for(const Fp::Db::QueryBuffer& query : qAsConst(playlistGameQueries))
+            pgPlaylistGameMatchImport->increaseMaximum(query.size);
+    }
+
+    // All checks of Additional Apps
+    Qx::ProgressGroup* pgAddAppMatchImport = initializeProgressGroup(Pg::AddAppMatchImport, 1);
+    quint64 passes = addAppQuery.size * (gameQueries.size() + playlistSpecGameQueries.size());
+    pgAddAppMatchImport->setMaximum(passes);
+
+    // Forward progress manager signal
+    connect(&mProgressManager, &Qx::GroupedProgressManager::valueChanged, this, &ImportWorker::progressValueChanged);
+
+    // Perform manual emission of total progress signal to indicate progress was calculated
+    emit progressMaximumChanged(mProgressManager.maximum());
     emit progressStepChanged(STEP_ADD_APP_PRELOAD);
+
+    //-Primary Import Stages-------------------------------------------------
 
     // Pre-load additional apps
     if((importStepStatus = preloadAddApps(errorReport, addAppQuery)) != Successful)
         return importStepStatus;
 
-    // Process games and additional apps by platform
-    if((importStepStatus = processGames(errorReport, gameQueries, false)) != Successful)
+    // Process games and additional apps by platform (primary and playlist specific)
+    if((importStepStatus = processGames(errorReport, gameQueries, playlistSpecGameQueries)) != Successful)
         return importStepStatus;
 
-    // Process playlist specific games and additional apps by platform
-    if((importStepStatus = processGames(errorReport, playlistSpecGameQueries, true)) != Successful)
+    // Process images
+    if((importStepStatus = processImages(errorReport, playlistSpecGameQueries)) != Successful)
         return importStepStatus;
-
-    // Set image references if applicable
-    if(mOptionSet.imageMode == LB::Install::Reference)
-    {
-        // Update progress dialog label
-        emit progressStepChanged(STEP_SETTING_IMAGE_REFERENCES);
-
-        // Create playlist pecific platforms set
-        QStringList playlistSpecPlatforms;
-        for(const FP::DB::QueryBuffer& query : qAsConst(playlistSpecGameQueries))
-            playlistSpecPlatforms.append(query.source);
-
-        if((importStepStatus = setImageReferences(errorReport, mImportSelections.platforms + playlistSpecPlatforms)) != Successful)
-            return importStepStatus;
-    }
 
     // Process playlists
     if((importStepStatus = processPlaylists(errorReport, playlistGameQueries)) != Successful)
@@ -555,7 +786,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     }
 
     // Reset install
-    mLaunchBoxInstall->softReset();
+    mFrontendInstall->softReset();
 
     // Report successful import completion
     errorReport = Qx::GenericError();

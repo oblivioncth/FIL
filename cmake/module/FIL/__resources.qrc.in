@@ -1,0 +1,5 @@
+<RCC>
+	<qresource prefix="@__RES_PREFIX@">
+		@__RES_FILES@
+	</qresource>
+</RCC>
