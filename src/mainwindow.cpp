@@ -144,7 +144,7 @@ void MainWindow::initializeForms()
     refreshEnableStates();
     refreshCheckStates();
 
-    // TODO: THIS IS FOR DEBUG PURPOSES
+    // NOTE: THIS IS FOR DEBUG PURPOSES
     //checkLaunchBoxInput("C:/Users/Player/Desktop/LBTest/LaunchBox");
     //checkFlashpointInput("D:/FP/Flashpoint 8.1 Ultimate");
 }
