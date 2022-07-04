@@ -5,13 +5,13 @@ cmake_minimum_required(VERSION 3.21.1)
 
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
-set(OFILB_BASE_VERSION 0.4.1.3) # Required for CI/CD
-project(OFILb
-    VERSION ${OFILB_BASE_VERSION}
+set(FIL_BASE_VERSION 0.4.1.3) # Required for CI/CD
+project(FIL
+    VERSION ${FIL_BASE_VERSION}
     LANGUAGES CXX
-    DESCRIPTION "Flashpoint importer for LaunchBox"
+    DESCRIPTION "Flashpoint importer for launchers"
 )
-set(FORMAL_NAME "Oby's Flashpoint Importer for LaunchBox")
+set(FORMAL_NAME "Flashpoint Importer for Launchers")
 string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LC)
 string(TOUPPER ${PROJECT_NAME} PROJECT_NAME_UC)
 
@@ -72,7 +72,7 @@ set(PACKAGE_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/out/dist")
 #------------Set Global Build Rules----------------
 
 # Versioning
-include(OFILb/VerboseVersioning)
+include(FIL/VerboseVersioning)
 setup_verbose_versioning(PROJECT_VERSION_VERBOSE)
 
 #================= Build =========================
@@ -90,18 +90,18 @@ find_package(Qt6 REQUIRED COMPONENTS
 add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 
 # Fetch Qx (build and import from source)
-include(OFILb/FetchQx)
+include(FIL/FetchQx)
 fetch_qx(6ca6c96ce49de2adfd7461b4be621e8b291a875b) # dev commit
 
 # Fetch libfp (build and import from source)
-include(OFILb/Fetchlibfp)
+include(FIL/Fetchlibfp)
 fetch_libfp(279974f05ef81ef3c6b277f2717ca70e4b78c425)
 
 # Fetch CLIFp (build and import from source)
-include(OFILb/FetchCLIFp)
+include(FIL/FetchCLIFp)
 fetch_clifp(1a4caceb9a98ba975fed7ea1cf9eb7f5bd3419ef) # dev commit
 
-# Setup copy of CLIFp executable to OFILb generated resources directory after its built
+# Setup copy of CLIFp executable to FIL generated resources directory after its built
 # ...
 # This statement creates a command that is known to be able to create the appropraite
 # output file (CLIFP.exe) by copying it from the CLIFp build. The command depends on
@@ -117,7 +117,7 @@ add_custom_command(OUTPUT
 # This statement creates a target that by itself does nothing, but since it depends
 # on a file that the above command is known to be able to create, it will invoke
 # the command automatically when run
-add_custom_target(ofilb_copy_clifp
+add_custom_target(fil_copy_clifp
     ALL
     DEPENDS "${CLIFP_RES_PATH}"
 )
@@ -210,10 +210,10 @@ set_target_properties(${TARGET_NAME} PROPERTIES
 )
 
 # Note that the executable depends on CLIFp being copied into its build dir
-add_dependencies(${TARGET_NAME} ofilb_copy_clifp)
+add_dependencies(${TARGET_NAME} fil_copy_clifp)
 
 # Forward select project variables to C++ code
-include(OFILb/ProjectVars)
+include(FIL/ProjectVars)
 set_cxx_project_vars(${TARGET_NAME}
     FULL_NAME "\"${FORMAL_NAME}\""
     SHORT_NAME "\"${PROJECT_NAME}\""
@@ -222,7 +222,7 @@ set_cxx_project_vars(${TARGET_NAME}
 
 # Generate resource collection for CLIFp
 get_target_property(CLIFP_PATH CLIFp::CLIFp IMPORTED_LOCATION)
-include(OFILb/GeneratedResources)
+include(FIL/GeneratedResources)
 add_generated_resources_collection(${TARGET_NAME}
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/res"
     PREFIX "/"
@@ -231,18 +231,18 @@ add_generated_resources_collection(${TARGET_NAME}
 )
 
 # Set target exe details
-include(OFILb/WinExecutableDetails)
+include(FIL/WinExecutableDetails)
 set_win_executable_details(${TARGET_NAME}
-    ICON "res/icon/OFILb.ico"
+    ICON "res/icon/FIL.ico"
     FILE_VER ${PROJECT_VERSION}
     PRODUCT_VER ${TARGET_FP_VERSION_PREFIX}
     COMPANY_NAME "oblivioncth"
-    FILE_DESC "Flashpoint Importer for LaunchBox"
-    INTERNAL_NAME "OFILb"
+    FILE_DESC "Flashpoint Importer for Launchers"
+    INTERNAL_NAME "FIL"
     COPYRIGHT "Open Source @ 2021 oblivioncth"
     TRADEMARKS_ONE "All Rights Reserved"
     TRADEMARKS_TWO "GNU AGPL V3"
-    ORIG_FILENAME "OFILb.exe"
+    ORIG_FILENAME "FIL.exe"
     PRODUCT_NAME "${FORMAL_NAME}"
 )
 

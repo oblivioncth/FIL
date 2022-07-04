@@ -27,7 +27,7 @@ Install::Install(QString installPath) :
 
 //-Class Functions--------------------------------------------------------------------------------------------
 //Private:
-QMap<QString, InstallFactory*>& Install::registry() { static QMap<QString, InstallFactory*> registry; return registry; }
+QMap<QString, Install::Entry>& Install::registry() { static QMap<QString, Entry> registry; return registry; }
 
 void Install::allowUserWriteOnFile(QString filePath)
 {
@@ -61,17 +61,17 @@ void Install::allowUserWriteOnFile(QString filePath)
 }
 
 //Public:
-void Install::registerInstall(QString name, InstallFactory* factory) { registry()[name] = factory; }
+void Install::registerInstall(QString name, Entry entry) { registry()[name] = entry; }
 
 std::shared_ptr<Install> Install::acquireMatch(const QString& installPath)
 {
     // Check all installs against path and return match if found
-    QMap<QString, InstallFactory*>::const_iterator i;
+    QMap<QString, Entry>::const_iterator i;
 
     for(i = registry().constBegin(); i != registry().constEnd(); ++i)
     {
-        InstallFactory* installFactory = i.value();
-        std::shared_ptr<Install> possibleMatch = installFactory->produce(installPath);
+        Entry entry = i.value();
+        std::shared_ptr<Install> possibleMatch = entry.factory->produce(installPath);
 
         if(possibleMatch->isValid())
             return possibleMatch;
@@ -345,7 +345,7 @@ int Install::revertNextChange(Qx::GenericError& error, bool skipOnFail)
         }
 
         // Remove entry on success
-        mModifiedDocuments.erase(setFront);
+        mModifiedDocuments.erase(setFront); // clazy:exclude=strict-iterators
         return operationsLeft - 1;
     }
 

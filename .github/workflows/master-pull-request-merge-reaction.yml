@@ -18,7 +18,7 @@ jobs:
       version_tag: ${{ steps.tag_master.outputs.new_tag }}
       target_fp_version: ${{ steps.check_target_fp.outputs.fp_version }}
     steps:
-    - name: Checkout OFILb Master
+    - name: Checkout FIL Master
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
@@ -73,10 +73,10 @@ jobs:
         git push
   
   build_ofilb_release_windows:
-    name: Build OFILb Release (Windows)
+    name: Build FIL Release (Windows)
     needs: tag_master_and_sync_dev
     if: github.event.pull_request.merged == true
-    uses: ./.github/workflows/build-ofilb-windows.yml
+    uses: ./.github/workflows/build-fil-windows.yml
     secrets:
       qt_static_dec_key: ${{ secrets.QT_WINDOWS_STATIC_DECRYPT_KEY }}
 
@@ -89,7 +89,7 @@ jobs:
     - name: Set release artifact names
       run: |
         echo "release_qts_win_package_name=${{ needs.build_ofilb_release_windows.outputs.qt_static_artifact_name }}" >> $Env:GITHUB_ENV
-    - name: Download built static OFILb artifact (Windows)
+    - name: Download built static FIL artifact (Windows)
       uses: actions/download-artifact@v3
       with:
         name: ${{ env.release_qts_win_package_name }}
@@ -100,7 +100,7 @@ jobs:
     - name: Generate release
       uses: softprops/action-gh-release@v1
       with:
-        name: "OFILb Release ${{ needs.tag_master_and_sync_dev.outputs.version_tag }} (Targets FP ${{ needs.tag_master_and_sync_dev.outputs.target_fp_version }})"
+        name: "FIL Release ${{ needs.tag_master_and_sync_dev.outputs.version_tag }} (Targets FP ${{ needs.tag_master_and_sync_dev.outputs.target_fp_version }})"
         tag_name: "${{ needs.tag_master_and_sync_dev.outputs.version_tag }}"
         fail_on_unmatched_files: true
         generate_release_notes: true

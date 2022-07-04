@@ -144,10 +144,13 @@ private:
     static inline const QString CAPTION_IMPORTING = "FP Import";
     static inline const QString CAPTION_TAG_FILTER = "Tag Filter";
 
+    // Menus
+    static inline const QString MENU_FE_HELP_OBJ_NAME_TEMPLATE = "action_%1Help";
+    static inline const QRegularExpression MENU_FE_HELP_KEY_REGEX = QRegularExpression("action_(?<frontend>.*?)Help");
+
     // URLs
     static inline const QUrl URL_CLIFP_GITHUB = QUrl("https://github.com/oblivioncth/CLIFp");
-    static inline const QUrl URL_OFLIB_GITHUB =  QUrl("https://github.com/oblivioncth/OFILb");
-    static inline const QUrl URL_LB_FORUMS =  QUrl("https://forums.launchbox-app.com/files/file/2652-obbys-flashpoint-importer-for-launchbox");
+    static inline const QUrl URL_OFLIB_GITHUB =  QUrl("https://github.com/oblivioncth/FIL");
 
     // Flashpoint version check
     static inline const Qx::VersionNumber TARGET_FP_VERSION_PREFIX = Qx::VersionNumber::fromString(PROJECT_TARGET_FP_VER_PFX_STR);
@@ -195,6 +198,7 @@ private:
     bool testForLinkPermissions();
     void initializeForms();
     void initializeEnableConditionMaps();
+    void initializeFrontendHelpActions();
     bool installMatchesTargetSeries(const Fp::Install& fpInstall);
     void checkManualInstallInput(Install install);
     void validateInstall(QString installPath, Install install);
@@ -245,6 +249,7 @@ private slots:
     void all_on_pushButton_clicked();
     void all_on_listWidget_itemChanged(QListWidgetItem* item);
     void all_on_radioButton_clicked();
+    void all_on_menu_triggered(QAction *action);
 
     // Import Exception Handling
     void handleBlockingError(std::shared_ptr<int> response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices);
