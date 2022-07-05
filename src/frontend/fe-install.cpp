@@ -304,6 +304,13 @@ void Install::addPurgeableImagePath(QString imagePath)
     mPurgeableImagePaths.append(imagePath);
 }
 
+/* These functions by default do nothing but can be overridden by children as needed.
+ * Work within them should be kept as minimal as possible since they are not accounted
+ * for by the import progress indicator.
+ */
+Qx::GenericError Install::preImportTasks() { return Qx::GenericError(); } // Called just before frontend portion of import
+Qx::GenericError Install::postImportTasks() { return Qx::GenericError(); } // Called just before final cancellation check
+
 void Install::softReset()
 {
     mLinkedClifpPath.clear();

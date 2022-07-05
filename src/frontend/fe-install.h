@@ -149,6 +149,8 @@ public:
     virtual Qx::GenericError bulkReferenceImages(QString logoRootPath, QString screenshotRootPath, QStringList platforms);
     void addPurgeableImagePath(QString imagePath);
 
+    virtual Qx::GenericError preImportTasks();
+    virtual Qx::GenericError postImportTasks();
     void softReset();
     int getRevertQueueCount() const;
     int revertNextChange(Qx::GenericError& error, bool skipOnFail);

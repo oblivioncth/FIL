@@ -702,6 +702,11 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
        return Failed;
     }
 
+    //-Handle Frontend Specific Import Setup------------------------------
+    errorReport = mFrontendInstall->preImportTasks();
+    if(errorReport.isValid())
+        return Failed;
+
     //-Determine Workload-------------------------------------------------
     quint64 totalGameCount = 0;
 
@@ -777,6 +782,11 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     // Process playlists
     if((importStepStatus = processPlaylists(errorReport, playlistGameQueries)) != Successful)
         return importStepStatus;
+
+    // Handle Frontend specific cleanup
+    errorReport = mFrontendInstall->postImportTasks();
+    if(errorReport.isValid())
+        return Failed;
 
     // Check for final cancellation
     if(mCanceled)
