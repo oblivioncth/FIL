@@ -112,6 +112,9 @@ UpdateableDoc::UpdateableDoc(Install* const parent, std::unique_ptr<QFile> docFi
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
+//Private:
+void UpdateableDoc::finalizeDerived() {} // Empty default implementation so it does nothing, but is opt in for derived classes
+
 //Public:
 void UpdateableDoc::finalize() { finalizeDerived(); }
 

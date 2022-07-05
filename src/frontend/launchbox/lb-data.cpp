@@ -497,9 +497,6 @@ std::shared_ptr<Fe::PlaylistGame> PlaylistDoc::preparePlaylistGame(const Fp::Pla
     return lbPlaylistGame;
 }
 
-//Public:
-void PlaylistDoc::finalizeDerived() {}
-
 //===============================================================================================================
 // PlaylistDocReader
 //===============================================================================================================

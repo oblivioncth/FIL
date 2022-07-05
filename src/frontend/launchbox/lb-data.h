@@ -251,9 +251,6 @@ private:
     Type type() const override;
     std::shared_ptr<Fe::PlaylistHeader> preparePlaylistHeader(const Fp::Playlist& playlist) override;
     std::shared_ptr<Fe::PlaylistGame> preparePlaylistGame(const Fp::PlaylistGame& game) override;
-
-public:
-    void finalizeDerived() override;
 };
 
 class PlaylistDocReader : public Fe::PlaylistDocReader, public XmlDocReader

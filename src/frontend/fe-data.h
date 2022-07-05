@@ -164,7 +164,7 @@ protected:
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 protected:
-    virtual void finalizeDerived() = 0; // Should maybe be option via default empty implementation
+    virtual void finalizeDerived(); // Should maybe be option via default empty implementation
 
     template <typename T, typename K>
         requires std::derived_from<T, Item>
