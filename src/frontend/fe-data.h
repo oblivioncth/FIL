@@ -185,27 +185,27 @@ protected:
                            QHash<K, std::shared_ptr<T>>& finalItems,
                            K key,
                            std::shared_ptr<T> newItem)
-{
-    // Check if game exists
-    if(existingItems.contains(key))
     {
-        // Replace if existing update is on, move existing otherwise
-        if(mUpdateOptions.importMode == ImportMode::NewAndExisting)
+        // Check if game exists
+        if(existingItems.contains(key))
         {
-            newItem->transferOtherFields(existingItems[key]->getOtherFields());
-            finalItems[key] = newItem;
-            existingItems.remove(key);
+            // Replace if existing update is on, move existing otherwise
+            if(mUpdateOptions.importMode == ImportMode::NewAndExisting)
+            {
+                newItem->transferOtherFields(existingItems[key]->getOtherFields());
+                finalItems[key] = newItem;
+                existingItems.remove(key);
+            }
+            else
+            {
+                finalItems[key] = std::move(existingItems[key]);
+                existingItems.remove(key);
+            }
+
         }
         else
-        {
-            finalItems[key] = std::move(existingItems[key]);
-            existingItems.remove(key);
-        }
-
+            finalItems[key] = newItem;
     }
-    else
-        finalItems[key] = newItem;
-}
 
 public:
     virtual void finalize();
