@@ -280,6 +280,16 @@ Qx::GenericError Install::savePlaylistDoc(std::unique_ptr<PlaylistDoc> document)
     return writeErrorStatus;
 }
 
+Qx::GenericError Install::referenceImage(Fp::ImageType, QString, const Game&)
+{
+    throw new std::exception("UNSUPPORTED");
+}
+
+Qx::GenericError Install::bulkReferenceImages(QString, QString, QStringList)
+{
+    throw new std::exception("UNSUPPORTED");
+}
+
 void Install::addPurgeableImagePath(QString imagePath)
 {
     /*TODO: This feels ugly, but due to the fact that a game's info is pulled before a transfer
@@ -292,16 +302,6 @@ void Install::addPurgeableImagePath(QString imagePath)
      *      this then makes reporting progress uglier...
     */
     mPurgeableImagePaths.append(imagePath);
-}
-
-Qx::GenericError Install::referenceImage(Fp::ImageType, QString, const Game&)
-{
-    throw new std::exception("UNSUPPORTED");
-}
-
-Qx::GenericError Install::bulkReferenceImages(QString, QString, QStringList)
-{
-    throw new std::exception("UNSUPPORTED");
 }
 
 void Install::softReset()
