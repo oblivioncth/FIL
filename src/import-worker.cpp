@@ -703,7 +703,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     }
 
     //-Handle Frontend Specific Import Setup------------------------------
-    errorReport = mFrontendInstall->preImportTasks();
+    errorReport = mFrontendInstall->preImport();
     if(errorReport.isValid())
         return Failed;
 
@@ -771,20 +771,43 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     if((importStepStatus = preloadAddApps(errorReport, addAppQuery)) != Successful)
         return importStepStatus;
 
+    // Handle Frontend specific pre-platform tasks
+    errorReport = mFrontendInstall->prePlatformsImport();
+    if(errorReport.isValid())
+        return Failed;
+
     // Process games and additional apps by platform (primary and playlist specific)
     if((importStepStatus = processGames(errorReport, gameQueries, playlistSpecGameQueries)) != Successful)
         return importStepStatus;
+
+    // Handle Frontend specific post-platform tasks
+    errorReport = mFrontendInstall->postPlatformsImport();
+    if(errorReport.isValid())
+        return Failed;
 
     // Process images
     if((importStepStatus = processImages(errorReport, playlistSpecGameQueries)) != Successful)
         return importStepStatus;
 
     // Process playlists
-    if((importStepStatus = processPlaylists(errorReport, playlistGameQueries)) != Successful)
-        return importStepStatus;
+    if(!playlistGameQueries.isEmpty())
+    {
+        // Handle Frontend specific pre-playlist tasks
+        errorReport = mFrontendInstall->prePlaylistsImport();
+        if(errorReport.isValid())
+            return Failed;
+
+        if((importStepStatus = processPlaylists(errorReport, playlistGameQueries)) != Successful)
+            return importStepStatus;
+
+        // Handle Frontend specific pre-playlist tasks
+        errorReport = mFrontendInstall->postPlaylistsImport();
+        if(errorReport.isValid())
+            return Failed;
+    }
 
     // Handle Frontend specific cleanup
-    errorReport = mFrontendInstall->postImportTasks();
+    errorReport = mFrontendInstall->postImport();
     if(errorReport.isValid())
         return Failed;
 

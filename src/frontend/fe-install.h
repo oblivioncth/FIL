@@ -149,8 +149,13 @@ public:
     virtual Qx::GenericError bulkReferenceImages(QString logoRootPath, QString screenshotRootPath, QStringList platforms);
     void addPurgeableImagePath(QString imagePath);
 
-    virtual Qx::GenericError preImportTasks();
-    virtual Qx::GenericError postImportTasks();
+    virtual Qx::GenericError preImport();
+    virtual Qx::GenericError postImport();
+    virtual Qx::GenericError prePlatformsImport();
+    virtual Qx::GenericError postPlatformsImport();
+    virtual Qx::GenericError prePlaylistsImport();
+    virtual Qx::GenericError postPlaylistsImport();
+
     void softReset();
     int getRevertQueueCount() const;
     int revertNextChange(Qx::GenericError& error, bool skipOnFail);
