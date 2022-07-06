@@ -139,10 +139,10 @@ public:
 
     virtual Qx::GenericError populateExistingDocs(QStringList targetPlatforms, QStringList targetPlaylists) = 0;
 
-    Qx::GenericError openPlatformDoc(std::unique_ptr<PlatformDoc>& returnBuffer, QString name, UpdateOptions updateOptions);
-    Qx::GenericError openPlaylistDoc(std::unique_ptr<PlaylistDoc>& returnBuffer, QString name, UpdateOptions updateOptions);
-    Qx::GenericError savePlatformDoc(std::unique_ptr<PlatformDoc> platformDoc);
-    Qx::GenericError savePlaylistDoc(std::unique_ptr<PlaylistDoc> playlistDoc);
+    virtual Qx::GenericError openPlatformDoc(std::unique_ptr<PlatformDoc>& returnBuffer, QString name, UpdateOptions updateOptions);
+    virtual Qx::GenericError openPlaylistDoc(std::unique_ptr<PlaylistDoc>& returnBuffer, QString name, UpdateOptions updateOptions);
+    virtual Qx::GenericError savePlatformDoc(std::unique_ptr<PlatformDoc> platformDoc);
+    virtual Qx::GenericError savePlaylistDoc(std::unique_ptr<PlaylistDoc> playlistDoc);
 
     virtual QString imageDestinationPath(Fp::ImageType imageType, const Game& game) const = 0;
     virtual Qx::GenericError referenceImage(Fp::ImageType imageType, QString sourcePath, const Game& game);
