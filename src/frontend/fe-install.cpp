@@ -139,8 +139,9 @@ Qx::GenericError Install::saveDataDocument(DataDoc* docToSave, std::shared_ptr<D
 
     // Create backup if required
     QFileInfo targetInfo(docToSave->filePath());
+    bool backupRequired = targetInfo.exists() && targetInfo.isFile() && !mModifiedDocuments.contains(docToSave->identifier()); // Prevent overwrite of original backup
 
-    if(targetInfo.exists() && targetInfo.isFile())
+    if(backupRequired)
     {
         QString backupPath = targetInfo.absolutePath() + '/' + targetInfo.baseName() + MODIFIED_FILE_EXT;
 
