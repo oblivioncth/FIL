@@ -20,7 +20,6 @@
 
 function(__parse_file_entry return)
     #---------------- Function Setup ----------------------
-    message(STATUS "__parse_file_entry: ${ARGN}")
     # Const variables
     set(ALIAS_ENTRY_TEMPLATE "<file alias=\"@FILE_ENTRY_ALIAS@\">@FILE_ENTRY_PATH@</file>")
     set(ENTRY_TEMPLATE "<file>@FILE_ENTRY_PATH@</file>")
@@ -62,7 +61,6 @@ function(__parse_file_entry return)
 endfunction()
 
 function(__parse_file_entry_list return)
-        message(STATUS "__parse_file_entry_list: ${ARGN}")
 
     # Working vars (not required to "initialize" in cmake, but here for clarity)
     set(HAVE_FIRST_PATH FALSE)
@@ -72,7 +70,6 @@ function(__parse_file_entry_list return)
 
     # Build parsed entry list
     foreach(word ${ARGN})
-        message(STATUS "word: ${word}")
         if("${word}" STREQUAL "PATH")
             if(${HAVE_FIRST_PATH})
                 # Parse sub-list
@@ -87,7 +84,6 @@ function(__parse_file_entry_list return)
         endif()
 
         list(APPEND ENTRY_ARGS ${word})
-        message(STATUS "entry_args: ${ENTRY_ARGS}")
     endforeach()
 
     # Process last sub-list (above loop ends while populating final sub-list)
