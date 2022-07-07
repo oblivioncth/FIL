@@ -11,10 +11,6 @@
 namespace Fe
 {
 
-//-Class Forward Declarations---------------------------------------------------------------------------------------
-//class Item;
-//template <typename B, typename T, QX_ENABLE_IF(std::is_base_of<Item, T>)> class ItemBuilder;
-
 //-Namespace Global Classes-----------------------------------------------------------------------------------------
 class Item
 {
