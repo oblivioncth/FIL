@@ -96,6 +96,7 @@ class Game : public BasicItem
     template <typename B, typename T>
         requires std::derived_from<T, Game>
     friend class GameBuilder;
+
 //-Class Variables--------------------------------------------------------------------------------------------------
 protected:
     static inline const QString RELEASE_TYPE_GAME = "Game";

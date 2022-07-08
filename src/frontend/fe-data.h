@@ -164,7 +164,7 @@ protected:
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 protected:
-    virtual void finalizeDerived(); // Should maybe be option via default empty implementation
+    virtual void finalizeDerived();
 
     template <typename T, typename K>
         requires std::derived_from<T, Item>
@@ -214,14 +214,6 @@ public:
 class PlatformDoc : public UpdateableDoc
 {
     friend class Install;
-    friend class PlatformDocReader;
-    friend class PlatformDocWriter;
-//-Instance Variables--------------------------------------------------------------------------------------------------
-protected:
-    QHash<QUuid, std::shared_ptr<Game>> mGamesFinal;
-    QHash<QUuid, std::shared_ptr<Game>> mGamesExisting;
-    QHash<QUuid, std::shared_ptr<AddApp>> mAddAppsFinal;
-    QHash<QUuid, std::shared_ptr<AddApp>> mAddAppsExisting;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
@@ -231,21 +223,46 @@ protected:
 private:
     Type type() const override;
 
+public:
+    virtual void setGameImageReference(Fp::ImageType imageType, QUuid gameId, QString sourcePath);
+
+    virtual bool containsGame(QUuid gameId) const = 0;
+    virtual bool containsAddApp(QUuid addAppId) const = 0;
+
+    virtual const Game* addGame(Fp::Game game) = 0;
+    virtual void addAddApp(Fp::AddApp app) = 0;
+};
+
+class BasicPlatformDoc : public PlatformDoc
+{
+    friend class Install;
+    friend class BasicPlatformDocReader;
+    friend class BasicPlatformDocWriter;
+//-Instance Variables--------------------------------------------------------------------------------------------------
+protected:
+    QHash<QUuid, std::shared_ptr<Game>> mGamesFinal;
+    QHash<QUuid, std::shared_ptr<Game>> mGamesExisting;
+    QHash<QUuid, std::shared_ptr<AddApp>> mAddAppsFinal;
+    QHash<QUuid, std::shared_ptr<AddApp>> mAddAppsExisting;
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+protected:
+    explicit BasicPlatformDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions);
+
+//-Instance Functions--------------------------------------------------------------------------------------------------
 protected:
     virtual std::shared_ptr<Game> prepareGame(const Fp::Game& game) = 0;
     virtual std::shared_ptr<AddApp> prepareAddApp(const Fp::AddApp& game) = 0;
 
 public:
-    virtual void setGameImageReference(Fp::ImageType imageType, QUuid gameId, QString sourcePath);
-
     const QHash<QUuid, std::shared_ptr<Game>>& getFinalGames() const;
     const QHash<QUuid, std::shared_ptr<AddApp>>& getFinalAddApps() const;
 
-    bool containsGame(QUuid gameId) const;
-    bool containsAddApp(QUuid addAppId) const;
+    bool containsGame(QUuid gameId) const override;
+    bool containsAddApp(QUuid addAppId) const override;
 
-    const Game* addGame(Fp::Game game);
-    const AddApp* addAddApp(Fp::AddApp app);
+    const Game* addGame(Fp::Game game) override;
+    void addAddApp(Fp::AddApp app) override;
 
     void finalize() override;
 };
@@ -255,6 +272,13 @@ class PlatformDocReader : public virtual DataDocReader
 //-Constructor-------------------------------------------------------------------------------------------------------
 protected:
     PlatformDocReader(DataDoc* targetDoc);
+};
+
+class BasicPlatformDocReader : public PlatformDocReader
+{
+//-Constructor-------------------------------------------------------------------------------------------------------
+protected:
+    BasicPlatformDocReader(DataDoc* targetDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 protected:
@@ -269,16 +293,16 @@ protected:
     PlatformDocWriter(DataDoc* sourceDoc);
 };
 
+class BasicPlatformDocWriter : public PlatformDocWriter
+{
+//-Constructor-------------------------------------------------------------------------------------------------------
+protected:
+    BasicPlatformDocWriter(DataDoc* sourceDoc);
+};
+
 class PlaylistDoc : public UpdateableDoc
 {
     friend class Install;
-    friend class PlaylistDocReader;
-    friend class PlaylistDocWriter;
-//-Instance Variables--------------------------------------------------------------------------------------------------
-protected:
-    std::shared_ptr<PlaylistHeader> mPlaylistHeader;
-    QHash<QUuid, std::shared_ptr<PlaylistGame>> mPlaylistGamesFinal;
-    QHash<QUuid, std::shared_ptr<PlaylistGame>> mPlaylistGamesExisting;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
@@ -288,6 +312,29 @@ protected:
 private:
     Type type() const override;
 
+public:
+    virtual bool containsPlaylistGame(QUuid gameId) const = 0;
+
+    virtual void setPlaylistHeader(Fp::Playlist playlist) = 0;
+    virtual void addPlaylistGame(Fp::PlaylistGame playlistGame) = 0;
+};
+
+class BasicPlaylistDoc : public PlaylistDoc
+{
+    friend class Install;
+    friend class BasicPlaylistDocReader;
+    friend class BasicPlaylistDocWriter;
+//-Instance Variables--------------------------------------------------------------------------------------------------
+protected:
+    std::shared_ptr<PlaylistHeader> mPlaylistHeader;
+    QHash<QUuid, std::shared_ptr<PlaylistGame>> mPlaylistGamesFinal;
+    QHash<QUuid, std::shared_ptr<PlaylistGame>> mPlaylistGamesExisting;
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+protected:
+    explicit BasicPlaylistDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions);
+
+//-Instance Functions--------------------------------------------------------------------------------------------------
 protected:
     virtual std::shared_ptr<PlaylistHeader> preparePlaylistHeader(const Fp::Playlist& playlist) = 0;
     virtual std::shared_ptr<PlaylistGame> preparePlaylistGame(const Fp::PlaylistGame& game) = 0;
@@ -296,10 +343,10 @@ public:
     const std::shared_ptr<PlaylistHeader>& getPlaylistHeader() const;
     const QHash<QUuid, std::shared_ptr<PlaylistGame>>& getFinalPlaylistGames() const;
 
-    bool containsPlaylistGame(QUuid gameId) const;
+    bool containsPlaylistGame(QUuid gameId) const override;
 
-    void setPlaylistHeader(Fp::Playlist playlist);
-    void addPlaylistGame(Fp::PlaylistGame playlistGame);
+    void setPlaylistHeader(Fp::Playlist playlist) override;
+    void addPlaylistGame(Fp::PlaylistGame playlistGame) override;
 
     void finalize() override;
 };
@@ -309,10 +356,16 @@ class PlaylistDocReader : public virtual DataDocReader
 //-Constructor-------------------------------------------------------------------------------------------------------
 protected:
     PlaylistDocReader(DataDoc* targetDoc);
+};
+
+class BasicPlaylistDocReader : public PlaylistDocReader
+{
+//-Constructor-------------------------------------------------------------------------------------------------------
+protected:
+    BasicPlaylistDocReader(DataDoc* targetDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 protected:
-
     QHash<QUuid, std::shared_ptr<PlaylistGame>>& targetDocExistingPlaylistGames();
     std::shared_ptr<PlaylistHeader>& targetDocPlaylistHeader();
 };
@@ -322,6 +375,13 @@ class PlaylistDocWriter : public virtual DataDocWriter
 //-Constructor-------------------------------------------------------------------------------------------------------
 protected:
     PlaylistDocWriter(DataDoc* sourceDoc);
+};
+
+class BasicPlaylistDocWriter : public PlaylistDocWriter
+{
+//-Constructor-------------------------------------------------------------------------------------------------------
+protected:
+    BasicPlaylistDocWriter(DataDoc* sourceDoc);
 };
 
 }

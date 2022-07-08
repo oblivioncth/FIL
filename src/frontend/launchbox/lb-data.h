@@ -175,7 +175,7 @@ public:
     Qx::GenericError writeOutOf() override;
 };
 
-class PlatformDoc : public Fe::PlatformDoc
+class PlatformDoc : public Fe::BasicPlatformDoc
 {
     friend class PlatformDocReader;
     friend class PlatformDocWriter;
@@ -193,7 +193,6 @@ public:
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
-    Type type() const override;
     std::shared_ptr<Fe::Game> prepareGame(const Fp::Game& game) override;
     std::shared_ptr<Fe::AddApp> prepareAddApp(const Fp::AddApp& addApp) override;
 
@@ -203,7 +202,7 @@ public:
     void finalizeDerived() override;
 };
 
-class PlatformDocReader : public Fe::PlatformDocReader, public XmlDocReader
+class PlatformDocReader : public Fe::BasicPlatformDocReader, public XmlDocReader
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -217,7 +216,7 @@ private:
     void parseCustomField();
 };
 
-class PlatformDocWriter : public Fe::PlatformDocWriter, public XmlDocWriter
+class PlatformDocWriter : public Fe::BasicPlatformDocWriter, public XmlDocWriter
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -231,7 +230,7 @@ private:
     bool writeCustomField(const CustomField& customField);
 };
 
-class PlaylistDoc : public Fe::PlaylistDoc
+class PlaylistDoc : public Fe::BasicPlaylistDoc
 {
     friend class PlaylistDocReader;
     friend class PlaylistDocWriter;
@@ -248,12 +247,11 @@ public:
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
-    Type type() const override;
     std::shared_ptr<Fe::PlaylistHeader> preparePlaylistHeader(const Fp::Playlist& playlist) override;
     std::shared_ptr<Fe::PlaylistGame> preparePlaylistGame(const Fp::PlaylistGame& game) override;
 };
 
-class PlaylistDocReader : public Fe::PlaylistDocReader, public XmlDocReader
+class PlaylistDocReader : public Fe::BasicPlaylistDocReader, public XmlDocReader
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -266,7 +264,7 @@ private:
     void parsePlaylistGame();
 };
 
-class PlaylistDocWriter : public Fe::PlaylistDocWriter, XmlDocWriter
+class PlaylistDocWriter : public Fe::BasicPlaylistDocWriter, XmlDocWriter
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:

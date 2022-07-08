@@ -123,7 +123,7 @@ void UpdateableDoc::finalize() { finalizeDerived(); }
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
-//Public:
+//Protected:
 PlatformDoc::PlatformDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions) :
     UpdateableDoc(parent, std::move(docFile), docName, updateOptions)
 {}
@@ -138,13 +138,25 @@ void PlatformDoc::setGameImageReference(Fp::ImageType, QUuid, QString)
     throw new std::exception("UNSUPPORTED");
 }
 
-const QHash<QUuid, std::shared_ptr<Game>>& PlatformDoc::getFinalGames() const { return mGamesFinal; }
-const QHash<QUuid, std::shared_ptr<AddApp>>& PlatformDoc::getFinalAddApps() const { return mAddAppsFinal; }
+//===============================================================================================================
+// BasicPlatformDoc
+//===============================================================================================================
 
-bool PlatformDoc::containsGame(QUuid gameId) const { return mGamesFinal.contains(gameId) || mGamesExisting.contains(gameId); }
-bool PlatformDoc::containsAddApp(QUuid addAppId) const { return mAddAppsFinal.contains(addAppId) || mAddAppsExisting.contains(addAppId); }
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Protected:
+BasicPlatformDoc::BasicPlatformDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions) :
+    PlatformDoc(parent, std::move(docFile), docName, updateOptions)
+{}
 
-const Game* PlatformDoc::addGame(Fp::Game game)
+//-Instance Functions--------------------------------------------------------------------------------------------------
+//Public:
+const QHash<QUuid, std::shared_ptr<Game>>& BasicPlatformDoc::getFinalGames() const { return mGamesFinal; }
+const QHash<QUuid, std::shared_ptr<AddApp>>& BasicPlatformDoc::getFinalAddApps() const { return mAddAppsFinal; }
+
+bool BasicPlatformDoc::containsGame(QUuid gameId) const { return mGamesFinal.contains(gameId) || mGamesExisting.contains(gameId); }
+bool BasicPlatformDoc::containsAddApp(QUuid addAppId) const { return mAddAppsFinal.contains(addAppId) || mAddAppsExisting.contains(addAppId); }
+
+const Game* BasicPlatformDoc::addGame(Fp::Game game)
 {
     // Prepare game
     std::shared_ptr<Game> feGame = prepareGame(game);
@@ -156,19 +168,16 @@ const Game* PlatformDoc::addGame(Fp::Game game)
     return feGame.get();
 }
 
-const AddApp* PlatformDoc::addAddApp(Fp::AddApp app)
+void BasicPlatformDoc::addAddApp(Fp::AddApp app)
 {
     // Prepare game
     std::shared_ptr<AddApp> feAddApp = prepareAddApp(app);
 
     // Add game
     addUpdateableItem(mAddAppsExisting, mAddAppsFinal, feAddApp->getId(), feAddApp);
-
-    // Return pointer to converted and added add app
-    return feAddApp.get();
 }
 
-void PlatformDoc::finalize()
+void BasicPlatformDoc::finalize()
 {
     // Finalize item stores
     finalizeUpdateableItems(mGamesExisting, mGamesFinal);
@@ -188,32 +197,64 @@ PlatformDocReader::PlatformDocReader(DataDoc* targetDoc) :
     DataDocReader(targetDoc)
 {}
 
+//===============================================================================================================
+// BasicPlatformDocReader
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Protected:
+BasicPlatformDocReader::BasicPlatformDocReader(DataDoc* targetDoc) :
+    PlatformDocReader(targetDoc)
+{}
+
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Protected:
 // TODO: Consider removing the following and similar, and just making public getters for existing items.
 //       Right now this is considered to break encapsulation too much, but it might be alright
-QHash<QUuid, std::shared_ptr<Game>>& PlatformDocReader::targetDocExistingGames()
+QHash<QUuid, std::shared_ptr<Game>>& BasicPlatformDocReader::targetDocExistingGames()
 {
-    return static_cast<PlatformDoc*>(mTargetDocument)->mGamesExisting;
+    return static_cast<BasicPlatformDoc*>(mTargetDocument)->mGamesExisting;
 }
 
-QHash<QUuid, std::shared_ptr<AddApp>>& PlatformDocReader::targetDocExistingAddApps()
+QHash<QUuid, std::shared_ptr<AddApp>>& BasicPlatformDocReader::targetDocExistingAddApps()
 {
-    return static_cast<PlatformDoc*>(mTargetDocument)->mAddAppsExisting;
+    return static_cast<BasicPlatformDoc*>(mTargetDocument)->mAddAppsExisting;
 }
 
 //===============================================================================================================
 // PlatformDocWriter
 //===============================================================================================================
 
-//-Constructor--------------------------------------------------------------------------------------------------------
-//Protected:
 PlatformDocWriter::PlatformDocWriter(DataDoc* sourceDoc) :
     DataDocWriter(sourceDoc)
 {}
 
 //===============================================================================================================
+// BasicPlatformDocWriter
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Protected:
+BasicPlatformDocWriter::BasicPlatformDocWriter(DataDoc* sourceDoc) :
+    PlatformDocWriter(sourceDoc)
+{}
+
+//===============================================================================================================
 // PlaylistDoc
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Public:
+PlaylistDoc::PlaylistDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions) :
+    UpdateableDoc(parent, std::move(docFile), docName, updateOptions)
+{}
+
+//-Instance Functions--------------------------------------------------------------------------------------------------
+//Private:
+DataDoc::Type PlaylistDoc::type() const { return Type::Platform; }
+
+//===============================================================================================================
+// BasicPlaylistDoc
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
@@ -225,22 +266,19 @@ PlatformDocWriter::PlatformDocWriter(DataDoc* sourceDoc) :
  * it may be better to require a value for it in this base class' constructor so that all derivatives must provide
  * a default (likely null/empty) playlist header.
  */
-PlaylistDoc::PlaylistDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions) :
-    UpdateableDoc(parent, std::move(docFile), docName, updateOptions)
+BasicPlaylistDoc::BasicPlaylistDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions) :
+    PlaylistDoc(parent, std::move(docFile), docName, updateOptions)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
-//Private:
-DataDoc::Type PlaylistDoc::type() const { return Type::Platform; }
-
 //Public:
-const std::shared_ptr<PlaylistHeader>& PlaylistDoc::getPlaylistHeader() const { return mPlaylistHeader; }
-const QHash<QUuid, std::shared_ptr<PlaylistGame>>& PlaylistDoc::getFinalPlaylistGames() const { return mPlaylistGamesFinal; }
+const std::shared_ptr<PlaylistHeader>& BasicPlaylistDoc::getPlaylistHeader() const { return mPlaylistHeader; }
+const QHash<QUuid, std::shared_ptr<PlaylistGame>>& BasicPlaylistDoc::getFinalPlaylistGames() const { return mPlaylistGamesFinal; }
 
-bool PlaylistDoc::containsPlaylistGame(QUuid gameId) const { return mPlaylistGamesFinal.contains(gameId) || mPlaylistGamesExisting.contains(gameId); }
+bool BasicPlaylistDoc::containsPlaylistGame(QUuid gameId) const { return mPlaylistGamesFinal.contains(gameId) || mPlaylistGamesExisting.contains(gameId); }
 
 
-void PlaylistDoc::setPlaylistHeader(Fp::Playlist playlist)
+void BasicPlaylistDoc::setPlaylistHeader(Fp::Playlist playlist)
 {
     std::shared_ptr<PlaylistHeader> fePlaylistHeader = preparePlaylistHeader(playlist);
 
@@ -252,7 +290,7 @@ void PlaylistDoc::setPlaylistHeader(Fp::Playlist playlist)
     mPlaylistHeader = fePlaylistHeader;
 }
 
-void PlaylistDoc::addPlaylistGame(Fp::PlaylistGame playlistGame)
+void BasicPlaylistDoc::addPlaylistGame(Fp::PlaylistGame playlistGame)
 {
     // Prepare playlist game
     std::shared_ptr<PlaylistGame> fePlaylistGame = preparePlaylistGame(playlistGame);
@@ -261,7 +299,7 @@ void PlaylistDoc::addPlaylistGame(Fp::PlaylistGame playlistGame)
     addUpdateableItem(mPlaylistGamesExisting, mPlaylistGamesFinal, fePlaylistGame->getId(), fePlaylistGame);
 }
 
-void PlaylistDoc::finalize()
+void BasicPlaylistDoc::finalize()
 {
     // Finalize item stores
     finalizeUpdateableItems(mPlaylistGamesExisting, mPlaylistGamesFinal);
@@ -271,7 +309,7 @@ void PlaylistDoc::finalize()
 }
 
 //===============================================================================================================
-// PlatformDocReader
+// PlaylistDocReader
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
@@ -280,27 +318,46 @@ PlaylistDocReader::PlaylistDocReader(DataDoc* targetDoc) :
     DataDocReader(targetDoc)
 {}
 
+//===============================================================================================================
+// BasicPlaylistDocReader
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Protected:
+BasicPlaylistDocReader::BasicPlaylistDocReader(DataDoc* targetDoc) :
+    PlaylistDocReader(targetDoc)
+{}
+
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Protected:
-
-QHash<QUuid, std::shared_ptr<PlaylistGame>>& PlaylistDocReader::targetDocExistingPlaylistGames()
+QHash<QUuid, std::shared_ptr<PlaylistGame>>& BasicPlaylistDocReader::targetDocExistingPlaylistGames()
 {
-    return static_cast<PlaylistDoc*>(mTargetDocument)->mPlaylistGamesExisting;
+    return static_cast<BasicPlaylistDoc*>(mTargetDocument)->mPlaylistGamesExisting;
 }
 
-std::shared_ptr<PlaylistHeader>& PlaylistDocReader::targetDocPlaylistHeader()
+std::shared_ptr<PlaylistHeader>& BasicPlaylistDocReader::targetDocPlaylistHeader()
 {
-    return static_cast<PlaylistDoc*>(mTargetDocument)->mPlaylistHeader;
+    return static_cast<BasicPlaylistDoc*>(mTargetDocument)->mPlaylistHeader;
 }
 
 //===============================================================================================================
-// PlatformDocWriter
+// PlaylistDocWriter
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Protected:
 PlaylistDocWriter::PlaylistDocWriter(DataDoc* sourceDoc) :
     DataDocWriter(sourceDoc)
+{}
+
+//===============================================================================================================
+// BasicPlaylistDocWriter
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Protected:
+BasicPlaylistDocWriter::BasicPlaylistDocWriter(DataDoc* sourceDoc) :
+    PlaylistDocWriter(sourceDoc)
 {}
 
 }

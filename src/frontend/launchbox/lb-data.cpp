@@ -118,13 +118,11 @@ Qx::GenericError XmlDocWriter::writeOutOf()
 //Public:
 PlatformDoc::PlatformDoc(Install* const parent, std::unique_ptr<QFile> xmlFile, QString docName, Fe::UpdateOptions updateOptions,
                          const DocKey&) :
-    Fe::PlatformDoc(parent, std::move(xmlFile), docName, updateOptions)
+    Fe::BasicPlatformDoc(parent, std::move(xmlFile), docName, updateOptions)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-Fe::DataDoc::Type PlatformDoc::type() const { return Fe::DataDoc::Type::Platform; }
-
 std::shared_ptr<Fe::Game> PlatformDoc::prepareGame(const Fp::Game& game)
 {
     // Convert to LaunchBox game
@@ -186,7 +184,7 @@ void PlatformDoc::finalizeDerived()
 //Public:
 PlatformDocReader::PlatformDocReader(PlatformDoc* targetDoc) :
     Fe::DataDocReader(targetDoc),
-    Fe::PlatformDocReader(targetDoc),
+    Fe::BasicPlatformDocReader(targetDoc),
     XmlDocReader(targetDoc)
 {}
 
@@ -330,7 +328,7 @@ void PlatformDocReader::parseCustomField()
 //Public:
 PlatformDocWriter::PlatformDocWriter(PlatformDoc* sourceDoc) :
     Fe::DataDocWriter(sourceDoc),
-    Fe::PlatformDocWriter(sourceDoc),
+    Fe::BasicPlatformDocWriter(sourceDoc),
     XmlDocWriter(sourceDoc)
 {}
 
@@ -453,21 +451,19 @@ bool PlatformDocWriter::writeCustomField(const CustomField& customField)
 }
 
 //===============================================================================================================
-// Xml::PlaylistDoc
+// PlaylistDoc
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
 PlaylistDoc::PlaylistDoc(Install* const parent, std::unique_ptr<QFile> xmlFile, QString docName, Fe::UpdateOptions updateOptions,
                          const DocKey&) :
-    Fe::PlaylistDoc(parent, std::move(xmlFile), docName, updateOptions),
+    Fe::BasicPlaylistDoc(parent, std::move(xmlFile), docName, updateOptions),
     mLaunchBoxDatabaseIdTracker(&parent->mLbDatabaseIdTracker)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-Fe::DataDoc::Type PlaylistDoc::type() const { return Fe::DataDoc::Type::Playlist; }
-
 std::shared_ptr<Fe::PlaylistHeader> PlaylistDoc::preparePlaylistHeader(const Fp::Playlist& playlist)
 {
     // Convert to LaunchBox playlist header
@@ -505,7 +501,7 @@ std::shared_ptr<Fe::PlaylistGame> PlaylistDoc::preparePlaylistGame(const Fp::Pla
 //Public:
 PlaylistDocReader::PlaylistDocReader(PlaylistDoc* targetDoc) :
     Fe::DataDocReader(targetDoc),
-    Fe::PlaylistDocReader(targetDoc),
+    Fe::BasicPlaylistDocReader(targetDoc),
     XmlDocReader(targetDoc)
 {}
 
@@ -598,7 +594,7 @@ void PlaylistDocReader::parsePlaylistGame()
 //Public:
 PlaylistDocWriter::PlaylistDocWriter(PlaylistDoc* sourceDoc) :
     Fe::DataDocWriter(sourceDoc),
-    Fe::PlaylistDocWriter(sourceDoc),
+    Fe::BasicPlaylistDocWriter(sourceDoc),
     XmlDocWriter(sourceDoc)
 {}
 

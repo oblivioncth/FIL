@@ -15,6 +15,8 @@
 namespace Lb
 {
 
+// TODO: Change getters here to property style (no "get")
+
 class Game : public Fe::Game
 {
     friend class GameBuilder;
