@@ -112,8 +112,18 @@ DataDocWriter::DataDocWriter(DataDoc* sourceDoc) :
     mStdWriteErrorStr(docHandlingErrorString(sourceDoc, DocHandlingError::DocWriteFailed))
 {}
 
+//===============================================================================================================
+// Errorable
+//===============================================================================================================
+
+//-Constructor-----------------------------------------------------------------------------------------------------
+//Protected:
+Errorable::Errorable() {}
+
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Protected:
+bool Errorable::hasError() const { return mError.isValid(); }
+Qx::GenericError Errorable::error() const { return mError; }
 
 //===============================================================================================================
 // UpdateableDoc

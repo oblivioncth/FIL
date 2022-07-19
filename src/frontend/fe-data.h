@@ -139,10 +139,24 @@ protected:
     DataDocWriter(DataDoc* sourceDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
-protected:
-
 public:
     virtual Qx::GenericError writeOutOf() = 0;
+};
+
+class Errorable
+{
+//-Instance Variables--------------------------------------------------------------------------------------------------
+protected:
+    Qx::GenericError mError;
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+protected:
+    Errorable();
+
+//-Instance Functions--------------------------------------------------------------------------------------------------
+public:
+    bool hasError() const;
+    Qx::GenericError error() const;
 };
 
 class UpdateableDoc : public DataDoc
@@ -204,7 +218,7 @@ public:
     virtual void finalize();
 };
 
-class PlatformDoc : public UpdateableDoc
+class PlatformDoc : public UpdateableDoc, public Errorable
 {
     friend class Install;
 
@@ -293,7 +307,7 @@ protected:
     BasicPlatformDocWriter(DataDoc* sourceDoc);
 };
 
-class PlaylistDoc : public UpdateableDoc
+class PlaylistDoc : public UpdateableDoc, public Errorable
 {
     friend class Install;
 
