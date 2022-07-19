@@ -181,7 +181,6 @@ class PlatformDoc : public Fe::BasicPlatformDoc
 {
     friend class PlatformDocReader;
     friend class PlatformDocWriter;
-    friend class Install;
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
@@ -236,7 +235,6 @@ class PlaylistDoc : public Fe::BasicPlaylistDoc
 {
     friend class PlaylistDocReader;
     friend class PlaylistDocWriter;
-    friend class Install;
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
@@ -283,7 +281,6 @@ class PlatformsDoc : public Fe::DataDoc
 {
     friend class PlatformsDocReader;
     friend class PlatformsDocWriter;
-    friend class Install;
 
 //-Class Variables-----------------------------------------------------------------------------------------------------
 public:

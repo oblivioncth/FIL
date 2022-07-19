@@ -220,8 +220,6 @@ public:
 
 class PlatformDoc : public UpdateableDoc, public Errorable
 {
-    friend class Install;
-
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
     explicit PlatformDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions);
@@ -242,7 +240,6 @@ public:
 
 class BasicPlatformDoc : public PlatformDoc
 {
-    friend class Install;
     friend class BasicPlatformDocReader;
     friend class BasicPlatformDocWriter;
 //-Instance Variables--------------------------------------------------------------------------------------------------
@@ -309,8 +306,6 @@ protected:
 
 class PlaylistDoc : public UpdateableDoc, public Errorable
 {
-    friend class Install;
-
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
     explicit PlaylistDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions);
@@ -328,9 +323,9 @@ public:
 
 class BasicPlaylistDoc : public PlaylistDoc
 {
-    friend class Install;
     friend class BasicPlaylistDocReader;
     friend class BasicPlaylistDocWriter;
+
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
     std::shared_ptr<PlaylistHeader> mPlaylistHeader;
