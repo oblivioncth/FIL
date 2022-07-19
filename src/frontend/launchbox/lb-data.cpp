@@ -359,21 +359,21 @@ PlatformDocWriter::PlatformDocWriter(PlatformDoc* sourceDoc) :
 bool PlatformDocWriter::writeSourceDoc()
 {
     // Write all games
-    for(std::shared_ptr<Fe::Game> game : static_cast<PlatformDoc*>(mSourceDocument)->getFinalGames())
+    for(const std::shared_ptr<Fe::Game>& game : static_cast<PlatformDoc*>(mSourceDocument)->getFinalGames())
     {
         if(!writeGame(*std::static_pointer_cast<Game>(game)))
             return false;
     }
 
     // Write all additional apps
-    for(std::shared_ptr<Fe::AddApp> addApp : static_cast<PlatformDoc*>(mSourceDocument)->getFinalAddApps())
+    for(const std::shared_ptr<Fe::AddApp>& addApp : static_cast<PlatformDoc*>(mSourceDocument)->getFinalAddApps())
     {
         if(!writeAddApp(*std::static_pointer_cast<AddApp>(addApp)))
             return false;
     }
 
     // Write all custom fields
-    for(std::shared_ptr<CustomField> customField : static_cast<PlatformDoc*>(mSourceDocument)->mCustomFieldsFinal)
+    for(const std::shared_ptr<CustomField>& customField : qAsConst(static_cast<PlatformDoc*>(mSourceDocument)->mCustomFieldsFinal))
     {
         if(!writeCustomField(*customField))
             return false;
