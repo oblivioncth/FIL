@@ -60,6 +60,13 @@ void Install::allowUserWriteOnFile(QString filePath)
     filePathC.ReleaseBuffer();
 }
 
+//Protected:
+QString Install::filePathToBackupPath(QString filePath)
+{
+    QFileInfo fi(filePath);
+    return fi.absolutePath() + '/' + fi.baseName() + MODIFIED_FILE_EXT;
+}
+
 //Public:
 void Install::registerInstall(QString name, Entry entry) { registry()[name] = entry; }
 
@@ -131,26 +138,29 @@ Qx::GenericError Install::saveDataDocument(DataDoc* docToSave, std::shared_ptr<D
     // Error template
     Qx::GenericError errorTemplate(Qx::GenericError::Critical, docHandlingErrorString(docToSave, DocHandlingError::DocCantSave));
 
-    // Create backup if required
-    QFileInfo targetInfo(docToSave->path());
-    bool backupRequired = targetInfo.exists() && targetInfo.isFile() && !mModifiedDocuments.contains(docToSave->identifier()); // Prevent overwrite of original backup
-
-    if(backupRequired)
+    // Create backup and add to modified list if required
+    if(!mModifiedDocuments.contains(docToSave->identifier()))
     {
-        QString backupPath = targetInfo.absolutePath() + '/' + targetInfo.baseName() + MODIFIED_FILE_EXT;
+        // Insert
+        QString docPath = docToSave->path();
+        mModifiedDocuments.insert(docToSave->identifier());
+        mRevertableFilePaths.append(docPath);
 
-        if(QFile::exists(backupPath) && QFileInfo(backupPath).isFile())
+        // Backup
+        if(QFile::exists(docPath))
         {
-            if(!QFile::remove(backupPath))
-                return errorTemplate.setSecondaryInfo(docHandlingErrorString(docToSave, DocHandlingError::CantRemoveBackup));
+            QString backupPath = filePathToBackupPath(docPath);
+
+            if(QFile::exists(backupPath) && QFileInfo(backupPath).isFile())
+            {
+                if(!QFile::remove(backupPath))
+                    return errorTemplate.setSecondaryInfo(docHandlingErrorString(docToSave, DocHandlingError::CantRemoveBackup));
+            }
+
+            if(!QFile::copy(docPath, backupPath))
+                return errorTemplate.setSecondaryInfo(docHandlingErrorString(docToSave, DocHandlingError::CantCreateBackup));
         }
-
-        if(!QFile::copy(targetInfo.absoluteFilePath(), backupPath))
-            return errorTemplate.setSecondaryInfo(docHandlingErrorString(docToSave, DocHandlingError::CantCreateBackup));
     }
-
-    // Add file to modified list
-    mModifiedDocuments.insert(docToSave->identifier());
 
     // Write to file
     Qx::GenericError saveWriteError = docWriter->writeOutOf();
@@ -268,19 +278,7 @@ Qx::GenericError Install::bulkReferenceImages(QString, QString, QStringList)
     throw new std::exception("UNSUPPORTED");
 }
 
-void Install::addPurgeableImagePath(QString imagePath)
-{
-    /*TODO: This feels ugly, but due to the fact that a game's info is pulled before a transfer
-     *      may be possible (i.e. if the image needs to be downloaded), and the info is needed
-     *      to determine an images destination path (and caching game info in import worker also
-     *      feels cruddy), this seemed like the best way to handle tracking modified images short
-     *      of moving the image transfer duty back into Fe::Install, adding image transfers to a
-     *      queue within Fe::Install when the game info is pulled, and then later when ImportWorker
-     *      would performed the transfers, call a function to have Fe::Install initiate them. Though,
-     *      this then makes reporting progress uglier...
-    */
-    mPurgeableImagePaths.append(imagePath);
-}
+void Install::addRevertableFile(QString filePath) { mRevertableFilePaths.append(filePath); }
 
 /* These functions by default do nothing but can be overridden by children as needed.
  * Work within them should be kept as minimal as possible since they are not accounted
@@ -298,11 +296,11 @@ void Install::softReset()
     mLinkedClifpPath.clear();
     mModifiedDocuments.clear();
     mLeasedDocuments.clear();
-    mPurgeableImagePaths.clear();
+    mRevertableFilePaths.clear();
     softResetDerived();
 }
 
-int Install::getRevertQueueCount() const { return mModifiedDocuments.size() + mPurgeableImagePaths.size(); }
+int Install::getRevertQueueCount() const { return mRevertableFilePaths.size(); }
 
 int Install::revertNextChange(Qx::GenericError& error, bool skipOnFail)
 {
@@ -310,47 +308,27 @@ int Install::revertNextChange(Qx::GenericError& error, bool skipOnFail)
     error = Qx::GenericError();
 
     // Get operation count for return
-    int operationsLeft = mModifiedDocuments.size() + mPurgeableImagePaths.size();
+    int operationsLeft = mRevertableFilePaths.size();
 
-    // Delete new XML files and restore backups if present
-    if(!mModifiedDocuments.isEmpty())
+    // Delete new files and restore backups if present
+    if(!mRevertableFilePaths.isEmpty())
     {
-        QSet<DataDoc::Identifier>::iterator setFront = mModifiedDocuments.begin();
-        QString currentDocPath = dataDocPath(*setFront);
+        QString filePath = mRevertableFilePaths.takeFirst();
+        QString backupPath = filePathToBackupPath(filePath);
 
-        QFileInfo currentDocInfo(currentDocPath);
-        QString backupPath = currentDocInfo.absolutePath() + '/' + currentDocInfo.baseName() + MODIFIED_FILE_EXT;
-
-        if(currentDocInfo.exists() && !QFile::remove(currentDocPath) && !skipOnFail)
+        if(QFile::exists(filePath) && !QFile::remove(filePath) && !skipOnFail)
         {
-            error = Qx::GenericError(Qx::GenericError::Error, ERR_REVERT_CANT_REMOVE_DOC, currentDocPath);
+            error = Qx::GenericError(Qx::GenericError::Error, ERR_FILE_WONT_DEL, filePath);
             return operationsLeft;
         }
 
-        if(!currentDocInfo.exists() && QFile::exists(backupPath) && !QFile::rename(backupPath, currentDocPath) && !skipOnFail)
+        if(!QFile::exists(filePath) && QFile::exists(backupPath) && !QFile::rename(backupPath, filePath) && !skipOnFail)
         {
-            error = Qx::GenericError(Qx::GenericError::Error, ERR_REVERT_CANT_RESTORE_DOC, backupPath);
+            error = Qx::GenericError(Qx::GenericError::Error, ERR_FILE_WONT_RESTORE, backupPath);
             return operationsLeft;
         }
 
-        // Remove entry on success
-        mModifiedDocuments.erase(setFront); // clazy:exclude=strict-iterators
-        return operationsLeft - 1;
-    }
-
-    // Revert regular image changes
-    if(!mPurgeableImagePaths.isEmpty())
-    {
-        QString currentImage = mPurgeableImagePaths.front();
-
-        if(!QFile::remove(currentImage) && !skipOnFail)
-        {
-            error = Qx::GenericError(Qx::GenericError::Error, ERR_REVERT_CANT_REMOVE_IMAGE, currentImage);
-            return operationsLeft;
-        }
-
-        // Remove entry on success
-        mPurgeableImagePaths.removeFirst();
+        // Decrement op count
         return operationsLeft - 1;
     }
 

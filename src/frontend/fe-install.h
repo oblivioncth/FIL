@@ -60,17 +60,16 @@ public:
     static inline const QString ERR_UNSUPPORTED_FEATURE = "A feature unsupported by the frontend was called upon!";
     static inline const QString ERR_INSEPECTION = "An unexpected error occurred while inspecting the frontend.";
 
-    // Images Errors
-    static inline const QString ERR_IMAGE_WONT_BACKUP = R"(Cannot rename the an existing image for backup:)";
-    static inline const QString ERR_IMAGE_WONT_COPY = R"(Cannot copy the image "%1" to its destination:)";
-    static inline const QString ERR_IMAGE_WONT_LINK = R"(Cannot create a symbolic link for "%1" at:)";
-    static inline const QString ERR_CANT_MAKE_DIR = R"(Could not create the following image directory. Make sure you have write permissions at that location.)";
-    static inline const QString CAPTION_IMAGE_ERR = "Error importing game image(s)";
+    // File Errors
+    static inline const QString ERR_FILE_WONT_BACKUP = R"(Cannot rename an existing file for backup:)";
+    static inline const QString ERR_FILE_WONT_COPY = R"(Cannot copy the file "%1" to its destination:)";
+    static inline const QString ERR_FILE_WONT_LINK = R"(Cannot create a symbolic link for "%1" at:)";
+    static inline const QString ERR_CANT_MAKE_DIR = R"(Could not create the following directory. Make sure you have write permissions at that location.)";
+    static inline const QString ERR_FILE_WONT_DEL = R"(Cannot remove a file. It may need to be deleted manually.)";
+    static inline const QString ERR_FILE_WONT_RESTORE = R"(Cannot restore a file backup. It may need to be renamed manually.)";
 
-    // Reversion Errors
-    static inline const QString ERR_REVERT_CANT_REMOVE_DOC = R"(Cannot remove a data document file. It may need to be deleted and have its backup restored manually.)";
-    static inline const QString ERR_REVERT_CANT_RESTORE_DOC = R"(Cannot restore a data document backup. It may need to be renamed manually.)";
-    static inline const QString ERR_REVERT_CANT_REMOVE_IMAGE = R"(Cannot remove an image file. It may need to be deleted manually.)";
+    // Image Errors
+    static inline const QString CAPTION_IMAGE_ERR = "Error importing game image(s)";
 
 //-Instance Variables--------------------------------------------------------------------------------------------
 protected:
@@ -86,8 +85,8 @@ protected:
     QSet<DataDoc::Identifier> mModifiedDocuments;
     QSet<DataDoc::Identifier> mLeasedDocuments;
 
-    // Image tracking
-    QStringList mPurgeableImagePaths;
+    // Backup/Deletion tracking
+    QStringList mRevertableFilePaths;
 
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
@@ -96,6 +95,9 @@ public:
 //-Class Functions------------------------------------------------------------------------------------------------------
 private:
     static void allowUserWriteOnFile(QString filePath);
+
+protected:
+    static QString filePathToBackupPath(QString filePath);
 
 public:
     // NOTE: Registry put behind function call to avoid SIOF since otherwise initialization of static registry before calls to registerFrontend would not be guaranteed
@@ -147,7 +149,6 @@ public:
     virtual QString imageDestinationPath(Fp::ImageType imageType, const Game& game) const = 0;
     virtual Qx::GenericError referenceImage(Fp::ImageType imageType, QString sourcePath, const Game& game);
     virtual Qx::GenericError bulkReferenceImages(QString logoRootPath, QString screenshotRootPath, QStringList platforms);
-    void addPurgeableImagePath(QString imagePath);
 
     virtual Qx::GenericError preImport();
     virtual Qx::GenericError postImport();
@@ -157,6 +158,7 @@ public:
     virtual Qx::GenericError postPlaylistsImport();
 
     void softReset();
+    void addRevertableFile(QString filePath);
     int getRevertQueueCount() const;
     int revertNextChange(Qx::GenericError& error, bool skipOnFail);
 };

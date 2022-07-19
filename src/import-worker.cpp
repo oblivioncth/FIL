@@ -141,7 +141,7 @@ Qx::GenericError ImportWorker::transferImage(bool symlink, QString sourcePath, Q
         else if(QFile::exists(backupPath))
             QFile::remove(backupPath);
         else
-            mFrontendInstall->addPurgeableImagePath(destinationPath); // Only queue image to be removed on failure if its new, so existing images aren't deleted on revert
+            mFrontendInstall->addRevertableFile(destinationPath); // Only queue image to be removed on failure if its new, so existing images aren't deleted on revert
     }
     else
     {
@@ -153,7 +153,7 @@ Qx::GenericError ImportWorker::transferImage(bool symlink, QString sourcePath, Q
         else if(QFile::exists(backupPath))
             QFile::remove(backupPath);
         else
-            mFrontendInstall->addPurgeableImagePath(destinationPath); // Only queue image to be removed on failure if its new, so existing images aren't deleted on revert
+            mFrontendInstall->addRevertableFile(destinationPath); // Only queue image to be removed on failure if its new, so existing images aren't deleted on revert
     }
 
     // Return null error on success
