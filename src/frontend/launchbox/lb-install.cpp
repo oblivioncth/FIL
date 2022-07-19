@@ -106,10 +106,9 @@ std::shared_ptr<Fe::PlatformDocReader> Install::prepareOpenPlatformDoc(std::uniq
 {
     // Create doc file reference
     Fe::DataDoc::Identifier docId(Fe::DataDoc::Type::Platform, name);
-    std::unique_ptr<QFile> docFile = std::make_unique<QFile>(dataDocPath(docId));
 
     // Construct unopened document
-    platformDoc = std::make_unique<PlatformDoc>(this, std::move(docFile), name, updateOptions, DocKey{});
+    platformDoc = std::make_unique<PlatformDoc>(this, dataDocPath(docId), name, updateOptions, DocKey{});
 
     // Construct doc reader (need to downcast pointer since doc pointer is upcasted after construction above)
     std::shared_ptr<Fe::PlatformDocReader> docReader = std::make_shared<PlatformDocReader>(static_cast<PlatformDoc*>(platformDoc.get()));
@@ -122,10 +121,9 @@ std::shared_ptr<Fe::PlaylistDocReader> Install::prepareOpenPlaylistDoc(std::uniq
 {
      // Create doc file reference
     Fe::DataDoc::Identifier docId(Fe::DataDoc::Type::Playlist, name);
-    std::unique_ptr<QFile> docFile = std::make_unique<QFile>(dataDocPath(docId));
 
     // Construct unopened document
-    playlistDoc = std::make_unique<PlaylistDoc>(this, std::move(docFile), name, updateOptions, DocKey{});
+    playlistDoc = std::make_unique<PlaylistDoc>(this, dataDocPath(docId), name, updateOptions, DocKey{});
 
     // Construct doc reader (need to downcast pointer since doc pointer is upcasted after construction above)
     std::shared_ptr<Fe::PlaylistDocReader> docReader = std::make_shared<PlaylistDocReader>(static_cast<PlaylistDoc*>(playlistDoc.get()));
@@ -155,11 +153,10 @@ std::shared_ptr<Fe::PlaylistDocWriter> Install::prepareSavePlaylistDoc(const std
 Qx::GenericError Install::openPlatformsDoc(std::unique_ptr<PlatformsDoc>& returnBuffer)
 {
     // Create doc file reference
-    std::unique_ptr<QFile> docFile = std::make_unique<QFile>(dataDocPath(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Config,
-                                                                                                 PlatformsDoc::STD_NAME)));
+    Fe::DataDoc::Identifier docId(Fe::DataDoc::Type::Config, PlatformsDoc::STD_NAME);
 
     // Construct unopened document
-    returnBuffer = std::make_unique<PlatformsDoc>(this, std::move(docFile), DocKey{});
+    returnBuffer = std::make_unique<PlatformsDoc>(this, dataDocPath(docId), DocKey{});
 
     // Construct doc reader
     std::shared_ptr<PlatformsDocReader> docReader = std::make_shared<PlatformsDocReader>(returnBuffer.get());

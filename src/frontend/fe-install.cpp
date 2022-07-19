@@ -115,13 +115,7 @@ Qx::GenericError Install::openDataDocument(DataDoc* docToOpen, std::shared_ptr<D
     {
         // Read existing file if present
         if(mExistingDocuments.contains(docToOpen->identifier()))
-        {
-            // Open File
-            if(docToOpen->mDocumentFile->open(QFile::ReadWrite))
-                openReadError = docReader->readInto();
-            else
-                openReadError = errorTemplate.setSecondaryInfo(docToOpen->mDocumentFile->errorString());
-        }
+             openReadError = docReader->readInto();
 
         // Add lease to ledger if no error occurred while reading
         if(!openReadError.isValid())
@@ -138,7 +132,7 @@ Qx::GenericError Install::saveDataDocument(DataDoc* docToSave, std::shared_ptr<D
     Qx::GenericError errorTemplate(Qx::GenericError::Critical, docHandlingErrorString(docToSave, DocHandlingError::DocCantSave));
 
     // Create backup if required
-    QFileInfo targetInfo(docToSave->filePath());
+    QFileInfo targetInfo(docToSave->path());
     bool backupRequired = targetInfo.exists() && targetInfo.isFile() && !mModifiedDocuments.contains(docToSave->identifier()); // Prevent overwrite of original backup
 
     if(backupRequired)
@@ -158,28 +152,11 @@ Qx::GenericError Install::saveDataDocument(DataDoc* docToSave, std::shared_ptr<D
     // Add file to modified list
     mModifiedDocuments.insert(docToSave->identifier());
 
-    // Create and open document file if its a new document, otherwise clear existing
-    if(!docToSave->mDocumentFile->isOpen())
-    {
-        // Attempt open
-        if(!docToSave->mDocumentFile->open(QIODevice::WriteOnly))
-            return errorTemplate.setSecondaryInfo(docToSave->mDocumentFile->errorString());
-    }
-    else
-    {
-        // Attempt clear
-        if(!docToSave->clearFile())
-            return errorTemplate.setSecondaryInfo(docToSave->mDocumentFile->errorString());
-    }
-
     // Write to file
     Qx::GenericError saveWriteError = docWriter->writeOutOf();
 
-    // Close document file
-    docToSave->mDocumentFile->close();
-
     // Set document permissions
-    allowUserWriteOnFile(docToSave->mDocumentFile->fileName());
+    allowUserWriteOnFile(docToSave->path());
 
     // Remove handle reservation
     mLeasedDocuments.remove(docToSave->identifier());

@@ -17,8 +17,29 @@
 // Project Includes
 #include "fe-items.h"
 
+/* TODO: Consider making readers/writers child classes of their respective docs (their composition can still be
+ * declared outside the doc class by using Doc::Reader{ declarations... }) so that access to the doc's members
+ * is the default and the use of "friend" can be significantly reduced
+ */
+
+/* TODO: Right now all docs that need to be constructed by an install have that install marked as their friend,
+ * but they also are using the Passkey Idiom, a key class with a private constructor that they are also friends
+ * with, which is is redundant for the purposes of construction. First see if the docs really need to be friends
+ * with the Installs (I think they do for the parent() Install pointer to be used as it is). Then, if they do,
+ * the only reason the Passkey Idiom is also being used is because these docs are constructed using
+ * std::make_shared<>(); even if the doc itself has the Install marked as a friend, it doesnt have
+ * the function std::make_shared<Install>() marked as a friend, so it can't be constructed that way. Because
+ * of this the Install constructor has to be public and the idiom used. So, double check the minor differences
+ * between constructing an instance on the heap and then creating a smart pointer with the regular pointer vs.
+ * using std::make_shared<>(), and see if allowing for its use when creating the docs is really worth also
+ * having to do Passkey.
+ */
+
 namespace Fe
 {
+//-External Reference--------------------------------------------------------------------------------------------
+class Install;
+
 //-Enums----------------------------------------------------------------------------------------------------------
 enum class ImportMode {OnlyNew, NewAndExisting};
 enum class DocHandlingError {DocAlreadyOpen, DocCantOpen, DocCantSave, NotParentDoc, CantRemoveBackup, CantCreateBackup, DocInvalidType, DocReadFailed, DocWriteFailed};
@@ -38,9 +59,6 @@ class DataDoc
      * parent() method can return the type directly, without a derived document needing to cast to it's parent's type
     */
 
-    friend class Install;
-    friend class DataDocReader;
-    friend class DataDocWriter;
 //-Class Enums---------------------------------------------------------------------------------------------------------
 public:
     enum class Type {Platform, Playlist, Config};
@@ -75,23 +93,21 @@ private:
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
     Install* const mParent;
-    std::unique_ptr<QFile> mDocumentFile;
-    QString mName;
+    const QString mDocumentPath;
+    const QString mName;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    DataDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName);
+    DataDoc(Install* const parent, const QString& docPath, QString docName);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 protected:
     virtual Type type() const = 0;
-    QString filePath() const;
 
 public:
     Install* parent() const;
+    QString path() const;
     Identifier identifier() const;
-
-    bool clearFile();
 };
 QX_SCOPED_ENUM_HASH_FUNC(DataDoc::Type);
 
@@ -107,9 +123,6 @@ protected:
     DataDocReader(DataDoc* targetDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
-protected:
-    std::unique_ptr<QFile>& targetDocFile();
-
 public:
     virtual Qx::GenericError readInto() = 0;
 };
@@ -127,7 +140,6 @@ protected:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 protected:
-    std::unique_ptr<QFile>& sourceDocFile();
 
 public:
     virtual Qx::GenericError writeOutOf() = 0;
@@ -141,7 +153,7 @@ protected:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit UpdateableDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions);
+    explicit UpdateableDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 protected:
@@ -198,7 +210,7 @@ class PlatformDoc : public UpdateableDoc
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit PlatformDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions);
+    explicit PlatformDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
@@ -228,7 +240,7 @@ protected:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit BasicPlatformDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions);
+    explicit BasicPlatformDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 protected:
@@ -287,7 +299,7 @@ class PlaylistDoc : public UpdateableDoc
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit PlaylistDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions);
+    explicit PlaylistDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
@@ -313,7 +325,7 @@ protected:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit BasicPlaylistDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions);
+    explicit BasicPlaylistDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 protected:
@@ -339,6 +351,13 @@ protected:
     PlaylistDocReader(DataDoc* targetDoc);
 };
 
+/* TODO: Consider making the existing items accessible through a public getter, or at least a function to add
+ * them through a public function (similar TODO already exists). If this is done then these base readers and writers
+ * for specific docs can be removed since they only exist to define the "workaround" getters for existing items.
+ *
+ * This would mean that virtual inheritance wouldn't be required for the other readers/writers and greatly simplify
+ * things
+ */
 class BasicPlaylistDocReader : public PlaylistDocReader
 {
 //-Constructor-------------------------------------------------------------------------------------------------------

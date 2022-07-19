@@ -20,14 +20,23 @@ namespace Lb
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-XmlDocReader::XmlDocReader(Fe::DataDoc* targetDoc) : Fe::DataDocReader(targetDoc) {}
+XmlDocReader::XmlDocReader(Fe::DataDoc* targetDoc) :
+    Fe::DataDocReader(targetDoc),
+    mXmlFile(targetDoc->path()),
+    mStreamReader(&mXmlFile)
+{}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Public:
 Qx::GenericError XmlDocReader::readInto()
 {
-    // Hook reader to document handle
-    mStreamReader.setDevice(targetDocFile().get());
+    // Open File
+    if(!mXmlFile.open(QFile::ReadOnly))
+    {
+        return Qx::GenericError(Qx::GenericError::Critical,
+                                Fe::docHandlingErrorString(mTargetDocument, Fe::DocHandlingError::DocCantOpen),
+                                mXmlFile.errorString());
+    }
 
     // Prepare error return instance
     Qx::XmlStreamReaderError readError;
@@ -53,6 +62,8 @@ Qx::GenericError XmlDocReader::readInto()
 
     return readError.isValid() ? Qx::GenericError(Qx::GenericError::Critical, mStdReadErrorStr, readError.text()) :
                                  Qx::GenericError();
+
+    // File is automatically closed when reader is destroyed...
 }
 
 //===============================================================================================================
@@ -61,7 +72,11 @@ Qx::GenericError XmlDocReader::readInto()
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-XmlDocWriter::XmlDocWriter(Fe::DataDoc* sourceDoc) : Fe::DataDocWriter(sourceDoc) {}
+XmlDocWriter::XmlDocWriter(Fe::DataDoc* sourceDoc) :
+    Fe::DataDocWriter(sourceDoc),
+    mXmlFile(sourceDoc->path()),
+    mStreamWriter(&mXmlFile)
+{}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Protected:
@@ -82,8 +97,13 @@ void XmlDocWriter::writeOtherFields(const QHash<QString, QString>& otherFields)
 //Public:
 Qx::GenericError XmlDocWriter::writeOutOf()
 {
-    // Hook writer to document handle
-    mStreamWriter.setDevice(sourceDocFile().get());
+    // Open File
+    if(!mXmlFile.open(QFile::WriteOnly | QFile::Truncate)) // Discard previous contents
+    {
+        return Qx::GenericError(Qx::GenericError::Critical,
+                                Fe::docHandlingErrorString(mSourceDocument, Fe::DocHandlingError::DocCantSave),
+                                mXmlFile.errorString());
+    }
 
     // Enable auto formatting
     mStreamWriter.setAutoFormatting(true);
@@ -108,6 +128,8 @@ Qx::GenericError XmlDocWriter::writeOutOf()
     // Return null string on success
     return mStreamWriter.hasError() ? Qx::GenericError(Qx::GenericError::Critical, mStdWriteErrorStr, mStreamWriter.device()->errorString()) :
                                       Qx::GenericError();
+
+    // File is automatically closed when writer is destroyed...
 }
 
 //===============================================================================================================
@@ -116,9 +138,9 @@ Qx::GenericError XmlDocWriter::writeOutOf()
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlatformDoc::PlatformDoc(Install* const parent, std::unique_ptr<QFile> xmlFile, QString docName, Fe::UpdateOptions updateOptions,
+PlatformDoc::PlatformDoc(Install* const parent, const QString& xmlPath, QString docName, Fe::UpdateOptions updateOptions,
                          const DocKey&) :
-    Fe::BasicPlatformDoc(parent, std::move(xmlFile), docName, updateOptions)
+    Fe::BasicPlatformDoc(parent, xmlPath, docName, updateOptions)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -456,9 +478,9 @@ bool PlatformDocWriter::writeCustomField(const CustomField& customField)
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlaylistDoc::PlaylistDoc(Install* const parent, std::unique_ptr<QFile> xmlFile, QString docName, Fe::UpdateOptions updateOptions,
+PlaylistDoc::PlaylistDoc(Install* const parent, const QString& xmlPath, QString docName, Fe::UpdateOptions updateOptions,
                          const DocKey&) :
-    Fe::BasicPlaylistDoc(parent, std::move(xmlFile), docName, updateOptions),
+    Fe::BasicPlaylistDoc(parent, xmlPath, docName, updateOptions),
     mLaunchBoxDatabaseIdTracker(&parent->mLbDatabaseIdTracker)
 {}
 
@@ -667,8 +689,8 @@ bool PlaylistDocWriter::writePlaylistGame(const PlaylistGame& playlistGame)
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlatformsDoc::PlatformsDoc(Install* const parent, std::unique_ptr<QFile> xmlFile, const DocKey&) :
-    Fe::DataDoc(parent, std::move(xmlFile), STD_NAME)
+PlatformsDoc::PlatformsDoc(Install* const parent, const QString& xmlPath, const DocKey&) :
+    Fe::DataDoc(parent, xmlPath, STD_NAME)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------

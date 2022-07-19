@@ -141,6 +141,7 @@ class XmlDocReader : public virtual Fe::DataDocReader
 {
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
+    QFile mXmlFile;
     QXmlStreamReader mStreamReader;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
@@ -159,6 +160,7 @@ class XmlDocWriter : public virtual Fe::DataDocWriter
 {
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
+    QFile mXmlFile;
     QXmlStreamWriter mStreamWriter;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
@@ -188,7 +190,7 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlatformDoc(Install* const parent, std::unique_ptr<QFile> xmlFile, QString docName, Fe::UpdateOptions updateOptions,
+    explicit PlatformDoc(Install* const parent, const QString& xmlPath, QString docName, Fe::UpdateOptions updateOptions,
                          const DocKey&);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -242,7 +244,7 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlaylistDoc(Install* const parent, std::unique_ptr<QFile> xmlFile, QString docName, Fe::UpdateOptions updateOptions,
+    explicit PlaylistDoc(Install* const parent, const QString& xmlPath, QString docName, Fe::UpdateOptions updateOptions,
                          const DocKey&);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -295,7 +297,7 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlatformsDoc(Install* const parent, std::unique_ptr<QFile> xmlFile, const DocKey&);
+    explicit PlatformsDoc(Install* const parent, const QString& xmlPath, const DocKey&);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:

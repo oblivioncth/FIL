@@ -78,21 +78,17 @@ QString DataDoc::Identifier::docName() const { return mDocName; }
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-DataDoc::DataDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName) :
+DataDoc::DataDoc(Install* const parent, const QString& docPath, QString docName) :
       mParent(parent),
-      mDocumentFile(std::move(docFile)),
+      mDocumentPath(docPath),
       mName(docName)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
-//Protected:
-QString DataDoc::filePath() const { return mDocumentFile->fileName(); }
-
 //Public:
 Install* DataDoc::parent() const { return mParent; }
+QString DataDoc::path() const { return mDocumentPath; }
 DataDoc::Identifier DataDoc::identifier() const { return Identifier(type(), mName); }
-
-bool DataDoc::clearFile(){ return mDocumentFile->resize(0); } // resize() automatically seeks to new end
 
 //===============================================================================================================
 // DataDocReader
@@ -105,9 +101,6 @@ DataDocReader::DataDocReader(DataDoc* targetDoc) :
     mStdReadErrorStr(docHandlingErrorString(targetDoc, DocHandlingError::DocReadFailed))
 {}
 
-//-Instance Functions-------------------------------------------------------------------------------------------------
-//Protected:
-std::unique_ptr<QFile>& DataDocReader::targetDocFile() { return mTargetDocument->mDocumentFile; }
 //===============================================================================================================
 // DataDocWriter
 //===============================================================================================================
@@ -121,7 +114,6 @@ DataDocWriter::DataDocWriter(DataDoc* sourceDoc) :
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Protected:
-std::unique_ptr<QFile>& DataDocWriter::sourceDocFile() { return mSourceDocument->mDocumentFile; }
 
 //===============================================================================================================
 // UpdateableDoc
@@ -129,8 +121,8 @@ std::unique_ptr<QFile>& DataDocWriter::sourceDocFile() { return mSourceDocument-
 
 //-Constructor-----------------------------------------------------------------------------------------------------
 //Protected:
-UpdateableDoc::UpdateableDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions) :
-    DataDoc(parent, std::move(docFile), docName),
+UpdateableDoc::UpdateableDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions) :
+    DataDoc(parent, docPath, docName),
     mUpdateOptions(updateOptions)
 {}
 
@@ -147,8 +139,8 @@ void UpdateableDoc::finalize() { finalizeDerived(); }
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Protected:
-PlatformDoc::PlatformDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions) :
-    UpdateableDoc(parent, std::move(docFile), docName, updateOptions)
+PlatformDoc::PlatformDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions) :
+    UpdateableDoc(parent, docPath, docName, updateOptions)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -167,8 +159,8 @@ void PlatformDoc::setGameImageReference(Fp::ImageType, QUuid, QString)
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Protected:
-BasicPlatformDoc::BasicPlatformDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions) :
-    PlatformDoc(parent, std::move(docFile), docName, updateOptions)
+BasicPlatformDoc::BasicPlatformDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions) :
+    PlatformDoc(parent, docPath, docName, updateOptions)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -232,8 +224,10 @@ BasicPlatformDocReader::BasicPlatformDocReader(DataDoc* targetDoc) :
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Protected:
-// TODO: Consider removing the following and similar, and just making public getters for existing items.
-//       Right now this is considered to break encapsulation too much, but it might be alright
+/* TODO: Consider removing the following and similar, and just making public getters for existing items.
+ *       Right now this is considered to break encapsulation too much, but it might not be that big of a deal
+ *       and would be cleaner from a usability standpoint that doing this
+ */
 QHash<QUuid, std::shared_ptr<Game>>& BasicPlatformDocReader::targetDocExistingGames()
 {
     return static_cast<BasicPlatformDoc*>(mTargetDocument)->mGamesExisting;
@@ -268,8 +262,8 @@ BasicPlatformDocWriter::BasicPlatformDocWriter(DataDoc* sourceDoc) :
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlaylistDoc::PlaylistDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions) :
-    UpdateableDoc(parent, std::move(docFile), docName, updateOptions)
+PlaylistDoc::PlaylistDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions) :
+    UpdateableDoc(parent, docPath, docName, updateOptions)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -289,8 +283,8 @@ DataDoc::Type PlaylistDoc::type() const { return Type::Platform; }
  * it may be better to require a value for it in this base class' constructor so that all derivatives must provide
  * a default (likely null/empty) playlist header.
  */
-BasicPlaylistDoc::BasicPlaylistDoc(Install* const parent, std::unique_ptr<QFile> docFile, QString docName, UpdateOptions updateOptions) :
-    PlaylistDoc(parent, std::move(docFile), docName, updateOptions)
+BasicPlaylistDoc::BasicPlaylistDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions) :
+    PlaylistDoc(parent, docPath, docName, updateOptions)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
