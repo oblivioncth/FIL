@@ -132,18 +132,28 @@ set(CXX_SOURCES
     src/frontend/fe-install.cpp
     src/frontend/fe-items.h
     src/frontend/fe-items.cpp
-    src/frontend/launchbox/lb-data.h
-    src/frontend/launchbox/lb-data.cpp
-    src/frontend/launchbox/lb-install.h
-    src/frontend/launchbox/lb-install.cpp
-    src/frontend/launchbox/lb-items.h
-    src/frontend/launchbox/lb-items.cpp
     src/import-worker.h
     src/import-worker.cpp
     src/mainwindow.h
     src/mainwindow.cpp
     src/main.cpp
 )
+
+set(FRONTEND_SOURCE_DIRS
+    launchbox
+)
+
+foreach(frontend ${FRONTEND_SOURCE_DIRS})
+    file(GLOB frontend_sources
+         LIST_DIRECTORIES FALSE
+         RELATIVE "${CMAKE_CURRENT_LIST_DIR}"
+         CONFIGURE_DEPENDS
+         "src/frontend/${frontend}/*.h"
+         "src/frontend/${frontend}/*.cpp"
+     )
+
+    list(APPEND CXX_SOURCES ${frontend_sources})
+endforeach()
 
 set(QT_UI_RESOURCES
     src/mainwindow.ui
