@@ -202,7 +202,7 @@ QString Install::versionString() const
     QByteArray settingsData;
     Qx::IoOpReport settingsLoadReport = Qx::readBytesFromFile(settingsData, depsJson);
 
-    if(settingsLoadReport.wasSuccessful())
+    if(!settingsLoadReport.isFailure())
     {
         // Parse original JSON data
         QJsonObject settingsObj = QJsonDocument::fromJson(settingsData).object();
@@ -242,29 +242,29 @@ Qx::GenericError Install::populateExistingDocs(QStringList targetPlatforms, QStr
 
     // Check for platforms (Likely dissolve Qx::getDirFileList in favor of QFileInfoList and QDir::entryInfoList())
     Qx::IoOpReport existingCheck = Qx::dirContentInfoList(existingList, mPlatformsDirectory, {"*." + XML_EXT}, QDir::NoFilter, QDirIterator::Subdirectories);
-    if(existingCheck.wasSuccessful())
+    if(!existingCheck.isFailure())
         for(const QFileInfo& platformFile : qAsConst(existingList))
             for(const QString& possibleMatch : targetPlatforms)
                 if(platformFile.baseName() == makeFileNameLBKosher(possibleMatch))
                     mExistingDocuments.insert(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Platform, possibleMatch));
 
     // Check for playlists
-    if(existingCheck.wasSuccessful())
+    if(!existingCheck.isFailure())
         existingCheck = Qx::dirContentInfoList(existingList, mPlaylistsDirectory, {"*." + XML_EXT}, QDir::NoFilter, QDirIterator::Subdirectories);
-    if(existingCheck.wasSuccessful())
+    if(!existingCheck.isFailure())
         for(const QFileInfo& playlistFile : qAsConst(existingList))
             for(const QString& possibleMatch : targetPlaylists)
                 if(playlistFile.baseName() == makeFileNameLBKosher(possibleMatch))
                     mExistingDocuments.insert(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Playlist, possibleMatch));
 
     // Check for config docs
-    if(existingCheck.wasSuccessful())
+    if(!existingCheck.isFailure())
         existingCheck = Qx::dirContentInfoList(existingList, mDataDirectory, {"*." + XML_EXT});
-    if(existingCheck.wasSuccessful())
+    if(!existingCheck.isFailure())
         for(const QFileInfo& configDocFile : qAsConst(existingList))
             mExistingDocuments.insert(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Config, configDocFile.baseName()));
 
-    return !existingCheck.wasSuccessful() ?
+    return existingCheck.isFailure() ?
                 Qx::GenericError(Qx::GenericError::Critical, ERR_INSEPECTION, existingCheck.outcome(), existingCheck.outcomeInfo()) :
                 Qx::GenericError();
 }

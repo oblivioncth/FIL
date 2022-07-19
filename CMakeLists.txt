@@ -91,15 +91,15 @@ add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 
 # Fetch Qx (build and import from source)
 include(FIL/FetchQx)
-fetch_qx("v0.3.0.3")
+fetch_qx("c148272b65da2f364b467200dd166c8d538ef4cd")
 
 # Fetch libfp (build and import from source)
 include(FIL/Fetchlibfp)
-fetch_libfp("v0.1")
+fetch_libfp("5f667cb1df8ddf053fe0c2ce51f7a5649c62c21e")
 
 # Fetch CLIFp (build and import from source)
 include(FIL/FetchCLIFp)
-fetch_clifp("v0.8.1")
+fetch_clifp("5a7d429579a7722d3d91cf7b024ed2748a98fbf4")
 
 # Setup copy of CLIFp executable to FIL generated resources directory after its built
 # ...

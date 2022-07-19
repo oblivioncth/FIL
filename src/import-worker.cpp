@@ -107,8 +107,8 @@ Qx::GenericError ImportWorker::transferImage(bool symlink, QString sourcePath, Q
             QString sourceChecksum;
             QString destinationChecksum;
 
-            if(Qx::calculateFileChecksum(sourceChecksum, source, QCryptographicHash::Md5).wasSuccessful() &&
-               Qx::calculateFileChecksum(destinationChecksum, destination, QCryptographicHash::Md5).wasSuccessful() &&
+            if(!Qx::calculateFileChecksum(sourceChecksum, source, QCryptographicHash::Md5).isFailure() &&
+               !Qx::calculateFileChecksum(destinationChecksum, destination, QCryptographicHash::Md5).isFailure() &&
                sourceChecksum.compare(destinationChecksum, Qt::CaseInsensitive) == 0)
                 return Qx::GenericError();
         }
