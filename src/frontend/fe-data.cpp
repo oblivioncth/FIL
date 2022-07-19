@@ -183,33 +183,44 @@ bool BasicPlatformDoc::containsAddApp(QUuid addAppId) const { return mAddAppsFin
 
 const Game* BasicPlatformDoc::addGame(Fp::Game game)
 {
-    // Prepare game
-    std::shared_ptr<Game> feGame = prepareGame(game);
+    if(!mError.isValid())
+    {
+        // Prepare game
+        std::shared_ptr<Game> feGame = prepareGame(game);
 
-    // Add game
-    addUpdateableItem(mGamesExisting, mGamesFinal, feGame->getId(), feGame);
+        // Add game
+        addUpdateableItem(mGamesExisting, mGamesFinal, feGame->getId(), feGame);
 
-    // Return pointer to converted and added game
-    return feGame.get();
+        // Return pointer to converted and added game
+        return feGame.get();
+    }
+    else
+        return nullptr;
 }
 
 void BasicPlatformDoc::addAddApp(Fp::AddApp app)
 {
-    // Prepare game
-    std::shared_ptr<AddApp> feAddApp = prepareAddApp(app);
+    if(!mError.isValid())
+    {
+        // Prepare game
+        std::shared_ptr<AddApp> feAddApp = prepareAddApp(app);
 
-    // Add game
-    addUpdateableItem(mAddAppsExisting, mAddAppsFinal, feAddApp->getId(), feAddApp);
+        // Add game
+        addUpdateableItem(mAddAppsExisting, mAddAppsFinal, feAddApp->getId(), feAddApp);
+    }
 }
 
 void BasicPlatformDoc::finalize()
 {
-    // Finalize item stores
-    finalizeUpdateableItems(mGamesExisting, mGamesFinal);
-    finalizeUpdateableItems(mAddAppsExisting, mAddAppsFinal);
+    if(!mError.isValid())
+    {
+        // Finalize item stores
+        finalizeUpdateableItems(mGamesExisting, mGamesFinal);
+        finalizeUpdateableItems(mAddAppsExisting, mAddAppsFinal);
 
-    // Perform base finalization
-    UpdateableDoc::finalize();
+        // Perform base finalization
+        UpdateableDoc::finalize();
+    }
 }
 
 //===============================================================================================================
@@ -307,32 +318,41 @@ bool BasicPlaylistDoc::containsPlaylistGame(QUuid gameId) const { return mPlayli
 
 void BasicPlaylistDoc::setPlaylistHeader(Fp::Playlist playlist)
 {
-    std::shared_ptr<PlaylistHeader> fePlaylistHeader = preparePlaylistHeader(playlist);
+    if(!mError.isValid())
+    {
+        std::shared_ptr<PlaylistHeader> fePlaylistHeader = preparePlaylistHeader(playlist);
 
-    // Ensure doc already existed before transferring (null check)
-    if(mPlaylistHeader)
-        fePlaylistHeader->transferOtherFields(mPlaylistHeader->getOtherFields());
+        // Ensure doc already existed before transferring (null check)
+        if(mPlaylistHeader)
+            fePlaylistHeader->transferOtherFields(mPlaylistHeader->getOtherFields());
 
-    // Set instance header to new one
-    mPlaylistHeader = fePlaylistHeader;
+        // Set instance header to new one
+        mPlaylistHeader = fePlaylistHeader;
+    }
 }
 
 void BasicPlaylistDoc::addPlaylistGame(Fp::PlaylistGame playlistGame)
 {
-    // Prepare playlist game
-    std::shared_ptr<PlaylistGame> fePlaylistGame = preparePlaylistGame(playlistGame);
+    if(!mError.isValid())
+    {
+        // Prepare playlist game
+        std::shared_ptr<PlaylistGame> fePlaylistGame = preparePlaylistGame(playlistGame);
 
-    // Add playlist game
-    addUpdateableItem(mPlaylistGamesExisting, mPlaylistGamesFinal, fePlaylistGame->getId(), fePlaylistGame);
+        // Add playlist game
+        addUpdateableItem(mPlaylistGamesExisting, mPlaylistGamesFinal, fePlaylistGame->getId(), fePlaylistGame);
+    }
 }
 
 void BasicPlaylistDoc::finalize()
 {
-    // Finalize item stores
-    finalizeUpdateableItems(mPlaylistGamesExisting, mPlaylistGamesFinal);
+    if(!mError.isValid())
+    {
+        // Finalize item stores
+        finalizeUpdateableItems(mPlaylistGamesExisting, mPlaylistGamesFinal);
 
-    // Perform base finalization
-    UpdateableDoc::finalize();
+        // Perform base finalization
+        UpdateableDoc::finalize();
+    }
 }
 
 //===============================================================================================================
