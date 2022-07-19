@@ -46,12 +46,12 @@ Qx::GenericError XmlDocReader::readInto()
             }
         }
         else
-            readError = Qx::XmlStreamReaderError(mTargetDocument->errorString(Fe::DataDoc::StandardError::NotParentDoc));
+            readError = Qx::XmlStreamReaderError(Fe::docHandlingErrorString(mTargetDocument, Fe::DocHandlingError::NotParentDoc));
     }
     else
         readError = Qx::XmlStreamReaderError(mStreamReader.error());
 
-    return readError.isValid() ? Qx::GenericError(Qx::GenericError::Critical, mPrimaryError, readError.text()) :
+    return readError.isValid() ? Qx::GenericError(Qx::GenericError::Critical, mStdReadErrorStr, readError.text()) :
                                  Qx::GenericError();
 }
 
@@ -97,7 +97,7 @@ Qx::GenericError XmlDocWriter::writeOutOf()
 
     // Write main body
     if(!writeSourceDoc())
-        return Qx::GenericError(Qx::GenericError::Critical, mPrimaryError, mStreamWriter.device()->errorString());
+        return Qx::GenericError(Qx::GenericError::Critical, mStdWriteErrorStr, mStreamWriter.device()->errorString());
 
     // Close main LaunchBox tag
     mStreamWriter.writeEndElement();
@@ -106,7 +106,7 @@ Qx::GenericError XmlDocWriter::writeOutOf()
     mStreamWriter.writeEndDocument();
 
     // Return null string on success
-    return mStreamWriter.hasError() ? Qx::GenericError(Qx::GenericError::Critical, mPrimaryError, mStreamWriter.device()->errorString()) :
+    return mStreamWriter.hasError() ? Qx::GenericError(Qx::GenericError::Critical, mStdWriteErrorStr, mStreamWriter.device()->errorString()) :
                                       Qx::GenericError();
 }
 
@@ -756,7 +756,7 @@ void PlatformsDocReader::parsePlatformFolder()
         else if(mStreamReader.name() == Xml::Element_PlatformFolder::ELEMENT_PLATFORM)
             platform = mStreamReader.readElementText();
         else
-            mStreamReader.raiseError(mTargetDocument->errorString(Fe::DataDoc::StandardError::DocTypeMismatch));
+            mStreamReader.raiseError(Fe::docHandlingErrorString(mTargetDocument, Fe::DocHandlingError::DocInvalidType));
     }
 
     // Add to document

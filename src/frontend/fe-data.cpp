@@ -6,6 +6,38 @@
 
 namespace Fe
 {
+//-Doc Handling Error--------------------------------------------------------------------------------------------
+    namespace Dhe
+    {
+        // Message Macros
+        const QString M_DOC_TYPE = "<docType>";
+        const QString M_DOC_NAME = "<docName>";
+        const QString M_DOC_PARENT = "<docParent>";
+
+        // Standard Errors
+        static inline const QHash<DocHandlingError, QString> STD_ERRORS = {
+            {DocHandlingError::DocAlreadyOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is already open."},
+            {DocHandlingError::DocCantOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be opened."},
+            {DocHandlingError::DocCantSave, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be saved."},
+            {DocHandlingError::NotParentDoc, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is not a" + M_DOC_PARENT + "document."},
+            {DocHandlingError::CantRemoveBackup, "The existing backup of the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") could not be removed."},
+            {DocHandlingError::CantCreateBackup, "Could not create a backup of the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ")."},
+            {DocHandlingError::DocInvalidType, "The document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is invalid or of the wrong type."},
+            {DocHandlingError::DocReadFailed, "Reading the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") failed."},
+            {DocHandlingError::DocWriteFailed, "Writing to the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") failed."}
+        };
+    }
+
+
+QString docHandlingErrorString(const DataDoc* doc, DocHandlingError handlingError)
+{
+    QString formattedError = Dhe::STD_ERRORS[handlingError];
+    formattedError.replace(Dhe::M_DOC_TYPE, doc->identifier().docTypeString());
+    formattedError.replace(Dhe::M_DOC_NAME, doc->identifier().docName());
+    formattedError.replace(Dhe::M_DOC_PARENT, doc->parent()->name());
+
+    return formattedError;
+}
 
 //===============================================================================================================
 // DataDoc::Identifier
@@ -59,15 +91,6 @@ QString DataDoc::filePath() const { return mDocumentFile->fileName(); }
 //Public:
 Install* DataDoc::parent() const { return mParent; }
 DataDoc::Identifier DataDoc::identifier() const { return Identifier(type(), mName); }
-QString DataDoc::errorString(StandardError error) const
-{
-    QString formattedError = STD_ERRORS[error];
-    formattedError.replace(M_DOC_TYPE, identifier().docTypeString());
-    formattedError.replace(M_DOC_NAME, identifier().docName());
-    formattedError.replace(M_DOC_PARENT, parent()->name());
-
-    return formattedError;
-}
 
 bool DataDoc::clearFile(){ return mDocumentFile->resize(0); } // resize() automatically seeks to new end
 
@@ -79,7 +102,7 @@ bool DataDoc::clearFile(){ return mDocumentFile->resize(0); } // resize() automa
 //Protected:
 DataDocReader::DataDocReader(DataDoc* targetDoc) :
     mTargetDocument(targetDoc),
-    mPrimaryError(targetDoc->errorString(DataDoc::StandardError::DocReadFailed))
+    mStdReadErrorStr(docHandlingErrorString(targetDoc, DocHandlingError::DocReadFailed))
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
@@ -93,7 +116,7 @@ std::unique_ptr<QFile>& DataDocReader::targetDocFile() { return mTargetDocument-
 //Protected:
 DataDocWriter::DataDocWriter(DataDoc* sourceDoc) :
     mSourceDocument(sourceDoc),
-    mPrimaryError(sourceDoc->errorString(DataDoc::StandardError::DocWriteFailed))
+    mStdWriteErrorStr(docHandlingErrorString(sourceDoc, DocHandlingError::DocWriteFailed))
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------

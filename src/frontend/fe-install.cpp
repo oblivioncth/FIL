@@ -106,11 +106,11 @@ Qx::GenericError Install::openDataDocument(DataDoc* docToOpen, std::shared_ptr<D
 {
     // Error report to return
     Qx::GenericError openReadError; // Defaults to no error
-    Qx::GenericError errorTemplate(Qx::GenericError::Critical, docToOpen->errorString(DataDoc::StandardError::DocCantOpen));
+    Qx::GenericError errorTemplate(Qx::GenericError::Critical, docHandlingErrorString(docToOpen, DocHandlingError::DocCantOpen));
 
     // Check if lease is already out
     if(mLeasedDocuments.contains(docToOpen->identifier()))
-        openReadError = errorTemplate.setSecondaryInfo(docToOpen->errorString(DataDoc::StandardError::DocAlreadyOpen));
+        openReadError = errorTemplate.setSecondaryInfo(docHandlingErrorString(docToOpen, DocHandlingError::DocAlreadyOpen));
     else
     {
         // Read existing file if present
@@ -135,7 +135,7 @@ Qx::GenericError Install::openDataDocument(DataDoc* docToOpen, std::shared_ptr<D
 Qx::GenericError Install::saveDataDocument(DataDoc* docToSave, std::shared_ptr<DataDocWriter> docWriter)
 {
     // Error template
-    Qx::GenericError errorTemplate(Qx::GenericError::Critical, docToSave->errorString(DataDoc::StandardError::DocCantSave));
+    Qx::GenericError errorTemplate(Qx::GenericError::Critical, docHandlingErrorString(docToSave, DocHandlingError::DocCantSave));
 
     // Create backup if required
     QFileInfo targetInfo(docToSave->filePath());
@@ -148,11 +148,11 @@ Qx::GenericError Install::saveDataDocument(DataDoc* docToSave, std::shared_ptr<D
         if(QFile::exists(backupPath) && QFileInfo(backupPath).isFile())
         {
             if(!QFile::remove(backupPath))
-                return errorTemplate.setSecondaryInfo(docToSave->errorString(DataDoc::StandardError::CantRemoveBackup));
+                return errorTemplate.setSecondaryInfo(docHandlingErrorString(docToSave, DocHandlingError::CantRemoveBackup));
         }
 
         if(!QFile::copy(targetInfo.absoluteFilePath(), backupPath))
-            return errorTemplate.setSecondaryInfo(docToSave->errorString(DataDoc::StandardError::CantCreateBackup));
+            return errorTemplate.setSecondaryInfo(docHandlingErrorString(docToSave, DocHandlingError::CantCreateBackup));
     }
 
     // Add file to modified list

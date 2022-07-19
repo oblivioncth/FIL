@@ -21,6 +21,8 @@ namespace Fe
 {
 //-Enums----------------------------------------------------------------------------------------------------------
 enum class ImportMode {OnlyNew, NewAndExisting};
+enum class DocHandlingError {DocAlreadyOpen, DocCantOpen, DocCantSave, NotParentDoc, CantRemoveBackup, CantCreateBackup, DocInvalidType, DocReadFailed, DocWriteFailed};
+QX_SCOPED_ENUM_HASH_FUNC(DocHandlingError);
 
 //-Structs---------------------------------------------------------------------------------------------------------
 struct UpdateOptions
@@ -42,7 +44,6 @@ class DataDoc
 //-Class Enums---------------------------------------------------------------------------------------------------------
 public:
     enum class Type {Platform, Playlist, Config};
-    enum class StandardError {DocAlreadyOpen, DocCantOpen, DocCantSave, NotParentDoc, CantRemoveBackup, CantCreateBackup, DocTypeMismatch, DocReadFailed, DocWriteFailed};
 
 //-Inner Classes----------------------------------------------------------------------------------------------------
 public:
@@ -71,24 +72,6 @@ private:
         {Type::Config, "Config"}
     };
 
-    // Message Macros
-    static inline const QString M_DOC_TYPE = "<docType>";
-    static inline const QString M_DOC_NAME = "<docName>";
-    static inline const QString M_DOC_PARENT = "<docParent>";
-
-    // Standard Errors
-    static inline const QHash<StandardError, QString> STD_ERRORS = {
-        {StandardError::DocAlreadyOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is already open."},
-        {StandardError::DocCantOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be opened."},
-        {StandardError::DocCantSave, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be saved."},
-        {StandardError::NotParentDoc, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is not a" + M_DOC_PARENT + "document."},
-        {StandardError::CantRemoveBackup, "The existing backup of the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") could not be removed."},
-        {StandardError::CantCreateBackup, "Could not create a backup of the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ")."},
-        {StandardError::DocTypeMismatch, "The document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") contained an element that belongs to a different document type than expected."},
-        {StandardError::DocReadFailed, "Reading the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") failed."},
-        {StandardError::DocWriteFailed, "Writing to the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") failed."}
-    };
-
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
     Install* const mParent;
@@ -107,19 +90,17 @@ protected:
 public:
     Install* parent() const;
     Identifier identifier() const;
-    QString errorString(StandardError error) const;
 
     bool clearFile();
 };
 QX_SCOPED_ENUM_HASH_FUNC(DataDoc::Type);
-QX_SCOPED_ENUM_HASH_FUNC(DataDoc::StandardError);
 
 class DataDocReader
 {
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
     DataDoc* mTargetDocument;
-    QString mPrimaryError;
+    QString mStdReadErrorStr;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
@@ -138,7 +119,7 @@ class DataDocWriter
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
     DataDoc* mSourceDocument;
-    QString mPrimaryError;
+    QString mStdWriteErrorStr;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
@@ -383,6 +364,9 @@ class BasicPlaylistDocWriter : public PlaylistDocWriter
 protected:
     BasicPlaylistDocWriter(DataDoc* sourceDoc);
 };
+
+//-Functions-------------------------------------------------------------------------------------------------------
+QString docHandlingErrorString(const DataDoc* doc, DocHandlingError handlingError);
 
 }
 #endif // FE_DATA
