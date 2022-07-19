@@ -196,6 +196,29 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& 
         Fp::Game builtGame = fpGb.build();
         const Fe::Game* addedGame = platformDoc->addGame(builtGame);
 
+        /* TODO: It would be nice to avoid needing the returned pointer above. An alternative idea was to make it so
+         * along with the game, likely in a structure, the addGame() call would pass the logo/ss paths and the Platform
+         * interface would handle any referencing (of the various different sorts possible) through itself or its link
+         * to the install via parent(). Then this pointer wouldn't be needed. The issue is that import worker still needs
+         * to get image destination paths if copy/link mode is selected, which would then just require addedGame to
+         * return paths or something like that, more or less coming back to the same problem. This could be worked around
+         * by making Fe::Install a QObject that emits a signal when final image paths are calculated, that import worker
+         * only connects to if those image modes are selected. Not sure if this is better overall though, its tricky...
+         *
+         * If this change was made though, the need for docs to have internal errors could be removed and all platform/
+         * playlist interface methods (which currently return void) could return an error object to be checked directly.
+         *
+         * The main benefit of removing the return is that is significantly simplifies image mode handling in the follow
+         * sections, as well as removes the following check
+         */
+
+        // addedGame can be null if an internal error occurred
+        if(!addedGame)
+        {
+            errorReport = platformDoc->error();
+            return Failed;
+        }
+
         // Add ID to imported game cache
         mImportedGameIdsCache.insert(addedGame->getId());
 
@@ -400,6 +423,13 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
             //---Finalize document----------------------------------
             currentPlatformDoc->finalize();
 
+            // Check for internal doc errors
+            if(currentPlatformDoc->hasError())
+            {
+                errorReport = currentPlatformDoc->error();
+                return Failed;
+            }
+
             // Forfeit document lease and save it
             Qx::GenericError saveError;
             if((saveError = mFrontendInstall->savePlatformDoc(std::move(currentPlatformDoc))).isValid())
@@ -486,6 +516,13 @@ ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& erro
 
         // Finalize document
         currentPlaylistDoc->finalize();
+
+        // Check for internal doc errors
+        if(currentPlaylistDoc->hasError())
+        {
+            errorReport = currentPlaylistDoc->error();
+            return Failed;
+        }
 
         // Forfeit document lease and save it
         Qx::GenericError saveError;
