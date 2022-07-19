@@ -288,9 +288,9 @@ void Install::addPurgeableImagePath(QString imagePath)
  */
 Qx::GenericError Install::preImport() { return Qx::GenericError(); } // Called just before frontend portion of import
 Qx::GenericError Install::postImport() { return Qx::GenericError(); } // Called just before final cancellation check
-Qx::GenericError Install::prePlatformsImport() { return Qx::GenericError(); } // Called just before platform import section
+Qx::GenericError Install::prePlatformsImport(UpdateOptions updateOptions) { return Qx::GenericError(); } // Called just before platform import section
 Qx::GenericError Install::postPlatformsImport() { return Qx::GenericError(); } // Called after before platform import section
-Qx::GenericError Install::prePlaylistsImport() { return Qx::GenericError(); } // Called just before playlists import section
+Qx::GenericError Install::prePlaylistsImport(UpdateOptions updateOptions) { return Qx::GenericError(); } // Called just before playlists import section
 Qx::GenericError Install::postPlaylistsImport() { return Qx::GenericError(); } // Called after before playlists import section
 
 void Install::softReset()

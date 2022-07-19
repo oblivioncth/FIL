@@ -772,7 +772,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         return importStepStatus;
 
     // Handle Frontend specific pre-platform tasks
-    errorReport = mFrontendInstall->prePlatformsImport();
+    errorReport = mFrontendInstall->prePlatformsImport(mOptionSet.updateOptions);
     if(errorReport.isValid())
         return Failed;
 
@@ -793,7 +793,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     if(!playlistGameQueries.isEmpty())
     {
         // Handle Frontend specific pre-playlist tasks
-        errorReport = mFrontendInstall->prePlaylistsImport();
+        errorReport = mFrontendInstall->prePlaylistsImport(mOptionSet.updateOptions);
         if(errorReport.isValid())
             return Failed;
 

@@ -151,9 +151,9 @@ public:
 
     virtual Qx::GenericError preImport();
     virtual Qx::GenericError postImport();
-    virtual Qx::GenericError prePlatformsImport();
+    virtual Qx::GenericError prePlatformsImport(UpdateOptions updateOptions);
     virtual Qx::GenericError postPlatformsImport();
-    virtual Qx::GenericError prePlaylistsImport();
+    virtual Qx::GenericError prePlaylistsImport(UpdateOptions updateOptions);
     virtual Qx::GenericError postPlaylistsImport();
 
     void softReset();
