@@ -15,8 +15,6 @@
 namespace Lb
 {
 
-// TODO: Change getters here to property style (no "get")
-
 class Game : public Fe::Game
 {
     friend class GameBuilder;
@@ -48,24 +46,24 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    QString getTitle() const;
-    QString getSeries() const;
-    QString getDeveloper() const;
-    QString getPublisher() const;
-    QString getSortTitle() const;
-    QDateTime getDateAdded() const;
-    QDateTime getDateModified() const;
+    QString title() const;
+    QString series() const;
+    QString developer() const;
+    QString publisher() const;
+    QString sortTitle() const;
+    QDateTime dateAdded() const;
+    QDateTime dateModified() const;
     bool isBroken() const;
-    QString getPlayMode() const;
-    QString getStatus() const;
-    QString getRegion() const;
-    QString getNotes() const;
-    QString getSource() const;
-    QString getAppPath() const;
-    QString getCommandLine() const;
-    QDateTime getReleaseDate() const;
-    QString getVersion() const;
-    QString getReleaseType() const;
+    QString playMode() const;
+    QString status() const;
+    QString region() const;
+    QString notes() const;
+    QString source() const;
+    QString appPath() const;
+    QString commandLine() const;
+    QDateTime releaseDate() const;
+    QString version() const;
+    QString releaseType() const;
 };
 
 class GameBuilder : public Fe::GameBuilder<GameBuilder, Game>
@@ -114,8 +112,8 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    QString getAppPath() const;
-    QString getCommandLine() const;
+    QString appPath() const;
+    QString commandLine() const;
     bool isAutorunBefore() const;
     bool isWaitForExit() const;
 };
@@ -153,9 +151,9 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    QUuid getGameId() const;
-    QString getName() const;
-    QString getValue() const;
+    QUuid gameId() const;
+    QString name() const;
+    QString value() const;
 };
 
 class CustomFieldBuilder : public Fe::ItemBuilder<CustomFieldBuilder, CustomField>
@@ -188,9 +186,9 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    QUuid getPlaylistId() const;
-    QString getNestedName() const;
-    QString getNotes() const;
+    QUuid playlistId() const;
+    QString nestedName() const;
+    QString notes() const;
 };
 
 class PlaylistHeaderBuilder : public Fe::PlaylistHeaderBuilder<PlaylistHeaderBuilder, PlaylistHeader>
@@ -242,11 +240,11 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    QString getGameTitle() const;
-    int getLBDatabaseId() const;
-    QString getGameFileName() const;
-    QString getGamePlatform() const;
-    int getManualOrder() const;
+    QString gameTitle() const;
+    int lbDatabaseId() const;
+    QString gameFileName() const;
+    QString gamePlatform() const;
+    int manualOrder() const;
 
     void setLBDatabaseId(int lbDbId);
 };
@@ -278,7 +276,7 @@ public:
     Platform();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
-    QString getName() const;
+    QString name() const;
 };
 
 class PlatformBuilder : public Fe::ItemBuilder<PlatformBuilder, Platform>
@@ -307,9 +305,9 @@ public:
 //    PlatformFolder();
 
 ////-Instance Functions------------------------------------------------------------------------------------------------------
-//    QString getMediaType();
-//    QString getFolderPath();
-//    QString getPlatform();
+//    QString mediaType();
+//    QString folderPath();
+//    QString platform();
 //};
 
 //class PlatformFolderBuilder : public ItemBuilder<PlatformFolderBuilder, PlatformFolder>

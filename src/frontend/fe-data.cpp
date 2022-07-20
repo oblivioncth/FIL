@@ -189,7 +189,7 @@ const Game* BasicPlatformDoc::addGame(Fp::Game game)
         std::shared_ptr<Game> feGame = prepareGame(game);
 
         // Add game
-        addUpdateableItem(mGamesExisting, mGamesFinal, feGame->getId(), feGame);
+        addUpdateableItem(mGamesExisting, mGamesFinal, feGame->id(), feGame);
 
         // Return pointer to converted and added game
         return feGame.get();
@@ -206,7 +206,7 @@ void BasicPlatformDoc::addAddApp(Fp::AddApp app)
         std::shared_ptr<AddApp> feAddApp = prepareAddApp(app);
 
         // Add game
-        addUpdateableItem(mAddAppsExisting, mAddAppsFinal, feAddApp->getId(), feAddApp);
+        addUpdateableItem(mAddAppsExisting, mAddAppsFinal, feAddApp->id(), feAddApp);
     }
 }
 
@@ -324,7 +324,7 @@ void BasicPlaylistDoc::setPlaylistHeader(Fp::Playlist playlist)
 
         // Ensure doc already existed before transferring (null check)
         if(mPlaylistHeader)
-            fePlaylistHeader->transferOtherFields(mPlaylistHeader->getOtherFields());
+            fePlaylistHeader->transferOtherFields(mPlaylistHeader->otherFields());
 
         // Set instance header to new one
         mPlaylistHeader = fePlaylistHeader;
@@ -339,7 +339,7 @@ void BasicPlaylistDoc::addPlaylistGame(Fp::PlaylistGame playlistGame)
         std::shared_ptr<PlaylistGame> fePlaylistGame = preparePlaylistGame(playlistGame);
 
         // Add playlist game
-        addUpdateableItem(mPlaylistGamesExisting, mPlaylistGamesFinal, fePlaylistGame->getId(), fePlaylistGame);
+        addUpdateableItem(mPlaylistGamesExisting, mPlaylistGamesFinal, fePlaylistGame->id(), fePlaylistGame);
     }
 }
 

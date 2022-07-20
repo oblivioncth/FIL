@@ -272,9 +272,9 @@ Qx::GenericError Install::populateExistingDocs(QStringList targetPlatforms, QStr
 QString Install::imageDestinationPath(Fp::ImageType imageType, const Fe::Game& game) const
 {
     return mPlatformImagesDirectory.absolutePath() + '/' +
-           game.getPlatform() + '/' +
+           game.platform() + '/' +
            (imageType == Fp::ImageType::Logo ? LOGO_PATH : SCREENSHOT_PATH) + '/' +
-           game.getId().toString(QUuid::WithoutBraces) +
+           game.id().toString(QUuid::WithoutBraces) +
            IMAGE_EXT;
 }
 

@@ -14,8 +14,8 @@ Item::Item() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QHash<QString, QString>& Item::getOtherFields() { return mOtherFields; }
-const QHash<QString, QString>& Item::getOtherFields() const { return mOtherFields; }
+QHash<QString, QString>& Item::otherFields() { return mOtherFields; }
+const QHash<QString, QString>& Item::otherFields() const { return mOtherFields; }
 
 void Item::transferOtherFields(QHash<QString, QString>& otherFields) { mOtherFields = std::move(otherFields); }
 
@@ -34,8 +34,8 @@ BasicItem::BasicItem(QUuid id, QString name) :
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QUuid BasicItem::getId() const { return mId; }
-QString BasicItem::getName() const { return mName; }
+QUuid BasicItem::id() const { return mId; }
+QString BasicItem::name() const { return mName; }
 
 //===============================================================================================================
 // GAME
@@ -51,7 +51,7 @@ Game::Game(QUuid id, QString name, QString platform) :
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QString Game::getPlatform() const { return mPlatform; }
+QString Game::platform() const { return mPlatform; }
 
 //===============================================================================================================
 // ADD APP
@@ -68,7 +68,7 @@ AddApp::AddApp(QUuid id, QString name, QUuid gameId) :
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QUuid AddApp::getGameId() const { return mGameId; }
+QUuid AddApp::gameId() const { return mGameId; }
 
 //===============================================================================================================
 // PLAYLIST HEADER
@@ -96,6 +96,6 @@ PlaylistGame::PlaylistGame(QUuid id, QString name) :
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QUuid PlaylistGame::getGameId() const { return mId; } // Proxy for getId()
+QUuid PlaylistGame::gameId() const { return mId; } // Proxy for getId()
 
 }

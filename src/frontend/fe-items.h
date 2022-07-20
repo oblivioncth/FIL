@@ -31,8 +31,8 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    QHash<QString, QString>& getOtherFields();
-    const QHash<QString, QString>& getOtherFields() const;
+    QHash<QString, QString>& otherFields();
+    const QHash<QString, QString>& otherFields() const;
     void transferOtherFields(QHash<QString, QString>& otherFields);
 };
 
@@ -76,8 +76,8 @@ protected:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    QUuid getId() const;
-    QString getName() const;
+    QUuid id() const;
+    QString name() const;
 };
 
 template <typename B, typename T>
@@ -113,7 +113,7 @@ protected:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    QString getPlatform() const;
+    QString platform() const;
 };
 
 template <typename B, typename T>
@@ -141,7 +141,7 @@ protected:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    QUuid getGameId() const;
+    QUuid gameId() const;
 };
 
 template <typename B, typename T>
@@ -185,7 +185,7 @@ protected:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    QUuid getGameId() const;
+    QUuid gameId() const;
 };
 
 template <typename B, typename T>

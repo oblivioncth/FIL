@@ -19,7 +19,8 @@
 
 /* TODO: Consider making readers/writers child classes of their respective docs (their composition can still be
  * declared outside the doc class by using Doc::Reader{ declarations... }) so that access to the doc's members
- * is the default and the use of "friend" can be significantly reduced
+ * is the default and the use of "friend" can be significantly reduced. The same can be done for the builders
+ * of items (i.e. ::Builder)
  */
 
 /* TODO: Right now all docs that need to be constructed by an install have that install marked as their friend,
@@ -199,7 +200,7 @@ protected:
             // Replace if existing update is on, move existing otherwise
             if(mUpdateOptions.importMode == ImportMode::NewAndExisting)
             {
-                newItem->transferOtherFields(existingItems[key]->getOtherFields());
+                newItem->transferOtherFields(existingItems[key]->otherFields());
                 finalItems[key] = newItem;
                 existingItems.remove(key);
             }
@@ -361,7 +362,7 @@ protected:
 };
 
 /* TODO: Consider making the existing items accessible through a public getter, or at least a function to add
- * them through a public function (similar TODO already exists). If this is done then these base readers and writers
+ * them through a public function (similar todo already exists). If this is done then these base readers and writers
  * for specific docs can be removed since they only exist to define the "workaround" getters for existing items.
  *
  * This would mean that virtual inheritance wouldn't be required for the other readers/writers and greatly simplify

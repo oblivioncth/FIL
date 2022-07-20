@@ -220,18 +220,18 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& 
         }
 
         // Add ID to imported game cache
-        mImportedGameIdsCache.insert(addedGame->getId());
+        mImportedGameIdsCache.insert(addedGame->id());
 
         // Get image information
-        QFileInfo logoLocalInfo(mFlashpointInstall->imageLocalPath(Fp::ImageType::Logo, addedGame->getId()));
-        QFileInfo ssLocalInfo(mFlashpointInstall->imageLocalPath(Fp::ImageType::Screenshot, addedGame->getId()));
+        QFileInfo logoLocalInfo(mFlashpointInstall->imageLocalPath(Fp::ImageType::Logo, addedGame->id()));
+        QFileInfo ssLocalInfo(mFlashpointInstall->imageLocalPath(Fp::ImageType::Screenshot, addedGame->id()));
 
         // Setup image downloads if applicable
         if(mOptionSet.downloadImages)
         {
             if(!logoLocalInfo.exists())
             {
-                QUrl logoRemotePath = mFlashpointInstall->imageRemoteUrl(Fp::ImageType::Logo, addedGame->getId());
+                QUrl logoRemotePath = mFlashpointInstall->imageRemoteUrl(Fp::ImageType::Logo, addedGame->id());
                 mImageDownloadManager.appendTask(Qx::DownloadTask{logoRemotePath, logoLocalInfo.path()});
             }
             else
@@ -239,7 +239,7 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& 
 
             if(!ssLocalInfo.exists())
             {
-                QUrl ssRemotePath = mFlashpointInstall->imageRemoteUrl(Fp::ImageType::Screenshot, addedGame->getId());
+                QUrl ssRemotePath = mFlashpointInstall->imageRemoteUrl(Fp::ImageType::Screenshot, addedGame->id());
                 mImageDownloadManager.appendTask(Qx::DownloadTask{ssRemotePath, ssLocalInfo.path()});
             }
             else
@@ -256,8 +256,8 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& 
             }
             else if(mFrontendInstall->imageRefType() == Fe::Install::ImageRefType::Platform)
             {
-                platformDoc->setGameImageReference(Fp::ImageType::Logo, addedGame->getId(), logoLocalInfo.path());
-                platformDoc->setGameImageReference(Fp::ImageType::Screenshot, addedGame->getId(), ssLocalInfo.path());
+                platformDoc->setGameImageReference(Fp::ImageType::Logo, addedGame->id(), logoLocalInfo.path());
+                platformDoc->setGameImageReference(Fp::ImageType::Screenshot, addedGame->id(), ssLocalInfo.path());
             }
         }
         else // Setup transfer tasks if applicable

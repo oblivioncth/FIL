@@ -38,24 +38,24 @@ Game::Game(Fp::Game flashpointGame, QString fullCLIFpPath) :
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QString Game::getTitle() const { return mName; } // Proxy for name
-QString Game::getSeries() const { return mSeries; }
-QString Game::getDeveloper() const { return mDeveloper; }
-QString Game::getPublisher() const { return mPublisher; }
-QString Game::getSortTitle() const { return mSortTitle; }
-QDateTime Game::getDateAdded() const { return mDateAdded; }
-QDateTime Game::getDateModified() const { return mDateModified; }
+QString Game::title() const { return mName; } // Proxy for name
+QString Game::series() const { return mSeries; }
+QString Game::developer() const { return mDeveloper; }
+QString Game::publisher() const { return mPublisher; }
+QString Game::sortTitle() const { return mSortTitle; }
+QDateTime Game::dateAdded() const { return mDateAdded; }
+QDateTime Game::dateModified() const { return mDateModified; }
 bool Game::isBroken() const { return mBroken; }
-QString Game::getPlayMode() const { return mPlayMode; }
-QString Game::getStatus() const { return mStatus; }
-QString Game::getRegion() const { return mRegion; }
-QString Game::getNotes() const { return mNotes; }
-QString Game::getSource() const { return mSource; }
-QString Game::getAppPath() const { return mAppPath; }
-QString Game::getCommandLine() const { return mCommandLine; }
-QDateTime Game::getReleaseDate() const { return mReleaseDate; }
-QString Game::getVersion() const { return mVersion; }
-QString Game::getReleaseType() const { return mReleaseType; }
+QString Game::playMode() const { return mPlayMode; }
+QString Game::status() const { return mStatus; }
+QString Game::region() const { return mRegion; }
+QString Game::notes() const { return mNotes; }
+QString Game::source() const { return mSource; }
+QString Game::appPath() const { return mAppPath; }
+QString Game::commandLine() const { return mCommandLine; }
+QDateTime Game::releaseDate() const { return mReleaseDate; }
+QString Game::version() const { return mVersion; }
+QString Game::releaseType() const { return mReleaseType; }
 
 //===============================================================================================================
 // GameBuilder
@@ -124,8 +124,8 @@ AddApp::AddApp(Fp::AddApp flashpointAddApp, QString fullCLIFpPath) :
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QString AddApp::getAppPath() const { return mAppPath; }
-QString AddApp::getCommandLine() const { return mCommandLine; }
+QString AddApp::appPath() const { return mAppPath; }
+QString AddApp::commandLine() const { return mCommandLine; }
 bool AddApp::isAutorunBefore() const { return mAutorunBefore; }
 bool AddApp::isWaitForExit() const { return mWaitForExit; }
 
@@ -154,9 +154,9 @@ CustomField::CustomField() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QUuid CustomField::getGameId() const { return mGameId; }
-QString CustomField::getName() const { return mName; }
-QString CustomField::getValue() const { return mValue; }
+QUuid CustomField::gameId() const { return mGameId; }
+QString CustomField::name() const { return mName; }
+QString CustomField::value() const { return mValue; }
 
 //===============================================================================================================
 // CustomFieldBuilder
@@ -188,9 +188,9 @@ PlaylistHeader::PlaylistHeader(Fp::Playlist flashpointPlaylist) :
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QUuid PlaylistHeader::getPlaylistId() const { return mId; } // Proxy for mId
-QString PlaylistHeader::getNestedName() const { return mNestedName; }
-QString PlaylistHeader::getNotes() const { return mNotes; }
+QUuid PlaylistHeader::playlistId() const { return mId; } // Proxy for mId
+QString PlaylistHeader::nestedName() const { return mNestedName; }
+QString PlaylistHeader::notes() const { return mNotes; }
 
 //===============================================================================================================
 // PlaylistHeaderBuilder
@@ -215,9 +215,9 @@ PlaylistHeaderBuilder& PlaylistHeaderBuilder::wNotes(QString notes) { mItemBluep
 PlaylistGame::EntryDetails::EntryDetails() {}
 
 PlaylistGame::EntryDetails::EntryDetails(const Game& refGame) :
-    mTitle(refGame.getName()),
-    mFilename(QFileInfo(refGame.getAppPath()).fileName()),
-    mPlatform(refGame.getPlatform())
+    mTitle(refGame.name()),
+    mFilename(QFileInfo(refGame.appPath()).fileName()),
+    mPlatform(refGame.platform())
 {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
@@ -244,11 +244,11 @@ PlaylistGame::PlaylistGame() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QString PlaylistGame::getGameTitle() const { return mName; } // Proxy for mName
-int PlaylistGame::getLBDatabaseId() const { return mLBDatabaseId; }
-QString PlaylistGame::getGameFileName() const { return mGameFilename; }
-QString PlaylistGame::getGamePlatform() const { return mGamePlatform; }
-int PlaylistGame::getManualOrder() const { return mManualOrder; }
+QString PlaylistGame::gameTitle() const { return mName; } // Proxy for mName
+int PlaylistGame::lbDatabaseId() const { return mLBDatabaseId; }
+QString PlaylistGame::gameFileName() const { return mGameFilename; }
+QString PlaylistGame::gamePlatform() const { return mGamePlatform; }
+int PlaylistGame::manualOrder() const { return mManualOrder; }
 
 void PlaylistGame::setLBDatabaseId(int lbDbId) { mLBDatabaseId = lbDbId; }
 
@@ -295,7 +295,7 @@ Platform::Platform() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-QString Platform::getName() const { return mName; }
+QString Platform::name() const { return mName; }
 
 //===============================================================================================================
 // PlatformBuilder
@@ -319,9 +319,9 @@ PlatformBuilder& PlatformBuilder::wName(QString name) { mItemBlueprint.mName = n
 
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-//QString PlatformFolder::getMediaType() { return mMediaType; }
-//QString PlatformFolder::getFolderPath() { return mFolderPath; }
-//QString PlatformFolder::getPlatform() { return mPlatform; }
+//QString PlatformFolder::mediaType() { return mMediaType; }
+//QString PlatformFolder::folderPath() { return mFolderPath; }
+//QString PlatformFolder::platform() { return mPlatform; }
 
 //===============================================================================================================
 // PlatformFolderBuilder
