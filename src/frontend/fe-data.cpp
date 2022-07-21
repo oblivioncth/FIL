@@ -189,7 +189,7 @@ const Game* BasicPlatformDoc::addGame(Fp::Game game)
         std::shared_ptr<Game> feGame = prepareGame(game);
 
         // Add game
-        addUpdateableItem(mGamesExisting, mGamesFinal, feGame->id(), feGame);
+        addUpdateableItem(mGamesExisting, mGamesFinal, feGame);
 
         // Return pointer to converted and added game
         return feGame.get();
@@ -206,7 +206,7 @@ void BasicPlatformDoc::addAddApp(Fp::AddApp app)
         std::shared_ptr<AddApp> feAddApp = prepareAddApp(app);
 
         // Add game
-        addUpdateableItem(mAddAppsExisting, mAddAppsFinal, feAddApp->id(), feAddApp);
+        addUpdateableItem(mAddAppsExisting, mAddAppsFinal, feAddApp);
     }
 }
 
@@ -339,7 +339,7 @@ void BasicPlaylistDoc::addPlaylistGame(Fp::PlaylistGame playlistGame)
         std::shared_ptr<PlaylistGame> fePlaylistGame = preparePlaylistGame(playlistGame);
 
         // Add playlist game
-        addUpdateableItem(mPlaylistGamesExisting, mPlaylistGamesFinal, fePlaylistGame->id(), fePlaylistGame);
+        addUpdateableItem(mPlaylistGamesExisting, mPlaylistGamesFinal, fePlaylistGame);
     }
 }
 

@@ -215,6 +215,15 @@ protected:
             finalItems[key] = newItem;
     }
 
+    template <typename T>
+        requires std::derived_from<T, BasicItem>
+    void addUpdateableItem(QHash<QUuid, std::shared_ptr<T>>& existingItems,
+                           QHash<QUuid, std::shared_ptr<T>>& finalItems,
+                           std::shared_ptr<T> newItem)
+    {
+        addUpdateableItem(existingItems, finalItems, static_cast<BasicItem>(newItem).id(), newItem);
+    }
+
 public:
     virtual void finalize();
 };
