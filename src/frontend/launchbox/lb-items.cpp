@@ -14,7 +14,7 @@ namespace Lb
 //Public:
 Game::Game() {}
 
-Game::Game(Fp::Game flashpointGame, QString fullCLIFpPath) :
+Game::Game(const Fp::Game& flashpointGame, QString fullCLIFpPath) :
     Fe::Game(flashpointGame.getId(), flashpointGame.getTitle(), flashpointGame.getPlatform()),
     mSeries(flashpointGame.getSeries()),
     mDeveloper(flashpointGame.getDeveloper()),
@@ -111,7 +111,7 @@ GameBuilder& GameBuilder::wReleaseType(QString releaseType) { mItemBlueprint.mRe
 //Public:
 AddApp::AddApp() {}
 
-AddApp::AddApp(Fp::AddApp flashpointAddApp, QString fullCLIFpPath) :
+AddApp::AddApp(const Fp::AddApp& flashpointAddApp, QString fullCLIFpPath) :
     Fe::AddApp(flashpointAddApp.getId(), flashpointAddApp.getName(), flashpointAddApp.getParentId()),
     mAppPath(QDir::toNativeSeparators(fullCLIFpPath)),
     mCommandLine(flashpointAddApp.isPlayable() ? CLIFp::parametersFromStandard(mId)
@@ -180,7 +180,7 @@ CustomFieldBuilder& CustomFieldBuilder::wValue(QString value) { mItemBlueprint.m
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 PlaylistHeader::PlaylistHeader() {}
-PlaylistHeader::PlaylistHeader(Fp::Playlist flashpointPlaylist) :
+PlaylistHeader::PlaylistHeader(const Fp::Playlist& flashpointPlaylist) :
     Fe::PlaylistHeader(flashpointPlaylist.getId(), flashpointPlaylist.getTitle()),
     mNestedName(flashpointPlaylist.getTitle()),
     mNotes(flashpointPlaylist.getDescription())
@@ -232,7 +232,7 @@ QString PlaylistGame::EntryDetails::platform() const { return mTitle; }
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-PlaylistGame::PlaylistGame(Fp::PlaylistGame flashpointPlaylistGame, const QHash<QUuid, EntryDetails>& playlistGameDetailsMap) :
+PlaylistGame::PlaylistGame(const Fp::PlaylistGame& flashpointPlaylistGame, const QHash<QUuid, EntryDetails>& playlistGameDetailsMap) :
     Fe::PlaylistGame(flashpointPlaylistGame.getGameId(), playlistGameDetailsMap.value(flashpointPlaylistGame.getGameId()).title()),
     mLBDatabaseId(-1),
     mGameFilename(playlistGameDetailsMap.value(flashpointPlaylistGame.getGameId()).filename()),

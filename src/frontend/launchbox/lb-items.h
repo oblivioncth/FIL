@@ -41,7 +41,7 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    Game(Fp::Game flashpointGame, QString fullCLIFpPath);
+    Game(const Fp::Game& flashpointGame, QString fullCLIFpPath);
     Game();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
@@ -107,7 +107,7 @@ private:
 
 //-Constructor------------------------------------------------------------------------------------------------------
 public:
-    AddApp(Fp::AddApp flashpointAddApp, QString fullCLIFpPath);
+    AddApp(const Fp::AddApp& flashpointAddApp, QString fullCLIFpPath);
     AddApp();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
@@ -181,7 +181,7 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    PlaylistHeader(Fp::Playlist flashpointPlaylist);
+    PlaylistHeader(const Fp::Playlist& flashpointPlaylist);
     PlaylistHeader();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
@@ -235,7 +235,7 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    PlaylistGame(Fp::PlaylistGame flashpointPlaylistGame, const QHash<QUuid, EntryDetails>& playlistGameDetailsMap);
+    PlaylistGame(const Fp::PlaylistGame& flashpointPlaylistGame, const QHash<QUuid, EntryDetails>& playlistGameDetailsMap);
     PlaylistGame();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
