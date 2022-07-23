@@ -7,27 +7,26 @@
 namespace Fe
 {
 //-Doc Handling Error--------------------------------------------------------------------------------------------
-    namespace Dhe
-    {
-        // Message Macros
-        const QString M_DOC_TYPE = "<docType>";
-        const QString M_DOC_NAME = "<docName>";
-        const QString M_DOC_PARENT = "<docParent>";
+namespace Dhe
+{
+    // Message Macros
+    const QString M_DOC_TYPE = "<docType>";
+    const QString M_DOC_NAME = "<docName>";
+    const QString M_DOC_PARENT = "<docParent>";
 
-        // Standard Errors
-        static inline const QHash<DocHandlingError, QString> STD_ERRORS = {
-            {DocHandlingError::DocAlreadyOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is already open."},
-            {DocHandlingError::DocCantOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be opened."},
-            {DocHandlingError::DocCantSave, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be saved."},
-            {DocHandlingError::NotParentDoc, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is not a" + M_DOC_PARENT + "document."},
-            {DocHandlingError::CantRemoveBackup, "The existing backup of the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") could not be removed."},
-            {DocHandlingError::CantCreateBackup, "Could not create a backup of the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ")."},
-            {DocHandlingError::DocInvalidType, "The document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is invalid or of the wrong type."},
-            {DocHandlingError::DocReadFailed, "Reading the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") failed."},
-            {DocHandlingError::DocWriteFailed, "Writing to the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") failed."}
-        };
-    }
-
+    // Standard Errors
+    static inline const QHash<DocHandlingError, QString> STD_ERRORS = {
+        {DocHandlingError::DocAlreadyOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is already open."},
+        {DocHandlingError::DocCantOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be opened."},
+        {DocHandlingError::DocCantSave, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be saved."},
+        {DocHandlingError::NotParentDoc, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is not a" + M_DOC_PARENT + "document."},
+        {DocHandlingError::CantRemoveBackup, "The existing backup of the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") could not be removed."},
+        {DocHandlingError::CantCreateBackup, "Could not create a backup of the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ")."},
+        {DocHandlingError::DocInvalidType, "The document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is invalid or of the wrong type."},
+        {DocHandlingError::DocReadFailed, "Reading the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") failed."},
+        {DocHandlingError::DocWriteFailed, "Writing to the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") failed."}
+    };
+}
 
 QString docHandlingErrorString(const DataDoc* doc, DocHandlingError handlingError)
 {
@@ -38,6 +37,26 @@ QString docHandlingErrorString(const DataDoc* doc, DocHandlingError handlingErro
 
     return formattedError;
 }
+
+//===============================================================================================================
+// ImageSources
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Public:
+ImageSources::ImageSources() {}
+ImageSources::ImageSources(const QString& logoPath, const QString& screenshotPath) :
+    mLogoPath(logoPath),
+    mScreenshotPath(screenshotPath)
+{}
+
+//-Instance Functions--------------------------------------------------------------------------------------------------
+//Public:
+bool ImageSources::isNull() const { return mLogoPath.isEmpty() && mScreenshotPath.isEmpty(); }
+QString ImageSources::logoPath() const { return mLogoPath; }
+QString ImageSources::screenshotPath() const { return mScreenshotPath; };
+void ImageSources::setLogoPath(const QString& path) { mLogoPath = path; }
+void ImageSources::setScreenshotPath(const QString& path) { mScreenshotPath = path; }
 
 //===============================================================================================================
 // DataDoc::Identifier
@@ -158,10 +177,13 @@ PlatformDoc::PlatformDoc(Install* const parent, const QString& docPath, QString 
 DataDoc::Type PlatformDoc::type() const { return Type::Platform; }
 
 //Public:
-void PlatformDoc::setGameImageReference(Fp::ImageType, QUuid, QString)
+void PlatformDoc::addGame(Fp::Game game, const ImageSources& images)
 {
-    throw new std::exception("UNSUPPORTED");
+    const Game* processedGame = processGame(game, images);
+    parent()->processDirectGameImages(processedGame, images);
 }
+
+void PlatformDoc::addAddApp(Fp::AddApp app) { processAddApp(app); }
 
 //===============================================================================================================
 // BasicPlatformDoc
@@ -174,19 +196,13 @@ BasicPlatformDoc::BasicPlatformDoc(Install* const parent, const QString& docPath
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
-//Public:
-const QHash<QUuid, std::shared_ptr<Game>>& BasicPlatformDoc::getFinalGames() const { return mGamesFinal; }
-const QHash<QUuid, std::shared_ptr<AddApp>>& BasicPlatformDoc::getFinalAddApps() const { return mAddAppsFinal; }
-
-bool BasicPlatformDoc::containsGame(QUuid gameId) const { return mGamesFinal.contains(gameId) || mGamesExisting.contains(gameId); }
-bool BasicPlatformDoc::containsAddApp(QUuid addAppId) const { return mAddAppsFinal.contains(addAppId) || mAddAppsExisting.contains(addAppId); }
-
-const Game* BasicPlatformDoc::addGame(Fp::Game game)
+//Private:
+const Game* BasicPlatformDoc::processGame(const Fp::Game& game, const ImageSources& images)
 {
     if(!mError.isValid())
     {
         // Prepare game
-        std::shared_ptr<Game> feGame = prepareGame(game);
+        std::shared_ptr<Game> feGame = prepareGame(game, images);
 
         // Add game
         addUpdateableItem(mGamesExisting, mGamesFinal, feGame);
@@ -198,7 +214,7 @@ const Game* BasicPlatformDoc::addGame(Fp::Game game)
         return nullptr;
 }
 
-void BasicPlatformDoc::addAddApp(Fp::AddApp app)
+void BasicPlatformDoc::processAddApp(const Fp::AddApp& app)
 {
     if(!mError.isValid())
     {
@@ -209,6 +225,13 @@ void BasicPlatformDoc::addAddApp(Fp::AddApp app)
         addUpdateableItem(mAddAppsExisting, mAddAppsFinal, feAddApp);
     }
 }
+
+//Public:
+const QHash<QUuid, std::shared_ptr<Game>>& BasicPlatformDoc::getFinalGames() const { return mGamesFinal; }
+const QHash<QUuid, std::shared_ptr<AddApp>>& BasicPlatformDoc::getFinalAddApps() const { return mAddAppsFinal; }
+
+bool BasicPlatformDoc::containsGame(QUuid gameId) const { return mGamesFinal.contains(gameId) || mGamesExisting.contains(gameId); }
+bool BasicPlatformDoc::containsAddApp(QUuid addAppId) const { return mAddAppsFinal.contains(addAppId) || mAddAppsExisting.contains(addAppId); }
 
 void BasicPlatformDoc::finalize()
 {

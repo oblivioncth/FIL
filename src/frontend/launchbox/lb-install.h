@@ -17,7 +17,7 @@ namespace Lb {
 
 class Install : public Fe::Install
 {
-    friend class PlatformDoc;
+    friend class PlatformDoc; // TODO: See about removing the need for these (CLIfp path would need public accessor here)
     friend class PlaylistDoc;
 //-Class Variables--------------------------------------------------------------------------------------------------
 public:
@@ -40,21 +40,23 @@ public:
     static inline const QString XML_EXT = "xml";
 
     // Support
-    static inline const QSet<Fe::Install::ImageMode> IMAGE_MODES {
-        Fe::Install::ImageMode::Reference,
-        Fe::Install::ImageMode::Copy,
-        Fe::Install::ImageMode::Link
+    static inline const QSet<Fe::ImageMode> IMAGE_MODES {
+        Fe::ImageMode::Reference,
+        Fe::ImageMode::Copy,
+        Fe::ImageMode::Link
     };
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
-
     // Files and directories
     QDir mDataDirectory;
     QDir mPlatformsDirectory;
     QDir mPlaylistsDirectory;
     QDir mPlatformImagesDirectory;
     QDir mCoreDirectory;
+
+    // Image transfers for import worker
+    QList<ImageMap> mWorkerImageJobs;
 
     // Other trackers
     Qx::FreeIndexTracker<int> mLbDatabaseIdTracker = Qx::FreeIndexTracker<int>(0, -1, {});
@@ -66,36 +68,42 @@ private:
 public:
     Install(QString installPath);
 
-//-Class Functions------------------------------------------------------------------------------------------------------
-private:
-    static QString makeFileNameLBKosher(QString fileName);
-
 //-Instance Functions------------------------------------------------------------------------------------------------------
 private:
-    void nullifyDerived() override;
-    void softResetDerived() override;
+    // Install management
+    void nullify() override;
+    Qx::GenericError populateExistingDocs() override;
+    QString translateDocName(const QString&) const override;
 
-    QString dataDocPath(Fe::DataDoc::Identifier identifier) const override;
+    // Image Processing
+    QString imageDestinationPath(Fp::ImageType imageType, const Fe::Game* game) const;
+    Qx::GenericError editBulkImageReferences(const Fe::ImageSources& imagesSources, bool use);
 
-    std::shared_ptr<Fe::PlatformDocReader> prepareOpenPlatformDoc(std::unique_ptr<Fe::PlatformDoc>& platformDoc, const QString& name, const Fe::UpdateOptions& updateOptions) override;
-    std::shared_ptr<Fe::PlaylistDocReader> prepareOpenPlaylistDoc(std::unique_ptr<Fe::PlaylistDoc>& playlistDoc, const QString& name, const Fe::UpdateOptions& updateOptions) override;
-    std::shared_ptr<Fe::PlatformDocWriter> prepareSavePlatformDoc(const std::unique_ptr<Fe::PlatformDoc>& platformDoc) override;
-    std::shared_ptr<Fe::PlaylistDocWriter> prepareSavePlaylistDoc(const std::unique_ptr<Fe::PlaylistDoc>& playlistDoc) override;
+    // Doc handling
+    QString dataDocPath(Fe::DataDoc::Identifier identifier) const;
+    std::shared_ptr<Fe::PlatformDocReader> preparePlatformDocCheckout(std::unique_ptr<Fe::PlatformDoc>& platformDoc, const QString& translatedName) override;
+    std::shared_ptr<Fe::PlaylistDocReader> preparePlaylistDocCheckout(std::unique_ptr<Fe::PlaylistDoc>& playlistDoc, const QString& translatedName) override;
+    std::shared_ptr<Fe::PlatformDocWriter> preparePlatformDocCommit(const std::unique_ptr<Fe::PlatformDoc>& platformDoc) override;
+    std::shared_ptr<Fe::PlaylistDocWriter> preparePlaylistDocCommit(const std::unique_ptr<Fe::PlaylistDoc>& playlistDoc) override;
 
-    Qx::GenericError openPlatformsDoc(std::unique_ptr<PlatformsDoc>& returnBuffer);
-    Qx::GenericError savePlatformsDoc(std::unique_ptr<PlatformsDoc> document);
+    Qx::GenericError checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsDoc>& returnBuffer);
+    Qx::GenericError commitPlatformsConfigDoc(std::unique_ptr<PlatformsDoc> document);
 
 public:
+    // Install management
+    void softReset() override;
+
+    // Info
     QString name() const override;
     QString executablePath() const override;
-    ImageRefType imageRefType() const override;
-    bool supportsImageMode(ImageMode imageMode) const override;
+    bool supportsImageMode(Fe::ImageMode imageMode) const override;
     QString versionString() const override;
 
-    Qx::GenericError populateExistingDocs(QStringList targetPlatforms, QStringList targetPlaylists) override;
+    // Import stage notifier hooks
+    Qx::GenericError preImageProcessing(QList<ImageMap>& workerTransfers, Fe::ImageSources bulkSources) override;
 
-    QString imageDestinationPath(Fp::ImageType imageType, const Fe::Game& game) const override;
-    Qx::GenericError bulkReferenceImages(QString logoRootPath, QString screenshotRootPath, QStringList platforms) override;
+    // Image handling
+    void processDirectGameImages(const Fe::Game* game, const Fe::ImageSources& imageSources) override;
 };
 REGISTER_FRONTEND(Install::NAME, Install, &Install::ICON_PATH, &Install::HELP_URL);
 

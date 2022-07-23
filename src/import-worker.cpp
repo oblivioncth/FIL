@@ -53,10 +53,10 @@ const QList<QUuid> ImportWorker::preloadPlaylists(Fp::Db::QueryBuffer& playlistQ
         Fp::Playlist playlist = fpPb.build();
 
         // Add to cache
-        mPlaylistsCache[playlist.getId()] = playlist;
+        mPlaylistsCache[playlist.id()] = playlist;
 
         // Add to ID list
-        targetPlaylistIds.append(playlist.getId());
+        targetPlaylistIds.append(playlist.id());
     }
 
     return targetPlaylistIds;
@@ -192,92 +192,47 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& 
         fpGb.wOrderTitle(gameQueryResult.result.value(Fp::Db::Table_Game::COL_ORDER_TITLE).toString());
         fpGb.wLibrary(gameQueryResult.result.value(Fp::Db::Table_Game::COL_LIBRARY).toString());
 
-        // Build FP game and add to document
+        // Build FP game
         Fp::Game builtGame = fpGb.build();
-        const Fe::Game* addedGame = platformDoc->addGame(builtGame);
 
-        /* TODO: It would be nice to avoid needing the returned pointer above. An alternative idea was to make it so
-         * along with the game, likely in a structure, the addGame() call would pass the logo/ss paths and the Platform
-         * interface would handle any referencing (of the various different sorts possible) through itself or its link
-         * to the install via parent(). Then this pointer wouldn't be needed. The issue is that import worker still needs
-         * to get image destination paths if copy/link mode is selected, which would then just require addedGame to
-         * return paths or something like that, more or less coming back to the same problem. This could be worked around
-         * by making Fe::Install a QObject that emits a signal when final image paths are calculated, that import worker
-         * only connects to if those image modes are selected. Not sure if this is better overall though, its tricky...
-         *
-         * If this change was made though, the need for docs to have internal errors could be removed and all platform/
-         * playlist interface methods (which currently return void) could return an error object to be checked directly.
-         *
-         * The main benefit of removing the return is that is significantly simplifies image mode handling in the follow
-         * sections, as well as removes the following check
-         */
+        // Get image informationd
+        QFileInfo logoLocalInfo(mFlashpointInstall->imageLocalPath(Fp::ImageType::Logo, builtGame.id()));
+        QFileInfo ssLocalInfo(mFlashpointInstall->imageLocalPath(Fp::ImageType::Screenshot, builtGame.id()));
 
-        // addedGame can be null if an internal error occurred
-        if(!addedGame)
-        {
-            errorReport = platformDoc->error();
-            return Failed;
-        }
+        // Add game to doc
+        QString checkedLogoPath = (logoLocalInfo.exists() || mOptionSet.downloadImages) ? logoLocalInfo.absoluteFilePath() : QString();
+        QString checkedScreenshotPath = (ssLocalInfo.exists() || mOptionSet.downloadImages) ? logoLocalInfo.absoluteFilePath() : QString();
+        platformDoc->addGame(builtGame, Fe::ImageSources(checkedLogoPath, checkedScreenshotPath));
 
         // Add ID to imported game cache
-        mImportedGameIdsCache.insert(addedGame->id());
-
-        // Get image information
-        QFileInfo logoLocalInfo(mFlashpointInstall->imageLocalPath(Fp::ImageType::Logo, addedGame->id()));
-        QFileInfo ssLocalInfo(mFlashpointInstall->imageLocalPath(Fp::ImageType::Screenshot, addedGame->id()));
+        mImportedGameIdsCache.insert(builtGame.id());
 
         // Setup image downloads if applicable
         if(mOptionSet.downloadImages)
         {
             if(!logoLocalInfo.exists())
             {
-                QUrl logoRemotePath = mFlashpointInstall->imageRemoteUrl(Fp::ImageType::Logo, addedGame->id());
-                mImageDownloadManager.appendTask(Qx::DownloadTask{logoRemotePath, logoLocalInfo.path()});
+                QUrl logoRemotePath = mFlashpointInstall->imageRemoteUrl(Fp::ImageType::Logo, builtGame.id());
+                mImageDownloadManager.appendTask(Qx::DownloadTask{logoRemotePath, logoLocalInfo.absoluteFilePath()});
             }
             else
                 mProgressManager.group(Pg::ImageDownload)->decrementMaximum(); // Already exists, remove download step from progress bar
 
             if(!ssLocalInfo.exists())
             {
-                QUrl ssRemotePath = mFlashpointInstall->imageRemoteUrl(Fp::ImageType::Screenshot, addedGame->id());
-                mImageDownloadManager.appendTask(Qx::DownloadTask{ssRemotePath, ssLocalInfo.path()});
+                QUrl ssRemotePath = mFlashpointInstall->imageRemoteUrl(Fp::ImageType::Screenshot, builtGame.id());
+                mImageDownloadManager.appendTask(Qx::DownloadTask{ssRemotePath, ssLocalInfo.absoluteFilePath()});
             }
             else
                 mProgressManager.group(Pg::ImageDownload)->decrementMaximum(); // Already exists, remove download step from progress bar
         }
 
-        // Perform immediate image handling if applicable
-        if(mOptionSet.imageMode == Fe::Install::Reference)
-        {
-            if(mFrontendInstall->imageRefType() == Fe::Install::ImageRefType::Single)
-            {
-                mFrontendInstall->referenceImage(Fp::ImageType::Logo, logoLocalInfo.path(), *addedGame);
-                mFrontendInstall->referenceImage(Fp::ImageType::Screenshot, ssLocalInfo.path(), *addedGame);
-            }
-            else if(mFrontendInstall->imageRefType() == Fe::Install::ImageRefType::Platform)
-            {
-                platformDoc->setGameImageReference(Fp::ImageType::Logo, addedGame->id(), logoLocalInfo.path());
-                platformDoc->setGameImageReference(Fp::ImageType::Screenshot, addedGame->id(), ssLocalInfo.path());
-            }
-        }
-        else // Setup transfer tasks if applicable
-        {
-            if(logoLocalInfo.exists() || mOptionSet.downloadImages)
-            {
-                QString logoDestPath = mFrontendInstall->imageDestinationPath(Fp::ImageType::Logo, *addedGame);
-                mImageTransferJobs.append(ImageTransferJob{logoLocalInfo.absoluteFilePath(), logoDestPath});
-            }
-            else
-                mProgressManager.group(Pg::ImageTransfer)->decrementMaximum(); // Can't transfer image that doesn't/won't exist
+        // Adjust progress if images aren't available
+        if(checkedLogoPath.isEmpty())
+            mProgressManager.group(Pg::ImageTransfer)->decrementMaximum(); // Can't transfer image that doesn't/won't exist
+        if(checkedScreenshotPath.isEmpty())
+            mProgressManager.group(Pg::ImageTransfer)->decrementMaximum(); // Can't transfer image that doesn't/won't exist
 
-            if(ssLocalInfo.exists() || mOptionSet.downloadImages)
-            {
-                QString ssDestPath = mFrontendInstall->imageDestinationPath(Fp::ImageType::Screenshot, *addedGame);
-                mImageTransferJobs.append(ImageTransferJob{ssLocalInfo.absoluteFilePath(), ssDestPath});
-            }
-            else
-                mProgressManager.group(Pg::ImageTransfer)->decrementMaximum();
-        }
 
         // Update progress dialog value for game addition
         if(mCanceled)
@@ -300,7 +255,7 @@ ImportWorker::ImportResult ImportWorker::processPlatformAddApps(Qx::GenericError
     for (QSet<Fp::AddApp>::iterator j = mAddAppsCache.begin(); j != mAddAppsCache.end();)
     {
         // If the current platform doc contains the game this add app belongs to, convert and add it, then remove it from cache
-        if (platformDoc->containsGame((*j).getParentId()))
+        if (platformDoc->containsGame((*j).parentId()))
         {
            platformDoc->addAddApp(*j);
            j = mAddAppsCache.erase(j); // clazy:exclude=strict-iterators Oversight of clazy since there's no QSet::erase(QSet::const_iterator) anymore
@@ -386,7 +341,7 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
 
             // Open frontend platform doc
             std::unique_ptr<Fe::PlatformDoc> currentPlatformDoc;
-            Qx::GenericError platformReadError = mFrontendInstall->openPlatformDoc(currentPlatformDoc, currentQueryResult.source, mOptionSet.updateOptions);
+            Qx::GenericError platformReadError = mFrontendInstall->checkoutPlatformDoc(currentPlatformDoc, currentQueryResult.source);
 
             // Stop import if error occurred
             if(platformReadError.isValid())
@@ -432,7 +387,7 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
 
             // Forfeit document lease and save it
             Qx::GenericError saveError;
-            if((saveError = mFrontendInstall->savePlatformDoc(std::move(currentPlatformDoc))).isValid())
+            if((saveError = mFrontendInstall->commitPlatformDoc(std::move(currentPlatformDoc))).isValid())
             {
                 errorReport = saveError;
                 return Failed;
@@ -468,11 +423,11 @@ ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& erro
         Fp::Playlist currentPlaylist = mPlaylistsCache.value(QUuid(currentPlaylistGameResult.source));
 
         // Update progress dialog label
-        emit progressStepChanged(STEP_IMPORTING_PLAYLIST_GAMES.arg(currentPlaylist.getTitle()));
+        emit progressStepChanged(STEP_IMPORTING_PLAYLIST_GAMES.arg(currentPlaylist.title()));
 
         // Open frontend playlist doc
         std::unique_ptr<Fe::PlaylistDoc> currentPlaylistDoc;
-        Qx::GenericError playlistReadError = mFrontendInstall->openPlaylistDoc(currentPlaylistDoc, currentPlaylist.getTitle(), mOptionSet.updateOptions);
+        Qx::GenericError playlistReadError = mFrontendInstall->checkoutPlaylistDoc(currentPlaylistDoc, currentPlaylist.title());
 
         // Stop import if error occurred
         if(playlistReadError.isValid())
@@ -526,7 +481,7 @@ ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& erro
 
         // Forfeit document lease and save it
         Qx::GenericError saveError;
-        if((saveError = mFrontendInstall->savePlaylistDoc(std::move(currentPlaylistDoc))).isValid())
+        if((saveError = mFrontendInstall->commitPlaylistDoc(std::move(currentPlaylistDoc))).isValid())
         {
             errorReport = saveError;
             return Failed;
@@ -540,7 +495,7 @@ ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& erro
 
 ImportWorker::ImportResult ImportWorker::processImages(Qx::GenericError& errorReport, const QList<Fp::Db::QueryBuffer>& playlistSpecGameQueries)
 {
-    // Download images if applicable
+    //-Image Download---------------------------------------------------------------------------------
     if(mOptionSet.downloadImages && mImageDownloadManager.hasTasks())
     {
         // Update progress dialog label
@@ -584,41 +539,47 @@ ImportWorker::ImportResult ImportWorker::processImages(Qx::GenericError& errorRe
         }
     }
 
-    // Import images if applicable
-    if(mOptionSet.imageMode == Fe::Install::Reference && mFrontendInstall->imageRefType() == Fe::Install::ImageRefType::Bulk)
+    //-Image Import---------------------------------------------------------------------------
+
+    // Update progress dialog label
+    emit progressStepChanged(STEP_IMPORTING_IMAGES);
+
+    // Provide frontend with bulk reference locations and acquire any transfer tasks
+    QList<Fe::Install::ImageMap> imageTransferJobs;
+    Fe::ImageSources bulkSources;
+    if(mOptionSet.imageMode == Fe::ImageMode::Reference)
     {
-        // Update progress dialog label
-        emit progressStepChanged(STEP_SETTING_IMAGE_REFERENCES);
-
-        // Create playlist specific platforms set
-        QStringList playlistSpecPlatforms;
-        for(const Fp::Db::QueryBuffer& query : qAsConst(playlistSpecGameQueries))
-            playlistSpecPlatforms.append(query.source);
-
-        // Initiate frontend reference routine
-        Qx::GenericError referenceError = mFrontendInstall->bulkReferenceImages(QDir::toNativeSeparators(mFlashpointInstall->logosDirectory().absolutePath()),
-                                                                                QDir::toNativeSeparators(mFlashpointInstall->screenshotsDirectory().absolutePath()),
-                                                                                mImportSelections.platforms + playlistSpecPlatforms);
-        if(referenceError.isValid())
-        {
-            // Emit import failure
-            errorReport = referenceError;
-            return Failed;
-        }
+        bulkSources.setLogoPath(QDir::toNativeSeparators(mFlashpointInstall->logosDirectory().absolutePath()));
+        bulkSources.setScreenshotPath(QDir::toNativeSeparators(mFlashpointInstall->screenshotsDirectory().absolutePath()));
     }
-    else if(mOptionSet.imageMode != Fe::Install::Reference)
+
+    Qx::GenericError imageExchangeError = mFrontendInstall->preImageProcessing(imageTransferJobs, bulkSources);
+
+    if(imageExchangeError.isValid())
     {
-        // Update progress dialog label
-        emit progressStepChanged(STEP_IMPORTING_IMAGES);
+        // Emit import failure
+        errorReport = imageExchangeError;
+        return Failed;
+    }
+
+    // Perform transfers if required
+    if(mOptionSet.imageMode == Fe::ImageMode::Copy || mOptionSet.imageMode == Fe::ImageMode::Link)
+    {
+        // Account for potential mismatch between assumed and actual job count (shouldn't happen)
+        if(imageTransferJobs.size() != mProgressManager.group(Pg::ImageTransfer)->maximum())
+        {
+            mProgressManager.group(Pg::ImageTransfer)->setMaximum(imageTransferJobs.size());
+            qWarning("ImportWorker::processImages() the frontend provided less image transfers than predicted!");
+        }
 
         // Setup for image transfers
         Qx::GenericError imageTransferError; // Error return reference
         *mBlockingErrorResponse = QMessageBox::NoToAll; // Default to choice "NoToAll" in case the signal is not correctly connected using Qt::BlockingQueuedConnection
         bool ignoreAllTransferErrors = false; // NoToAll response tracker
 
-        for(const ImageTransferJob& imageJob : qAsConst(mImageTransferJobs))
+        for(const Fe::Install::ImageMap& imageJob : qAsConst(imageTransferJobs))
         {
-            while((imageTransferError = transferImage(mOptionSet.imageMode == Fe::Install::Link, imageJob.sourcePath, imageJob.destPath)).isValid() && !ignoreAllTransferErrors)
+            while((imageTransferError = transferImage(mOptionSet.imageMode == Fe::ImageMode::Link, imageJob.sourcePath, imageJob.destPath)).isValid() && !ignoreAllTransferErrors)
             {
                 // Notify GUI Thread of error
                 emit blockingErrorOccured(mBlockingErrorResponse, imageTransferError,
@@ -641,6 +602,11 @@ ImportWorker::ImportResult ImportWorker::processImages(Qx::GenericError& errorRe
                mProgressManager.group(Pg::ImageTransfer)->incrementValue();
         }
     }
+    else if(!imageTransferJobs.isEmpty())
+        qWarning("ImportWorker::processImages() the frontend provided image transfers when the mode wasn't link/copy!");
+
+    // Handle frontend specific actions
+    mFrontendInstall->postImageProcessing();
 
     // Report successful step completion
     errorReport = Qx::GenericError();
@@ -664,9 +630,6 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     Fp::Db::QueryBuffer addAppQuery;
     Fp::Db::QueryBuffer playlistQueries;
     QList<Fp::Db::QueryBuffer> playlistGameQueries;
-
-    // Link CLIFp to frontend
-    mFrontendInstall->linkClifpPath(CLIFp::standardCLIFpPath(*mFlashpointInstall));
 
     // Get flashpoint database
     Fp::Db* fpDatabase = mFlashpointInstall->database();
@@ -739,11 +702,6 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
        return Failed;
     }
 
-    //-Handle Frontend Specific Import Setup------------------------------
-    errorReport = mFrontendInstall->preImport();
-    if(errorReport.isValid())
-        return Failed;
-
     //-Determine Workload-------------------------------------------------
     quint64 totalGameCount = 0;
 
@@ -776,7 +734,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     }
 
     // Screenshot and Logo transfer
-    if(mOptionSet.imageMode != Fe::Install::ImageMode::Reference)
+    if(mOptionSet.imageMode != Fe::ImageMode::Reference)
     {
         Qx::ProgressGroup* pgImageTransfer = initializeProgressGroup(Pg::ImageTransfer, 3);
         pgImageTransfer->setMaximum(totalGameCount * 2);
@@ -798,7 +756,24 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     // Forward progress manager signal
     connect(&mProgressManager, &Qx::GroupedProgressManager::valueChanged, this, &ImportWorker::progressValueChanged);
 
-    // Perform manual emission of total progress signal to indicate progress was calculated
+    //-Handle Frontend Specific Import Setup------------------------------
+    QStringList playlistSpecPlatforms;
+    for(const Fp::Db::QueryBuffer& query : qAsConst(playlistSpecGameQueries))
+        playlistSpecPlatforms.append(query.source);
+
+    Fe::Install::ImportDetails details{
+        .updateOptions = mOptionSet.updateOptions,
+        .imageMode = mOptionSet.imageMode,
+        .clifpPath = CLIFp::standardCLIFpPath(*mFlashpointInstall),
+        .involvedPlatforms = mImportSelections.platforms + playlistSpecPlatforms,
+        .involvedPlaylists = mImportSelections.playlists
+    };
+
+    errorReport = mFrontendInstall->preImport(details);
+    if(errorReport.isValid())
+        return Failed;
+
+    //-Set Progress Indicator To First Step----------------------------------
     emit progressMaximumChanged(mProgressManager.maximum());
     emit progressStepChanged(STEP_ADD_APP_PRELOAD);
 
@@ -809,7 +784,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         return importStepStatus;
 
     // Handle Frontend specific pre-platform tasks
-    errorReport = mFrontendInstall->prePlatformsImport(mOptionSet.updateOptions);
+    errorReport = mFrontendInstall->prePlatformsImport();
     if(errorReport.isValid())
         return Failed;
 
@@ -830,7 +805,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     if(!playlistGameQueries.isEmpty())
     {
         // Handle Frontend specific pre-playlist tasks
-        errorReport = mFrontendInstall->prePlaylistsImport(mOptionSet.updateOptions);
+        errorReport = mFrontendInstall->prePlaylistsImport();
         if(errorReport.isValid())
             return Failed;
 

@@ -7,11 +7,6 @@
 // Qx Includes
 #include <qx/windows/qx-filedetails.h>
 
-// Windows Includes (Specifically for changing file permissions)
-#include <atlstr.h>
-#include "Aclapi.h"
-#include "sddl.h"
-
 namespace Fe
 {
 
@@ -21,53 +16,13 @@ namespace Fe
 
 //-Constructor---------------------------------------------------------------------------------------------------
 Install::Install(QString installPath) :
-    mValid(false), // Path is invalid until proven otherwise
-    mRootDirectory(installPath)
+    InstallFoundation(installPath)
 {}
 
 //-Class Functions--------------------------------------------------------------------------------------------
-//Private:
+//Public:
 QMap<QString, Install::Entry>& Install::registry() { static QMap<QString, Entry> registry; return registry; }
 
-void Install::allowUserWriteOnFile(QString filePath)
-{
-    PACL pDacl,pNewDACL;
-    EXPLICIT_ACCESS ExplicitAccess;
-    PSECURITY_DESCRIPTOR ppSecurityDescriptor;
-    PSID psid;
-
-    CString filePathC = filePath.toStdWString().c_str();
-    LPTSTR lpStr = filePathC.GetBuffer();
-
-    GetNamedSecurityInfo(lpStr, SE_FILE_OBJECT,DACL_SECURITY_INFORMATION, NULL, NULL, &pDacl, NULL, &ppSecurityDescriptor);
-    ConvertStringSidToSid(L"S-1-1-0", &psid);
-
-    ExplicitAccess.grfAccessMode = SET_ACCESS;
-    ExplicitAccess.grfAccessPermissions = GENERIC_ALL;
-    ExplicitAccess.grfInheritance = CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE;
-    ExplicitAccess.Trustee.MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
-    ExplicitAccess.Trustee.pMultipleTrustee = NULL;
-    ExplicitAccess.Trustee.ptstrName = (LPTSTR) psid;
-    ExplicitAccess.Trustee.TrusteeForm = TRUSTEE_IS_SID;
-    ExplicitAccess.Trustee.TrusteeType = TRUSTEE_IS_UNKNOWN;
-
-    SetEntriesInAcl(1, &ExplicitAccess, pDacl, &pNewDACL);
-    SetNamedSecurityInfo(lpStr,SE_FILE_OBJECT,DACL_SECURITY_INFORMATION,NULL,NULL,pNewDACL,NULL);
-
-    LocalFree(pNewDACL);
-    LocalFree(psid);
-
-    filePathC.ReleaseBuffer();
-}
-
-//Protected:
-QString Install::filePathToBackupPath(QString filePath)
-{
-    QFileInfo fi(filePath);
-    return fi.absolutePath() + '/' + fi.baseName() + MODIFIED_FILE_EXT;
-}
-
-//Public:
 void Install::registerInstall(QString name, Entry entry) { registry()[name] = entry; }
 
 std::shared_ptr<Install> Install::acquireMatch(const QString& installPath)
@@ -89,95 +44,25 @@ std::shared_ptr<Install> Install::acquireMatch(const QString& installPath)
 }
 
 //-Instance Functions--------------------------------------------------------------------------------------------
-//Private:
-QSet<QString> Install::getExistingDocs(DataDoc::Type docType) const
-{
-    QSet<QString> nameSet;
-
-    for (const DataDoc::Identifier& identifier : mExistingDocuments)
-        if(identifier.docType() == docType)
-            nameSet.insert(identifier.docName());
-
-    return nameSet;
-}
-
 //Protected:
 void Install::nullify()
 {
-    mValid = false;
-    mRootDirectory = QDir();
-    nullifyDerived();
+    // Redundant with base version, but here to make it clear its part of the main Install interface
+    InstallFoundation::nullify();
 }
 
-Qx::GenericError Install::openDataDocument(DataDoc* docToOpen, std::shared_ptr<DataDocReader> docReader)
+QString Install::translateDocName(const QString& originalName) const
 {
-    // Error report to return
-    Qx::GenericError openReadError; // Defaults to no error
-    Qx::GenericError errorTemplate(Qx::GenericError::Critical, docHandlingErrorString(docToOpen, DocHandlingError::DocCantOpen));
-
-    // Check if lease is already out
-    if(mLeasedDocuments.contains(docToOpen->identifier()))
-        openReadError = errorTemplate.setSecondaryInfo(docHandlingErrorString(docToOpen, DocHandlingError::DocAlreadyOpen));
-    else
-    {
-        // Read existing file if present
-        if(mExistingDocuments.contains(docToOpen->identifier()))
-             openReadError = docReader->readInto();
-
-        // Add lease to ledger if no error occurred while reading
-        if(!openReadError.isValid())
-            mLeasedDocuments.insert(docToOpen->identifier());
-    }
-
-    // Return opened document and status
-    return openReadError;
-}
-
-Qx::GenericError Install::saveDataDocument(DataDoc* docToSave, std::shared_ptr<DataDocWriter> docWriter)
-{
-    // Error template
-    Qx::GenericError errorTemplate(Qx::GenericError::Critical, docHandlingErrorString(docToSave, DocHandlingError::DocCantSave));
-
-    // Create backup and add to modified list if required
-    if(!mModifiedDocuments.contains(docToSave->identifier()))
-    {
-        // Insert
-        QString docPath = docToSave->path();
-        mModifiedDocuments.insert(docToSave->identifier());
-        mRevertableFilePaths.append(docPath);
-
-        // Backup
-        if(QFile::exists(docPath))
-        {
-            QString backupPath = filePathToBackupPath(docPath);
-
-            if(QFile::exists(backupPath) && QFileInfo(backupPath).isFile())
-            {
-                if(!QFile::remove(backupPath))
-                    return errorTemplate.setSecondaryInfo(docHandlingErrorString(docToSave, DocHandlingError::CantRemoveBackup));
-            }
-
-            if(!QFile::copy(docPath, backupPath))
-                return errorTemplate.setSecondaryInfo(docHandlingErrorString(docToSave, DocHandlingError::CantCreateBackup));
-        }
-    }
-
-    // Write to file
-    Qx::GenericError saveWriteError = docWriter->writeOutOf();
-
-    // Set document permissions
-    allowUserWriteOnFile(docToSave->path());
-
-    // Remove handle reservation
-    mLeasedDocuments.remove(docToSave->identifier());
-
-    // Return write status and let document ptr auto delete
-    return saveWriteError;
+    // Redundant with base version, but here to make it clear its part of the main Install interface
+    return InstallFoundation::translateDocName(originalName);
 }
 
 //Public:
-void Install::linkClifpPath(QString clifpPath) { mLinkedClifpPath = clifpPath; }
-QString Install::linkedClifpPath() const { return mLinkedClifpPath; }
+void Install::softReset()
+{
+    // Redundant with base version, but here to make it clear its part of the main Install interface
+    InstallFoundation::softReset();
+}
 
 QString Install::versionString() const
 {
@@ -194,146 +79,97 @@ QString Install::versionString() const
         return "Unknown Version";
 }
 
-bool Install::isValid() const { return mValid; }
-QString Install::getPath() const { return mRootDirectory.absolutePath(); }
-
-QSet<QString> Install::getExistingPlatforms() const { return getExistingDocs(DataDoc::Type::Platform); }
-QSet<QString> Install::getExistingPlaylists() const { return getExistingDocs(DataDoc::Type::Playlist); }
-
-Qx::GenericError Install::openPlatformDoc(std::unique_ptr<PlatformDoc>& returnBuffer, QString name, UpdateOptions updateOptions)
-{
-    // Get initialized blank doc and reader
-    std::shared_ptr<PlatformDocReader> docReader = prepareOpenPlatformDoc(returnBuffer, name, updateOptions);
-
-    // Open document
-    Qx::GenericError readErrorStatus = openDataDocument(returnBuffer.get(), docReader);
-
-    // Set return null on failure
-    if(readErrorStatus.isValid())
-        returnBuffer.reset();
-
-    // Return status
-    return readErrorStatus;
-}
-
-Qx::GenericError Install::openPlaylistDoc(std::unique_ptr<PlaylistDoc>& returnBuffer, QString name, UpdateOptions updateOptions)
-{
-    // Get initialized blank doc and reader
-    std::shared_ptr<PlaylistDocReader> docReader = prepareOpenPlaylistDoc(returnBuffer, name, updateOptions);
-
-    // Open document
-    Qx::GenericError readErrorStatus = openDataDocument(returnBuffer.get(), docReader);
-
-    // Set return null on failure
-    if(readErrorStatus.isValid())
-        returnBuffer.reset();
-
-    // Return status
-    return readErrorStatus;
-}
-
-Qx::GenericError Install::savePlatformDoc(std::unique_ptr<PlatformDoc> document)
-{
-    // Doc should belong to this install
-    assert(document->parent() == this);
-
-    // Prepare writer
-    std::shared_ptr<PlatformDocWriter> docWriter = prepareSavePlatformDoc(document);
-
-    // Write
-    Qx::GenericError writeErrorStatus = saveDataDocument(document.get(), docWriter);
-
-    // Ensure document is cleared
-    document.reset();
-
-    // Return write status and let document ptr auto delete
-    return writeErrorStatus;
-}
-
-Qx::GenericError Install::savePlaylistDoc(std::unique_ptr<PlaylistDoc> document)
-{
-    // Doc should belong to this install
-    assert(document->parent() == this);
-
-    // Prepare writer
-    std::shared_ptr<PlaylistDocWriter> docWriter = prepareSavePlaylistDoc(document);
-
-    // Write
-    Qx::GenericError writeErrorStatus = saveDataDocument(document.get(), docWriter);
-
-    // Ensure document is cleared
-    document.reset();
-
-    // Return write status and let document ptr auto delete
-    return writeErrorStatus;
-}
-
-Qx::GenericError Install::referenceImage(Fp::ImageType, QString, const Game&)
-{
-    throw new std::exception("UNSUPPORTED");
-}
-
-Qx::GenericError Install::bulkReferenceImages(QString, QString, QStringList)
-{
-    throw new std::exception("UNSUPPORTED");
-}
-
-void Install::addRevertableFile(QString filePath) { mRevertableFilePaths.append(filePath); }
-
-/* These functions by default do nothing but can be overridden by children as needed.
+/* These functions can be overridden by children as needed.
  * Work within them should be kept as minimal as possible since they are not accounted
  * for by the import progress indicator.
  */
-Qx::GenericError Install::preImport() { return Qx::GenericError(); } // Called just before frontend portion of import
-Qx::GenericError Install::postImport() { return Qx::GenericError(); } // Called just before final cancellation check
-Qx::GenericError Install::prePlatformsImport(UpdateOptions updateOptions) { return Qx::GenericError(); } // Called just before platform import section
-Qx::GenericError Install::postPlatformsImport() { return Qx::GenericError(); } // Called after before platform import section
-Qx::GenericError Install::prePlaylistsImport(UpdateOptions updateOptions) { return Qx::GenericError(); } // Called just before playlists import section
-Qx::GenericError Install::postPlaylistsImport() { return Qx::GenericError(); } // Called after before playlists import section
-
-void Install::softReset()
+Qx::GenericError Install::preImport(const ImportDetails& details)
 {
-    mLinkedClifpPath.clear();
-    mModifiedDocuments.clear();
-    mLeasedDocuments.clear();
-    mRevertableFilePaths.clear();
-    softResetDerived();
+    mImportDetails = std::make_unique<ImportDetails>(details);
+    return Qx::GenericError();
 }
 
-int Install::getRevertQueueCount() const { return mRevertableFilePaths.size(); }
+Qx::GenericError Install::postImport() { return {}; }
+Qx::GenericError Install::prePlatformsImport() { return {}; }
+Qx::GenericError Install::postPlatformsImport() { return {}; }
+Qx::GenericError Install::preImageProcessing(QList<ImageMap>& workerTransfers, ImageSources bulkSources) { return {}; }
+Qx::GenericError Install::postImageProcessing() { return {}; }
+Qx::GenericError Install::prePlaylistsImport() { return {}; }
+Qx::GenericError Install::postPlaylistsImport() { return {}; }
+/* */
 
-int Install::revertNextChange(Qx::GenericError& error, bool skipOnFail)
+Qx::GenericError Install::checkoutPlatformDoc(std::unique_ptr<PlatformDoc>& returnBuffer, QString name)
 {
-    // Ensure error message is null
-    error = Qx::GenericError();
+    // Translate to frontend doc name
+    QString translatedName = translateDocName(name);
 
-    // Get operation count for return
-    int operationsLeft = mRevertableFilePaths.size();
+    // Get initialized blank doc and reader
+    std::shared_ptr<PlatformDocReader> docReader = preparePlatformDocCheckout(returnBuffer, translatedName);
 
-    // Delete new files and restore backups if present
-    if(!mRevertableFilePaths.isEmpty())
-    {
-        QString filePath = mRevertableFilePaths.takeFirst();
-        QString backupPath = filePathToBackupPath(filePath);
+    // Open document
+    Qx::GenericError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
 
-        if(QFile::exists(filePath) && !QFile::remove(filePath) && !skipOnFail)
-        {
-            error = Qx::GenericError(Qx::GenericError::Error, ERR_FILE_WONT_DEL, filePath);
-            return operationsLeft;
-        }
+    // Set return null on failure
+    if(readErrorStatus.isValid())
+        returnBuffer.reset();
 
-        if(!QFile::exists(filePath) && QFile::exists(backupPath) && !QFile::rename(backupPath, filePath) && !skipOnFail)
-        {
-            error = Qx::GenericError(Qx::GenericError::Error, ERR_FILE_WONT_RESTORE, backupPath);
-            return operationsLeft;
-        }
+    // Return status
+    return readErrorStatus;
+}
 
-        // Decrement op count
-        return operationsLeft - 1;
-    }
+Qx::GenericError Install::checkoutPlaylistDoc(std::unique_ptr<PlaylistDoc>& returnBuffer, QString name)
+{
+    // Translate to frontend doc name
+    QString translatedName = translateDocName(name);
 
-    // Return 0 if all empty (shouldn't be reached if function is used correctly)
-    return 0;
+    // Get initialized blank doc and reader
+    std::shared_ptr<PlaylistDocReader> docReader = preparePlaylistDocCheckout(returnBuffer, translatedName);
+
+    // Open document
+    Qx::GenericError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
+
+    // Set return null on failure
+    if(readErrorStatus.isValid())
+        returnBuffer.reset();
+
+    // Return status
+    return readErrorStatus;
+}
+
+Qx::GenericError Install::commitPlatformDoc(std::unique_ptr<PlatformDoc> document)
+{
+    // Doc should belong to this install
+    assert(document->parent() == this);
+
+    // Prepare writer
+    std::shared_ptr<PlatformDocWriter> docWriter = preparePlatformDocCommit(document);
+
+    // Write
+    Qx::GenericError writeErrorStatus = commitDataDocument(document.get(), docWriter);
+
+    // Ensure document is cleared
+    document.reset();
+
+    // Return write status and let document ptr auto delete
+    return writeErrorStatus;
+}
+
+Qx::GenericError Install::commitPlaylistDoc(std::unique_ptr<PlaylistDoc> document)
+{
+    // Doc should belong to this install
+    assert(document->parent() == this);
+
+    // Prepare writer
+    std::shared_ptr<PlaylistDocWriter> docWriter = preparePlaylistDocCommit(document);
+
+    // Write
+    Qx::GenericError writeErrorStatus = commitDataDocument(document.get(), docWriter);
+
+    // Ensure document is cleared
+    document.reset();
+
+    // Return write status and let document ptr auto delete
+    return writeErrorStatus;
 }
 
 }

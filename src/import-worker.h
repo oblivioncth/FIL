@@ -48,16 +48,10 @@ public:
     struct OptionSet
     {
         Fe::UpdateOptions updateOptions;
-        Fe::Install::ImageMode imageMode;
+        Fe::ImageMode imageMode;
         bool downloadImages;
         PlaylistGameMode playlistMode;
         Fp::Db::InclusionOptions inclusionOptions;
-    };
-
-    struct ImageTransferJob
-    {
-        QString sourcePath;
-        QString destPath;
     };
 
 //-Class Variables-----------------------------------------------------------------------------------------------
@@ -69,7 +63,6 @@ public:
     static inline const QString STEP_IMPORTING_PLATFORM_ADD_APPS = "Importing additional apps for platform %1...";
     static inline const QString STEP_IMPORTING_PLAYLIST_SPEC_ADD_APPS = "Importing playlist specific additional apps for platform %1...";
     static inline const QString STEP_IMPORTING_PLAYLIST_GAMES = "Importing playlist %1...";
-    static inline const QString STEP_SETTING_IMAGE_REFERENCES = "Setting image references...";
     static inline const QString STEP_DOWNLOADING_IMAGES = "Downloading images...";
     static inline const QString STEP_IMPORTING_IMAGES = "Importing images...";
 
@@ -106,7 +99,6 @@ private:
     QSet<Fp::AddApp> mAddAppsCache;
     QHash<QUuid, Fp::Playlist> mPlaylistsCache;
     QSet<QUuid> mImportedGameIdsCache;
-    QList<ImageTransferJob> mImageTransferJobs;
 
     // Progress Tracking
     Qx::GroupedProgressManager mProgressManager;

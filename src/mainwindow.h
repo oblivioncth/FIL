@@ -213,6 +213,7 @@ private:
     void clearListWidgets();
     bool isExistingPlatformSelected();
     bool isExistingPlaylistSelected();
+    bool selectionsMayModify();
 
     void postSqlError(QString mainText, QSqlError sqlError);
     void postListError(QString mainText, QStringList detailedItems);
@@ -225,7 +226,7 @@ private:
     QStringList getSelectedPlaylists() const;
     Fp::Db::InclusionOptions getSelectedInclusionOptions() const;
     Fe::UpdateOptions getSelectedUpdateOptions() const;
-    Fe::Install::ImageMode getSelectedImageMode() const;
+    Fe::ImageMode getSelectedImageMode() const;
     ImportWorker::PlaylistGameMode getSelectedPlaylistGameMode() const;
     bool getForceDownloadImages() const;
 

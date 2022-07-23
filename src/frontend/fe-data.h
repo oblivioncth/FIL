@@ -3,6 +3,7 @@
 
 // Standard Library Includes
 #include <concepts>
+#include <memory>
 
 // Qt Includes
 #include <QFile>
@@ -54,6 +55,27 @@ struct UpdateOptions
 };
 
 //-Classes-----------------------------------------------------------------------------------------------------------
+class ImageSources
+{
+//-Instance Members--------------------------------------------------------------------------------------------------
+private:
+    QString mLogoPath;
+    QString mScreenshotPath;
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+public:
+    ImageSources();
+    ImageSources(const QString& logoPath, const QString& screenshotPath);
+
+//-Instance Functions--------------------------------------------------------------------------------------------------
+public:
+    bool isNull() const;
+    QString logoPath() const;
+    QString screenshotPath() const;
+    void setLogoPath(const QString& path);
+    void setScreenshotPath(const QString& path);
+};
+
 class DataDoc
 {
     /* TODO: Consider making this a template class where T is the type argument for the doc's parent, so that the
@@ -221,7 +243,10 @@ protected:
                            QHash<QUuid, std::shared_ptr<T>>& finalItems,
                            std::shared_ptr<T> newItem)
     {
-        addUpdateableItem(existingItems, finalItems, static_cast<BasicItem>(newItem).id(), newItem);
+        addUpdateableItem(existingItems,
+                          finalItems,
+                          std::static_pointer_cast<BasicItem>(newItem)->id(),
+                          newItem);
     }
 
 public:
@@ -238,14 +263,17 @@ protected:
 private:
     Type type() const override;
 
-public:
-    virtual void setGameImageReference(Fp::ImageType imageType, QUuid gameId, QString sourcePath);
+protected:
+    // NOTE: The image paths provided here can be null (i.e. images unavailable). Handle accordingly in derived.
+    virtual const Game* processGame(const Fp::Game& game, const ImageSources& images) = 0;
+    virtual void processAddApp(const Fp::AddApp& app) = 0;
 
+public:
     virtual bool containsGame(QUuid gameId) const = 0;
     virtual bool containsAddApp(QUuid addAppId) const = 0;
 
-    virtual const Game* addGame(Fp::Game game) = 0;
-    virtual void addAddApp(Fp::AddApp app) = 0;
+    void addGame(Fp::Game game, const ImageSources& images);
+    void addAddApp(Fp::AddApp app);
 };
 
 class BasicPlatformDoc : public PlatformDoc
@@ -264,8 +292,12 @@ protected:
     explicit BasicPlatformDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
+private:
+    const Game* processGame(const Fp::Game& game, const ImageSources& images) override;
+    void processAddApp(const Fp::AddApp& app) override;
+
 protected:
-    virtual std::shared_ptr<Game> prepareGame(const Fp::Game& game) = 0;
+    virtual std::shared_ptr<Game> prepareGame(const Fp::Game& game, const ImageSources& images) = 0;
     virtual std::shared_ptr<AddApp> prepareAddApp(const Fp::AddApp& game) = 0;
 
 public:
@@ -274,9 +306,6 @@ public:
 
     bool containsGame(QUuid gameId) const override;
     bool containsAddApp(QUuid addAppId) const override;
-
-    const Game* addGame(Fp::Game game) override;
-    void addAddApp(Fp::AddApp app) override;
 
     void finalize() override;
 };

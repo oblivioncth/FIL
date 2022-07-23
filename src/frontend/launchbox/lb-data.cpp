@@ -145,19 +145,22 @@ PlatformDoc::PlatformDoc(Install* const parent, const QString& xmlPath, QString 
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-std::shared_ptr<Fe::Game> PlatformDoc::prepareGame(const Fp::Game& game)
+std::shared_ptr<Fe::Game> PlatformDoc::prepareGame(const Fp::Game& game, const Fe::ImageSources& images)
 {
+    Q_UNUSED(images); // LaunchBox doesn't store image info in its platform doc directly
+
     // Convert to LaunchBox game
-    std::shared_ptr<Game> lbGame = std::make_shared<Game>(game, parent()->linkedClifpPath());
+    const QString& clifpPath = static_cast<Install*>(parent())->mImportDetails->clifpPath;
+    std::shared_ptr<Game> lbGame = std::make_shared<Game>(game, clifpPath);
 
     // Add details to cache
-    static_cast<Install*>(parent())->mPlaylistGameDetailsCache.insert(game.getId(), PlaylistGame::EntryDetails(*lbGame));
+    static_cast<Install*>(parent())->mPlaylistGameDetailsCache.insert(game.id(), PlaylistGame::EntryDetails(*lbGame));
 
     // Add language as custom field
     CustomFieldBuilder cfb;
-    cfb.wGameId(game.getId());
+    cfb.wGameId(game.id());
     cfb.wName(CustomField::LANGUAGE);
-    cfb.wValue(game.getLanguage());
+    cfb.wValue(game.language());
     addCustomField(cfb.buildShared());
 
     // Return converted game
@@ -167,7 +170,8 @@ std::shared_ptr<Fe::Game> PlatformDoc::prepareGame(const Fp::Game& game)
 std::shared_ptr<Fe::AddApp> PlatformDoc::prepareAddApp(const Fp::AddApp& addApp)
 {
     // Convert to LaunchBox add app
-    std::shared_ptr<AddApp> lbAddApp = std::make_shared<AddApp>(addApp, parent()->linkedClifpPath());
+    const QString& clifpPath = static_cast<Install*>(parent())->mImportDetails->clifpPath;
+    std::shared_ptr<AddApp> lbAddApp = std::make_shared<AddApp>(addApp, clifpPath);
 
     // Return converted game
     return lbAddApp;
@@ -705,6 +709,7 @@ const QList<PlatformCategory>& PlatformsDoc::getPlatformCategories() const { ret
 bool PlatformsDoc::containsPlatform(QString name) { return mPlatforms.contains(name); }
 
 void PlatformsDoc::addPlatform(Platform platform) { mPlatforms[platform.name()] = platform; }
+void PlatformsDoc::removePlatform(QString name) { mPlatforms.remove(name); }
 
 void PlatformsDoc::setMediaFolder(QString platform, QString mediaType, QString folderPath)
 {

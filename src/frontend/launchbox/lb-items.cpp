@@ -15,25 +15,25 @@ namespace Lb
 Game::Game() {}
 
 Game::Game(const Fp::Game& flashpointGame, QString fullCLIFpPath) :
-    Fe::Game(flashpointGame.getId(), flashpointGame.getTitle(), flashpointGame.getPlatform()),
-    mSeries(flashpointGame.getSeries()),
-    mDeveloper(flashpointGame.getDeveloper()),
-    mPublisher(flashpointGame.getPublisher()),
-    mSortTitle(flashpointGame.getOrderTitle()),
-    mDateAdded(flashpointGame.getDateAdded()),
-    mDateModified(flashpointGame.getDateModified()),
+    Fe::Game(flashpointGame.id(), flashpointGame.title(), flashpointGame.platform()),
+    mSeries(flashpointGame.series()),
+    mDeveloper(flashpointGame.developer()),
+    mPublisher(flashpointGame.publisher()),
+    mSortTitle(flashpointGame.orderTitle()),
+    mDateAdded(flashpointGame.dateAdded()),
+    mDateModified(flashpointGame.dateModified()),
     mBroken(flashpointGame.isBroken()),
-    mPlayMode(flashpointGame.getPlayMode()),
-    mStatus(flashpointGame.getStatus()),
+    mPlayMode(flashpointGame.playMode()),
+    mStatus(flashpointGame.status()),
     mRegion(), // Ensures this field is cleared because of older tool versions
-    mNotes(flashpointGame.getOriginalDescription() +
-           (!flashpointGame.getNotes().isEmpty() ? "\n\n" + flashpointGame.getNotes() : "")),
-    mSource(flashpointGame.getSource()),
+    mNotes(flashpointGame.originalDescription() +
+           (!flashpointGame.notes().isEmpty() ? "\n\n" + flashpointGame.notes() : "")),
+    mSource(flashpointGame.source()),
     mAppPath(QDir::toNativeSeparators(fullCLIFpPath)),
-    mCommandLine(CLIFp::parametersFromStandard(flashpointGame.getId())),
-    mReleaseDate(flashpointGame.getReleaseDate()),
-    mVersion(flashpointGame.getVersion()),
-    mReleaseType(flashpointGame.getLibrary() == Fp::Db::Table_Game::ENTRY_GAME_LIBRARY ? RELEASE_TYPE_GAME : RELEASE_TYPE_ANIM)
+    mCommandLine(CLIFp::parametersFromStandard(flashpointGame.id())),
+    mReleaseDate(flashpointGame.releaseDate()),
+    mVersion(flashpointGame.version()),
+    mReleaseType(flashpointGame.library() == Fp::Db::Table_Game::ENTRY_GAME_LIBRARY ? RELEASE_TYPE_GAME : RELEASE_TYPE_ANIM)
 {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
@@ -112,10 +112,10 @@ GameBuilder& GameBuilder::wReleaseType(QString releaseType) { mItemBlueprint.mRe
 AddApp::AddApp() {}
 
 AddApp::AddApp(const Fp::AddApp& flashpointAddApp, QString fullCLIFpPath) :
-    Fe::AddApp(flashpointAddApp.getId(), flashpointAddApp.getName(), flashpointAddApp.getParentId()),
+    Fe::AddApp(flashpointAddApp.id(), flashpointAddApp.name(), flashpointAddApp.parentId()),
     mAppPath(QDir::toNativeSeparators(fullCLIFpPath)),
     mCommandLine(flashpointAddApp.isPlayable() ? CLIFp::parametersFromStandard(mId)
-                   : CLIFp::parametersFromStandard(flashpointAddApp.getAppPath(), flashpointAddApp.getLaunchCommand())),
+                   : CLIFp::parametersFromStandard(flashpointAddApp.appPath(), flashpointAddApp.launchCommand())),
     mAutorunBefore(false),
     mWaitForExit(flashpointAddApp.isWaitExit())
 {}
@@ -181,9 +181,9 @@ CustomFieldBuilder& CustomFieldBuilder::wValue(QString value) { mItemBlueprint.m
 //Public:
 PlaylistHeader::PlaylistHeader() {}
 PlaylistHeader::PlaylistHeader(const Fp::Playlist& flashpointPlaylist) :
-    Fe::PlaylistHeader(flashpointPlaylist.getId(), flashpointPlaylist.getTitle()),
-    mNestedName(flashpointPlaylist.getTitle()),
-    mNotes(flashpointPlaylist.getDescription())
+    Fe::PlaylistHeader(flashpointPlaylist.id(), flashpointPlaylist.title()),
+    mNestedName(flashpointPlaylist.title()),
+    mNotes(flashpointPlaylist.description())
 {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
@@ -233,11 +233,11 @@ QString PlaylistGame::EntryDetails::platform() const { return mTitle; }
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 PlaylistGame::PlaylistGame(const Fp::PlaylistGame& flashpointPlaylistGame, const QHash<QUuid, EntryDetails>& playlistGameDetailsMap) :
-    Fe::PlaylistGame(flashpointPlaylistGame.getGameId(), playlistGameDetailsMap.value(flashpointPlaylistGame.getGameId()).title()),
+    Fe::PlaylistGame(flashpointPlaylistGame.gameId(), playlistGameDetailsMap.value(flashpointPlaylistGame.gameId()).title()),
     mLBDatabaseId(-1),
-    mGameFilename(playlistGameDetailsMap.value(flashpointPlaylistGame.getGameId()).filename()),
-    mGamePlatform(playlistGameDetailsMap.value(flashpointPlaylistGame.getGameId()).platform()),
-    mManualOrder(flashpointPlaylistGame.getOrder())
+    mGameFilename(playlistGameDetailsMap.value(flashpointPlaylistGame.gameId()).filename()),
+    mGamePlatform(playlistGameDetailsMap.value(flashpointPlaylistGame.gameId()).platform()),
+    mManualOrder(flashpointPlaylistGame.order())
 {}
 
 PlaylistGame::PlaylistGame() {}

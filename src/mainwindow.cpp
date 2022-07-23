@@ -167,20 +167,17 @@ void MainWindow::initializeEnableConditionMaps()
     // Populate hash-map of widget element enable conditions
     mWidgetEnableConditionMap[ui->groupBox_importSelection] = [&](){ return mFrontendInstall && mFlashpointInstall; };
     mWidgetEnableConditionMap[ui->groupBox_playlistGameMode] = [&](){ return getSelectedPlaylists().count() > 0; };
-    mWidgetEnableConditionMap[ui->groupBox_updateMode] = [&](){
-        return isExistingPlatformSelected() || isExistingPlaylistSelected() ||
-               (getSelectedPlaylistGameMode() ==  ImportWorker::ForceAll && mFrontendInstall->getExistingPlatforms().count() > 0);
-    };
+    mWidgetEnableConditionMap[ui->groupBox_updateMode] = [&](){ return selectionsMayModify(); };
     mWidgetEnableConditionMap[ui->groupBox_imageMode] = [&](){ return mFrontendInstall && mFlashpointInstall; };
 
     mWidgetEnableConditionMap[ui->radioButton_reference] = [&](){
-        return mFrontendInstall && mFlashpointInstall && mFrontendInstall->supportsImageMode(Fe::Install::ImageMode::Reference);
+        return mFrontendInstall && mFlashpointInstall && mFrontendInstall->supportsImageMode(Fe::ImageMode::Reference);
     };
     mWidgetEnableConditionMap[ui->radioButton_link] = [&](){
-        return mHasLinkPermissions && mFrontendInstall && mFlashpointInstall && mFrontendInstall->supportsImageMode(Fe::Install::ImageMode::Link);
+        return mHasLinkPermissions && mFrontendInstall && mFlashpointInstall && mFrontendInstall->supportsImageMode(Fe::ImageMode::Link);
     };
     mWidgetEnableConditionMap[ui->radioButton_reference] = [&](){
-        return mFrontendInstall && mFlashpointInstall && mFrontendInstall->supportsImageMode(Fe::Install::ImageMode::Copy);
+        return mFrontendInstall && mFlashpointInstall && mFrontendInstall->supportsImageMode(Fe::ImageMode::Copy);
     };
 
     mWidgetEnableConditionMap[ui->pushButton_startImport] = [&](){ return getSelectedPlatforms().count() > 0 ||
@@ -302,7 +299,7 @@ void MainWindow::populateImportSelectionBoxes()
         currentItem->setFlags(currentItem->flags() | Qt::ItemIsUserCheckable);
         currentItem->setCheckState(Qt::Unchecked);
 
-        if(mFrontendInstall->getExistingPlatforms().contains(currentItem->text()))
+        if(mFrontendInstall->containsPlatform(currentItem->text()))
             currentItem->setBackground(QBrush(mExistingItemColor));
     }
 
@@ -312,7 +309,7 @@ void MainWindow::populateImportSelectionBoxes()
         currentItem->setFlags(currentItem->flags() | Qt::ItemIsUserCheckable);
         currentItem->setCheckState(Qt::Unchecked);
 
-        if(mFrontendInstall->getExistingPlaylists().contains(currentItem->text()))
+        if(mFrontendInstall->containsPlaylist(currentItem->text()))
             currentItem->setBackground(QBrush(mExistingItemColor));
     }
 }
@@ -368,7 +365,7 @@ bool MainWindow::parseFrontendData()
     Qx::GenericError existingCheck;
 
     // Get list of existing platforms and playlists
-    existingCheck = mFrontendInstall->populateExistingDocs(mFlashpointInstall->database()->platformList(), mFlashpointInstall->database()->playlistList());
+    existingCheck = mFrontendInstall->refreshExistingDocs();
 
     // IO Error Check
     if(existingCheck.isValid())
@@ -383,22 +380,15 @@ bool MainWindow::installsHaveChanged()
     // TODO: Make this check more thorough
 
     // Check frontend existing items
-    QSet<QString> currentPlatforms = mFrontendInstall->getExistingPlatforms();
-    QSet<QString> currentPlaylists = mFrontendInstall->getExistingPlaylists();
-
-    if(mFrontendInstall->populateExistingDocs(mFlashpointInstall->database()->platformList(), mFlashpointInstall->database()->playlistList()).isValid())
-        return true;
-
-    if(currentPlatforms != mFrontendInstall->getExistingPlatforms() || currentPlaylists != mFrontendInstall->getExistingPlaylists())
-        return true;
-
-    return false;
+    bool changed = false;
+    mFrontendInstall->refreshExistingDocs(&changed);
+    return changed;
 }
 
 void MainWindow::redoInputChecks()
 {
     // Check existing locations again
-    validateInstall(mFrontendInstall->getPath(), InstallType::Frontend);
+    validateInstall(mFrontendInstall->path(), InstallType::Frontend);
     validateInstall(mFlashpointInstall->fullPath(), InstallType::Flashpoint);
 }
 
@@ -443,7 +433,7 @@ bool MainWindow::isExistingPlatformSelected()
     for(int i = 0; i < ui->listWidget_platformChoices->count(); i++)
     {
         if(ui->listWidget_platformChoices->item(i)->checkState() == Qt::Checked &&
-           mFrontendInstall->getExistingPlatforms().contains(ui->listWidget_platformChoices->item(i)->text()))
+           mFrontendInstall->containsPlatform(ui->listWidget_platformChoices->item(i)->text()))
             return true;
     }
 
@@ -457,12 +447,19 @@ bool MainWindow::isExistingPlaylistSelected()
     for(int i = 0; i < ui->listWidget_playlistChoices->count(); i++)
     {
         if(ui->listWidget_playlistChoices->item(i)->checkState() == Qt::Checked &&
-           mFrontendInstall->getExistingPlaylists().contains(ui->listWidget_playlistChoices->item(i)->text()))
+           mFrontendInstall->containsPlaylist(ui->listWidget_playlistChoices->item(i)->text()))
             return true;
     }
 
     // Return false if no match
     return false;
+}
+
+bool MainWindow::selectionsMayModify()
+{
+    return isExistingPlatformSelected() || isExistingPlaylistSelected() ||
+               (getSelectedPlaylistGameMode() ==  ImportWorker::ForceAll &&
+                mFrontendInstall->containsAnyPlatform(mFlashpointInstall->database()->platformList()));
 }
 
 void MainWindow::postSqlError(QString mainText, QSqlError sqlError)
@@ -513,24 +510,24 @@ void MainWindow::refreshCheckStates()
 {
     // Move image mode selection to next preferred option if the current one is invalid
     // (if there is no front end install yet, assume all modes are otherwise valid)
-    QList<Fe::Install::ImageMode> validModes;
+    QList<Fe::ImageMode> validModes;
 
-    if(mHasLinkPermissions && (!mFrontendInstall || mFrontendInstall->supportsImageMode(Fe::Install::ImageMode::Link)))
-            validModes.append(Fe::Install::ImageMode::Link);
-    if(!mFrontendInstall || mFrontendInstall->supportsImageMode(Fe::Install::ImageMode::Reference))
-            validModes.append(Fe::Install::ImageMode::Reference);
-    if(!mFrontendInstall || mFrontendInstall->supportsImageMode(Fe::Install::ImageMode::Copy))
-            validModes.append(Fe::Install::ImageMode::Copy);
+    if(mHasLinkPermissions && (!mFrontendInstall || mFrontendInstall->supportsImageMode(Fe::ImageMode::Link)))
+            validModes.append(Fe::ImageMode::Link);
+    if(!mFrontendInstall || mFrontendInstall->supportsImageMode(Fe::ImageMode::Reference))
+            validModes.append(Fe::ImageMode::Reference);
+    if(!mFrontendInstall || mFrontendInstall->supportsImageMode(Fe::ImageMode::Copy))
+            validModes.append(Fe::ImageMode::Copy);
 
-    Fe::Install::ImageMode im = getSelectedImageMode();
+    Fe::ImageMode im = getSelectedImageMode();
 
     if(!validModes.contains(im))
     {
-        if(validModes.contains(Fe::Install::ImageMode::Link))
+        if(validModes.contains(Fe::ImageMode::Link))
             ui->radioButton_link->setChecked(true);
-        else if(validModes.contains(Fe::Install::ImageMode::Reference))
+        else if(validModes.contains(Fe::ImageMode::Reference))
             ui->radioButton_reference->setChecked(true);
-        else if(validModes.contains(Fe::Install::ImageMode::Copy))
+        else if(validModes.contains(Fe::ImageMode::Copy))
             ui->radioButton_copy->setChecked(true);
         else
             throw std::runtime_error("At least one image import mode must be available!");
@@ -573,9 +570,9 @@ Fe::UpdateOptions MainWindow::getSelectedUpdateOptions() const
     return {ui->radioButton_onlyAdd->isChecked() ? Fe::ImportMode::OnlyNew : Fe::ImportMode::NewAndExisting, ui->checkBox_removeMissing->isChecked() };
 }
 
-Fe::Install::ImageMode MainWindow::getSelectedImageMode() const
+Fe::ImageMode MainWindow::getSelectedImageMode() const
 {
-    return ui->radioButton_copy->isChecked() ? Fe::Install::Copy : ui->radioButton_reference->isChecked() ? Fe::Install::Reference : Fe::Install::Link;
+    return ui->radioButton_copy->isChecked() ? Fe::ImageMode::Copy : ui->radioButton_reference->isChecked() ? Fe::ImageMode::Reference : Fe::ImageMode::Link;
 }
 
 ImportWorker::PlaylistGameMode MainWindow::getSelectedPlaylistGameMode() const
@@ -599,12 +596,7 @@ void MainWindow::prepareImport()
     }
 
     // Warn user if they are changing existing files
-    QStringList selPlatforms = getSelectedPlatforms();
-    QStringList selPlaylists = getSelectedPlaylists();
-
-    if(mFrontendInstall->getExistingPlatforms().intersects(QSet<QString>(selPlatforms.begin(), selPlatforms.end())) ||
-       mFrontendInstall->getExistingPlaylists().intersects(QSet<QString>(selPlaylists.begin(), selPlaylists.end())) ||
-       (getSelectedPlaylistGameMode() == ImportWorker::ForceAll && mFrontendInstall->getExistingPlatforms().count() > 0))
+    if(selectionsMayModify())
         if(QMessageBox::warning(this, QApplication::applicationName(), MSG_PRE_EXISTING_IMPORT, QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel) == QMessageBox::Cancel)
             return;
 
@@ -641,7 +633,8 @@ void MainWindow::prepareImport()
         QApplication::processEvents();
 
         // Setup import worker
-        ImportWorker::ImportSelections impSel{selPlatforms, selPlaylists};
+        ImportWorker::ImportSelections impSel{.platforms = getSelectedPlatforms(),
+                                              .playlists =getSelectedPlaylists()};
         ImportWorker::OptionSet optSet{
             getSelectedUpdateOptions(),
             getSelectedImageMode(),

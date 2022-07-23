@@ -194,7 +194,7 @@ public:
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
-    std::shared_ptr<Fe::Game> prepareGame(const Fp::Game& game) override;
+    std::shared_ptr<Fe::Game> prepareGame(const Fp::Game& game, const Fe::ImageSources& images) override;
     std::shared_ptr<Fe::AddApp> prepareAddApp(const Fp::AddApp& addApp) override;
 
     void addCustomField(std::shared_ptr<CustomField> customField);
@@ -308,6 +308,7 @@ public:
     bool containsPlatform(QString name);
 
     void addPlatform(Platform platform);
+    void removePlatform(QString name);
 
     void setMediaFolder(QString platform, QString mediaType, QString folderPath);
 

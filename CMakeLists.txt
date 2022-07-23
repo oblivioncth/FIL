@@ -91,11 +91,11 @@ add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 
 # Fetch Qx (build and import from source)
 include(FIL/FetchQx)
-fetch_qx("c148272b65da2f364b467200dd166c8d538ef4cd")
+fetch_qx("b84c68e95d00c0d7b6c9d285b61cd544b79c4e8c")
 
 # Fetch libfp (build and import from source)
 include(FIL/Fetchlibfp)
-fetch_libfp("5f667cb1df8ddf053fe0c2ce51f7a5649c62c21e")
+fetch_libfp("38c7096929f63c4211965f23962fb1a3515c8bd3")
 
 # Fetch CLIFp (build and import from source)
 include(FIL/FetchCLIFp)
@@ -128,6 +128,8 @@ set(CXX_SOURCES
     src/clifp.cpp
     src/frontend/fe-data.h
     src/frontend/fe-data.cpp
+    src/frontend/fe-installfoundation.h
+    src/frontend/fe-installfoundation.cpp
     src/frontend/fe-install.h
     src/frontend/fe-install.cpp
     src/frontend/fe-items.h
