@@ -197,7 +197,7 @@ const QHash<QUuid, std::shared_ptr<AddApp>>& BasicPlatformDoc::getFinalAddApps()
 bool BasicPlatformDoc::containsGame(QUuid gameId) const { return mGamesFinal.contains(gameId) || mGamesExisting.contains(gameId); }
 bool BasicPlatformDoc::containsAddApp(QUuid addAppId) const { return mAddAppsFinal.contains(addAppId) || mAddAppsExisting.contains(addAppId); }
 
-void BasicPlatformDoc::addGame(Fp::Game game, const ImageSources& images)
+void BasicPlatformDoc::addGame(const Fp::Game& game, const ImageSources& images)
 {
     if(!mError.isValid())
     {
@@ -213,7 +213,7 @@ void BasicPlatformDoc::addGame(Fp::Game game, const ImageSources& images)
     }
 }
 
-void BasicPlatformDoc::addAddApp(Fp::AddApp app)
+void BasicPlatformDoc::addAddApp(const Fp::AddApp& app)
 {
     if(!mError.isValid())
     {
@@ -331,7 +331,7 @@ const QHash<QUuid, std::shared_ptr<PlaylistGame>>& BasicPlaylistDoc::getFinalPla
 bool BasicPlaylistDoc::containsPlaylistGame(QUuid gameId) const { return mPlaylistGamesFinal.contains(gameId) || mPlaylistGamesExisting.contains(gameId); }
 
 
-void BasicPlaylistDoc::setPlaylistHeader(Fp::Playlist playlist)
+void BasicPlaylistDoc::setPlaylistHeader(const Fp::Playlist& playlist)
 {
     if(!mError.isValid())
     {
@@ -346,7 +346,7 @@ void BasicPlaylistDoc::setPlaylistHeader(Fp::Playlist playlist)
     }
 }
 
-void BasicPlaylistDoc::addPlaylistGame(Fp::PlaylistGame playlistGame)
+void BasicPlaylistDoc::addPlaylistGame(const Fp::PlaylistGame& playlistGame)
 {
     if(!mError.isValid())
     {

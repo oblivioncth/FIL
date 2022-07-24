@@ -270,8 +270,8 @@ public:
     /* NOTE: The image paths provided here can be null (i.e. images unavailable). Handle accordingly in derived.
      * Also in most cases, addGame should call parent()->processDirectGameImages()
      */
-    virtual void addGame(Fp::Game game, const ImageSources& images) = 0;
-    virtual void addAddApp(Fp::AddApp app) = 0;
+    virtual void addGame(const Fp::Game& game, const ImageSources& images) = 0;
+    virtual void addAddApp(const Fp::AddApp& app) = 0;
 };
 
 class BasicPlatformDoc : public PlatformDoc
@@ -301,8 +301,8 @@ public:
     bool containsGame(QUuid gameId) const override;
     bool containsAddApp(QUuid addAppId) const override;
 
-    void addGame(Fp::Game game, const ImageSources& images) override;
-    void addAddApp(Fp::AddApp app) override;
+    void addGame(const Fp::Game& game, const ImageSources& images) override;
+    void addAddApp(const Fp::AddApp& app) override;
 
     void finalize() override;
 };
@@ -353,8 +353,8 @@ private:
 public:
     virtual bool containsPlaylistGame(QUuid gameId) const = 0;
 
-    virtual void setPlaylistHeader(Fp::Playlist playlist) = 0;
-    virtual void addPlaylistGame(Fp::PlaylistGame playlistGame) = 0;
+    virtual void setPlaylistHeader(const Fp::Playlist& playlist) = 0;
+    virtual void addPlaylistGame(const Fp::PlaylistGame& playlistGame) = 0;
 };
 
 class BasicPlaylistDoc : public PlaylistDoc
@@ -383,8 +383,8 @@ public:
 
     bool containsPlaylistGame(QUuid gameId) const override;
 
-    void setPlaylistHeader(Fp::Playlist playlist) override;
-    void addPlaylistGame(Fp::PlaylistGame playlistGame) override;
+    void setPlaylistHeader(const Fp::Playlist& playlist) override;
+    void addPlaylistGame(const Fp::PlaylistGame& playlistGame) override;
 
     void finalize() override;
 };
