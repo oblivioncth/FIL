@@ -176,15 +176,6 @@ PlatformDoc::PlatformDoc(Install* const parent, const QString& docPath, QString 
 //Private:
 DataDoc::Type PlatformDoc::type() const { return Type::Platform; }
 
-//Public:
-void PlatformDoc::addGame(Fp::Game game, const ImageSources& images)
-{
-    const Game* processedGame = processGame(game, images);
-    parent()->processDirectGameImages(processedGame, images);
-}
-
-void PlatformDoc::addAddApp(Fp::AddApp app) { processAddApp(app); }
-
 //===============================================================================================================
 // BasicPlatformDoc
 //===============================================================================================================
@@ -197,7 +188,16 @@ BasicPlatformDoc::BasicPlatformDoc(Install* const parent, const QString& docPath
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-const Game* BasicPlatformDoc::processGame(const Fp::Game& game, const ImageSources& images)
+
+
+//Public:
+const QHash<QUuid, std::shared_ptr<Game>>& BasicPlatformDoc::getFinalGames() const { return mGamesFinal; }
+const QHash<QUuid, std::shared_ptr<AddApp>>& BasicPlatformDoc::getFinalAddApps() const { return mAddAppsFinal; }
+
+bool BasicPlatformDoc::containsGame(QUuid gameId) const { return mGamesFinal.contains(gameId) || mGamesExisting.contains(gameId); }
+bool BasicPlatformDoc::containsAddApp(QUuid addAppId) const { return mAddAppsFinal.contains(addAppId) || mAddAppsExisting.contains(addAppId); }
+
+void BasicPlatformDoc::addGame(Fp::Game game, const ImageSources& images)
 {
     if(!mError.isValid())
     {
@@ -207,14 +207,13 @@ const Game* BasicPlatformDoc::processGame(const Fp::Game& game, const ImageSourc
         // Add game
         addUpdateableItem(mGamesExisting, mGamesFinal, feGame);
 
-        // Return pointer to converted and added game
-        return feGame.get();
+        // Allow install to handle images if needed
+        parent()->processDirectGameImages(feGame.get(), images);
+
     }
-    else
-        return nullptr;
 }
 
-void BasicPlatformDoc::processAddApp(const Fp::AddApp& app)
+void BasicPlatformDoc::addAddApp(Fp::AddApp app)
 {
     if(!mError.isValid())
     {
@@ -225,13 +224,6 @@ void BasicPlatformDoc::processAddApp(const Fp::AddApp& app)
         addUpdateableItem(mAddAppsExisting, mAddAppsFinal, feAddApp);
     }
 }
-
-//Public:
-const QHash<QUuid, std::shared_ptr<Game>>& BasicPlatformDoc::getFinalGames() const { return mGamesFinal; }
-const QHash<QUuid, std::shared_ptr<AddApp>>& BasicPlatformDoc::getFinalAddApps() const { return mAddAppsFinal; }
-
-bool BasicPlatformDoc::containsGame(QUuid gameId) const { return mGamesFinal.contains(gameId) || mGamesExisting.contains(gameId); }
-bool BasicPlatformDoc::containsAddApp(QUuid addAppId) const { return mAddAppsFinal.contains(addAppId) || mAddAppsExisting.contains(addAppId); }
 
 void BasicPlatformDoc::finalize()
 {

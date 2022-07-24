@@ -263,17 +263,15 @@ protected:
 private:
     Type type() const override;
 
-protected:
-    // NOTE: The image paths provided here can be null (i.e. images unavailable). Handle accordingly in derived.
-    virtual const Game* processGame(const Fp::Game& game, const ImageSources& images) = 0;
-    virtual void processAddApp(const Fp::AddApp& app) = 0;
-
 public:
     virtual bool containsGame(QUuid gameId) const = 0;
     virtual bool containsAddApp(QUuid addAppId) const = 0;
 
-    void addGame(Fp::Game game, const ImageSources& images);
-    void addAddApp(Fp::AddApp app);
+    /* NOTE: The image paths provided here can be null (i.e. images unavailable). Handle accordingly in derived.
+     * Also in most cases, addGame should call parent()->processDirectGameImages()
+     */
+    virtual void addGame(Fp::Game game, const ImageSources& images) = 0;
+    virtual void addAddApp(Fp::AddApp app) = 0;
 };
 
 class BasicPlatformDoc : public PlatformDoc
@@ -292,10 +290,6 @@ protected:
     explicit BasicPlatformDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
-private:
-    const Game* processGame(const Fp::Game& game, const ImageSources& images) override;
-    void processAddApp(const Fp::AddApp& app) override;
-
 protected:
     virtual std::shared_ptr<Game> prepareGame(const Fp::Game& game, const ImageSources& images) = 0;
     virtual std::shared_ptr<AddApp> prepareAddApp(const Fp::AddApp& game) = 0;
@@ -306,6 +300,9 @@ public:
 
     bool containsGame(QUuid gameId) const override;
     bool containsAddApp(QUuid addAppId) const override;
+
+    void addGame(Fp::Game game, const ImageSources& images) override;
+    void addAddApp(Fp::AddApp app) override;
 
     void finalize() override;
 };
