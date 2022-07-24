@@ -277,10 +277,10 @@ private:
     bool writePlaylistGame(const PlaylistGame& playlistGame);
 };
 
-class PlatformsDoc : public Fe::DataDoc
+class PlatformsConfigDoc : public Fe::DataDoc
 {
-    friend class PlatformsDocReader;
-    friend class PlatformsDocWriter;
+    friend class PlatformsConfigDocReader;
+    friend class PlatformsConfigDocWriter;
 
 //-Class Variables-----------------------------------------------------------------------------------------------------
 public:
@@ -294,16 +294,16 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlatformsDoc(Install* const parent, const QString& xmlPath, const DocKey&);
+    explicit PlatformsConfigDoc(Install* const parent, const QString& xmlPath, const DocKey&);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
     Type type() const override;
 
 public:
-    const QHash<QString, Platform>& getPlatforms() const;
-    const QMap<QString, QMap<QString, QString>>& getPlatformFolders() const;
-    const QList<PlatformCategory>& getPlatformCategories() const;
+    const QHash<QString, Platform>& platforms() const;
+    const QMap<QString, QMap<QString, QString>>& platformFolders() const;
+    const QList<PlatformCategory>& platformCategories() const;
 
     bool containsPlatform(QString name);
 
@@ -314,11 +314,11 @@ public:
 
 };
 
-class PlatformsDocReader : public XmlDocReader
+class PlatformsConfigDocReader : public XmlDocReader
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    PlatformsDocReader(PlatformsDoc* targetDoc);
+    PlatformsConfigDocReader(PlatformsConfigDoc* targetDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
@@ -328,11 +328,11 @@ private:
     void parsePlatformCategory();
 };
 
-class PlatformsDocWriter : public XmlDocWriter
+class PlatformsConfigDocWriter : public XmlDocWriter
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    PlatformsDocWriter(PlatformsDoc* sourceDoc);
+    PlatformsConfigDocWriter(PlatformsConfigDoc* sourceDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:

@@ -290,7 +290,7 @@ public:
     PlatformBuilder& wName(QString name);
 };
 
-//class PlatformFolder  : public Item
+//class PlatformFolder : public Fe::Item
 //{
 //    friend class PlatformFolderBuilder;
 
@@ -310,7 +310,7 @@ public:
 //    QString platform();
 //};
 
-//class PlatformFolderBuilder : public ItemBuilder<PlatformFolderBuilder, PlatformFolder>
+//class PlatformFolderBuilder : public Fe::ItemBuilder<PlatformFolderBuilder, PlatformFolder>
 //{
 ////-Constructor-------------------------------------------------------------------------------------------------
 //public:

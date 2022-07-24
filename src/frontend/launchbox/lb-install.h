@@ -77,7 +77,7 @@ private:
 
     // Image Processing
     QString imageDestinationPath(Fp::ImageType imageType, const Fe::Game* game) const;
-    Qx::GenericError editBulkImageReferences(const Fe::ImageSources& imagesSources, bool use);
+    Qx::GenericError editBulkImageReferences(const Fe::ImageSources& imageSources);
 
     // Doc handling
     QString dataDocPath(Fe::DataDoc::Identifier identifier) const;
@@ -86,8 +86,8 @@ private:
     std::shared_ptr<Fe::PlatformDocWriter> preparePlatformDocCommit(const std::unique_ptr<Fe::PlatformDoc>& platformDoc) override;
     std::shared_ptr<Fe::PlaylistDocWriter> preparePlaylistDocCommit(const std::unique_ptr<Fe::PlaylistDoc>& playlistDoc) override;
 
-    Qx::GenericError checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsDoc>& returnBuffer);
-    Qx::GenericError commitPlatformsConfigDoc(std::unique_ptr<PlatformsDoc> document);
+    Qx::GenericError checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc>& returnBuffer);
+    Qx::GenericError commitPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc> document);
 
 public:
     // Install management

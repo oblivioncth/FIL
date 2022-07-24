@@ -116,35 +116,33 @@ QString Install::imageDestinationPath(Fp::ImageType imageType, const Fe::Game* g
            IMAGE_EXT;
 }
 
-Qx::GenericError Install::editBulkImageReferences(const Fe::ImageSources& imagesSources, bool use)
+Qx::GenericError Install::editBulkImageReferences(const Fe::ImageSources& imageSources)
 {
     // Open platforms document
-    std::unique_ptr<PlatformsDoc> platformConfigXML;
-    Qx::GenericError platformConfigReadError = checkoutPlatformsConfigDoc(platformConfigXML);
+    std::unique_ptr<PlatformsConfigDoc> platformsConfig;
+    Qx::GenericError platformsConfigReadError = checkoutPlatformsConfigDoc(platformsConfig);
 
     // Stop import if error occurred
-    if(platformConfigReadError.isValid())
-        return platformConfigReadError;
+    if(platformsConfigReadError.isValid())
+        return platformsConfigReadError;
 
-    // Set media folder paths and ensure document contains platform or else image paths will be ignored
+    // Set media folder paths
     for(const QString& platform : qAsConst(mImportDetails->involvedPlatforms))
     {
-        platformConfigXML->setMediaFolder(platform, Lb::Install::LOGO_PATH, imagesSources.logoPath());
-        platformConfigXML->setMediaFolder(platform, Lb::Install::SCREENSHOT_PATH, imagesSources.screenshotPath());
-
-        if(use && !platformConfigXML->containsPlatform(platform)) // TODO: UNFINISHED
+        if(!imageSources.isNull())
         {
-            Lb::PlatformBuilder pb;
-            pb.wName(platform);
-            platformConfigXML->addPlatform(pb.build());
+            // Setting the folders also makes sure that the platform is added
+            platformsConfig->setMediaFolder(platform, Lb::Install::LOGO_PATH, imageSources.logoPath());
+            platformsConfig->setMediaFolder(platform, Lb::Install::SCREENSHOT_PATH, imageSources.screenshotPath());
         }
-
+        else
+            platformsConfig->removePlatform(platform);
     }
 
     // Save platforms document
-    Qx::GenericError saveError = commitPlatformsConfigDoc(std::move(platformConfigXML));
+    Qx::GenericError saveError = commitPlatformsConfigDoc(std::move(platformsConfig));
 
-    return saveError.isValid() ? saveError : Qx::GenericError();
+    return saveError;
 }
 
 //TODO: FIGURE OUT ME
@@ -218,16 +216,16 @@ std::shared_ptr<Fe::PlaylistDocWriter> Install::preparePlaylistDocCommit(const s
     return docWriter;
 }
 
-Qx::GenericError Install::checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsDoc>& returnBuffer)
+Qx::GenericError Install::checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc>& returnBuffer)
 {
     // Create doc file reference
-    Fe::DataDoc::Identifier docId(Fe::DataDoc::Type::Config, PlatformsDoc::STD_NAME);
+    Fe::DataDoc::Identifier docId(Fe::DataDoc::Type::Config, PlatformsConfigDoc::STD_NAME);
 
     // Construct unopened document
-    returnBuffer = std::make_unique<PlatformsDoc>(this, dataDocPath(docId), DocKey{});
+    returnBuffer = std::make_unique<PlatformsConfigDoc>(this, dataDocPath(docId), DocKey{});
 
     // Construct doc reader
-    std::shared_ptr<PlatformsDocReader> docReader = std::make_shared<PlatformsDocReader>(returnBuffer.get());
+    std::shared_ptr<PlatformsConfigDocReader> docReader = std::make_shared<PlatformsConfigDocReader>(returnBuffer.get());
 
     // Open document
     Qx::GenericError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
@@ -240,12 +238,12 @@ Qx::GenericError Install::checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsDo
     return readErrorStatus;
 }
 
-Qx::GenericError Install::commitPlatformsConfigDoc(std::unique_ptr<PlatformsDoc> document)
+Qx::GenericError Install::commitPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc> document)
 {
     assert(document->parent() == this);
 
     // Prepare writer
-    std::shared_ptr<PlatformsDocWriter> docWriter = std::make_shared<PlatformsDocWriter>(document.get());
+    std::shared_ptr<PlatformsConfigDocWriter> docWriter = std::make_shared<PlatformsConfigDocWriter>(document.get());
 
     // Write
     Qx::GenericError writeErrorStatus = commitDataDocument(document.get(), docWriter);
@@ -315,9 +313,9 @@ Qx::GenericError Install::preImageProcessing(QList<ImageMap>& workerTransfers, F
         case Fe::ImageMode::Link:
         case Fe::ImageMode::Copy:
             workerTransfers.swap(mWorkerImageJobs);
-            return editBulkImageReferences(bulkSources, false);
+            return editBulkImageReferences(bulkSources);
         case Fe::ImageMode::Reference:
-            return editBulkImageReferences(bulkSources, true);
+            return editBulkImageReferences(bulkSources);
         default:
             return Qx::GenericError();
             qWarning("Lb::Install::preImageProcessing() unhandled image mode");
