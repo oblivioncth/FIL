@@ -186,7 +186,7 @@ void PlatformDoc::addCustomField(std::shared_ptr<CustomField> customField)
 }
 
 //Public:
-void PlatformDoc::finalizeDerived()
+void PlatformDoc::finalize()
 {
     // Finalize custom fields
     finalizeUpdateableItems(mCustomFieldsExisting, mCustomFieldsFinal);
@@ -200,6 +200,8 @@ void PlatformDoc::finalizeDerived()
         else
             ++i;
     }
+
+    Fe::BasicPlatformDoc::finalize();
 }
 
 //===============================================================================================================

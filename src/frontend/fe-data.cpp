@@ -156,11 +156,8 @@ UpdateableDoc::UpdateableDoc(Install* const parent, const QString& docPath, QStr
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
-//Private:
-void UpdateableDoc::finalizeDerived() {} // Empty default implementation so it does nothing, but is opt in for derived classes
-
 //Public:
-void UpdateableDoc::finalize() { finalizeDerived(); }
+void UpdateableDoc::finalize() {} // Does nothing for base class
 
 //===============================================================================================================
 // PlatformDoc

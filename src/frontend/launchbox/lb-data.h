@@ -200,7 +200,7 @@ private:
     void addCustomField(std::shared_ptr<CustomField> customField);
 
 public:
-    void finalizeDerived() override;
+    void finalize() override;
 };
 
 class PlatformDocReader : public Fe::BasicPlatformDocReader, public XmlDocReader

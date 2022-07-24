@@ -194,8 +194,6 @@ protected:
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 protected:
-    virtual void finalizeDerived();
-
     template <typename T, typename K>
         requires std::derived_from<T, Item>
     void finalizeUpdateableItems(QHash<K, std::shared_ptr<T>>& existingItems,
