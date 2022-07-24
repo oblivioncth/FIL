@@ -195,7 +195,7 @@ void PlatformDoc::finalizeDerived()
     QHash<QString, std::shared_ptr<CustomField>>::iterator i = mCustomFieldsFinal.begin();
     while (i != mCustomFieldsFinal.end())
     {
-        if(!getFinalGames().contains(i.value()->gameId()))
+        if(!finalGames().contains(i.value()->gameId()))
             i = mCustomFieldsFinal.erase(i);
         else
             ++i;
@@ -363,14 +363,14 @@ PlatformDocWriter::PlatformDocWriter(PlatformDoc* sourceDoc) :
 bool PlatformDocWriter::writeSourceDoc()
 {
     // Write all games
-    for(const std::shared_ptr<Fe::Game>& game : static_cast<PlatformDoc*>(mSourceDocument)->getFinalGames())
+    for(const std::shared_ptr<Fe::Game>& game : static_cast<PlatformDoc*>(mSourceDocument)->finalGames())
     {
         if(!writeGame(*std::static_pointer_cast<Game>(game)))
             return false;
     }
 
     // Write all additional apps
-    for(const std::shared_ptr<Fe::AddApp>& addApp : static_cast<PlatformDoc*>(mSourceDocument)->getFinalAddApps())
+    for(const std::shared_ptr<Fe::AddApp>& addApp : static_cast<PlatformDoc*>(mSourceDocument)->finalAddApps())
     {
         if(!writeAddApp(*std::static_pointer_cast<AddApp>(addApp)))
             return false;
@@ -629,12 +629,12 @@ PlaylistDocWriter::PlaylistDocWriter(PlaylistDoc* sourceDoc) :
 bool PlaylistDocWriter::writeSourceDoc()
 {
     // Write playlist header
-    std::shared_ptr<Fe::PlaylistHeader> playlistHeader = static_cast<PlaylistDoc*>(mSourceDocument)->getPlaylistHeader();
+    std::shared_ptr<Fe::PlaylistHeader> playlistHeader = static_cast<PlaylistDoc*>(mSourceDocument)->playlistHeader();
     if(!writePlaylistHeader(*std::static_pointer_cast<PlaylistHeader>(playlistHeader)))
         return false;
 
     // Write all playlist games
-    for(std::shared_ptr<Fe::PlaylistGame> playlistGame : static_cast<PlaylistDoc*>(mSourceDocument)->getFinalPlaylistGames())
+    for(std::shared_ptr<Fe::PlaylistGame> playlistGame : static_cast<PlaylistDoc*>(mSourceDocument)->finalPlaylistGames())
     {
         if(!writePlaylistGame(*std::static_pointer_cast<PlaylistGame>(playlistGame)))
             return false;

@@ -109,7 +109,7 @@ public:
     bool containsAnyPlaylist(const QList<QString>& names) const;
 
     void addRevertableFile(QString filePath);
-    int getRevertQueueCount() const;
+    int revertQueueCount() const;
     int revertNextChange(Qx::GenericError& error, bool skipOnFail);
 };
 

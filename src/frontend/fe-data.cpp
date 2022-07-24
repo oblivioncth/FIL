@@ -191,8 +191,8 @@ BasicPlatformDoc::BasicPlatformDoc(Install* const parent, const QString& docPath
 
 
 //Public:
-const QHash<QUuid, std::shared_ptr<Game>>& BasicPlatformDoc::getFinalGames() const { return mGamesFinal; }
-const QHash<QUuid, std::shared_ptr<AddApp>>& BasicPlatformDoc::getFinalAddApps() const { return mAddAppsFinal; }
+const QHash<QUuid, std::shared_ptr<Game>>& BasicPlatformDoc::finalGames() const { return mGamesFinal; }
+const QHash<QUuid, std::shared_ptr<AddApp>>& BasicPlatformDoc::finalAddApps() const { return mAddAppsFinal; }
 
 bool BasicPlatformDoc::containsGame(QUuid gameId) const { return mGamesFinal.contains(gameId) || mGamesExisting.contains(gameId); }
 bool BasicPlatformDoc::containsAddApp(QUuid addAppId) const { return mAddAppsFinal.contains(addAppId) || mAddAppsExisting.contains(addAppId); }
@@ -325,8 +325,8 @@ BasicPlaylistDoc::BasicPlaylistDoc(Install* const parent, const QString& docPath
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-const std::shared_ptr<PlaylistHeader>& BasicPlaylistDoc::getPlaylistHeader() const { return mPlaylistHeader; }
-const QHash<QUuid, std::shared_ptr<PlaylistGame>>& BasicPlaylistDoc::getFinalPlaylistGames() const { return mPlaylistGamesFinal; }
+const std::shared_ptr<PlaylistHeader>& BasicPlaylistDoc::playlistHeader() const { return mPlaylistHeader; }
+const QHash<QUuid, std::shared_ptr<PlaylistGame>>& BasicPlaylistDoc::finalPlaylistGames() const { return mPlaylistGamesFinal; }
 
 bool BasicPlaylistDoc::containsPlaylistGame(QUuid gameId) const { return mPlaylistGamesFinal.contains(gameId) || mPlaylistGamesExisting.contains(gameId); }
 

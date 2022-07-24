@@ -295,8 +295,8 @@ protected:
     virtual std::shared_ptr<AddApp> prepareAddApp(const Fp::AddApp& game) = 0;
 
 public:
-    const QHash<QUuid, std::shared_ptr<Game>>& getFinalGames() const;
-    const QHash<QUuid, std::shared_ptr<AddApp>>& getFinalAddApps() const;
+    const QHash<QUuid, std::shared_ptr<Game>>& finalGames() const;
+    const QHash<QUuid, std::shared_ptr<AddApp>>& finalAddApps() const;
 
     bool containsGame(QUuid gameId) const override;
     bool containsAddApp(QUuid addAppId) const override;
@@ -378,8 +378,8 @@ protected:
     virtual std::shared_ptr<PlaylistGame> preparePlaylistGame(const Fp::PlaylistGame& game) = 0;
 
 public:
-    const std::shared_ptr<PlaylistHeader>& getPlaylistHeader() const;
-    const QHash<QUuid, std::shared_ptr<PlaylistGame>>& getFinalPlaylistGames() const;
+    const std::shared_ptr<PlaylistHeader>& playlistHeader() const;
+    const QHash<QUuid, std::shared_ptr<PlaylistGame>>& finalPlaylistGames() const;
 
     bool containsPlaylistGame(QUuid gameId) const override;
 

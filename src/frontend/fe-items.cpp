@@ -96,6 +96,6 @@ PlaylistGame::PlaylistGame(QUuid id, QString name) :
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QUuid PlaylistGame::gameId() const { return mId; } // Proxy for getId()
+QUuid PlaylistGame::gameId() const { return mId; } // Proxy for id()
 
 }

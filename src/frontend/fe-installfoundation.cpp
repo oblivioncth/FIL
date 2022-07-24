@@ -197,7 +197,7 @@ bool InstallFoundation::containsAnyPlaylist(const QList<QString>& names) const
 }
 
 void InstallFoundation::addRevertableFile(QString filePath) { mRevertableFilePaths.append(filePath); }
-int InstallFoundation::getRevertQueueCount() const { return mRevertableFilePaths.size(); }
+int InstallFoundation::revertQueueCount() const { return mRevertableFilePaths.size(); }
 
 int InstallFoundation::revertNextChange(Qx::GenericError& error, bool skipOnFail)
 {

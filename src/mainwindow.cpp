@@ -676,7 +676,7 @@ void MainWindow::revertAllFrontendChanges()
     int retryChoice;
 
     // Progress
-    QProgressDialog reversionProgress(CAPTION_REVERT, QString(), 0, mFrontendInstall->getRevertQueueCount(), this);
+    QProgressDialog reversionProgress(CAPTION_REVERT, QString(), 0, mFrontendInstall->revertQueueCount(), this);
     reversionProgress.setWindowModality(Qt::WindowModal);
     reversionProgress.setAutoReset(false);
 
