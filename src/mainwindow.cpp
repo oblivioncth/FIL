@@ -508,29 +508,38 @@ void MainWindow::refreshEnableStates()
 
 void MainWindow::refreshCheckStates()
 {
+    // Determine allowed/preferred image mode order
+    QList<Fe::ImageMode> modeOrder = mFrontendInstall ? mFrontendInstall->preferredImageModeOrder() : DEFAULT_IMAGE_MODE_ORDER;
+
+    // Remove link as an option if user doesn't have permissions
+    if(!mHasLinkPermissions)
+        modeOrder.removeAll(Fe::ImageMode::Link);
+
+    // Ensure an option remains
+    if(modeOrder.isEmpty())
+        throw std::runtime_error("MainWindow::refreshCheckStates(): At least one image import mode must be available!");
+
     // Move image mode selection to next preferred option if the current one is invalid
-    // (if there is no front end install yet, assume all modes are otherwise valid)
-    QList<Fe::ImageMode> validModes;
-
-    if(mHasLinkPermissions && (!mFrontendInstall || mFrontendInstall->supportsImageMode(Fe::ImageMode::Link)))
-            validModes.append(Fe::ImageMode::Link);
-    if(!mFrontendInstall || mFrontendInstall->supportsImageMode(Fe::ImageMode::Reference))
-            validModes.append(Fe::ImageMode::Reference);
-    if(!mFrontendInstall || mFrontendInstall->supportsImageMode(Fe::ImageMode::Copy))
-            validModes.append(Fe::ImageMode::Copy);
-
     Fe::ImageMode im = getSelectedImageMode();
-
-    if(!validModes.contains(im))
+    if(!modeOrder.contains(im))
     {
-        if(validModes.contains(Fe::ImageMode::Link))
-            ui->radioButton_link->setChecked(true);
-        else if(validModes.contains(Fe::ImageMode::Reference))
-            ui->radioButton_reference->setChecked(true);
-        else if(validModes.contains(Fe::ImageMode::Copy))
-            ui->radioButton_copy->setChecked(true);
-        else
-            throw std::runtime_error("At least one image import mode must be available!");
+        Fe::ImageMode preferredMode = modeOrder.first();
+
+        switch(preferredMode)
+        {
+            case Fe::ImageMode::Link:
+                ui->radioButton_link->setChecked(true);
+                break;
+            case Fe::ImageMode::Reference:
+                ui->radioButton_reference->setChecked(true);
+                break;
+            case Fe::ImageMode::Copy:
+                ui->radioButton_copy->setChecked(true);
+                break;
+            default:
+                qCritical("MainWindow::refreshCheckStates(): Invalid preferred image mode.");
+                break;
+        }
     }
 
     // Ensure that the force download images option is unchecked if not supported

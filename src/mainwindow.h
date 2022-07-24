@@ -155,6 +155,13 @@ private:
     // Flashpoint version check
     static inline const Qx::VersionNumber TARGET_FP_VERSION_PREFIX = Qx::VersionNumber::fromString(PROJECT_TARGET_FP_VER_PFX_STR);
 
+    // Selection defaults
+    static inline const QList<Fe::ImageMode> DEFAULT_IMAGE_MODE_ORDER = {
+        Fe::ImageMode::Link,
+        Fe::ImageMode::Reference,
+        Fe::ImageMode::Copy
+    };
+
     // User Roles
     static inline const int USER_ROLE_TAG_ID = 0x200; // Value chosen arbitrarily (must be > 0x100)
 

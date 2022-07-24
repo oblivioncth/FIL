@@ -267,7 +267,7 @@ void Install::softReset()
 
 QString Install::name() const { return NAME; }
 QString Install::executablePath() const { return path() + "/" + MAIN_EXE_PATH; }
-bool Install::supportsImageMode(Fe::ImageMode imageMode) const { return IMAGE_MODES.contains(imageMode); }
+QList<Fe::ImageMode> Install::preferredImageModeOrder() const { return IMAGE_MODE_ORDER; }
 
 QString Install::versionString() const
 {

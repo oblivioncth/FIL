@@ -77,7 +77,8 @@ public:
     // Info
     virtual QString name() const = 0;
     virtual QString executablePath() const = 0;
-    virtual bool supportsImageMode(ImageMode imageMode) const = 0;
+    virtual QList<ImageMode> preferredImageModeOrder() const = 0;
+    bool supportsImageMode(ImageMode imageMode) const;
     virtual QString versionString() const;
 
     // Import stage notifier hooks

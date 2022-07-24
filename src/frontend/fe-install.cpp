@@ -64,6 +64,8 @@ void Install::softReset()
     InstallFoundation::softReset();
 }
 
+bool Install::supportsImageMode(ImageMode imageMode) const { return preferredImageModeOrder().contains(imageMode); }
+
 QString Install::versionString() const
 {
     Qx::FileDetails exeDetails = Qx::FileDetails::readFileDetails(executablePath());

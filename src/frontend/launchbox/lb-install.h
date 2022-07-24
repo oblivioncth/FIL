@@ -40,10 +40,10 @@ public:
     static inline const QString XML_EXT = "xml";
 
     // Support
-    static inline const QSet<Fe::ImageMode> IMAGE_MODES {
-        Fe::ImageMode::Reference,
+    static inline const QList<Fe::ImageMode> IMAGE_MODE_ORDER {
+        Fe::ImageMode::Link,
         Fe::ImageMode::Copy,
-        Fe::ImageMode::Link
+        Fe::ImageMode::Reference
     };
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
@@ -96,7 +96,7 @@ public:
     // Info
     QString name() const override;
     QString executablePath() const override;
-    bool supportsImageMode(Fe::ImageMode imageMode) const override;
+    QList<Fe::ImageMode> preferredImageModeOrder() const override;
     QString versionString() const override;
 
     // Import stage notifier hooks
