@@ -62,7 +62,7 @@ protected:
     // Install management
     virtual void nullify() override;
     virtual Qx::GenericError populateExistingDocs() override = 0;
-    virtual QString translateDocName(const QString&) const override;
+    virtual QString translateDocName(const QString& originalName, DataDoc::Type type) const override;
 
     // Doc Handling
     virtual std::shared_ptr<PlatformDocReader> preparePlatformDocCheckout(std::unique_ptr<PlatformDoc>& platformDoc, const QString& translatedName) = 0;

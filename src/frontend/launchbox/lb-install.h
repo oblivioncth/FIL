@@ -73,7 +73,7 @@ private:
     // Install management
     void nullify() override;
     Qx::GenericError populateExistingDocs() override;
-    QString translateDocName(const QString&) const override;
+    QString translateDocName(const QString& originalName, Fe::DataDoc::Type type) const override;
 
     // Image Processing
     QString imageDestinationPath(Fp::ImageType imageType, const Fe::Game* game) const;

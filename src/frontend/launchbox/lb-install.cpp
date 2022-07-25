@@ -93,7 +93,7 @@ Qx::GenericError Install::populateExistingDocs()
     return Qx::GenericError();
 }
 
-QString Install::translateDocName(const QString& originalName) const
+QString Install::translateDocName(const QString& originalName, Fe::DataDoc::Type type) const
 {
     // Perform general kosherization
     QString translatedName = Qx::kosherizeFileName(originalName);

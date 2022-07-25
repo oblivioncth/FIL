@@ -65,7 +65,7 @@ bool InstallFoundation::containsAnyDataDoc(DataDoc::Type type, const QList<QStri
     // Create identifier set of names
     QSet<DataDoc::Identifier> searchSet;
     for(const QString& docName : names)
-        searchSet << DataDoc::Identifier(type, translateDocName(docName));
+        searchSet << DataDoc::Identifier(type, translateDocName(docName, type));
 
     // Cross reference with existing documents
     return mExistingDocuments.intersects(searchSet);
@@ -93,7 +93,7 @@ void InstallFoundation::declareValid(bool valid)
         nullify();
 }
 
-QString InstallFoundation::translateDocName(const QString& originalName) const { return originalName; }
+QString InstallFoundation::translateDocName(const QString& originalName, DataDoc::Type type) const { return originalName; }
 void InstallFoundation::catalogueExistingDoc(DataDoc::Identifier existingDoc) { mExistingDocuments.insert(existingDoc); }
 
 Qx::GenericError InstallFoundation::checkoutDataDocument(DataDoc* docToOpen, std::shared_ptr<DataDocReader> docReader)

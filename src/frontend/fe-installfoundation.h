@@ -92,7 +92,7 @@ protected:
     void declareValid(bool valid);
     virtual Qx::GenericError populateExistingDocs() = 0; // Stated redundantly again in Install to make it clear its part of the main interface
 
-    virtual QString translateDocName(const QString& originalName) const;
+    virtual QString translateDocName(const QString& originalName, DataDoc::Type type) const;
     void catalogueExistingDoc(DataDoc::Identifier existingDoc);
 
     Qx::GenericError checkoutDataDocument(DataDoc* docToOpen, std::shared_ptr<DataDocReader> docReader);

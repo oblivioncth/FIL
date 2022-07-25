@@ -51,10 +51,10 @@ void Install::nullify()
     InstallFoundation::nullify();
 }
 
-QString Install::translateDocName(const QString& originalName) const
+QString Install::translateDocName(const QString& originalName, DataDoc::Type type) const
 {
     // Redundant with base version, but here to make it clear its part of the main Install interface
-    return InstallFoundation::translateDocName(originalName);
+    return InstallFoundation::translateDocName(originalName, type);
 }
 
 //Public:
@@ -103,7 +103,7 @@ Qx::GenericError Install::postPlaylistsImport() { return {}; }
 Qx::GenericError Install::checkoutPlatformDoc(std::unique_ptr<PlatformDoc>& returnBuffer, QString name)
 {
     // Translate to frontend doc name
-    QString translatedName = translateDocName(name);
+    QString translatedName = translateDocName(name, DataDoc::Type::Platform);
 
     // Get initialized blank doc and reader
     std::shared_ptr<PlatformDocReader> docReader = preparePlatformDocCheckout(returnBuffer, translatedName);
@@ -122,7 +122,7 @@ Qx::GenericError Install::checkoutPlatformDoc(std::unique_ptr<PlatformDoc>& retu
 Qx::GenericError Install::checkoutPlaylistDoc(std::unique_ptr<PlaylistDoc>& returnBuffer, QString name)
 {
     // Translate to frontend doc name
-    QString translatedName = translateDocName(name);
+    QString translatedName = translateDocName(name, DataDoc::Type::Playlist);
 
     // Get initialized blank doc and reader
     std::shared_ptr<PlaylistDocReader> docReader = preparePlaylistDocCheckout(returnBuffer, translatedName);
