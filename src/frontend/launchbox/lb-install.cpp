@@ -36,7 +36,10 @@ Install::Install(QString installPath) :
     // Check validity
     QFileInfo mainExe(installPath + "/" + MAIN_EXE_PATH);
     if(!mainExe.exists() || !mainExe.isFile() || !mPlatformsDirectory.exists() || !mPlaylistsDirectory.exists())
+    {
         declareValid(false);
+        return;
+    }
 
     // Give the OK
     declareValid(true);
