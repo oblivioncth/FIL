@@ -297,7 +297,12 @@ QString Install::versionString() const
     // Try unins000.exe
     Qx::FileDetails uninsDetails = Qx::FileDetails::readFileDetails(path() + "/" + "unins000.exe");
     if(!uninsDetails.isNull())
-        return uninsDetails.productVersion().toString();
+    {
+        Qx::VersionNumber ver = uninsDetails.productVersion();
+
+        if(!ver.isNull())
+            return ver.toString();
+    }
 
     // Fallback to generic method
     return Fe::Install::versionString();
