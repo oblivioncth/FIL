@@ -15,11 +15,6 @@
 #include <qx/core/qx-versionnumber.h>
 #include <qx/windows/qx-filedetails.h>
 
-// Windows Includes (Specifically for changing XML permissions)
-#include <atlstr.h>
-#include "Aclapi.h"
-#include "sddl.h"
-
 namespace Lb
 {
 //===============================================================================================================
@@ -145,7 +140,6 @@ Qx::GenericError Install::editBulkImageReferences(const Fe::ImageSources& imageS
     return saveError;
 }
 
-//TODO: FIGURE OUT ME
 QString Install::dataDocPath(Fe::DataDoc::Identifier identifier) const
 {
     QString fileName = identifier.docName() + "." + XML_EXT;
