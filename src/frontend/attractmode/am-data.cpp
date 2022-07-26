@@ -59,7 +59,7 @@ Qx::GenericError CommonDocReader::readInto()
 //Protected:
 CommonDocWriter::CommonDocWriter(Fe::DataDoc* sourceDoc) :
     Fe::DataDocWriter(sourceDoc),
-    mStreamWriter(sourceDoc->path())
+    mStreamWriter(sourceDoc->path(), Qx::WriteMode::Truncate)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
