@@ -36,7 +36,7 @@ public:
 public:
     // Files
     static inline const QString IMAGE_EXT = ".png";
-    static inline const QString MODIFIED_FILE_EXT = ".obk";
+    static inline const QString BACKUP_FILE_EXT = ".fbk";
 
     // Base errors
     static inline const QString ERR_UNSUPPORTED_FEATURE = "A feature unsupported by the frontend was called upon!";

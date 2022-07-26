@@ -54,8 +54,7 @@ void InstallFoundation::allowUserWriteOnFile(QString filePath)
 
 QString InstallFoundation::filePathToBackupPath(QString filePath)
 {
-    QFileInfo fi(filePath);
-    return fi.absolutePath() + '/' + fi.baseName() + MODIFIED_FILE_EXT;
+    return filePath + BACKUP_FILE_EXT;
 }
 
 //-Instance Functions--------------------------------------------------------------------------------------------
