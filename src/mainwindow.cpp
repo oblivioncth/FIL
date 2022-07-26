@@ -176,7 +176,7 @@ void MainWindow::initializeEnableConditionMaps()
     mWidgetEnableConditionMap[ui->radioButton_link] = [&](){
         return mHasLinkPermissions && mFrontendInstall && mFlashpointInstall && mFrontendInstall->supportsImageMode(Fe::ImageMode::Link);
     };
-    mWidgetEnableConditionMap[ui->radioButton_reference] = [&](){
+    mWidgetEnableConditionMap[ui->radioButton_copy] = [&](){
         return mFrontendInstall && mFlashpointInstall && mFrontendInstall->supportsImageMode(Fe::ImageMode::Copy);
     };
 
