@@ -91,7 +91,7 @@ add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 
 # Fetch Qx (build and import from source)
 include(FIL/FetchQx)
-fetch_qx("b84c68e95d00c0d7b6c9d285b61cd544b79c4e8c")
+fetch_qx("74edd52d106faf37e51a0ca2e862d5607465ca0f")
 
 # Fetch libfp (build and import from source)
 include(FIL/Fetchlibfp)
@@ -143,6 +143,7 @@ set(CXX_SOURCES
 
 set(FRONTEND_SOURCE_DIRS
     launchbox
+    attractmode
 )
 
 foreach(frontend ${FRONTEND_SOURCE_DIRS})
