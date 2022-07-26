@@ -302,6 +302,8 @@ QList<Fe::ImageMode> Install::preferredImageModeOrder() const { return IMAGE_MOD
 
 QString Install::versionString() const
 {
+    // Limits to first 3 segments for consistency since that's what AttractMode seems to use
+
     // Try executables if they exist
     QString exePath = mMainExe.exists() ? mMainExe.fileName() :
                       mConsoleExe.exists() ? mConsoleExe.fileName() :
@@ -314,7 +316,7 @@ QString Install::versionString() const
         {
             Qx::VersionNumber ver = exeDetails.productVersion();
             if(!ver.isNull())
-                return ver.toString();
+                return ver.first(3).toString();
         }
     }
 
@@ -330,7 +332,7 @@ QString Install::versionString() const
             {
                 Qx::VersionNumber ver = Qx::VersionNumber::fromString(sv.captured());
                 if(!ver.isNull())
-                    return ver.toString();
+                    return ver.first(3).toString();
             }
         }
     }
