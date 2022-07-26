@@ -93,7 +93,7 @@ private:
                                                           "\n"
                                                           "Are you sure you want to proceed?";
     static inline const QString MSG_FRONTEND_CLOSE_PROMPT = "The importer has detected that the selected frontend is running. It must be closed in order to continue. If recently closed, wait a few moments before trying to proceed again as it performs significant cleanup in the background.";
-    static inline const QString MSG_POST_IMPORT = "The Flashpoint import has completed successfully. Next time you start the frontend it may take longer than usual as it will have to fill in some default fields for the imported Platforms/Playlists.\n"
+    static inline const QString MSG_POST_IMPORT = "The Flashpoint import has completed successfully. Next time you start the frontend it may take longer than usual as it may have to fill in some default fields for the imported Platforms/Playlists.\n"
                                                   "\n"
                                                   "If you wish to import further selections or update to a newer version of Flashpoint, simply re-run this procedure after pointing it to the desired Flashpoint installation.";
     // Initial import status
