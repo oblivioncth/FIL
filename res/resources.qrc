@@ -9,5 +9,6 @@
         <file>icon/Exit.png</file>
         <file>icon/GitHub.png</file>
         <file>icon/frontend/LaunchBox.svg</file>
+        <file>icon/frontend/AttractMode.png</file>
     </qresource>
 </RCC>
