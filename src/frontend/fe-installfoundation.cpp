@@ -172,7 +172,7 @@ Qx::GenericError InstallFoundation::refreshExistingDocs(bool* changed)
     oldDocSet.swap(mExistingDocuments);
     Qx::GenericError error = populateExistingDocs();
     if(changed)
-        *changed = mExistingDocuments == oldDocSet;
+        *changed = mExistingDocuments != oldDocSet;
     return error;
 }
 
