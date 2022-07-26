@@ -132,8 +132,7 @@ void MainWindow::initializeForms()
 
     mArgedUpdateModeHelp = MSG_UPDATE_MODE_HELP.arg(ui->radioButton_onlyAdd->text(),
                                                     ui->radioButton_updateExisting->text(),
-                                                    ui->checkBox_removeMissing->text(),
-                                                    ui->action_includeExtreme->text());
+                                                    ui->checkBox_removeMissing->text());
 
     mArgedImageModeHelp = MSG_IMAGE_MODE_HELP.arg(ui->radioButton_copy->text(),
                                                    ui->radioButton_reference->text(),
