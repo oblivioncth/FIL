@@ -100,7 +100,7 @@ Qx::GenericError ImportWorker::transferImage(bool symlink, QString sourcePath, Q
     {
         if(destinationInfo.isSymLink() && symlink)
             return Qx::GenericError();
-        else
+        else if(!destinationInfo.isSymLink() && !symlink)
         {
             QFile source(sourcePath);
             QFile destination(destinationPath);
@@ -112,6 +112,7 @@ Qx::GenericError ImportWorker::transferImage(bool symlink, QString sourcePath, Q
                sourceChecksum.compare(destinationChecksum, Qt::CaseInsensitive) == 0)
                 return Qx::GenericError();
         }
+        // Image is always updated if changing between Link/Copy
     }
 
     // Ensure destination path exists
