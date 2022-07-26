@@ -319,8 +319,8 @@ Qx::GenericError Install::preImageProcessing(QList<ImageMap>& workerTransfers, F
         case Fe::ImageMode::Reference:
             return editBulkImageReferences(bulkSources);
         default:
-            return Qx::GenericError();
             qWarning("Lb::Install::preImageProcessing() unhandled image mode");
+            return Qx::GenericError();
     }
 }
 

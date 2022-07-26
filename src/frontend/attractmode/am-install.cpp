@@ -398,11 +398,13 @@ Qx::GenericError Install::preImageProcessing(QList<ImageMap>& workerTransfers, F
         case Fe::ImageMode::Link:
         case Fe::ImageMode::Copy:
             workerTransfers.swap(mWorkerImageJobs);
+            return Qx::GenericError();
         case Fe::ImageMode::Reference:
             qWarning("Am::Install::preImageProcessing() unsupported image mode");
-        default:
             return Qx::GenericError();
+        default:
             qWarning("Am::Install::preImageProcessing() unhandled image mode");
+            return Qx::GenericError();
     }
 }
 
