@@ -33,11 +33,15 @@ public:
     };
 
 //-Class Variables-----------------------------------------------------------------------------------------------
-public:
+private:
     // Files
-    static inline const QString IMAGE_EXT = ".png";
-    static inline const QString BACKUP_FILE_EXT = ".fbk";
+    static inline const QString BACKUP_FILE_EXT = "fbk";
 
+protected:
+    // Files
+    static inline const QString IMAGE_EXT = "png";
+
+public:
     // Base errors
     static inline const QString ERR_UNSUPPORTED_FEATURE = "A feature unsupported by the frontend was called upon!";
     static inline const QString ERR_INSEPECTION = "An unexpected error occurred while inspecting the frontend.";
@@ -80,6 +84,8 @@ public:
 //-Class Functions------------------------------------------------------------------------------------------------------
 private:
     static void allowUserWriteOnFile(QString filePath);
+
+public:
     static QString filePathToBackupPath(QString filePath);
 
 //-Instance Functions---------------------------------------------------------------------------------------------------------

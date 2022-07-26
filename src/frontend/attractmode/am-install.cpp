@@ -127,7 +127,7 @@ QString Install::imageDestinationPath(Fp::ImageType imageType, const Fe::Game* g
     return mFpScraperDirectory.absolutePath() + '/' +
            (imageType == Fp::ImageType::Logo ? LOGO_FOLDER_NAME : SCREENSHOT_FOLDER_NAME) + '/' +
            game->id().toString(QUuid::WithoutBraces) +
-           IMAGE_EXT;
+           '.' + IMAGE_EXT;
 }
 
 std::shared_ptr<Fe::PlatformDocReader> Install::preparePlatformDocCheckout(std::unique_ptr<Fe::PlatformDoc>& platformDoc, const QString& translatedName)

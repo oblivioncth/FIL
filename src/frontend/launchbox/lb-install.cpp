@@ -111,7 +111,7 @@ QString Install::imageDestinationPath(Fp::ImageType imageType, const Fe::Game* g
            game->platform() + '/' +
            (imageType == Fp::ImageType::Logo ? LOGO_PATH : SCREENSHOT_PATH) + '/' +
            game->id().toString(QUuid::WithoutBraces) +
-           IMAGE_EXT;
+           '.' + IMAGE_EXT;
 }
 
 Qx::GenericError Install::editBulkImageReferences(const Fe::ImageSources& imageSources)

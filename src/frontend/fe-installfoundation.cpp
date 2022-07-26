@@ -52,9 +52,10 @@ void InstallFoundation::allowUserWriteOnFile(QString filePath)
     filePathC.ReleaseBuffer();
 }
 
+//Public:
 QString InstallFoundation::filePathToBackupPath(QString filePath)
 {
-    return filePath + BACKUP_FILE_EXT;
+    return filePath + '.' + BACKUP_FILE_EXT;
 }
 
 //-Instance Functions--------------------------------------------------------------------------------------------

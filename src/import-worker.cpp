@@ -120,7 +120,7 @@ Qx::GenericError ImportWorker::transferImage(bool symlink, QString sourcePath, Q
         return Qx::GenericError(Qx::GenericError::Error, ERR_CANT_MAKE_DIR.arg(destinationDir.absolutePath()), IMAGE_RETRY_PROMPT, QString(), CAPTION_IMAGE_ERR);
 
     // Determine backup path
-    QString backupPath = destinationInfo.absoluteFilePath() + Fe::Install::BACKUP_FILE_EXT;
+    QString backupPath = Fe::Install::filePathToBackupPath(destinationInfo.absoluteFilePath());
 
     // Temporarily backup image if it already exists (also acts as deletion marking in case images for the title were removed in an update)
     if(destinationOccupied)
