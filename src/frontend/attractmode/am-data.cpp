@@ -66,9 +66,17 @@ CommonDocWriter::CommonDocWriter(Fe::DataDoc* sourceDoc) :
 //Public:
 Qx::GenericError CommonDocWriter::writeOutOf()
 {
+    Qx::GenericError errorTemplate(Qx::GenericError::Critical, mStdWriteErrorStr);
+
+    Qx::IoOpReport openError =  mStreamWriter.openFile();
+    if(openError.isFailure())
+        return errorTemplate.setSecondaryInfo(openError.outcomeInfo());
+
     bool writeSuccess = writeSourceDoc();
-    return !writeSuccess ? Qx::GenericError(Qx::GenericError::Critical, mStdWriteErrorStr, mStreamWriter.status().outcomeInfo()) :
-                                            Qx::GenericError();
+
+    mStreamWriter.closeFile();
+
+    return writeSuccess ? Qx::GenericError() : errorTemplate.setSecondaryInfo(mStreamWriter.status().outcomeInfo());
 }
 
 //===============================================================================================================
