@@ -124,6 +124,7 @@ public:
     // Image handling
     void processDirectGameImages(const Fe::Game* game, const Fe::ImageSources& imageSources) override;
 };
+REGISTER_FRONTEND(Install::NAME, Install, &Install::ICON_PATH, &Install::HELP_URL);
 
 }
 #endif // ATTRACTMODE_INSTALL_H
