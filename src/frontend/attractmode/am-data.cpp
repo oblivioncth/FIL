@@ -837,6 +837,7 @@ QString Emulator::workDir() const { return mWorkDir; }
 QString Emulator::romPath() const { return mRomPath; }
 QString Emulator::romExt() const { return mRomExt; }
 QString Emulator::system() const { return mSystem; }
+QString Emulator::infoSource() const { return mInfoSource; }
 QString Emulator::exitHotkey() const { return mExitHotkey; }
 EmulatorArtworkEntry Emulator::artworkEntry(QString type) const { return mArtworkEntries.value(type); }
 QList<EmulatorArtworkEntry> Emulator::artworkEntries() const { return mArtworkEntries.values(); }
@@ -847,6 +848,7 @@ void Emulator::setWorkDir(QString workDir) { mWorkDir = workDir; }
 void Emulator::setRomPath(QString romPath) { mRomPath = romPath; }
 void Emulator::setRomExt(QString romExt) { mRomExt = romExt; }
 void Emulator::setSystem(QString system) { mSystem = system; }
+void Emulator::setInfoSource(QString infoSource) { mInfoSource = infoSource; }
 void Emulator::setExitHotkey(QString exitHotkey) { mExitHotkey = exitHotkey; }
 void Emulator::setArtworkEntry(EmulatorArtworkEntry entry) { mArtworkEntries[entry.type()] = entry; }
 
