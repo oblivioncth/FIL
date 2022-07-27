@@ -352,15 +352,16 @@ void RomlistReader::parseRomEntry(const QString& rawEntry)
         const QChar& c = *itr;
         bool lastChar = itr == lastCharPos;
 
+        if(c == '"') // Quote change
+            inQuotes = !inQuotes;
+
         if((c == ';' && !inQuotes) || lastChar) // Field separator
         {
             addFieldToBuilder(reb, currentField, currentFieldIndex);
             currentField.clear();
             currentFieldIndex++;
         }
-        else if(c == '"') // Quote change
-            inQuotes = !inQuotes;
-        else
+        else if(c != '"')
             currentField += c;
 
         // Advance
