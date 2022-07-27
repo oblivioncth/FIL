@@ -615,8 +615,12 @@ void PlatformInterface::addAddApp(const Fp::AddApp& app)
         // Add add app ID to platform tag list
         mPlatformTaglist.appendTag(app.id().toString(QUuid::WithoutBraces));
 
-        // Forward add app insertion to main Romlist
-        static_cast<Install*>(parent())->mRomlist->addAddApp(app);
+        /* Forward add app insertion to main Romlist
+         *
+         * Only include "playable" add apps since the others aren't needed and just clutter the UI
+         */
+        if(app.isPlayable())
+            static_cast<Install*>(parent())->mRomlist->addAddApp(app);
     }
 }
 
