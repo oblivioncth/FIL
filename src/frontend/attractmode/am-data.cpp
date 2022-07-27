@@ -459,7 +459,8 @@ bool RomlistWriter::writeRomEntry(const RomEntry& romEntry)
     writeEntryField(romEntry.series());
     writeEntryField(romEntry.language());
     writeEntryField(romEntry.region());
-    writeEntryField(romEntry.rating());
+    writeEntryField(romEntry.rating(), false);
+    mStreamWriter << '\n';
 
     return !mStreamWriter.hasError();
 }
