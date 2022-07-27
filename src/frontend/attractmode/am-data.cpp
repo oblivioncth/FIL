@@ -698,6 +698,21 @@ Fe::DataDoc::Type CrudeMainConfig::type() const { return Type::Config; }
 
 bool CrudeMainConfig::containsEntry(QUuid entryId) { return mEntries.contains(entryId); }
 bool CrudeMainConfig::containsEntry(QString type, QString name) { return containsEntry(CrudeMainConfigEntry::equivalentId(type, name)); }
+
+bool CrudeMainConfig::containsEntryWithContent(QString type, const QString& partialContent)
+{
+    auto itr = mEntries.constBegin();
+    while(itr != mEntries.constEnd())
+    {
+        const CrudeMainConfigEntry& entry = itr.value();
+        if(entry.type() == type && entry.contents().contains(partialContent))
+            return true;
+    }
+
+    // No hit
+    return false;
+}
+
 void CrudeMainConfig::addEntry(const CrudeMainConfigEntry& entry) { mEntries.insert(entry.id(), entry); }
 
 //===============================================================================================================

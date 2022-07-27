@@ -466,19 +466,22 @@ Qx::GenericError Install::postImport()
     if(mainConfigReadError.isValid())
         return mainConfigReadError;
 
+    // Display romlist section
+    QString fpRomlistSection = "romlist              " + FLASHPOINT_NAME;
+
     // Add default display entry if not present
-    if(!mainConfig->containsEntry("display", FLASHPOINT_NAME))
+    if(!mainConfig->containsEntryWithContent("display", fpRomlistSection))
     {
         CrudeMainConfigEntryBuilder cmceb;
         cmceb.wTypeAndName("display", FLASHPOINT_NAME);
         cmceb.wContents({
-            "	layout               Attrac-Man",
-            "	romlist              " + FLASHPOINT_NAME,
-            "	in_cycle             no",
-            "	in_menu              yes",
-            "	filter               All",
-            "	filter               Favourites",
-            "		rule                 Favourite equals 1"
+            "\tlayout               Attrac-Man",
+            "\t" + fpRomlistSection,
+            "\tin_cycle             no",
+            "\tin_menu              yes",
+            "\tfilter               All",
+            "\tfilter               Favourites",
+            "\t\trule                 Favourite equals 1"
         });
 
         mainConfig->addEntry(cmceb.build());

@@ -347,6 +347,7 @@ public:
 
     bool containsEntry(QUuid entryId);
     bool containsEntry(QString type, QString name);
+    bool containsEntryWithContent(QString type, const QString& partialContent);
     void addEntry(const CrudeMainConfigEntry& entry);
 };
 
