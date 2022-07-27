@@ -33,7 +33,7 @@ QString CommonDocReader::readLineIgnoringComments(qint64 maxlen)
 
     do
         line = mStreamReader.readLine(maxlen);
-    while(line.front() == '#');
+    while(!line.isEmpty() && line.front() == '#'); // Must check for empty string due to QString::front() constraints
 
     return line;
 }
