@@ -193,13 +193,15 @@ public:
                          const DocKey&);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
-private:
+private:    
     std::shared_ptr<Fe::Game> prepareGame(const Fp::Game& game, const Fe::ImageSources& images) override;
     std::shared_ptr<Fe::AddApp> prepareAddApp(const Fp::AddApp& addApp) override;
 
     void addCustomField(std::shared_ptr<CustomField> customField);
 
 public:
+    bool isEmpty() const override;
+
     void finalize() override;
 };
 
@@ -301,6 +303,8 @@ private:
     Type type() const override;
 
 public:
+    bool isEmpty() const override;
+
     const QHash<QString, Platform>& platforms() const;
     const QMap<QString, QMap<QString, QString>>& platformFolders() const;
     const QList<PlatformCategory>& platformCategories() const;

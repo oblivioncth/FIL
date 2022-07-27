@@ -184,10 +184,12 @@ BasicPlatformDoc::BasicPlatformDoc(Install* const parent, const QString& docPath
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
-//Private:
-
-
 //Public:
+bool BasicPlatformDoc::isEmpty() const
+{
+    return mGamesFinal.isEmpty() && mGamesExisting.isEmpty() && mAddAppsFinal.isEmpty() && mAddAppsExisting.isEmpty();
+}
+
 const QHash<QUuid, std::shared_ptr<Game>>& BasicPlatformDoc::finalGames() const { return mGamesFinal; }
 const QHash<QUuid, std::shared_ptr<AddApp>>& BasicPlatformDoc::finalAddApps() const { return mAddAppsFinal; }
 
@@ -322,6 +324,12 @@ BasicPlaylistDoc::BasicPlaylistDoc(Install* const parent, const QString& docPath
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
+bool BasicPlaylistDoc::isEmpty() const
+{
+    // The playlist header doesn't matter if there are no games
+    return mPlaylistGamesFinal.isEmpty() && mPlaylistGamesExisting.isEmpty();
+}
+
 const std::shared_ptr<PlaylistHeader>& BasicPlaylistDoc::playlistHeader() const { return mPlaylistHeader; }
 const QHash<QUuid, std::shared_ptr<PlaylistGame>>& BasicPlaylistDoc::finalPlaylistGames() const { return mPlaylistGamesFinal; }
 

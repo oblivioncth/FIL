@@ -157,6 +157,11 @@ Taglist::Taglist(Install* const parent, const QString& listPath, QString docName
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
+bool Taglist::isEmpty() const
+{
+    return mTags.isEmpty();
+}
+
 bool Taglist::containsTag(QString tag) const { return mTags.contains(tag); }
 void Taglist::appendTag(QString tag) { mTags.append(tag); }
 
@@ -226,6 +231,11 @@ Romlist::Romlist(Install* const parent, const QString& listPath, QString docName
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
+bool Romlist::isEmpty() const
+{
+    return mEntriesExisting.isEmpty() && mEntriesFinal.isEmpty();
+}
+
 const QHash<QUuid, std::shared_ptr<RomEntry>>& Romlist::finalEntries() const { return mEntriesFinal; }
 
 bool Romlist::containsGame(QUuid gameId) const { return mEntriesExisting.contains(gameId) || mEntriesFinal.contains(gameId); }
@@ -519,6 +529,8 @@ PlatformInterface::PlatformInterface(Install* const parent, const QString& platf
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
+bool PlatformInterface::isEmpty() const { return mPlatformTaglist.isEmpty(); };
+
 bool PlatformInterface::containsGame(QUuid gameId) const
 {
     /* Check main romlist for ID. Could check the taglist instead, which would be more "correct" since only the current
@@ -574,22 +586,6 @@ void PlatformInterface::addAddApp(const Fp::AddApp& app)
 }
 
 //===============================================================================================================
-// PlaylistInterfaceWriter
-//===============================================================================================================
-
-//-Constructor--------------------------------------------------------------------------------------------------------
-//Public:
-PlaylistInterfaceWriter::PlaylistInterfaceWriter(PlaylistInterface* sourceDoc) :
-    Fe::DataDocWriter(sourceDoc),
-    Fe::PlaylistDocWriter(sourceDoc),
-    mTaglistWriter(&sourceDoc->mPlaylistTaglist)
-{}
-
-//-Instance Functions--------------------------------------------------------------------------------------------------
-//Public:
-Qx::GenericError PlaylistInterfaceWriter::writeOutOf() { return mTaglistWriter.writeOutOf(); }
-
-//===============================================================================================================
 // PlatformInterfaceWriter
 //===============================================================================================================
 
@@ -619,6 +615,8 @@ PlaylistInterface::PlaylistInterface(Install* const parent, const QString& playl
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
+bool PlaylistInterface::isEmpty() const { return mPlaylistTaglist.isEmpty(); };
+
 bool PlaylistInterface::containsPlaylistGame(QUuid gameId) const
 {
     return mPlaylistTaglist.containsTag(gameId.toString(QUuid::WithoutBraces));
@@ -632,6 +630,22 @@ void PlaylistInterface::addPlaylistGame(const Fp::PlaylistGame& playlistGame)
 };
 
 //===============================================================================================================
+// PlaylistInterfaceWriter
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Public:
+PlaylistInterfaceWriter::PlaylistInterfaceWriter(PlaylistInterface* sourceDoc) :
+    Fe::DataDocWriter(sourceDoc),
+    Fe::PlaylistDocWriter(sourceDoc),
+    mTaglistWriter(&sourceDoc->mPlaylistTaglist)
+{}
+
+//-Instance Functions--------------------------------------------------------------------------------------------------
+//Public:
+Qx::GenericError PlaylistInterfaceWriter::writeOutOf() { return mTaglistWriter.writeOutOf(); }
+
+//===============================================================================================================
 // CrudeMainConfig
 //===============================================================================================================
 
@@ -643,6 +657,8 @@ CrudeMainConfig::CrudeMainConfig(Install* const parent, const QString& filePath,
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
+bool CrudeMainConfig::isEmpty() const { return mEntries.isEmpty(); };
+
 Fe::DataDoc::Type CrudeMainConfig::type() const { return Type::Config; }
 
 bool CrudeMainConfig::containsEntry(QUuid entryId) { return mEntries.contains(entryId); }
@@ -763,6 +779,7 @@ Emulator::Emulator(Install* const parent, const QString& filePath, const DocKey&
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
+bool Emulator::isEmpty() const { return false; }; // Can have blank fields, but always has field keys
 Fe::DataDoc::Type Emulator::type() const { return Fe::DataDoc::Type::Config; };
 
 QString Emulator::executable() const { return mExecutable; }

@@ -149,8 +149,10 @@ Qx::GenericError InstallFoundation::commitDataDocument(DataDoc* docToSave, std::
         }
     }
 
-    // Write to file
-    Qx::GenericError saveWriteError = docWriter->writeOutOf();
+    // Write to file if it contains content
+    Qx::GenericError saveWriteError;
+    if(!docToSave->isEmpty())
+        saveWriteError = docWriter->writeOutOf();
 
     // Set document permissions
     allowUserWriteOnFile(docToSave->path());

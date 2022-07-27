@@ -177,8 +177,6 @@ std::shared_ptr<Fe::AddApp> PlatformDoc::prepareAddApp(const Fp::AddApp& addApp)
     return lbAddApp;
 }
 
-//Public:
-
 void PlatformDoc::addCustomField(std::shared_ptr<CustomField> customField)
 {
     QString key = customField->gameId().toString() + customField->name();
@@ -186,6 +184,11 @@ void PlatformDoc::addCustomField(std::shared_ptr<CustomField> customField)
 }
 
 //Public:
+bool PlatformDoc::isEmpty() const
+{
+    return mCustomFieldsFinal.isEmpty() && mCustomFieldsExisting.isEmpty() && Fe::BasicPlatformDoc::isEmpty();
+}
+
 void PlatformDoc::finalize()
 {
     // Finalize custom fields
@@ -704,6 +707,11 @@ PlatformsConfigDoc::PlatformsConfigDoc(Install* const parent, const QString& xml
 Fe::DataDoc::Type PlatformsConfigDoc::type() const { return Fe::DataDoc::Type::Config; }
 
 //Public:
+bool PlatformsConfigDoc::isEmpty() const
+{
+    return mPlatforms.isEmpty() && mPlatformFolders.isEmpty() && mPlatformCategories.isEmpty();
+}
+
 const QHash<QString, Platform>& PlatformsConfigDoc::platforms() const { return mPlatforms; }
 const QMap<QString, QMap<QString, QString>>& PlatformsConfigDoc::platformFolders() const { return mPlatformFolders; }
 const QList<PlatformCategory>& PlatformsConfigDoc::platformCategories() const { return mPlatformCategories; }

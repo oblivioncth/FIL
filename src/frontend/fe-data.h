@@ -131,6 +131,7 @@ public:
     Install* parent() const;
     QString path() const;
     Identifier identifier() const;
+    virtual bool isEmpty() const = 0;
 };
 QX_SCOPED_ENUM_HASH_FUNC(DataDoc::Type);
 
@@ -293,6 +294,8 @@ protected:
     virtual std::shared_ptr<AddApp> prepareAddApp(const Fp::AddApp& game) = 0;
 
 public:
+    virtual bool isEmpty() const override;
+
     const QHash<QUuid, std::shared_ptr<Game>>& finalGames() const;
     const QHash<QUuid, std::shared_ptr<AddApp>>& finalAddApps() const;
 
@@ -376,6 +379,8 @@ protected:
     virtual std::shared_ptr<PlaylistGame> preparePlaylistGame(const Fp::PlaylistGame& game) = 0;
 
 public:
+    virtual bool isEmpty() const override;
+
     const std::shared_ptr<PlaylistHeader>& playlistHeader() const;
     const QHash<QUuid, std::shared_ptr<PlaylistGame>>& finalPlaylistGames() const;
 

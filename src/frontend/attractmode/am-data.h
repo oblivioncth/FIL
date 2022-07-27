@@ -116,6 +116,8 @@ protected:
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 public:
+    bool isEmpty() const override;
+
     bool containsTag(QString tag) const;
     void appendTag(QString tag);
 };
@@ -177,6 +179,8 @@ public:
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 public:
+    bool isEmpty() const override;
+
     const QHash<QUuid, std::shared_ptr<RomEntry>>& finalEntries() const;
 
     bool containsGame(QUuid gameId) const override;
@@ -253,6 +257,8 @@ public:
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 public:
+    bool isEmpty() const override;
+
     bool containsGame(QUuid gameId) const override;
     bool containsAddApp(QUuid addAppId) const override;
 
@@ -292,6 +298,8 @@ public:
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 public:
+    bool isEmpty() const override;
+
     bool containsPlaylistGame(QUuid gameId) const override;
 
     void setPlaylistHeader(const Fp::Playlist& playlist) override;
@@ -334,6 +342,7 @@ public:
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 public:
+    bool isEmpty() const override;
     Type type() const override;
 
     bool containsEntry(QUuid entryId);
@@ -418,6 +427,7 @@ public:
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 public:
+    bool isEmpty() const override;
     Type type() const override;
 
     QString executable() const;
