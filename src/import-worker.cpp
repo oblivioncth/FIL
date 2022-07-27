@@ -820,6 +820,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     }
 
     // Handle Frontend specific cleanup
+    emit progressStepChanged(STEP_FINALIZING);
     errorReport = mFrontendInstall->postImport();
     if(errorReport.isValid())
         return Failed;

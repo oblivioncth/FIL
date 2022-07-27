@@ -65,6 +65,7 @@ public:
     static inline const QString STEP_IMPORTING_PLAYLIST_GAMES = "Importing playlist %1...";
     static inline const QString STEP_DOWNLOADING_IMAGES = "Downloading images...";
     static inline const QString STEP_IMPORTING_IMAGES = "Importing images...";
+    static inline const QString STEP_FINALIZING = "Finalizing...";
 
     // Import Errors
     static inline const QString MSG_FP_DB_CANT_CONNECT = "Failed to establish a handle to the Flashpoint database:";
