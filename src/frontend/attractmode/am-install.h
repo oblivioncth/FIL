@@ -44,6 +44,7 @@ public:
 
     // Files
     static inline const QString TXT_EXT = "txt";
+    static inline const QString TAG_EXT = "tag";
     static inline const QString CFG_EXT = "cfg";
 
     // Support

@@ -139,7 +139,7 @@ QString Install::imageDestinationPath(Fp::ImageType imageType, const Fe::Game* g
 std::shared_ptr<Fe::PlatformDocReader> Install::preparePlatformDocCheckout(std::unique_ptr<Fe::PlatformDoc>& platformDoc, const QString& translatedName)
 {
     // Determine path to the taglist that corresponds with the interface
-    QString taglistPath = mFpTagDirectory.absoluteFilePath(translatedName + "." + TXT_EXT) ;
+    QString taglistPath = mFpTagDirectory.absoluteFilePath(translatedName + "." + TAG_EXT) ;
 
     // Overviews
     QDir overviewDir(mFpScraperDirectory.absoluteFilePath(OVERVIEW_FOLDER_NAME)); // Not a file, but works
@@ -154,7 +154,7 @@ std::shared_ptr<Fe::PlatformDocReader> Install::preparePlatformDocCheckout(std::
 std::shared_ptr<Fe::PlaylistDocReader> Install::preparePlaylistDocCheckout(std::unique_ptr<Fe::PlaylistDoc>& playlistDoc, const QString& translatedName)
 {
     // Determine path to the taglist that corresponds with the interface
-    QString taglistPath = mFpTagDirectory.absoluteFilePath(translatedName + "." + TXT_EXT) ;
+    QString taglistPath = mFpTagDirectory.absoluteFilePath(translatedName + "." + TAG_EXT) ;
 
     // Construct unopened document
     playlistDoc = std::make_unique<PlaylistInterface>(this, taglistPath, translatedName, DocKey{});
