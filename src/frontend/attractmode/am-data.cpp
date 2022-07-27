@@ -701,8 +701,7 @@ bool CrudeMainConfig::containsEntry(QString type, QString name) { return contain
 
 bool CrudeMainConfig::containsEntryWithContent(QString type, const QString& partialContent)
 {
-    auto itr = mEntries.constBegin();
-    while(itr != mEntries.constEnd())
+    for(auto itr = mEntries.constBegin(); itr != mEntries.constEnd(); itr++)
     {
         const CrudeMainConfigEntry& entry = itr.value();
         if(entry.type() == type && entry.contents().contains(partialContent))
