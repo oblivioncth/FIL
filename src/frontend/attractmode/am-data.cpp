@@ -560,15 +560,20 @@ void PlatformInterface::addGame(const Fp::Game& game, const Fe::ImageSources& im
         static_cast<Install*>(parent())->mRomlist->addGame(game, images);
 
         // Create game overview
-        bool written = mOverviewWriter.writeOverview(game.id(), game.originalDescription());
+        QString overview = game.originalDescription();
 
-        if(written)
-            parent()->addRevertableFile(mOverviewWriter.currentFilePath());
-        else
+        if(!overview.isEmpty())
         {
-            mError = Qx::GenericError(Qx::GenericError::Critical,
-                                      Fe::docHandlingErrorString(this, Fe::DocHandlingError::DocWriteFailed),
-                                      mOverviewWriter.fileErrorString());
+            bool written = mOverviewWriter.writeOverview(game.id(), overview);
+
+            if(written)
+                parent()->addRevertableFile(mOverviewWriter.currentFilePath());
+            else
+            {
+                mError = Qx::GenericError(Qx::GenericError::Critical,
+                                          Fe::docHandlingErrorString(this, Fe::DocHandlingError::DocWriteFailed),
+                                          mOverviewWriter.fileErrorString());
+            }
         }
     }
 }
