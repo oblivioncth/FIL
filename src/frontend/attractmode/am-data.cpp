@@ -41,6 +41,11 @@ Qx::GenericError CommonDocReader::readInto()
     // Error template
     Qx::GenericError error(Qx::GenericError::Critical, mStdReadErrorStr);
 
+    // Open file
+    Qx::IoOpReport openError =  mStreamReader.openFile();
+    if(openError.isFailure())
+        return error.setSecondaryInfo(openError.outcomeInfo());
+
     // Check that doc is valid
     bool isValid = false;
     if(!checkDocValidity(isValid))
@@ -51,10 +56,14 @@ Qx::GenericError CommonDocReader::readInto()
         return error.setSecondaryInfo(errReason);
     }
 
-    // Read doc and check for error status
+    // Read doc
     bool readSuccessful = readTargetDoc();
-    return !readSuccessful ? error.setSecondaryInfo(mStreamReader.status().outcomeInfo()) :
-                             Qx::GenericError();
+
+    // Close file
+    mStreamReader.closeFile();
+
+    // Return outcome
+    return readSuccessful ? Qx::GenericError() : error.setSecondaryInfo(mStreamReader.status().outcomeInfo());
 }
 
 //===============================================================================================================
@@ -72,17 +81,22 @@ CommonDocWriter::CommonDocWriter(Fe::DataDoc* sourceDoc) :
 //Public:
 Qx::GenericError CommonDocWriter::writeOutOf()
 {
-    Qx::GenericError errorTemplate(Qx::GenericError::Critical, mStdWriteErrorStr);
+    // Error template
+    Qx::GenericError error(Qx::GenericError::Critical, mStdWriteErrorStr);
 
+    // Open file
     Qx::IoOpReport openError =  mStreamWriter.openFile();
     if(openError.isFailure())
-        return errorTemplate.setSecondaryInfo(openError.outcomeInfo());
+        return error.setSecondaryInfo(openError.outcomeInfo());
 
+    // Write doc
     bool writeSuccess = writeSourceDoc();
 
+    // Close file
     mStreamWriter.closeFile();
 
-    return writeSuccess ? Qx::GenericError() : errorTemplate.setSecondaryInfo(mStreamWriter.status().outcomeInfo());
+    // Return outcome
+    return writeSuccess ? Qx::GenericError() : error.setSecondaryInfo(mStreamWriter.status().outcomeInfo());
 }
 
 //===============================================================================================================
