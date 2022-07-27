@@ -197,7 +197,7 @@ Qx::GenericError Install::checkoutMainConfig(std::unique_ptr<CrudeMainConfig>& r
 Qx::GenericError Install::checkoutFlashpointRomlist(std::unique_ptr<Romlist>& returnBuffer)
 {
     // Construct unopened document
-    returnBuffer = std::make_unique<Romlist>(this, mMainConfigFile.fileName(), FLASHPOINT_NAME, mImportDetails->updateOptions, DocKey{});
+    returnBuffer = std::make_unique<Romlist>(this, mFpRomlist.fileName(), FLASHPOINT_NAME, mImportDetails->updateOptions, DocKey{});
 
     // Construct doc reader
     std::shared_ptr<RomlistReader> docReader = std::make_shared<RomlistReader>(returnBuffer.get());
