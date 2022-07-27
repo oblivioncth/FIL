@@ -8,6 +8,9 @@
 #include <qx/windows/qx-filedetails.h>
 #include <qx/core/qx-regularexpression.h>
 
+// Project Includes
+#include "../../clifp.h"
+
 namespace Am
 {
 //===============================================================================================================

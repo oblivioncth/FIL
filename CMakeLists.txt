@@ -95,11 +95,11 @@ fetch_qx("9f60cb84bab308fee9db0e81d37f4451d26ffeb7")
 
 # Fetch libfp (build and import from source)
 include(FIL/Fetchlibfp)
-fetch_libfp("cbed1b3b65cf92683f40adad6d4a7e26a264d473")
+fetch_libfp("9c3fb51d271c0816c3775b938ec18a46ee2de7b1")
 
 # Fetch CLIFp (build and import from source)
 include(FIL/FetchCLIFp)
-fetch_clifp("5a7d429579a7722d3d91cf7b024ed2748a98fbf4")
+fetch_clifp("0d1359c9bd5ff9c9bcbfa3d83eea8a9a558e7bda")
 
 # Setup copy of CLIFp executable to FIL generated resources directory after its built
 # ...
