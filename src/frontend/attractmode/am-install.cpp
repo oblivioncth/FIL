@@ -450,7 +450,11 @@ Qx::GenericError Install::postImport()
     emulatorConfig->setArtworkEntry(aeb.build());
 
     // Commit emulator config
-    return commitClifpEmulatorConfig(std::move(emulatorConfig));
+    Qx::GenericError emulatorConfigWriteError = commitClifpEmulatorConfig(std::move(emulatorConfig));
+
+    // Stop import if error occurred
+    if(emulatorConfigWriteError.isValid())
+        return emulatorConfigWriteError;
 
     //-Ensure display entry exists-----------------------------------
 
