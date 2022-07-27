@@ -95,7 +95,7 @@ fetch_qx("9f60cb84bab308fee9db0e81d37f4451d26ffeb7")
 
 # Fetch libfp (build and import from source)
 include(FIL/Fetchlibfp)
-fetch_libfp("38c7096929f63c4211965f23962fb1a3515c8bd3")
+fetch_libfp("cbed1b3b65cf92683f40adad6d4a7e26a264d473")
 
 # Fetch CLIFp (build and import from source)
 include(FIL/FetchCLIFp)

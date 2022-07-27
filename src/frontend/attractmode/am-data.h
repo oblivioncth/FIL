@@ -8,7 +8,6 @@
 // Project Includes
 #include "am-items.h"
 #include "../fe-data.h"
-#include "../../clifp.h"
 
 namespace Am
 {
@@ -411,7 +410,7 @@ public:
 
 //-Class Variables-----------------------------------------------------------------------------------------------------
 public:
-    static inline const QString STD_NAME = CLIFp::NAME;
+    static inline const QString STD_NAME = Fp::NAME;
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:

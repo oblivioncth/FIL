@@ -16,7 +16,7 @@ RomEntry::RomEntry() {}
 
 RomEntry::RomEntry(const Fp::Game& flashpointGame) :
     Fe::Game(flashpointGame.id(), flashpointGame.title(), flashpointGame.platform()),
-    mEmulator(CLIFp::NAME),
+    mEmulator(Fp::NAME),
     mCloneOf(),
     mYear(flashpointGame.releaseDate()),
     mManufacturer(flashpointGame.developer()),
@@ -38,7 +38,7 @@ RomEntry::RomEntry(const Fp::Game& flashpointGame) :
 
 RomEntry::RomEntry(const Fp::AddApp& flashpointAddApp) :
     Fe::Game(flashpointAddApp.id(), flashpointAddApp.name(), QString()),
-    mEmulator(CLIFp::NAME),
+    mEmulator(Fp::NAME),
     mCloneOf(flashpointAddApp.parentId().toString(QUuid::WithoutBraces)),
     mYear(),
     mManufacturer(),

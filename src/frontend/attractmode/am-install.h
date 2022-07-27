@@ -25,7 +25,6 @@ public:
     static inline const QUrl HELP_URL = QUrl("");
 
     // Naming
-    static inline const QString FLASHPOINT_NAME = "Flashpoint";
     static inline const QString PLATFORM_TAG_PREFIX = "[Platform] ";
     static inline const QString PLAYLIST_TAG_PREFIX = "[Playlist] ";
 
@@ -70,7 +69,7 @@ private:
     QFile mMainExe;
     QFile mConsoleExe;
     QFile mFpRomlist;
-    QFile mClifpConfigFile;
+    QFile mEmulatorConfigFile;
 
     // Image transfers for import worker
     QList<ImageMap> mWorkerImageJobs;
