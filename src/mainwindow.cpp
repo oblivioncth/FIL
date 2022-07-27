@@ -986,7 +986,7 @@ void MainWindow::all_on_menu_triggered(QAction *action)
             }
         }
 
-        qWarning("Frontend help action name could not be determined.");
+        qWarning() << Q_FUNC_INFO << "Frontend help action name could not be determined.";
     }
     else
         throw std::runtime_error("Unhandled use of all_on_menu_triggered() slot");

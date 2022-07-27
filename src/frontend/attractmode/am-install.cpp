@@ -1,6 +1,9 @@
 // Unit Include
 #include "am-install.h"
 
+// Qt Includes
+#include <QtDebug>
+
 // Qx Includes
 #include <qx/windows/qx-filedetails.h>
 #include <qx/core/qx-regularexpression.h>
@@ -404,10 +407,10 @@ Qx::GenericError Install::preImageProcessing(QList<ImageMap>& workerTransfers, F
             workerTransfers.swap(mWorkerImageJobs);
             return Qx::GenericError();
         case Fe::ImageMode::Reference:
-            qWarning("Am::Install::preImageProcessing() unsupported image mode");
+            qWarning() << Q_FUNC_INFO << "unsupported image mode";
             return Qx::GenericError();
         default:
-            qWarning("Am::Install::preImageProcessing() unhandled image mode");
+            qWarning() << Q_FUNC_INFO << "unhandled image mode";
             return Qx::GenericError();
     }
 }

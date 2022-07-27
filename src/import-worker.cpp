@@ -570,7 +570,7 @@ ImportWorker::ImportResult ImportWorker::processImages(Qx::GenericError& errorRe
         if(imageTransferJobs.size() != mProgressManager.group(Pg::ImageTransfer)->maximum())
         {
             mProgressManager.group(Pg::ImageTransfer)->setMaximum(imageTransferJobs.size());
-            qWarning("ImportWorker::processImages() the frontend provided less image transfers than predicted!");
+            qWarning() << Q_FUNC_INFO << "the frontend provided less image transfers than predicted";
         }
 
         // Setup for image transfers
@@ -604,7 +604,7 @@ ImportWorker::ImportResult ImportWorker::processImages(Qx::GenericError& errorRe
         }
     }
     else if(!imageTransferJobs.isEmpty())
-        qWarning("ImportWorker::processImages() the frontend provided image transfers when the mode wasn't link/copy!");
+        qWarning() << Q_FUNC_INFO << "the frontend provided image transfers when the mode wasn't link/copy";
 
     // Handle frontend specific actions
     mFrontendInstall->postImageProcessing();

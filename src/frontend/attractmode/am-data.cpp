@@ -1,6 +1,9 @@
 // Unit Include
 #include "am-data.h"
 
+// Qt Includes
+#include <QtDebug>
+
 // Qx Includes
 #include <qx/core/qx-string.h>
 
@@ -366,7 +369,7 @@ void RomlistReader::parseRomEntry(const QString& rawEntry)
 
     // Ensure parsing ended out of quotes
     if(inQuotes)
-        qWarning("Missing terminating '\"' character for ROM entry %s", rawEntry.data());
+        qWarning() << Q_FUNC_INFO << "Missing terminating '\"' character for ROM entry" << rawEntry;
 
     // Build Entry and add to document
     std::shared_ptr<RomEntry> existingEntry = reb.buildShared();
@@ -441,7 +444,7 @@ void RomlistReader::addFieldToBuilder(RomEntryBuilder& builder, QString field, q
             builder.wRating(field);
             break;
         default:
-            qWarning("Unhandled RomEntry field in addFieldToBuilder()");
+            qWarning() << Q_FUNC_INFO << "Unhandled RomEntry field";
     }
 }
 
