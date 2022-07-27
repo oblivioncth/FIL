@@ -11,6 +11,19 @@
 namespace Fe
 {
 
+/*
+ * TODO: Right now there is no Fe::Set or similar. This would be nice because it would set a standard for Platform
+ * docs that store their add apps directly with their main games; however, with the current system this would make
+ * the 'containsXXX' methods hairy and slow unless they're outright removed (which they can be, they're unused), and
+ * the update situation is even rougher. The set couldn't really derive from Item because its not an item by itself,
+ * and even if it was the other fields that would get transferred wouldn't actually be from the game/add apps of the set,
+ * but just empty ones along side them. Likely an extra function would have to be added to UpdateableDoc like
+ * "addUpdateableSet", and finalize be modified as well. Lastly there is the question of whether or not to have a fixed
+ * set that just contains pointers to Fe::Game and a list of pointers to Fe::AddApp, or intended for the set to
+ * be derived from as well. A fixed set is likely the better choice since any even remotely compatible frontend should
+ * be able to work with it
+ */
+
 //-Class Forward Declarations---------------------------------------------------------------------------------------
 //class Item;
 //template <typename B, typename T, QX_ENABLE_IF(std::is_base_of<Item, T>)> class ItemBuilder;

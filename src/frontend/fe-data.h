@@ -269,8 +269,7 @@ public:
     /* NOTE: The image paths provided here can be null (i.e. images unavailable). Handle accordingly in derived.
      * Also in most cases, addGame should call parent()->processDirectGameImages()
      */
-    virtual void addGame(const Fp::Game& game, const ImageSources& images) = 0;
-    virtual void addAddApp(const Fp::AddApp& app) = 0;
+    virtual void addSet(const Fp::Set& set, const ImageSources& images) = 0;
 };
 
 class BasicPlatformDoc : public PlatformDoc
@@ -299,11 +298,10 @@ public:
     const QHash<QUuid, std::shared_ptr<Game>>& finalGames() const;
     const QHash<QUuid, std::shared_ptr<AddApp>>& finalAddApps() const;
 
-    bool containsGame(QUuid gameId) const override;
-    bool containsAddApp(QUuid addAppId) const override;
+    bool containsGame(QUuid gameId) const override; // NOTE: UNUSED
+    bool containsAddApp(QUuid addAppId) const override; // NOTE: UNUSED
 
-    void addGame(const Fp::Game& game, const ImageSources& images) override;
-    void addAddApp(const Fp::AddApp& app) override;
+    void addSet(const Fp::Set& set, const ImageSources& images) override;
 
     void finalize() override;
 };
@@ -352,7 +350,7 @@ private:
     Type type() const override;
 
 public:
-    virtual bool containsPlaylistGame(QUuid gameId) const = 0;
+    virtual bool containsPlaylistGame(QUuid gameId) const = 0; // NOTE: UNUSED
 
     virtual void setPlaylistHeader(const Fp::Playlist& playlist) = 0;
     virtual void addPlaylistGame(const Fp::PlaylistGame& playlistGame) = 0;

@@ -188,8 +188,7 @@ public:
     bool containsGame(QUuid gameId) const override;
     bool containsAddApp(QUuid addAppId) const override;
 
-    void addGame(const Fp::Game& game, const Fe::ImageSources& images) override;
-    void addAddApp(const Fp::AddApp& app) override;
+    void addSet(const Fp::Set& set, const Fe::ImageSources& images) override;
 
     void finalize() override;
 };
@@ -264,8 +263,7 @@ public:
     bool containsGame(QUuid gameId) const override;
     bool containsAddApp(QUuid addAppId) const override;
 
-    void addGame(const Fp::Game& game, const Fe::ImageSources& images) override;
-    void addAddApp(const Fp::AddApp& app) override;
+    void addSet(const Fp::Set& set, const Fe::ImageSources& images) override;
 };
 
 class PlatformInterfaceWriter : public Fe::PlatformDocWriter

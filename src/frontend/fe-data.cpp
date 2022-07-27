@@ -196,31 +196,29 @@ const QHash<QUuid, std::shared_ptr<AddApp>>& BasicPlatformDoc::finalAddApps() co
 bool BasicPlatformDoc::containsGame(QUuid gameId) const { return mGamesFinal.contains(gameId) || mGamesExisting.contains(gameId); }
 bool BasicPlatformDoc::containsAddApp(QUuid addAppId) const { return mAddAppsFinal.contains(addAppId) || mAddAppsExisting.contains(addAppId); }
 
-void BasicPlatformDoc::addGame(const Fp::Game& game, const ImageSources& images)
+void BasicPlatformDoc::addSet(const Fp::Set& set, const ImageSources& images)
 {
     if(!mError.isValid())
     {
         // Prepare game
-        std::shared_ptr<Game> feGame = prepareGame(game, images);
+        std::shared_ptr<Game> feGame = prepareGame(set.game(), images);
 
         // Add game
         addUpdateableItem(mGamesExisting, mGamesFinal, feGame);
 
+        // Handle additional apps
+        for(const Fp::AddApp& addApp : set.addApps())
+        {
+            // Prepare
+            std::shared_ptr<AddApp> feAddApp = prepareAddApp(addApp);
+
+            // Add
+            addUpdateableItem(mAddAppsExisting, mAddAppsFinal, feAddApp);
+        }
+
         // Allow install to handle images if needed
         parent()->processDirectGameImages(feGame.get(), images);
 
-    }
-}
-
-void BasicPlatformDoc::addAddApp(const Fp::AddApp& app)
-{
-    if(!mError.isValid())
-    {
-        // Prepare game
-        std::shared_ptr<AddApp> feAddApp = prepareAddApp(app);
-
-        // Add game
-        addUpdateableItem(mAddAppsExisting, mAddAppsFinal, feAddApp);
     }
 }
 

@@ -267,26 +267,32 @@ const QHash<QUuid, std::shared_ptr<RomEntry>>& Romlist::finalEntries() const { r
 bool Romlist::containsGame(QUuid gameId) const { return mEntriesExisting.contains(gameId) || mEntriesFinal.contains(gameId); }
 bool Romlist::containsAddApp(QUuid addAppId) const { return mEntriesExisting.contains(addAppId) || mEntriesFinal.contains(addAppId); };
 
-void Romlist::addGame(const Fp::Game& game, const Fe::ImageSources& images)
+void Romlist::addSet(const Fp::Set& set, const Fe::ImageSources& images)
 {
     // Convert to romlist entry
-    std::shared_ptr<RomEntry> romEntry = std::make_shared<RomEntry>(game);
+    std::shared_ptr<RomEntry> mainRomEntry = std::make_shared<RomEntry>(set.game());
 
     // Add entry
-    addUpdateableItem(mEntriesExisting, mEntriesFinal, romEntry);
+    addUpdateableItem(mEntriesExisting, mEntriesFinal, mainRomEntry);
+
+    // Handle additional apps
+    for(const Fp::AddApp& addApp : set.addApps())
+    {
+        // Ignore if not playable
+        if(addApp.isPlayable())
+        {
+            // Convert to romlist entry
+            std::shared_ptr<RomEntry> subRomEntry = std::make_shared<RomEntry>(addApp);
+
+            // Add entry
+            addUpdateableItem(mEntriesExisting, mEntriesFinal, subRomEntry);
+        }
+    }
 
     // Allow install to process images as necessary
-    parent()->processDirectGameImages(romEntry.get(), images);
+    parent()->processDirectGameImages(mainRomEntry.get(), images);
 }
 
-void Romlist::addAddApp(const Fp::AddApp& app)
-{
-    // Convert to romlist entry
-    std::shared_ptr<RomEntry> romEntry = std::make_shared<RomEntry>(app);
-
-    // Add entry
-    addUpdateableItem(mEntriesExisting, mEntriesFinal, romEntry);
-}
 
 void Romlist::finalize()
 {
@@ -579,15 +585,15 @@ bool PlatformInterface::containsAddApp(QUuid addAppId) const
     return static_cast<Install*>(parent())->mRomlist->containsAddApp(addAppId);
 };
 
-void PlatformInterface::addGame(const Fp::Game& game, const Fe::ImageSources& images)
+void PlatformInterface::addSet(const Fp::Set& set, const Fe::ImageSources& images)
 {
     if(!hasError())
     {
+        //-Handle game----------------------------------------------------------
+        const Fp::Game& game = set.game();
+
         // Add game ID to platform tag list
         mPlatformTaglist.appendTag(game.id().toString(QUuid::WithoutBraces));
-
-        // Forward game insertion to main Romlist
-        static_cast<Install*>(parent())->mRomlist->addGame(game, images);
 
         // Create game overview
         QString overview = game.originalDescription();
@@ -605,22 +611,23 @@ void PlatformInterface::addGame(const Fp::Game& game, const Fe::ImageSources& im
                                           mOverviewWriter.fileErrorString());
             }
         }
-    }
-}
 
-void PlatformInterface::addAddApp(const Fp::AddApp& app)
-{
-    if(!hasError())
-    {
-        // Add add app ID to platform tag list
-        mPlatformTaglist.appendTag(app.id().toString(QUuid::WithoutBraces));
+        //-Handle add apps-------------------------------------------------------
 
-        /* Forward add app insertion to main Romlist
-         *
-         * Only include "playable" add apps since the others aren't needed and just clutter the UI
-         */
-        if(app.isPlayable())
-            static_cast<Install*>(parent())->mRomlist->addAddApp(app);
+        // Add add app IDs to platform tag list
+        for(const Fp::AddApp& addApp : set.addApps())
+        {
+            /* Ignore non-playable add apps to avoid useless clutter in AM
+             * TODO: Consider doing this in Import Worker to make it a standard since
+             * LB doesn't actually need the non-playable entries either. Importing them
+             * is basically a leftover from an earlier CLIFp version
+             */
+            if(addApp.isPlayable())
+                mPlatformTaglist.appendTag(addApp.id().toString(QUuid::WithoutBraces));
+        }
+
+        //-Forward game insertion to main Romlist--------------------------------
+        static_cast<Install*>(parent())->mRomlist->addSet(set, images);
     }
 }
 

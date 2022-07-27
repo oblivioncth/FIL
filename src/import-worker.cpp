@@ -193,17 +193,24 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& 
         fpGb.wOrderTitle(gameQueryResult.result.value(Fp::Db::Table_Game::COL_ORDER_TITLE).toString());
         fpGb.wLibrary(gameQueryResult.result.value(Fp::Db::Table_Game::COL_LIBRARY).toString());
 
-        // Build FP game
         Fp::Game builtGame = fpGb.build();
 
-        // Get image informationd
+        // Construct full game set
+        Fp::SetBuilder sb;
+        sb.wGame(builtGame); // From above
+        sb.wAddApps(mAddAppsCache.values(builtGame.id())); // All associated additional apps from cache
+        mAddAppsCache.remove(builtGame.id());
+
+        Fp::Set builtSet = sb.build();
+
+        // Get image information
         QFileInfo logoLocalInfo(mFlashpointInstall->imageLocalPath(Fp::ImageType::Logo, builtGame.id()));
         QFileInfo ssLocalInfo(mFlashpointInstall->imageLocalPath(Fp::ImageType::Screenshot, builtGame.id()));
 
-        // Add game to doc
+        // Add set to doc
         QString checkedLogoPath = (logoLocalInfo.exists() || mOptionSet.downloadImages) ? logoLocalInfo.absoluteFilePath() : QString();
         QString checkedScreenshotPath = (ssLocalInfo.exists() || mOptionSet.downloadImages) ? logoLocalInfo.absoluteFilePath() : QString();
-        platformDoc->addGame(builtGame, Fe::ImageSources(checkedLogoPath, checkedScreenshotPath));
+        platformDoc->addSet(builtSet, Fe::ImageSources(checkedLogoPath, checkedScreenshotPath));
 
         // Add ID to imported game cache
         mImportedGameIdsCache.insert(builtGame.id());
@@ -250,35 +257,6 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& 
     return Successful;
 }
 
-ImportWorker::ImportResult ImportWorker::processPlatformAddApps(Qx::GenericError& errorReport, std::unique_ptr<Fe::PlatformDoc>& platformDoc)
-{
-    // Add applicable additional apps
-    for (QSet<Fp::AddApp>::iterator j = mAddAppsCache.begin(); j != mAddAppsCache.end();)
-    {
-        // If the current platform doc contains the game this add app belongs to, convert and add it, then remove it from cache
-        if (platformDoc->containsGame((*j).parentId()))
-        {
-           platformDoc->addAddApp(*j);
-           j = mAddAppsCache.erase(j); // clazy:exclude=strict-iterators Oversight of clazy since there's no QSet::erase(QSet::const_iterator) anymore
-        }
-        else
-           ++j;
-
-        // Update progress dialog value
-        if(mCanceled)
-        {
-            errorReport = Qx::GenericError();
-            return Canceled;
-        }
-        else
-            mProgressManager.group(Pg::AddAppMatchImport)->incrementValue();
-    }
-
-    // Report successful step completion
-    errorReport = Qx::GenericError();
-    return Successful;
-}
-
 ImportWorker::ImportResult ImportWorker::preloadAddApps(Qx::GenericError& errorReport, Fp::Db::QueryBuffer& addAppQuery)
 {
     mAddAppsCache.reserve(addAppQuery.size);
@@ -301,7 +279,7 @@ ImportWorker::ImportResult ImportWorker::preloadAddApps(Qx::GenericError& errorR
         Fp::AddApp additionalApp = fpAab.build();
 
         // Add to cache
-        mAddAppsCache.insert(additionalApp);
+        mAddAppsCache.insert(additionalApp.parentId(), additionalApp);
 
         // Update progress dialog value
         if(mCanceled)
@@ -327,13 +305,8 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
     qsizetype remainingPlatforms = primary.size() + playlistSpecific.size();
 
     // Use lambda to handle both lists due to major overlap
-    struct StepLabels
-    {
-        const QString& games;
-        const QString& addApps;
-    };
 
-    auto platformsHandler = [&remainingPlatforms, &errorReport, this](QList<Fp::Db::QueryBuffer>& platformQueryResults, StepLabels labels) -> ImportResult {
+    auto platformsHandler = [&remainingPlatforms, &errorReport, this](QList<Fp::Db::QueryBuffer>& platformQueryResults, QString label) -> ImportResult {
         ImportResult result;
 
         for(int i = 0; i < platformQueryResults.size(); i++)
@@ -353,28 +326,9 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
             }
 
             //---Import games---------------------------------------
-            emit progressStepChanged(labels.games.arg(currentQueryResult.source));
+            emit progressStepChanged(label.arg(currentQueryResult.source));
             if((result = processPlatformGames(errorReport, currentPlatformDoc, currentQueryResult)) != Successful)
                 return result;
-
-            //---Import additional apps----------------------------
-            emit progressStepChanged(labels.addApps.arg(currentQueryResult.source));
-
-            // Note current cache size
-            qsizetype preAddAppCacheSize = mAddAppsCache.size();
-
-            // Import platform additional apps
-            if((result = processPlatformAddApps(errorReport, currentPlatformDoc)) != Successful)
-                return result;
-
-            /*
-             * Account for reduced total progress due to consumed additional apps.
-             * All platforms have to scan the entire additional app cache so each following platform
-             * won't need to check the additional apps that were imported by this one
-             */
-            qsizetype consumedAddApps = preAddAppCacheSize - mAddAppsCache.size();
-            quint64 progressReduction = consumedAddApps * (remainingPlatforms - 1); // Don't count current list
-            mProgressManager.group(Pg::AddAppMatchImport)->decreaseMaximum(progressReduction);
 
             //---Finalize document----------------------------------
             currentPlatformDoc->finalize();
@@ -404,11 +358,11 @@ ImportWorker::ImportResult ImportWorker::processGames(Qx::GenericError& errorRep
     };
 
     // Import primary platforms
-    if((platformImportStatus = platformsHandler(primary, {.games = STEP_IMPORTING_PLATFORM_GAMES, .addApps = STEP_IMPORTING_PLATFORM_ADD_APPS })) != Successful)
+    if((platformImportStatus = platformsHandler(primary, STEP_IMPORTING_PLATFORM_SETS)) != Successful)
         return platformImportStatus;
 
     // Import playlist specific platforms
-    if((platformImportStatus = platformsHandler(playlistSpecific, {.games = STEP_IMPORTING_PLAYLIST_GAMES, .addApps = STEP_IMPORTING_PLAYLIST_SPEC_ADD_APPS })) != Successful)
+    if((platformImportStatus = platformsHandler(playlistSpecific, STEP_IMPORTING_PLAYLIST_SPEC_SETS)) != Successful)
         return platformImportStatus;
 
     // Return success
@@ -748,11 +702,6 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
         for(const Fp::Db::QueryBuffer& query : qAsConst(playlistGameQueries))
             pgPlaylistGameMatchImport->increaseMaximum(query.size);
     }
-
-    // All checks of Additional Apps
-    Qx::ProgressGroup* pgAddAppMatchImport = initializeProgressGroup(Pg::AddAppMatchImport, 1);
-    quint64 passes = addAppQuery.size * (gameQueries.size() + playlistSpecGameQueries.size());
-    pgAddAppMatchImport->setMaximum(passes);
 
     // Forward progress manager signal
     connect(&mProgressManager, &Qx::GroupedProgressManager::valueChanged, this, &ImportWorker::progressValueChanged);
