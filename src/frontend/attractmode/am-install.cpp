@@ -107,7 +107,8 @@ Qx::GenericError Install::populateExistingDocs()
     }
 
     // Check for config docs
-    catalogueExistingDoc(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Config, MAIN_CFG_PATH)); // Must exist
+    QFileInfo mainCfgInfo(mMainConfigFile);
+    catalogueExistingDoc(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Config, mainCfgInfo.baseName())); // Must exist
 
     QFileInfo clifpCfgInfo(mClifpConfigFile);
     if(clifpCfgInfo.exists())
