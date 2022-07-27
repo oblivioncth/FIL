@@ -970,7 +970,7 @@ void EmulatorWriter::writeStandardKeyValue(const QString& key, const QString& va
     mStreamWriter.setFieldWidth(STD_KEY_FIELD_WIDTH);
     mStreamWriter << key;
     mStreamWriter.setFieldWidth(0);
-    mStreamWriter << value;
+    mStreamWriter << value << '\n';
 }
 
 void EmulatorWriter::writeArtworkEntry(const EmulatorArtworkEntry& entry)
@@ -981,6 +981,7 @@ void EmulatorWriter::writeArtworkEntry(const EmulatorArtworkEntry& entry)
     mStreamWriter << entry.type();
     mStreamWriter.setFieldWidth(0);
     mStreamWriter << entry.paths().join(';');
+    mStreamWriter << '\n';
 }
 
 Emulator* EmulatorWriter::sourceEmulator() { return static_cast<Emulator*>(mSourceDocument); }
