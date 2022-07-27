@@ -726,7 +726,7 @@ CrudeMainConfigReader::CrudeMainConfigReader(CrudeMainConfig* targetDoc) :
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-QHash<QUuid, CrudeMainConfigEntry>& CrudeMainConfigReader::targetDocEntries()
+QMap<QUuid, CrudeMainConfigEntry>& CrudeMainConfigReader::targetDocEntries()
 {
     return static_cast<CrudeMainConfig*>(mTargetDocument)->mEntries;
 }

@@ -334,7 +334,8 @@ public:
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
-    QHash<QUuid, CrudeMainConfigEntry> mEntries;
+    // Using map because any sorting is better than nothing until a proper config parser is implemented
+    QMap<QUuid, CrudeMainConfigEntry> mEntries;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -359,7 +360,7 @@ public:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
-    QHash<QUuid, CrudeMainConfigEntry>& targetDocEntries();
+    QMap<QUuid, CrudeMainConfigEntry>& targetDocEntries();
     bool readTargetDoc() override;
 
     void parseConfigEntry(QStringList rawEntry);
