@@ -73,17 +73,23 @@ Qx::GenericError Install::populateExistingDocs()
     // Platforms and Playlists
     if(mFpTagDirectory.exists())
     {
-        // Check for platforms (
-        Qx::IoOpReport existingCheck = Qx::dirContentInfoList(existingList, mFpTagDirectory, {PLATFORM_TAG_PREFIX +" *." + TXT_EXT},
-                                                              QDir::NoFilter, QDirIterator::Subdirectories);
+        /* NOTE: Qt globbing syntax is slightly weird (mainly '\' cannot be used as an escape character, and instead character to
+         * be escaped must individually be placed between braces. This makes using variables as part of the expression awkward
+         * so instead they must be written out completely and care must be taken to modify them if the file names change.
+         *
+         * See: https://doc.qt.io/qt-6/qregularexpression.html#wildcardToRegularExpression
+         */
+
+        // Check for platforms
+        Qx::IoOpReport existingCheck = Qx::dirContentInfoList(existingList, mFpTagDirectory, {"[[]Platform[]] *.txt"});
         if(existingCheck.isFailure())
             return error.setSecondaryInfo(existingCheck.outcome()).setDetailedInfo(existingCheck.outcomeInfo());
 
         for(const QFileInfo& platformFile : qAsConst(existingList))
              catalogueExistingDoc(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Platform, platformFile.baseName()));
 
-        // Check for playlists (
-        existingCheck = Qx::dirContentInfoList(existingList, mFpTagDirectory, {PLAYLIST_TAG_PREFIX +" *." + TXT_EXT},
+        // Check for playlists
+        existingCheck = Qx::dirContentInfoList(existingList, mFpTagDirectory, {"[[]Playlist[]] *.txt"},
                                                QDir::NoFilter, QDirIterator::Subdirectories);
         if(existingCheck.isFailure())
             return error.setSecondaryInfo(existingCheck.outcome()).setDetailedInfo(existingCheck.outcomeInfo());
