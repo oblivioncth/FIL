@@ -436,6 +436,7 @@ Qx::GenericError Install::postImport()
     emulatorConfig->setRomPath("");
     emulatorConfig->setRomExt("");
     emulatorConfig->setSystem(FLASHPOINT_NAME);
+    emulatorConfig->setInfoSource("");
 
     // Ensure image directories are clear
     EmulatorArtworkEntryBuilder aeb;

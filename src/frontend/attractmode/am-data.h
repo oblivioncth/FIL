@@ -394,6 +394,7 @@ public:
         static inline const QString ROM_PATH = "rompath";
         static inline const QString ROM_EXT = "romext";
         static inline const QString SYSTEM = "system";
+        static inline const QString INFO_SOURCE = "info_source";
         static inline const QString EXIT_HOTKEY = "exit_hotkey";
 
         class Artwork
@@ -420,6 +421,7 @@ private:
     QString mRomPath;
     QString mRomExt;
     QString mSystem;
+    QString mInfoSource;
     QString mExitHotkey;
     QHash<QString, EmulatorArtworkEntry> mArtworkEntries;
 
@@ -438,6 +440,7 @@ public:
     QString romPath() const;
     QString romExt() const;
     QString system() const;
+    QString infoSource() const;
     QString exitHotkey() const;
     EmulatorArtworkEntry artworkEntry(QString type) const;
     QList<EmulatorArtworkEntry> artworkEntries() const;
@@ -448,6 +451,7 @@ public:
     void setRomPath(QString romPath);
     void setRomExt(QString romExt);
     void setSystem(QString system);
+    void setInfoSource(QString infoSource);
     void setExitHotkey(QString exitHotkey);
     void setArtworkEntry(EmulatorArtworkEntry entry);
 };
@@ -468,6 +472,7 @@ private:
     void parseRomPath(const QString& value);
     void parseRomExt(const QString& value);
     void parseSystem(const QString& value);
+    void parseInfoSource(const QString& value);
     void parseExitHotkey(const QString& value);
     void parseArtwork(const QString& value);
 

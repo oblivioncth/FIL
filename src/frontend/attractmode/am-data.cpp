@@ -891,6 +891,8 @@ void EmulatorReader::parseKeyValue(const QString& key, const QString& value)
         parseRomExt(value);
     else if(key == Emulator::Keys::SYSTEM)
         parseSystem(value);
+    else if(key == Emulator::Keys::INFO_SOURCE)
+        parseInfoSource(value);
     else if(key == Emulator::Keys::EXIT_HOTKEY)
         parseExitHotkey(value);
     else if(key == Emulator::Keys::Artwork::NAME)
@@ -909,6 +911,7 @@ void EmulatorReader::parseRomExt(const QString& value)
     targetEmulator()->setRomPath(value == R"("")" ? "" : value);
 }
 void EmulatorReader::parseSystem(const QString& value) { targetEmulator()->setSystem(value); }
+void EmulatorReader::parseInfoSource(const QString& value) { targetEmulator()->setInfoSource(value); }
 void EmulatorReader::parseExitHotkey(const QString& value) { targetEmulator()->setExitHotkey(value); }
 void EmulatorReader::parseArtwork(const QString& value)
 {
@@ -947,6 +950,9 @@ EmulatorWriter::EmulatorWriter(Emulator* sourceDoc) :
 //Private:
 bool EmulatorWriter::writeConfigDoc()
 {
+    // Set field alignment
+    mStreamWriter.setFieldAlignment(QTextStream::AlignLeft);
+
     // Write main key/values
     writeStandardKeyValue(Emulator::Keys::EXECUTABLE, sourceEmulator()->executable());
     writeStandardKeyValue(Emulator::Keys::ARGS, sourceEmulator()->args());
@@ -954,6 +960,7 @@ bool EmulatorWriter::writeConfigDoc()
     writeStandardKeyValue(Emulator::Keys::ROM_PATH, sourceEmulator()->romPath());
     writeStandardKeyValue(Emulator::Keys::ROM_EXT, sourceEmulator()->romExt());
     writeStandardKeyValue(Emulator::Keys::SYSTEM, sourceEmulator()->system());
+    writeStandardKeyValue(Emulator::Keys::INFO_SOURCE, sourceEmulator()->infoSource());
     writeStandardKeyValue(Emulator::Keys::EXIT_HOTKEY, sourceEmulator()->exitHotkey());
 
     // Write artwork entries
