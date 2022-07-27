@@ -35,7 +35,7 @@ protected:
 protected:
     bool lineIsComment(const QString& line);
     QString readLineIgnoringComments(qint64 maxlen = 0);
-    virtual bool checkDocValidity() = 0;
+    virtual bool checkDocValidity(bool& isValid) = 0;
     virtual bool readTargetDoc() = 0;
 
 public:
@@ -87,7 +87,7 @@ protected:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 protected:
-    bool checkDocValidity() override;
+    bool checkDocValidity(bool& isValid) override;
 };
 
 class ConfigDocWriter : public CommonDocWriter
@@ -201,7 +201,7 @@ public:
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
     QHash<QUuid, std::shared_ptr<RomEntry>>& targetDocExistingRomEntries();
-    bool checkDocValidity() override;
+    bool checkDocValidity(bool& isValid) override;
     bool readTargetDoc() override;
     void parseRomEntry(const QString& rawEntry);
     void addFieldToBuilder(RomEntryBuilder& builder, QString field, quint8 index);

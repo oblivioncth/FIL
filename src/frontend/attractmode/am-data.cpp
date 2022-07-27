@@ -38,16 +38,22 @@ QString CommonDocReader::readLineIgnoringComments(qint64 maxlen)
 //Public:
 Qx::GenericError CommonDocReader::readInto()
 {
+    // Error template
+    Qx::GenericError error(Qx::GenericError::Critical, mStdReadErrorStr);
+
     // Check that doc is valid
-    if(!checkDocValidity())
+    bool isValid = false;
+    if(!checkDocValidity(isValid))
+        return error.setSecondaryInfo(mStreamReader.status().outcomeInfo());
+    else if(!isValid)
     {
         QString errReason = Fe::docHandlingErrorString(mTargetDocument, Fe::DocHandlingError::DocInvalidType);
-        return Qx::GenericError(Qx::GenericError::Critical, mStdReadErrorStr, errReason);
+        return error.setSecondaryInfo(errReason);
     }
 
     // Read doc and check for error status
     bool readSuccessful = readTargetDoc();
-    return !readSuccessful ? Qx::GenericError(Qx::GenericError::Critical, mStdReadErrorStr, mStreamReader.status().outcomeInfo()) :
+    return !readSuccessful ? error.setSecondaryInfo(mStreamReader.status().outcomeInfo()) :
                              Qx::GenericError();
 }
 
@@ -109,7 +115,7 @@ ConfigDocReader::ConfigDocReader(ConfigDoc* targetDoc) :
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Protected:
-bool ConfigDocReader::checkDocValidity()
+bool ConfigDocReader::checkDocValidity(bool& isValid)
 {
     // Check for config "header"
     QString firstLine = mStreamReader.readLine();
@@ -117,7 +123,10 @@ bool ConfigDocReader::checkDocValidity()
 
     bool hasTagline = firstLine.left(ConfigDoc::TAGLINE.length()) == ConfigDoc::TAGLINE;
 
-    return hasTagline && lineIsComment(secondLine);
+    isValid = hasTagline && lineIsComment(secondLine);
+
+    // Return status
+    return !mStreamReader.hasError();
 }
 
 //===============================================================================================================
@@ -285,11 +294,14 @@ QHash<QUuid, std::shared_ptr<RomEntry>>& RomlistReader::targetDocExistingRomEntr
     return static_cast<Romlist*>(mTargetDocument)->mEntriesExisting;
 }
 
-bool RomlistReader::checkDocValidity()
+bool RomlistReader::checkDocValidity(bool& isValid)
 {
     // See if first line is the romlist header
     QString header = mStreamReader.readLine();
-    return header == Romlist::HEADER;
+    isValid = header == Romlist::HEADER;
+
+    // Return status
+    return !mStreamReader.hasError();
 }
 
 bool RomlistReader::readTargetDoc()
