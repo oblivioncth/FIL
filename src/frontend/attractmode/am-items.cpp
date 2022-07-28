@@ -36,8 +36,8 @@ RomEntry::RomEntry(const Fp::Game& flashpointGame) :
     mRating()
 {}
 
-RomEntry::RomEntry(const Fp::AddApp& flashpointAddApp) :
-    Fe::Game(flashpointAddApp.id(), flashpointAddApp.name(), QString()),
+RomEntry::RomEntry(const Fp::AddApp& flashpointAddApp, const Fp::Game& parentGame) :
+    Fe::Game(flashpointAddApp.id(), parentGame.title() + " |> "+ flashpointAddApp.name(), QString()),
     mEmulator(Fp::NAME),
     mCloneOf(flashpointAddApp.parentId().toString(QUuid::WithoutBraces)),
     mYear(),
@@ -48,7 +48,7 @@ RomEntry::RomEntry(const Fp::AddApp& flashpointAddApp) :
     mStatus(),
     mDisplayCount(1),
     mDisplayType(),
-    mAltRomName(),
+    mAltRomName(parentGame.orderTitle() + "|>"+ flashpointAddApp.name()),
     mAltTitle(),
     mExtra(),
     mButtons(),

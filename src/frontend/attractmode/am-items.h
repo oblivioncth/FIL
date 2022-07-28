@@ -45,7 +45,7 @@ private:
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
     RomEntry(const Fp::Game& flashpointGame);
-    RomEntry(const Fp::AddApp& flashpointAddApp);
+    RomEntry(const Fp::AddApp& flashpointAddApp, const Fp::Game& parentGame);
     RomEntry();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------

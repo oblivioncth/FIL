@@ -282,7 +282,7 @@ void Romlist::addSet(const Fp::Set& set, const Fe::ImageSources& images)
         if(addApp.isPlayable())
         {
             // Convert to romlist entry
-            std::shared_ptr<RomEntry> subRomEntry = std::make_shared<RomEntry>(addApp);
+            std::shared_ptr<RomEntry> subRomEntry = std::make_shared<RomEntry>(addApp, set.game());
 
             // Add entry
             addUpdateableItem(mEntriesExisting, mEntriesFinal, subRomEntry);
