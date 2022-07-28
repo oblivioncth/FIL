@@ -71,6 +71,17 @@ bool InstallFoundation::containsAnyDataDoc(DataDoc::Type type, const QList<QStri
     return mExistingDocuments.intersects(searchSet);
 }
 
+QList<QString> InstallFoundation::modifiedDataDocs(DataDoc::Type type) const
+{
+    QList<QString> modList;
+
+    for(const DataDoc::Identifier& dataDocId : mModifiedDocuments)
+        if(dataDocId.docType() == type)
+            modList.append(dataDocId.docName());
+
+    return modList;
+}
+
 //Protected:
 void InstallFoundation::nullify()
 {
@@ -163,6 +174,10 @@ Qx::GenericError InstallFoundation::commitDataDocument(DataDoc* docToSave, std::
     // Return write status and let document ptr auto delete
     return saveWriteError;
 }
+
+QList<QString> InstallFoundation::modifiedPlatforms() const { return modifiedDataDocs(DataDoc::Type::Platform); }
+
+QList<QString> InstallFoundation::modifiedPlaylists() const { return modifiedDataDocs(DataDoc::Type::Platform);}
 
 //Public:
 bool InstallFoundation::isValid() const { return mValid; }

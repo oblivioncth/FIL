@@ -91,6 +91,7 @@ public:
 //-Instance Functions---------------------------------------------------------------------------------------------------------
 private:
     bool containsAnyDataDoc(DataDoc::Type type, const QList<QString>& names) const;
+    QList<QString> modifiedDataDocs(DataDoc::Type type) const;
 
 protected:
     virtual void nullify();
@@ -103,6 +104,9 @@ protected:
 
     Qx::GenericError checkoutDataDocument(DataDoc* docToOpen, std::shared_ptr<DataDocReader> docReader);
     Qx::GenericError commitDataDocument(DataDoc* docToSave, std::shared_ptr<DataDocWriter> docWriter);
+
+    QList<QString> modifiedPlatforms() const;
+    QList<QString> modifiedPlaylists() const;
 
 public:
     bool isValid() const;

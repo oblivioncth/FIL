@@ -125,7 +125,8 @@ Qx::GenericError Install::editBulkImageReferences(const Fe::ImageSources& imageS
         return platformsConfigReadError;
 
     // Set media folder paths
-    for(const QString& platform : qAsConst(mImportDetails->involvedPlatforms))
+    const QList<QString> affectedPlatforms = modifiedPlatforms();
+    for(const QString& platform : affectedPlatforms)
     {
         if(!imageSources.isNull())
         {
