@@ -93,6 +93,10 @@ add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 include(FIL/FetchQx)
 fetch_qx("9f60cb84bab308fee9db0e81d37f4451d26ffeb7")
 
+# Fetch Neargye's Magic Enum
+include(FIL/FetchMagicEnum)
+fetch_magicenum("v0.8.0")
+
 # Fetch libfp (build and import from source)
 include(FIL/Fetchlibfp)
 fetch_libfp("cb8158ffecd35318a618bb6d2fa02ab676495f4b")
@@ -213,6 +217,7 @@ target_link_libraries(${TARGET_NAME}
         Qx::Windows-gui
         Qx::Xml
         Fp::Flashpoint
+        magic_enum::magic_enum
 )
 
 # Configure target properties
