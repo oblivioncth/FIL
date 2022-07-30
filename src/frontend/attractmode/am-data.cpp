@@ -130,6 +130,35 @@ ConfigDocReader::ConfigDocReader(ConfigDoc* targetDoc) :
     CommonDocReader(targetDoc)
 {}
 
+//-Class Functions-------------------------------------------------------------------------------------------------
+//Protected:
+bool ConfigDocReader::splitKeyValue(const QString& line, QString& key, QString& value)
+{
+    /* TODO: The result from this function is currently unused due to no easy way to raise a custom
+     * error with the stream reader in this class (and how the current paradigm is to return bools
+     * for each step and then use the reader status if one is found). If used properly this should
+     * never error, but ideally it should be checked for anyway. Might need to have all read functions
+     * return Qx::GenericError to allow non stream related errors to be returned.
+     */
+
+    // Null out return buffers
+    key = QString();
+    value = QString();
+
+    QRegularExpressionMatch keyValueCheck = KEY_VALUE_REGEX.match(line);
+    if(keyValueCheck.hasMatch())
+    {
+        key = keyValueCheck.captured("key");
+        value = keyValueCheck.captured("value");
+        return true;
+    }
+    else
+    {
+        qWarning() << Q_FUNC_INFO << "Invalid key value string";
+        return false;
+    }
+}
+
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Protected:
 bool ConfigDocReader::checkDocValidity(bool& isValid)
@@ -880,9 +909,9 @@ bool EmulatorReader::readTargetDoc()
     while(!mStreamReader.atEnd())
     {
         QString line = mStreamReader.readLine();
-        int firstSpace = line.indexOf(' ');
-        QString key = firstSpace != -1 ? line.first(firstSpace) : line;
-        QString value = firstSpace != -1 ? Qx::String::trimLeading(line.mid(firstSpace)) : "";
+        QString key;
+        QString value;
+        splitKeyValue(line, key, value);
         parseKeyValue(key, value);
     }
 
@@ -930,15 +959,7 @@ void EmulatorReader::parseArtwork(const QString& value)
 {
     QString type;
     QString rawPaths;
-    int firstSpace = value.indexOf(' ');
-
-    if(firstSpace != -1)
-    {
-        type = value.first(firstSpace);
-        rawPaths = Qx::String::trimLeading(value.mid(firstSpace));
-    }
-    else
-        type = value;
+    splitKeyValue(value, type, rawPaths);
 
     EmulatorArtworkEntryBuilder eaeb;
     eaeb.wType(type);

@@ -83,9 +83,18 @@ protected:
 
 class ConfigDocReader : public CommonDocReader
 {
+//-Class Variables----------------------------------------------------------------------------------------------------
+protected:
+    static inline const QRegularExpression KEY_VALUE_REGEX =
+            QRegularExpression(R"((?<key>\w+)(?!\S)[^\S\r\n]*(?<value>(?:\S+(?:[^\S\r\n]+\S+)*)*))");
+
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
     ConfigDocReader(ConfigDoc* targetDoc);
+
+//-Class Functions-------------------------------------------------------------------------------------------------
+protected:
+    bool splitKeyValue(const QString& line, QString& key, QString& value);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 protected:
