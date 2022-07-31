@@ -103,6 +103,10 @@ DataDoc::DataDoc(Install* const parent, const QString& docPath, QString docName)
       mName(docName)
 {}
 
+//-Destructor------------------------------------------------------------------------------------------------
+//Public:
+DataDoc::~DataDoc() {}
+
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
 Install* DataDoc::parent() const { return mParent; }
@@ -120,6 +124,10 @@ DataDocReader::DataDocReader(DataDoc* targetDoc) :
     mStdReadErrorStr(docHandlingErrorString(targetDoc, DocHandlingError::DocReadFailed))
 {}
 
+//-Destructor------------------------------------------------------------------------------------------------
+//Public:
+DataDocReader::~DataDocReader() {}
+
 //===============================================================================================================
 // DataDocWriter
 //===============================================================================================================
@@ -131,6 +139,10 @@ DataDocWriter::DataDocWriter(DataDoc* sourceDoc) :
     mStdWriteErrorStr(docHandlingErrorString(sourceDoc, DocHandlingError::DocWriteFailed))
 {}
 
+//-Destructor------------------------------------------------------------------------------------------------
+//Public:
+DataDocWriter::~DataDocWriter() {}
+
 //===============================================================================================================
 // Errorable
 //===============================================================================================================
@@ -138,6 +150,10 @@ DataDocWriter::DataDocWriter(DataDoc* sourceDoc) :
 //-Constructor-----------------------------------------------------------------------------------------------------
 //Protected:
 Errorable::Errorable() {}
+
+//-Destructor------------------------------------------------------------------------------------------------
+//Public:
+Errorable::~Errorable() {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Protected:

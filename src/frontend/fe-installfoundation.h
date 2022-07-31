@@ -81,6 +81,10 @@ protected:
 public:
     InstallFoundation(QString installPath);
 
+//-Destructor-------------------------------------------------------------------------------------------------
+public:
+    virtual ~InstallFoundation();
+
 //-Class Functions------------------------------------------------------------------------------------------------------
 private:
     static void allowUserWriteOnFile(QString filePath);

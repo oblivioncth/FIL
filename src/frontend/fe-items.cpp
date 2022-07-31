@@ -12,6 +12,10 @@ namespace Fe
 //Public:
 Item::Item() {}
 
+//-Destructor------------------------------------------------------------------------------------------------
+//Public:
+Item::~Item() {}
+
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
 QHash<QString, QString>& Item::otherFields() { return mOtherFields; }

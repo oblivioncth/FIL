@@ -19,6 +19,10 @@ InstallFoundation::InstallFoundation(QString installPath) :
     mRootDirectory(installPath)
 {}
 
+//-Destructor------------------------------------------------------------------------------------------------
+//Public:
+InstallFoundation::~InstallFoundation() {}
+
 //-Class Functions--------------------------------------------------------------------------------------------
 //Private:
 void InstallFoundation::allowUserWriteOnFile(QString filePath)

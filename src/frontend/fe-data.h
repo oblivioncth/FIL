@@ -123,6 +123,10 @@ protected:
 protected:
     DataDoc(Install* const parent, const QString& docPath, QString docName);
 
+//-Destructor-------------------------------------------------------------------------------------------------
+public:
+    virtual ~DataDoc();
+
 //-Instance Functions--------------------------------------------------------------------------------------------------
 protected:
     virtual Type type() const = 0;
@@ -146,6 +150,10 @@ protected:
 protected:
     DataDocReader(DataDoc* targetDoc);
 
+//-Destructor-------------------------------------------------------------------------------------------------
+public:
+    virtual ~DataDocReader();
+
 //-Instance Functions-------------------------------------------------------------------------------------------------
 public:
     virtual Qx::GenericError readInto() = 0;
@@ -162,6 +170,10 @@ protected:
 protected:
     DataDocWriter(DataDoc* sourceDoc);
 
+//-Destructor-------------------------------------------------------------------------------------------------
+public:
+    virtual ~DataDocWriter();
+
 //-Instance Functions-------------------------------------------------------------------------------------------------
 public:
     virtual Qx::GenericError writeOutOf() = 0;
@@ -176,6 +188,10 @@ protected:
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
     Errorable();
+
+//-Destructor-------------------------------------------------------------------------------------------------
+public:
+    virtual ~Errorable();
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 public:
