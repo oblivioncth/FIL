@@ -102,7 +102,7 @@ bool Display::Parser::parse(QString key, QString value, int depth)
     if(key == CrudeSettings::Keys::Display::LAYOUT)
         mSetting->mLayout = value;
     else if(key == CrudeSettings::Keys::Display::ROMLIST)
-        mSetting->mLayout = value;
+        mSetting->mRomlist = value;
     else if(key == CrudeSettings::Keys::Display::IN_CYCLE)
         mSetting->mInCycle = value == "yes" ? true : false;
     else if(key == CrudeSettings::Keys::Display::IN_MENU)
