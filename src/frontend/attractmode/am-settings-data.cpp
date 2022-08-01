@@ -99,8 +99,6 @@ Display::Parser::Parser(Display* display) :
 //Public:
 bool Display::Parser::parse(QString key, QString value, int depth)
 {
-    Q_UNUSED(depth);
-
     if(key == CrudeSettings::Keys::Display::LAYOUT)
         mSetting->mLayout = value;
     else if(key == CrudeSettings::Keys::Display::ROMLIST)
@@ -127,6 +125,8 @@ bool Display::Parser::parse(QString key, QString value, int depth)
         // Create parser and set to current
         mCurrentSubSettingParser = std::make_unique<DisplayFilter::Parser>(addedFilter);
     }
+    else if(mCurrentSubSettingParser)
+        mCurrentSubSettingParser->parse(key, value, depth);
     else
         return false;
 
