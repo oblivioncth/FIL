@@ -27,7 +27,9 @@ RomEntry::RomEntry(const Fp::Game& flashpointGame) :
     mDisplayCount(1),
     mDisplayType(),
     mAltRomName(),
-    mAltTitle(flashpointGame.orderTitle()),
+    mAltTitle(!flashpointGame.orderTitle().isEmpty() ?
+              flashpointGame.orderTitle() :
+              flashpointGame.title()),
     mExtra(),
     mButtons(),
     mSeries(flashpointGame.series()),
@@ -49,7 +51,9 @@ RomEntry::RomEntry(const Fp::AddApp& flashpointAddApp, const Fp::Game& parentGam
     mDisplayCount(1),
     mDisplayType(),
     mAltRomName(),
-    mAltTitle(parentGame.orderTitle() + "|>"+ flashpointAddApp.name()),
+    mAltTitle(!parentGame.orderTitle().isEmpty() ?
+               parentGame.orderTitle() + "|>"+ flashpointAddApp.name() :
+               parentGame.title() + "|>"+ flashpointAddApp.name()),
     mExtra(),
     mButtons(),
     mSeries(),
