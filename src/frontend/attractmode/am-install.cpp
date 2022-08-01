@@ -478,6 +478,7 @@ Qx::GenericError Install::postImport()
         DisplayBuilder db;
         db.wName(Fp::NAME);
         db.wLayout("Attrac-Man");
+        db.wRomlist(Fp::NAME);
         db.wInCycle(false);
         db.wInMenu(true);
 
