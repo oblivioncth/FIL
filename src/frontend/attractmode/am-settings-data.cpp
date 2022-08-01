@@ -351,8 +351,10 @@ bool CrudeSettingsWriter::writeDisplay(const Display& display)
     mTabDepth++;
 
     // Write basic values
-    writeKeyValue(CrudeSettings::Keys::Display::LAYOUT, display.layout());
-    writeKeyValue(CrudeSettings::Keys::Display::ROMLIST, display.romlist());
+    if(!display.layout().isEmpty())
+        writeKeyValue(CrudeSettings::Keys::Display::LAYOUT, display.layout());
+    if(!display.romlist().isEmpty())
+        writeKeyValue(CrudeSettings::Keys::Display::ROMLIST, display.romlist());
     writeKeyValue(CrudeSettings::Keys::Display::IN_CYCLE, display.inCycle() ? "yes" : "no");
     writeKeyValue(CrudeSettings::Keys::Display::IN_MENU, display.inMenu() ? "yes" : "no");
 
@@ -410,10 +412,16 @@ bool CrudeSettingsWriter::writeDisplayFilter(const DisplayFilter& filter)
     mTabDepth++;
 
     // Write basic values
-    QString sortByValue = QString(magic_enum::enum_name(filter.sortBy()).data());
-    writeKeyValue(CrudeSettings::Keys::Display::Filter::SORT_BY, sortByValue);
-    writeKeyValue(CrudeSettings::Keys::Display::Filter::REVERSE_ORDER, filter.reverseOrder() ? "true" : "false");
-    writeKeyValue(CrudeSettings::Keys::Display::Filter::LIST_LIMIT, QString::number(filter.listLimit()));
+    if(filter.sortBy() != DisplayFilter::Sort::NoSort)
+    {
+        QString sortByValue = QString(magic_enum::enum_name(filter.sortBy()).data());
+        writeKeyValue(CrudeSettings::Keys::Display::Filter::SORT_BY, sortByValue);
+    }
+
+    if(filter.reverseOrder() != false)
+        writeKeyValue(CrudeSettings::Keys::Display::Filter::REVERSE_ORDER, "true");
+    if(filter.listLimit() != 0)
+        writeKeyValue(CrudeSettings::Keys::Display::Filter::LIST_LIMIT, QString::number(filter.listLimit()));
 
     // Write rules
     for(const QString& rule : qxAsConst(filter.rules()))
