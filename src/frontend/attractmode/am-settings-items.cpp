@@ -53,12 +53,15 @@ DisplayGlobalFilterBuilder& DisplayGlobalFilterBuilder::wException(QString excep
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 DisplayFilter::DisplayFilter() :
-    SettingsItem(META_NAME)
+    DisplayFilter(QString())
 {}
 
 DisplayFilter::DisplayFilter(QString name) :
     SettingsItem(META_NAME),
-    mName(name)
+    mName(name),
+    mSortBy(DisplayFilter::Sort::NoSort),
+    mReverseOrder(false),
+    mListLimit(0)
 {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
@@ -94,12 +97,14 @@ DisplayFilterBuilder& DisplayFilterBuilder::wListLimit(int listLimit) { mItemBlu
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 Display::Display() :
-    SettingsItem(META_NAME)
+    Display(QString())
 {}
 
 Display::Display(QString name) :
     SettingsItem(META_NAME),
-    mName(name)
+    mName(name),
+    mInCycle(false),
+    mInMenu(true)
 {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
@@ -140,7 +145,7 @@ DisplayBuilder& DisplayBuilder::wFilter(DisplayFilter filter) { mItemBlueprint.m
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 OtherSetting::OtherSetting() :
-    SettingsItem(META_NAME)
+    OtherSetting(QString(), QString())
 {}
 
 OtherSetting::OtherSetting(QString type, QString name) :
