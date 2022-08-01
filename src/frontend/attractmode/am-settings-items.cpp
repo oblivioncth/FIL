@@ -41,7 +41,11 @@ DisplayGlobalFilterBuilder::DisplayGlobalFilterBuilder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-
+DisplayGlobalFilterBuilder& DisplayGlobalFilterBuilder::wRule(QString rule) { mItemBlueprint.mRules.append(rule); return *this; }
+DisplayGlobalFilterBuilder& DisplayGlobalFilterBuilder::wException(QString exception)
+{
+    mItemBlueprint.mExceptions.append(exception); return *this;
+}
 //===============================================================================================================
 // DisplayFilter
 //===============================================================================================================
