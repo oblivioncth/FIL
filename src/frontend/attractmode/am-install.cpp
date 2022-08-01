@@ -484,12 +484,14 @@ Qx::GenericError Install::postImport()
         // All filter
         DisplayFilterBuilder dfb;
         dfb.wName("All");
+        dfb.wSortBy(DisplayFilter::Sort::AltTitle); // This uses FP's "orderTtile"
         db.wFilter(dfb.build());
 
         // Favorites filter
         dfb = DisplayFilterBuilder();
         dfb.wName("Favourites");
         dfb.wRule("Favourite equals 1");
+        dfb.wSortBy(DisplayFilter::Sort::AltTitle);
         db.wFilter(dfb.build());
 
         mainConfig->addDisplay(db.build());
