@@ -181,6 +181,7 @@ public:
     bool inMenu() const;
     std::optional<DisplayGlobalFilter> globalFilter() const;
     QList<DisplayFilter>& filters();
+    const QList<DisplayFilter>& filters() const;
 };
 
 class DisplayBuilder : public Fe::ItemBuilder<DisplayBuilder, Display>

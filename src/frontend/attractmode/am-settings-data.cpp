@@ -165,12 +165,11 @@ CrudeSettings::CrudeSettings(Install* const parent, const QString& filePath, con
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
 bool CrudeSettings::isEmpty() const { return mDisplays.isEmpty() && mOtherSettings.isEmpty(); };
-
 Fe::DataDoc::Type CrudeSettings::type() const { return Type::Config; }
 
 bool CrudeSettings::containsDisplay(QString name) { return mDisplays.contains(name); }
-
 void CrudeSettings::addDisplay(const Display& display) { mDisplays.insert(display.name(), display); }
+Display& CrudeSettings::display(QString name) { return mDisplays[name]; }
 
 bool CrudeSettings::containsOtherSetting(QString type, QString name)
 {
@@ -352,7 +351,7 @@ bool CrudeSettingsWriter::writeDisplay(const Display& display)
         writeDisplayGlobalFilter(globalFilter.value());
 
     // Write filters
-    for(const DisplayFilter& filter : qxAsConst(display.filters()))
+    for(const DisplayFilter& filter : display.filters())
     {
         if(!writeDisplayFilter(filter))
             return false;

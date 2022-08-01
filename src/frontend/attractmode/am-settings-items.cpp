@@ -116,6 +116,7 @@ bool Display::inCycle() const { return mInCycle; }
 bool Display::inMenu() const { return mInMenu; }
 std::optional<DisplayGlobalFilter> Display::globalFilter() const { return mGlobalFilter; }
 QList<DisplayFilter>& Display::filters() { return mFilters; }
+const QList<DisplayFilter>& Display::filters() const { return mFilters; }
 
 //===============================================================================================================
 // DisplayBuilder

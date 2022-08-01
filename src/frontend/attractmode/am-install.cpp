@@ -473,7 +473,7 @@ Qx::GenericError Install::postImport()
         return mainConfigReadError;
 
     // Add default display entry if not present
-    if(!mainConfig->containsDisplayWithRomlist(Fp::NAME))
+    if(!mainConfig->containsDisplay(Fp::NAME))
     {
         DisplayBuilder db;
         db.wName(Fp::NAME);
@@ -496,6 +496,41 @@ Qx::GenericError Install::postImport()
         db.wFilter(dfb.build());
 
         mainConfig->addDisplay(db.build());
+    }
+
+    // Display to update with updated tags
+    Display& fpDisplay = mainConfig->display(Fp::NAME);
+    QList<DisplayFilter>& displayFilters = fpDisplay.filters();
+
+    // Remove old platform/playlist based filters
+    displayFilters.removeIf([](const DisplayFilter& filter){
+        const QStringList rules = filter.rules();
+        for(const QString& rule : rules)
+        {
+            if(rule.contains("\\[Platform\\]") || rule.contains("\\[Playlist\\]"))
+                return true;
+        }
+
+        return false;
+    });
+
+    // Generate filter for each current taglist
+    QStringList tagFiles;
+    tagFiles.append(modifiedPlatforms());
+    tagFiles.append(modifiedPlaylists());
+
+    for(QString tagFile : tagFiles)
+    {
+        // Escape brackets in name since AM uses regex for value
+        QString escaped = tagFile.replace("[", "\\[").replace("]", "\\]");
+
+        DisplayFilterBuilder dfb;
+        dfb = DisplayFilterBuilder();
+        dfb.wName(tagFile);
+        dfb.wSortBy(DisplayFilter::Sort::AltTitle);
+        dfb.wRule("Tags contains " + escaped);
+
+        displayFilters.append(dfb.build());
     }
 
     // Commit main config
