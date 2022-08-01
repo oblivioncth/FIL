@@ -121,45 +121,6 @@ RomEntryBuilder& RomEntryBuilder::wRegion(QString region) { mItemBlueprint.mRegi
 RomEntryBuilder& RomEntryBuilder::wRating(QString rating) { mItemBlueprint.mRating = rating; return *this; }
 
 //===============================================================================================================
-// CrudeMainConfigEntry
-//===============================================================================================================
-
-//-Constructor------------------------------------------------------------------------------------------------
-//Public:
-CrudeMainConfigEntry::CrudeMainConfigEntry() {}
-
-//-Class Variables--------------------------------------------------------------------------------------------------
-//Public:
-QUuid CrudeMainConfigEntry::equivalentId(QString type, QString name)
-{
-    return QUuid::createUuidV5(NAMESPACE_SEED, type + name);
-}
-
-//-Instance Functions------------------------------------------------------------------------------------------------
-//Public:
-QString CrudeMainConfigEntry::type() const{ return mType; }
-QStringList CrudeMainConfigEntry::contents() const{ return mContents; }
-
-//===============================================================================================================
-// CrudeMainConfigEntryBuilder
-//===============================================================================================================
-
-//-Constructor-------------------------------------------------------------------------------------------------
-//Public:
-CrudeMainConfigEntryBuilder::CrudeMainConfigEntryBuilder() {}
-
-//-Instance Functions------------------------------------------------------------------------------------------
-//Public:
-CrudeMainConfigEntryBuilder& CrudeMainConfigEntryBuilder::wTypeAndName(QString type, QString name)
-{
-    mItemBlueprint.mType = type;
-    mItemBlueprint.mName = name;
-    mItemBlueprint.mId = CrudeMainConfigEntry::equivalentId(type, name);
-    return *this;
-}
-CrudeMainConfigEntryBuilder& CrudeMainConfigEntryBuilder::wContents(const QStringList& contents) { mItemBlueprint.mContents = contents; return *this; }
-
-//===============================================================================================================
 // EmulatorArtworkEntry
 //===============================================================================================================
 

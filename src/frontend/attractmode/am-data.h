@@ -38,7 +38,7 @@ protected:
     bool lineIsComment(const QString& line);
     QString readLineIgnoringComments(qint64 maxlen = 0);
     virtual bool checkDocValidity(bool& isValid) = 0;
-    virtual bool readTargetDoc() = 0;
+    virtual Qx::GenericError readTargetDoc() = 0;
 
 public:
     Qx::GenericError readInto() override;
@@ -212,7 +212,7 @@ public:
 private:
     QHash<QUuid, std::shared_ptr<RomEntry>>& targetDocExistingRomEntries();
     bool checkDocValidity(bool& isValid) override;
-    bool readTargetDoc() override;
+    Qx::GenericError readTargetDoc() override;
     void parseRomEntry(const QString& rawEntry);
     void addFieldToBuilder(RomEntryBuilder& builder, QString field, quint8 index);
 };
@@ -332,61 +332,6 @@ private:
     Qx::GenericError writeOutOf() override;
 };
 
-class CrudeMainConfig : public ConfigDoc
-{
-    friend class CrudeMainConfigReader;
-    friend class CrudeMainConfigWriter;
-
-//-Class Variables-----------------------------------------------------------------------------------------------------
-public:
-    static inline const QString STD_NAME = "attract";
-
-//-Instance Variables--------------------------------------------------------------------------------------------------
-private:
-    // Using map because any sorting is better than nothing until a proper config parser is implemented
-    QMap<QUuid, CrudeMainConfigEntry> mEntries;
-
-//-Constructor--------------------------------------------------------------------------------------------------------
-public:
-    explicit CrudeMainConfig(Install* const parent, const QString& filePath, const DocKey&);
-
-//-Instance Functions--------------------------------------------------------------------------------------------------
-public:
-    bool isEmpty() const override;
-    Type type() const override;
-
-    bool containsEntry(QUuid entryId);
-    bool containsEntry(QString type, QString name);
-    bool containsEntryWithContent(QString type, const QString& partialContent);
-    void addEntry(const CrudeMainConfigEntry& entry);
-};
-
-class CrudeMainConfigReader : public ConfigDocReader
-{
-//-Constructor--------------------------------------------------------------------------------------------------------
-public:
-    CrudeMainConfigReader(CrudeMainConfig* targetDoc);
-
-//-Instance Functions-------------------------------------------------------------------------------------------------
-private:
-    QMap<QUuid, CrudeMainConfigEntry>& targetDocEntries();
-    bool readTargetDoc() override;
-
-    void parseConfigEntry(QStringList rawEntry);
-};
-
-class CrudeMainConfigWriter : public ConfigDocWriter
-{
-//-Constructor--------------------------------------------------------------------------------------------------------
-public:
-    CrudeMainConfigWriter(CrudeMainConfig* sourceDoc);
-
-//-Instance Functions-------------------------------------------------------------------------------------------------
-private:
-    bool writeConfigDoc() override;
-    bool writeConfigEntry(const CrudeMainConfigEntry& configEntry);
-};
-
 class Emulator : public ConfigDoc
 {
     friend class EmulatorReader;
@@ -406,11 +351,10 @@ public:
         static inline const QString INFO_SOURCE = "info_source";
         static inline const QString EXIT_HOTKEY = "exit_hotkey";
 
+        static inline const QString ARTWORK = "artwork";
         class Artwork
         {
         public:
-            static inline const QString NAME = "artwork";
-
             static inline const QString FLYER = "flyer";
             static inline const QString MARQUEE = "marquee";
             static inline const QString SNAP = "snap";
@@ -473,7 +417,7 @@ public:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
-    bool readTargetDoc() override;
+    Qx::GenericError readTargetDoc() override;
     void parseKeyValue(const QString& key, const QString& value);
     void parseExecutable(const QString& value);
     void parseArgs(const QString& value);

@@ -188,13 +188,13 @@ std::shared_ptr<Fe::PlaylistDocWriter> Install::preparePlaylistDocCommit(const s
     return docWriter;
 }
 
-Qx::GenericError Install::checkoutMainConfig(std::unique_ptr<CrudeMainConfig>& returnBuffer)
+Qx::GenericError Install::checkoutMainConfig(std::unique_ptr<CrudeSettings>& returnBuffer)
 {
     // Construct unopened document
-    returnBuffer = std::make_unique<CrudeMainConfig>(this, mMainConfigFile.fileName(), DocKey{});
+    returnBuffer = std::make_unique<CrudeSettings>(this, mMainConfigFile.fileName(), DocKey{});
 
     // Construct doc reader
-    std::shared_ptr<CrudeMainConfigReader> docReader = std::make_shared<CrudeMainConfigReader>(returnBuffer.get());
+    std::shared_ptr<CrudeSettingsReader> docReader = std::make_shared<CrudeSettingsReader>(returnBuffer.get());
 
     // Open document
     Qx::GenericError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
@@ -245,12 +245,12 @@ Qx::GenericError Install::checkoutClifpEmulatorConfig(std::unique_ptr<Emulator>&
     return readErrorStatus;
 }
 
-Qx::GenericError Install::commitMainConfig(std::unique_ptr<CrudeMainConfig> document)
+Qx::GenericError Install::commitMainConfig(std::unique_ptr<CrudeSettings> document)
 {
     assert(document->parent() == this);
 
     // Prepare writer
-    std::shared_ptr<CrudeMainConfigWriter> docWriter = std::make_shared<CrudeMainConfigWriter>(document.get());
+    std::shared_ptr<CrudeSettingsWriter> docWriter = std::make_shared<CrudeSettingsWriter>(document.get());
 
     // Write
     Qx::GenericError writeErrorStatus = commitDataDocument(document.get(), docWriter);
@@ -444,6 +444,7 @@ Qx::GenericError Install::postImport()
     // Ensure image directories are clear
     EmulatorArtworkEntryBuilder aeb;
 
+    // Can reuse builder since all fields are set in each entry
     aeb.wPaths({});
     aeb.wType("flyer");
     emulatorConfig->setArtworkEntry(aeb.build());
@@ -464,32 +465,34 @@ Qx::GenericError Install::postImport()
     //-Ensure display entry exists-----------------------------------
 
     // Checkout main config
-    std::unique_ptr<CrudeMainConfig> mainConfig;
+    std::unique_ptr<CrudeSettings> mainConfig;
     Qx::GenericError mainConfigReadError = checkoutMainConfig(mainConfig);
 
     // Stop import if error occurred
     if(mainConfigReadError.isValid())
         return mainConfigReadError;
 
-    // Display romlist section
-    QString fpRomlistSection = "romlist              " + Fp::NAME;
-
     // Add default display entry if not present
-    if(!mainConfig->containsEntryWithContent("display", fpRomlistSection))
+    if(!mainConfig->containsDisplayWithRomlist(Fp::NAME))
     {
-        CrudeMainConfigEntryBuilder cmceb;
-        cmceb.wTypeAndName("display", Fp::NAME);
-        cmceb.wContents({
-            "\tlayout               Attrac-Man",
-            "\t" + fpRomlistSection,
-            "\tin_cycle             no",
-            "\tin_menu              yes",
-            "\tfilter               All",
-            "\tfilter               Favourites",
-            "\t\trule                 Favourite equals 1"
-        });
+        DisplayBuilder db;
+        db.wName(Fp::NAME);
+        db.wLayout("Attrac-Man");
+        db.wInCycle(false);
+        db.wInMenu(true);
 
-        mainConfig->addEntry(cmceb.build());
+        // All filter
+        DisplayFilterBuilder dfb;
+        dfb.wName("All");
+        db.wFilter(dfb.build());
+
+        // Favorites filter
+        dfb = DisplayFilterBuilder();
+        dfb.wName("Favourites");
+        dfb.wRule("Favourite equals 1");
+        db.wFilter(dfb.build());
+
+        mainConfig->addDisplay(db.build());
     }
 
     // Commit main config

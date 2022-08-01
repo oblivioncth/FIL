@@ -35,7 +35,7 @@ class Item
         requires std::derived_from<T, Item>
     friend class ItemBuilder;
 //-Instance Variables-----------------------------------------------------------------------------------------------
-private:
+protected:
     QHash<QString, QString> mOtherFields;
 
 //-Constructor-------------------------------------------------------------------------------------------------

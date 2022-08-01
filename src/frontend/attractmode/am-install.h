@@ -6,8 +6,8 @@
 
 // Project Includes
 #include "../fe-install.h"
-#include "am-items.h"
 #include "am-data.h"
+#include "am-settings-data.h"
 
 namespace Am
 {
@@ -97,10 +97,10 @@ private:
     std::shared_ptr<Fe::PlatformDocWriter> preparePlatformDocCommit(const std::unique_ptr<Fe::PlatformDoc>& platformDoc) override;
     std::shared_ptr<Fe::PlaylistDocWriter> preparePlaylistDocCommit(const std::unique_ptr<Fe::PlaylistDoc>& playlistDoc) override;
 
-    Qx::GenericError checkoutMainConfig(std::unique_ptr<CrudeMainConfig>& returnBuffer);
+    Qx::GenericError checkoutMainConfig(std::unique_ptr<CrudeSettings>& returnBuffer);
     Qx::GenericError checkoutFlashpointRomlist(std::unique_ptr<Romlist>& returnBuffer);
     Qx::GenericError checkoutClifpEmulatorConfig(std::unique_ptr<Emulator>& returnBuffer);
-    Qx::GenericError commitMainConfig(std::unique_ptr<CrudeMainConfig> document);
+    Qx::GenericError commitMainConfig(std::unique_ptr<CrudeSettings> document);
     Qx::GenericError commitFlashpointRomlist(std::unique_ptr<Romlist> document);
     Qx::GenericError commitClifpEmulatorConfig(std::unique_ptr<Emulator> document);
 

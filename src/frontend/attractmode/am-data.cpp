@@ -60,13 +60,18 @@ Qx::GenericError CommonDocReader::readInto()
     }
 
     // Read doc
-    bool readSuccessful = readTargetDoc();
+    Qx::GenericError parseError = readTargetDoc();
 
     // Close file
     mStreamReader.closeFile();
 
     // Return outcome
-    return readSuccessful ? Qx::GenericError() : error.setSecondaryInfo(mStreamReader.status().outcomeInfo());
+    if(parseError.isValid())
+        return parseError;
+    else if(mStreamReader.hasError())
+        return error.setSecondaryInfo(mStreamReader.status().outcomeInfo());
+    else
+        return Qx::GenericError();
 }
 
 //===============================================================================================================
@@ -356,7 +361,7 @@ bool RomlistReader::checkDocValidity(bool& isValid)
     return !mStreamReader.hasError();
 }
 
-bool RomlistReader::readTargetDoc()
+Qx::GenericError RomlistReader::readTargetDoc()
 {
     // Read all romlist entries
     while(!mStreamReader.atEnd())
@@ -365,8 +370,8 @@ bool RomlistReader::readTargetDoc()
         parseRomEntry(rawEntry);
     }
 
-    // Return stream status
-    return !mStreamReader.hasError();
+    // Only can have stream errors
+    return Qx::GenericError();
 }
 
 void RomlistReader::parseRomEntry(const QString& rawEntry)
@@ -721,142 +726,6 @@ PlaylistInterfaceWriter::PlaylistInterfaceWriter(PlaylistInterface* sourceDoc) :
 Qx::GenericError PlaylistInterfaceWriter::writeOutOf() { return mTaglistWriter.writeOutOf(); }
 
 //===============================================================================================================
-// CrudeMainConfig
-//===============================================================================================================
-
-//-Constructor--------------------------------------------------------------------------------------------------------
-//Public:
-CrudeMainConfig::CrudeMainConfig(Install* const parent, const QString& filePath, const DocKey&) :
-    ConfigDoc(parent, filePath, STD_NAME)
-{}
-
-//-Instance Functions--------------------------------------------------------------------------------------------------
-//Public:
-bool CrudeMainConfig::isEmpty() const { return mEntries.isEmpty(); };
-
-Fe::DataDoc::Type CrudeMainConfig::type() const { return Type::Config; }
-
-bool CrudeMainConfig::containsEntry(QUuid entryId) { return mEntries.contains(entryId); }
-bool CrudeMainConfig::containsEntry(QString type, QString name) { return containsEntry(CrudeMainConfigEntry::equivalentId(type, name)); }
-
-bool CrudeMainConfig::containsEntryWithContent(QString type, const QString& partialContent)
-{
-    for(auto itr = mEntries.constBegin(); itr != mEntries.constEnd(); itr++)
-    {
-        const CrudeMainConfigEntry& entry = itr.value();
-        if(entry.type() == type && entry.contents().contains(partialContent))
-            return true;
-    }
-
-    // No hit
-    return false;
-}
-
-void CrudeMainConfig::addEntry(const CrudeMainConfigEntry& entry) { mEntries.insert(entry.id(), entry); }
-
-//===============================================================================================================
-// CrudeMainConfigReader
-//===============================================================================================================
-
-//-Constructor--------------------------------------------------------------------------------------------------------
-//Public:
-CrudeMainConfigReader::CrudeMainConfigReader(CrudeMainConfig* targetDoc) :
-    ConfigDocReader(targetDoc)
-{}
-
-//-Instance Functions--------------------------------------------------------------------------------------------------
-//Private:
-QMap<QUuid, CrudeMainConfigEntry>& CrudeMainConfigReader::targetDocEntries()
-{
-    return static_cast<CrudeMainConfig*>(mTargetDocument)->mEntries;
-}
-
-bool CrudeMainConfigReader::readTargetDoc()
-{
-    // Read all config entries
-    QStringList currentEntry;
-
-    while(!mStreamReader.atEnd())
-    {
-        QString line = readLineIgnoringComments();
-        if(line.isEmpty() && !currentEntry.isEmpty())
-        {
-            parseConfigEntry(currentEntry);
-            currentEntry.clear();
-        }
-        else
-            currentEntry.append(line);
-    }
-
-    // Return stream status
-    return !mStreamReader.hasError();
-}
-
-void CrudeMainConfigReader::parseConfigEntry(QStringList rawEntry)
-{
-    // Prepare builder
-    CrudeMainConfigEntryBuilder cceb;
-
-    // Identify entry
-    QStringList identifiers = rawEntry.first().split(' ');
-    QString type = identifiers.first();
-    QString name = identifiers.count() > 1 ? identifiers.at(1) : QString();
-
-    // Remove identifier line
-    rawEntry.removeFirst();
-
-    // Draft entry
-    cceb.wTypeAndName(type, name);
-    cceb.wContents(rawEntry);
-
-    // Build Entry and add to document
-    CrudeMainConfigEntry existingEntry = cceb.build();
-    targetDocEntries()[existingEntry.id()] = existingEntry;
-}
-
-//===============================================================================================================
-// CrudeMainConfigWriter
-//===============================================================================================================
-
-//-Constructor--------------------------------------------------------------------------------------------------------
-//Public:
-CrudeMainConfigWriter::CrudeMainConfigWriter(CrudeMainConfig* sourceDoc) :
-    ConfigDocWriter(sourceDoc)
-{}
-
-//-Instance Functions--------------------------------------------------------------------------------------------------
-//Private:
-bool CrudeMainConfigWriter::writeConfigDoc()
-{
-    // Write all config entries
-    for(const CrudeMainConfigEntry& entry : qAsConst(static_cast<CrudeMainConfig*>(mSourceDocument)->mEntries))
-    {
-        if(!writeConfigEntry(entry))
-            return false;
-    }
-
-    // Return true on success
-    return true;
-}
-
-bool CrudeMainConfigWriter::writeConfigEntry(const CrudeMainConfigEntry& configEntry)
-{
-    // Write identifier
-    mStreamWriter << configEntry.type() << " " << configEntry.name() << "\n";
-
-    // Write contents
-    const QStringList contents = configEntry.contents();
-    for(const QString& line : contents)
-         mStreamWriter << line << '\n';
-
-    // Write spacer after entry
-    mStreamWriter << '\n';
-
-    // Return status
-    return !mStreamWriter.hasError();
-}
-
-//===============================================================================================================
 // Emulator
 //===============================================================================================================
 
@@ -904,7 +773,7 @@ EmulatorReader::EmulatorReader(Emulator* targetDoc) :
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-bool EmulatorReader::readTargetDoc()
+Qx::GenericError EmulatorReader::readTargetDoc()
 {
     while(!mStreamReader.atEnd())
     {
@@ -915,8 +784,8 @@ bool EmulatorReader::readTargetDoc()
         parseKeyValue(key, value);
     }
 
-    // Return stream status
-    return !mStreamReader.hasError();
+    // Only can have stream related errors
+    return Qx::GenericError();
 }
 
 void EmulatorReader::parseKeyValue(const QString& key, const QString& value)
@@ -937,7 +806,7 @@ void EmulatorReader::parseKeyValue(const QString& key, const QString& value)
         parseInfoSource(value);
     else if(key == Emulator::Keys::EXIT_HOTKEY)
         parseExitHotkey(value);
-    else if(key == Emulator::Keys::Artwork::NAME)
+    else if(key == Emulator::Keys::ARTWORK)
         parseArtwork(value);
 }
 
@@ -1017,7 +886,7 @@ void EmulatorWriter::writeStandardKeyValue(const QString& key, const QString& va
 void EmulatorWriter::writeArtworkEntry(const EmulatorArtworkEntry& entry)
 {
     mStreamWriter.setFieldWidth(ARTWORK_KEY_FIELD_WIDTH);
-    mStreamWriter << Emulator::Keys::Artwork::NAME;
+    mStreamWriter << Emulator::Keys::ARTWORK;
     mStreamWriter.setFieldWidth(ARTWORK_TYPE_FIELD_WIDTH);
     mStreamWriter << entry.type();
     mStreamWriter.setFieldWidth(0);

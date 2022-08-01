@@ -8,6 +8,9 @@
 // libfp Includes
 #include <fp/flashpoint/fp-items.h>
 
+// magic_enum Includes
+#include "magic_enum.hpp"
+
 // Project Includes
 #include "../fe-items.h"
 
@@ -102,48 +105,6 @@ public:
     RomEntryBuilder& wLanguage(QString language);
     RomEntryBuilder& wRegion(QString region);
     RomEntryBuilder& wRating(QString rating);
-};
-
-class CrudeMainConfigEntry : public Fe::BasicItem
-{
-    friend class CrudeMainConfigEntryBuilder;
-//-Class Variables--------------------------------------------------------------------------------------------------
-private:
-    static inline const QUuid NAMESPACE_SEED = QUuid("13d88ae7-9e9f-4736-bff4-e330e76c3b12");
-
-//-Instance Variables-----------------------------------------------------------------------------------------------
-private:
-    QString mType;
-    QStringList mContents;
-
-//-Constructor-------------------------------------------------------------------------------------------------
-public:
-    CrudeMainConfigEntry();
-
-//-Class Variables--------------------------------------------------------------------------------------------------
-public:
-    static QUuid equivalentId(QString type, QString name);
-
-//-Instance Functions------------------------------------------------------------------------------------------------------
-public:
-    QString type() const;
-    QStringList contents() const;
-};
-
-class CrudeMainConfigEntryBuilder : public Fe::ItemBuilder<CrudeMainConfigEntryBuilder, CrudeMainConfigEntry>
-{
-/* NOTE: This is derived from ItemBuilder instead of BasicItemBuilder because of the special
- * ID implementation required here
- */
-
-//-Constructor-------------------------------------------------------------------------------------------------
-public:
-    CrudeMainConfigEntryBuilder();
-
-//-Instance Functions------------------------------------------------------------------------------------------
-public:
-    CrudeMainConfigEntryBuilder& wTypeAndName(QString name, QString type);
-    CrudeMainConfigEntryBuilder& wContents(const QStringList& contents);
 };
 
 class EmulatorArtworkEntry : public Fe::Item
