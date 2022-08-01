@@ -168,8 +168,14 @@ public:
     Type type() const override;
 };
 
-class Romlist : public Fe::PlatformDoc
+class Romlist : public Fe::UpdateableDoc
 {
+    /* This class looks like it should inherit PlatformDoc, but it isn't truly one in the context of an Am install
+     * since those are represented by tag lists, and if it did there would be the issue that once modified it would
+     * be added into the modified platforms list, which isn't accurate given said context. It's more of a config
+     * doc since its usage is internal to Am::Install
+     */
+
     friend class RomlistReader;
     friend class RomlistWriter;
 
@@ -190,14 +196,15 @@ public:
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 public:
+    DataDoc::Type type() const override;
     bool isEmpty() const override;
 
     const QHash<QUuid, std::shared_ptr<RomEntry>>& finalEntries() const;
 
-    bool containsGame(QUuid gameId) const override;
-    bool containsAddApp(QUuid addAppId) const override;
+    bool containsGame(QUuid gameId) const;
+    bool containsAddApp(QUuid addAppId) const;
 
-    void addSet(const Fp::Set& set, const Fe::ImageSources& images) override;
+    void addSet(const Fp::Set& set, const Fe::ImageSources& images);
 
     void finalize() override;
 };

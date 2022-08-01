@@ -286,11 +286,13 @@ Fe::DataDoc::Type PlaylistTaglist::type() const { return Fe::DataDoc::Type::Play
 //Public:
 Romlist::Romlist(Install* const parent, const QString& listPath, QString docName, Fe::UpdateOptions updateOptions,
                          const DocKey&) :
-    Fe::PlatformDoc(parent, listPath, docName, updateOptions)
+    Fe::UpdateableDoc(parent, listPath, docName, updateOptions)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
+Fe::DataDoc::Type Romlist::type() const { return Fe::DataDoc::Type::Config; }
+
 bool Romlist::isEmpty() const
 {
     return mEntriesExisting.isEmpty() && mEntriesFinal.isEmpty();
@@ -331,7 +333,7 @@ void Romlist::addSet(const Fp::Set& set, const Fe::ImageSources& images)
 void Romlist::finalize()
 {
     finalizeUpdateableItems(mEntriesExisting, mEntriesFinal);
-    Fe::PlatformDoc::finalize();
+    Fe::UpdateableDoc::finalize();
 }
 
 //===============================================================================================================
