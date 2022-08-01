@@ -148,7 +148,7 @@ OtherSetting::Parser::Parser(OtherSetting* otherSetting) :
 //Public:
 bool OtherSetting::Parser::parse(QString key, QString value, int depth)
 {
-    mSetting->mContents.append({.key = value, .value = value, .depth = depth});
+    mSetting->mContents.append({.key = key, .value = value, .depth = depth});
     return true;
 }
 
@@ -441,7 +441,7 @@ bool CrudeSettingsWriter::writeDisplayFilter(const DisplayFilter& filter)
 bool CrudeSettingsWriter::writeOtherSetting(const OtherSetting& setting)
 {
     // Write identifier
-    mStreamWriter << setting.type() << ' ' << setting.name() << '\n';
+    mStreamWriter << setting.type() << '\t' << setting.name() << '\n';
 
     // Write contents
     int origTabDepth = mTabDepth;
