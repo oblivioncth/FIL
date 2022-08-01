@@ -180,7 +180,7 @@ public:
     bool inCycle() const;
     bool inMenu() const;
     std::optional<DisplayGlobalFilter> globalFilter() const;
-    QList<DisplayFilter> filters() const;
+    QList<DisplayFilter>& filters();
 };
 
 class DisplayBuilder : public Fe::ItemBuilder<DisplayBuilder, Display>

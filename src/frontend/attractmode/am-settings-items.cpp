@@ -115,7 +115,7 @@ QString Display::romlist() const { return mRomlist; }
 bool Display::inCycle() const { return mInCycle; }
 bool Display::inMenu() const { return mInMenu; }
 std::optional<DisplayGlobalFilter> Display::globalFilter() const { return mGlobalFilter; }
-QList<DisplayFilter> Display::filters() const { return mFilters; }
+QList<DisplayFilter>& Display::filters() { return mFilters; }
 
 //===============================================================================================================
 // DisplayBuilder

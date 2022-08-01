@@ -170,18 +170,6 @@ Fe::DataDoc::Type CrudeSettings::type() const { return Type::Config; }
 
 bool CrudeSettings::containsDisplay(QString name) { return mDisplays.contains(name); }
 
-bool CrudeSettings::containsDisplayWithRomlist(QString romlist)
-{
-    for(auto itr = mDisplays.constBegin(); itr != mDisplays.constEnd(); itr++)
-    {
-        const Display& display = itr.value();
-        if(display.romlist() == romlist)
-            return true;
-    }
-
-    // No hit
-    return false;
-}
 void CrudeSettings::addDisplay(const Display& display) { mDisplays.insert(display.name(), display); }
 
 bool CrudeSettings::containsOtherSetting(QString type, QString name)

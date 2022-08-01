@@ -174,8 +174,8 @@ public:
     Type type() const override;
 
     bool containsDisplay(QString name);
-    bool containsDisplayWithRomlist(QString romlist);
     void addDisplay(const Display& display);
+    Display& display(QString name);
 
     bool containsOtherSetting(QString type, QString name);
     void addOtherSetting(const OtherSetting& setting);
