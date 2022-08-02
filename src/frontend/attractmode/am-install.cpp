@@ -519,7 +519,7 @@ Qx::GenericError Install::postImport()
     tagFiles.append(modifiedPlatforms());
     tagFiles.append(modifiedPlaylists());
 
-    for(QString tagFile : tagFiles)
+    for(const QString& tagFile : tagFiles)
     {
         // Escape brackets in name since AM uses regex for value
         QString escaped = tagFile;
