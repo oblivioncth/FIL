@@ -379,7 +379,7 @@ Qx::GenericError RomlistReader::readTargetDoc()
 void RomlistReader::parseRomEntry(const QString& rawEntry)
 {
     // Prepare builder and iterator
-    RomEntryBuilder reb;
+    RomEntry::Builder reb;
     QString::const_iterator itr = rawEntry.constBegin();
     QString::const_iterator lastCharPos = rawEntry.constEnd() - 1;
 
@@ -419,7 +419,7 @@ void RomlistReader::parseRomEntry(const QString& rawEntry)
     targetDocExistingRomEntries()[existingEntry->id()] = existingEntry;
 }
 
-void RomlistReader::addFieldToBuilder(RomEntryBuilder& builder, QString field, quint8 index)
+void RomlistReader::addFieldToBuilder(RomEntry::Builder& builder, QString field, quint8 index)
 {
     switch(index)
     {
@@ -832,7 +832,7 @@ void EmulatorReader::parseArtwork(const QString& value)
     QString rawPaths;
     splitKeyValue(value, type, rawPaths);
 
-    EmulatorArtworkEntryBuilder eaeb;
+    EmulatorArtworkEntry::Builder eaeb;
     eaeb.wType(type);
     eaeb.wPaths(!rawPaths.isEmpty() ? rawPaths.split(';') : QStringList());
 

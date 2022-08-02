@@ -17,7 +17,9 @@ namespace Lb
 
 class Game : public Fe::Game
 {
-    friend class GameBuilder;
+//-Inner Classes---------------------------------------------------------------------------------------------------
+public:
+    class Builder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -66,37 +68,39 @@ public:
     QString releaseType() const;
 };
 
-class GameBuilder : public Fe::GameBuilder<GameBuilder, Game>
+class Game::Builder : public Fe::Game::Builder<Game::Builder, Game>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    GameBuilder();
+    Builder();
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    GameBuilder& wTitle(QString title);
-    GameBuilder& wSeries(QString series);
-    GameBuilder& wDeveloper(QString developer);
-    GameBuilder& wPublisher(QString publisher);
-    GameBuilder& wSortTitle(QString sortTitle);
-    GameBuilder& wDateAdded(QString rawDateAdded);
-    GameBuilder& wDateModified(QString rawDateModified);
-    GameBuilder& wBroken(QString rawBroken);
-    GameBuilder& wPlayMode(QString playMode);
-    GameBuilder& wStatus(QString status);
-    GameBuilder& wRegion(QString region);
-    GameBuilder& wNotes(QString notes);
-    GameBuilder& wSource(QString source);
-    GameBuilder& wAppPath(QString appPath);
-    GameBuilder& wCommandLine(QString commandLine);
-    GameBuilder& wReleaseDate(QString rawReleaseDate);
-    GameBuilder& wVersion(QString version);
-    GameBuilder& wReleaseType(QString releaseType);
+    Builder& wTitle(QString title);
+    Builder& wSeries(QString series);
+    Builder& wDeveloper(QString developer);
+    Builder& wPublisher(QString publisher);
+    Builder& wSortTitle(QString sortTitle);
+    Builder& wDateAdded(QString rawDateAdded);
+    Builder& wDateModified(QString rawDateModified);
+    Builder& wBroken(QString rawBroken);
+    Builder& wPlayMode(QString playMode);
+    Builder& wStatus(QString status);
+    Builder& wRegion(QString region);
+    Builder& wNotes(QString notes);
+    Builder& wSource(QString source);
+    Builder& wAppPath(QString appPath);
+    Builder& wCommandLine(QString commandLine);
+    Builder& wReleaseDate(QString rawReleaseDate);
+    Builder& wVersion(QString version);
+    Builder& wReleaseType(QString releaseType);
 };
 
 class AddApp : public Fe::AddApp
 {
-    friend class AddAppBuilder;
+//-Inner Classes---------------------------------------------------------------------------------------------------
+public:
+    class Builder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -118,23 +122,26 @@ public:
     bool isWaitForExit() const;
 };
 
-class AddAppBuilder : public Fe::AddAppBuilder<AddAppBuilder, AddApp>
+class AddApp::Builder : public Fe::AddApp::Builder<AddApp::Builder, AddApp>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    AddAppBuilder();
+    Builder();
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    AddAppBuilder& wAppPath(QString appPath);
-    AddAppBuilder& wCommandLine(QString commandLine);
-    AddAppBuilder& wAutorunBefore(QString rawAutorunBefore);
-    AddAppBuilder& wWaitForExit(QString rawWaitForExit);
+    Builder& wAppPath(QString appPath);
+    Builder& wCommandLine(QString commandLine);
+    Builder& wAutorunBefore(QString rawAutorunBefore);
+    Builder& wWaitForExit(QString rawWaitForExit);
 };
 
 class CustomField : public Fe::Item
 {
-    friend class CustomFieldBuilder;
+//-Inner Classes---------------------------------------------------------------------------------------------------
+public:
+    class Builder;
+
 //-Class Variables--------------------------------------------------------------------------------------------------
 public:
     static inline const QString LANGUAGE = "Language";
@@ -156,23 +163,25 @@ public:
     QString value() const;
 };
 
-class CustomFieldBuilder : public Fe::ItemBuilder<CustomFieldBuilder, CustomField>
+class CustomField::Builder : public Fe::Item::Builder<CustomField::Builder, CustomField>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    CustomFieldBuilder();
+    Builder();
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    CustomFieldBuilder& wGameId(QString rawGameId);
-    CustomFieldBuilder& wGameId(QUuid gameId);
-    CustomFieldBuilder& wName(QString name);
-    CustomFieldBuilder& wValue(QString value);
+    Builder& wGameId(QString rawGameId);
+    Builder& wGameId(QUuid gameId);
+    Builder& wName(QString name);
+    Builder& wValue(QString value);
 };
 
 class PlaylistHeader : public Fe::PlaylistHeader
 {
-    friend class PlaylistHeaderBuilder;
+//-Inner Classes---------------------------------------------------------------------------------------------------
+public:
+    class Builder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -191,22 +200,24 @@ public:
     QString notes() const;
 };
 
-class PlaylistHeaderBuilder : public Fe::PlaylistHeaderBuilder<PlaylistHeaderBuilder, PlaylistHeader>
+class PlaylistHeader::Builder : public Fe::PlaylistHeader::Builder<PlaylistHeader::Builder, PlaylistHeader>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    PlaylistHeaderBuilder();
+    Builder();
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    PlaylistHeaderBuilder& wPlaylistId(QString rawId);
-    PlaylistHeaderBuilder& wNestedName(QString nestedName);
-    PlaylistHeaderBuilder& wNotes(QString notes);
+    Builder& wPlaylistId(QString rawId);
+    Builder& wNestedName(QString nestedName);
+    Builder& wNotes(QString notes);
 };
 
 class PlaylistGame : public Fe::PlaylistGame
 {
-    friend class PlaylistGameBuilder;
+//-Inner Classes---------------------------------------------------------------------------------------------------
+public:
+    class Builder;
 
 //-Class Structs----------------------------------------------------------------------------------------------------
 public:
@@ -249,24 +260,26 @@ public:
     void setLBDatabaseId(int lbDbId);
 };
 
-class PlaylistGameBuilder : public Fe::PlaylistGameBuilder<PlaylistGameBuilder, PlaylistGame>
+class PlaylistGame::Builder : public Fe::PlaylistGame::Builder<PlaylistGame::Builder, PlaylistGame>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    PlaylistGameBuilder();
+    Builder();
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    PlaylistGameBuilder& wGameTitle(QString gameTitle);
-    PlaylistGameBuilder& wLBDatabaseId(QString rawLBDatabaseId);
-    PlaylistGameBuilder& wGameFileName(QString gameFileName);
-    PlaylistGameBuilder& wGamePlatform(QString gamePlatform);
-    PlaylistGameBuilder& wManualOrder(QString rawManualOrder);
+    Builder& wGameTitle(QString gameTitle);
+    Builder& wLBDatabaseId(QString rawLBDatabaseId);
+    Builder& wGameFileName(QString gameFileName);
+    Builder& wGamePlatform(QString gamePlatform);
+    Builder& wManualOrder(QString rawManualOrder);
 };
 
 class Platform : public Fe::Item
 {
-    friend class PlatformBuilder;
+//-Inner Classes---------------------------------------------------------------------------------------------------
+public:
+    class Builder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
     QString mName;
@@ -279,15 +292,15 @@ public:
     QString name() const;
 };
 
-class PlatformBuilder : public Fe::ItemBuilder<PlatformBuilder, Platform>
+class Platform::Builder : public Fe::Item::Builder<Platform::Builder, Platform>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    PlatformBuilder();
+    Builder();
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    PlatformBuilder& wName(QString name);
+    Builder& wName(QString name);
 };
 
 //class PlatformFolder : public Fe::Item
@@ -325,9 +338,9 @@ public:
 
 class PlatformCategory  : public Fe::Item
 {
-    friend class PlatformCategoryBuilder;
-
-//-Instance Variables-----------------------------------------------------------------------------------------------
+//-Inner Classes---------------------------------------------------------------------------------------------------
+public:
+    class Builder;
 
 //-Constructor------------------------------------------------------------------------------------------------------
 public:
@@ -336,16 +349,11 @@ public:
 //-Instance Functions------------------------------------------------------------------------------------------------------
 };
 
-class PlatformCategoryBuilder : public Fe::ItemBuilder<PlatformCategoryBuilder, PlatformCategory>
+class PlatformCategory::Builder : public Fe::Item::Builder<PlatformCategory::Builder, PlatformCategory>
 {
-//-Instance Variables-----------------------------------------------------------------------------------------------
-
-
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    PlatformCategoryBuilder();
-
-//-Instance Functions------------------------------------------------------------------------------------------
+    Builder();
 };
 
 

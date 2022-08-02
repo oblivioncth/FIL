@@ -32,17 +32,17 @@ QStringList DisplayGlobalFilter::rules() const { return mRules; }
 QStringList DisplayGlobalFilter::exceptions() const { return mExceptions; }
 
 //===============================================================================================================
-// DisplayGlobalFilterBuilder
+// DisplayGlobalFilter::Builder
 //===============================================================================================================
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-DisplayGlobalFilterBuilder::DisplayGlobalFilterBuilder() {}
+DisplayGlobalFilter::Builder::Builder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-DisplayGlobalFilterBuilder& DisplayGlobalFilterBuilder::wRule(QString rule) { mItemBlueprint.mRules.append(rule); return *this; }
-DisplayGlobalFilterBuilder& DisplayGlobalFilterBuilder::wException(QString exception)
+DisplayGlobalFilter::Builder& DisplayGlobalFilter::Builder::wRule(QString rule) { mItemBlueprint.mRules.append(rule); return *this; }
+DisplayGlobalFilter::Builder& DisplayGlobalFilter::Builder::wException(QString exception)
 {
     mItemBlueprint.mExceptions.append(exception); return *this;
 }
@@ -74,21 +74,21 @@ bool DisplayFilter::reverseOrder() const { return mReverseOrder; }
 int DisplayFilter::listLimit() const { return mListLimit; }
 
 //===============================================================================================================
-// DisplayFilterBuilder
+// DisplayFilter::Builder
 //===============================================================================================================
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-DisplayFilterBuilder::DisplayFilterBuilder() {}
+DisplayFilter::Builder::Builder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-DisplayFilterBuilder& DisplayFilterBuilder::wName(QString name) { mItemBlueprint.mName = name; return *this; }
-DisplayFilterBuilder& DisplayFilterBuilder::wRule(QString rule) { mItemBlueprint.mRules.append(rule); return *this; }
-DisplayFilterBuilder& DisplayFilterBuilder::wException(QString exception) { mItemBlueprint.mExceptions.append(exception); return *this; }
-DisplayFilterBuilder& DisplayFilterBuilder::wSortBy(DisplayFilter::Sort sortBy) { mItemBlueprint.mSortBy = sortBy; return *this; }
-DisplayFilterBuilder& DisplayFilterBuilder::wReverseOrder(bool reverseOrder) { mItemBlueprint.mReverseOrder = reverseOrder; return *this; }
-DisplayFilterBuilder& DisplayFilterBuilder::wListLimit(int listLimit) { mItemBlueprint.mListLimit = listLimit; return *this; }
+DisplayFilter::Builder& DisplayFilter::Builder::wName(QString name) { mItemBlueprint.mName = name; return *this; }
+DisplayFilter::Builder& DisplayFilter::Builder::wRule(QString rule) { mItemBlueprint.mRules.append(rule); return *this; }
+DisplayFilter::Builder& DisplayFilter::Builder::wException(QString exception) { mItemBlueprint.mExceptions.append(exception); return *this; }
+DisplayFilter::Builder& DisplayFilter::Builder::wSortBy(DisplayFilter::Sort sortBy) { mItemBlueprint.mSortBy = sortBy; return *this; }
+DisplayFilter::Builder& DisplayFilter::Builder::wReverseOrder(bool reverseOrder) { mItemBlueprint.mReverseOrder = reverseOrder; return *this; }
+DisplayFilter::Builder& DisplayFilter::Builder::wListLimit(int listLimit) { mItemBlueprint.mListLimit = listLimit; return *this; }
 
 //===============================================================================================================
 // Display
@@ -119,25 +119,25 @@ QList<DisplayFilter>& Display::filters() { return mFilters; }
 const QList<DisplayFilter>& Display::filters() const { return mFilters; }
 
 //===============================================================================================================
-// DisplayBuilder
+// Display::Builder
 //===============================================================================================================
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-DisplayBuilder::DisplayBuilder() {}
+Display::Builder::Builder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-DisplayBuilder& DisplayBuilder::wName(QString name) { mItemBlueprint.mName = name; return *this; }
-DisplayBuilder& DisplayBuilder::wLayout(QString layout) { mItemBlueprint.mLayout = layout; return *this; }
-DisplayBuilder& DisplayBuilder::wRomlist(QString romlist) { mItemBlueprint.mRomlist = romlist; return *this; }
-DisplayBuilder& DisplayBuilder::wInCycle(bool inCycle) { mItemBlueprint.mInCycle = inCycle; return *this; }
-DisplayBuilder& DisplayBuilder::wInMenu(bool inMenu) { mItemBlueprint.mInMenu = inMenu; return *this; }
-DisplayBuilder& DisplayBuilder::wGlobalFilter(DisplayGlobalFilter globalFilter)
+Display::Builder& Display::Builder::wName(QString name) { mItemBlueprint.mName = name; return *this; }
+Display::Builder& Display::Builder::wLayout(QString layout) { mItemBlueprint.mLayout = layout; return *this; }
+Display::Builder& Display::Builder::wRomlist(QString romlist) { mItemBlueprint.mRomlist = romlist; return *this; }
+Display::Builder& Display::Builder::wInCycle(bool inCycle) { mItemBlueprint.mInCycle = inCycle; return *this; }
+Display::Builder& Display::Builder::wInMenu(bool inMenu) { mItemBlueprint.mInMenu = inMenu; return *this; }
+Display::Builder& Display::Builder::wGlobalFilter(DisplayGlobalFilter globalFilter)
 {
     mItemBlueprint.mGlobalFilter = globalFilter; return *this;
 }
-DisplayBuilder& DisplayBuilder::wFilter(DisplayFilter filter) { mItemBlueprint.mFilters.append(filter); return *this; }
+Display::Builder& Display::Builder::wFilter(DisplayFilter filter) { mItemBlueprint.mFilters.append(filter); return *this; }
 
 //===============================================================================================================
 // OtherSetting
@@ -169,23 +169,23 @@ QString OtherSetting::name() const{ return mName; }
 QList<OtherSetting::ContentLine> OtherSetting::contents() const{ return mContents; }
 
 //===============================================================================================================
-// OtherSettingBuilder
+// OtherSetting::Builder
 //===============================================================================================================
 
 //-Constructor-------------------------------------------------------------------------------------------------
 //Public:
-OtherSettingBuilder::OtherSettingBuilder() {}
+OtherSetting::Builder::Builder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-OtherSettingBuilder& OtherSettingBuilder::wTypeAndName(QString type, QString name)
+OtherSetting::Builder& OtherSetting::Builder::wTypeAndName(QString type, QString name)
 {
     mItemBlueprint.mType = type;
     mItemBlueprint.mName = name;
     return *this;
 }
 
-OtherSettingBuilder& OtherSettingBuilder::wContent(const OtherSetting::ContentLine& line)
+OtherSetting::Builder& OtherSetting::Builder::wContent(const OtherSetting::ContentLine& line)
 {
     mItemBlueprint.mContents.append(line); return *this;
 }

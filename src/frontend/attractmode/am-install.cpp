@@ -442,7 +442,7 @@ Qx::GenericError Install::postImport()
     emulatorConfig->setInfoSource("");
 
     // Ensure image directories are clear
-    EmulatorArtworkEntryBuilder aeb;
+    EmulatorArtworkEntry::Builder aeb;
 
     // Can reuse builder since all fields are set in each entry
     aeb.wPaths({});
@@ -475,7 +475,7 @@ Qx::GenericError Install::postImport()
     // Add default display entry if not present
     if(!mainConfig->containsDisplay(Fp::NAME))
     {
-        DisplayBuilder db;
+        Display::Builder db;
         db.wName(Fp::NAME);
         db.wLayout("Attrac-Man");
         db.wRomlist(Fp::NAME);
@@ -483,13 +483,13 @@ Qx::GenericError Install::postImport()
         db.wInMenu(true);
 
         // All filter
-        DisplayFilterBuilder dfb;
+        DisplayFilter::Builder dfb;
         dfb.wName("All");
         dfb.wSortBy(DisplayFilter::Sort::AltTitle); // This uses FP's "orderTtile"
         db.wFilter(dfb.build());
 
         // Favorites filter
-        dfb = DisplayFilterBuilder();
+        dfb = DisplayFilter::Builder();
         dfb.wName("Favourites");
         dfb.wRule("Favourite equals 1");
         dfb.wSortBy(DisplayFilter::Sort::AltTitle);
@@ -525,8 +525,8 @@ Qx::GenericError Install::postImport()
         QString escaped = tagFile;
         escaped.replace("[", "\\[").replace("]", "\\]");
 
-        DisplayFilterBuilder dfb;
-        dfb = DisplayFilterBuilder();
+        DisplayFilter::Builder dfb;
+        dfb = DisplayFilter::Builder();
         dfb.wName('"' + tagFile + '"');
         dfb.wSortBy(DisplayFilter::Sort::AltTitle);
         dfb.wRule("Tags contains " + escaped);

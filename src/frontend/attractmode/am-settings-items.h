@@ -24,10 +24,9 @@ public:
 
 class DisplayGlobalFilter : public SettingsItem
 {
-    friend class DisplayGlobalFilterBuilder;
-
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
+    class Builder;
     class Parser;
 
 //-Class Variables---------------------------------------------------------------------------------------------------
@@ -49,24 +48,23 @@ public:
     QStringList exceptions() const;
 };
 
-class DisplayGlobalFilterBuilder : public Fe::ItemBuilder<DisplayGlobalFilterBuilder, DisplayGlobalFilter>
+class DisplayGlobalFilter::Builder : public Fe::Item::Builder<DisplayGlobalFilter::Builder, DisplayGlobalFilter>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    DisplayGlobalFilterBuilder();
+    Builder();
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    DisplayGlobalFilterBuilder& wRule(QString rule);
-    DisplayGlobalFilterBuilder& wException(QString exception);
+    Builder& wRule(QString rule);
+    Builder& wException(QString exception);
 };
 
 class DisplayFilter : public SettingsItem
 {
-    friend class DisplayFilterBuilder;
-
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
+    class Builder;
     class Parser;
 
 //-Class Enums--------------------------------------------------------------------------------------------------
@@ -129,28 +127,27 @@ public:
     int listLimit() const;
 };
 
-class DisplayFilterBuilder : public Fe::ItemBuilder<DisplayFilterBuilder, DisplayFilter>
+class DisplayFilter::Builder : public Fe::Item::Builder<DisplayFilter::Builder, DisplayFilter>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    DisplayFilterBuilder();
+    Builder();
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    DisplayFilterBuilder& wName(QString name);
-    DisplayFilterBuilder& wRule(QString rule);
-    DisplayFilterBuilder& wException(QString exception);
-    DisplayFilterBuilder& wSortBy(DisplayFilter::Sort sortBy);
-    DisplayFilterBuilder& wReverseOrder(bool reverseOrder);
-    DisplayFilterBuilder& wListLimit(int listLimit);
+    Builder& wName(QString name);
+    Builder& wRule(QString rule);
+    Builder& wException(QString exception);
+    Builder& wSortBy(DisplayFilter::Sort sortBy);
+    Builder& wReverseOrder(bool reverseOrder);
+    Builder& wListLimit(int listLimit);
 };
 
 class Display : public SettingsItem
 {
-    friend class DisplayBuilder;
-
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
+    class Builder;
     class Parser;
 
 //-Class Variables---------------------------------------------------------------------------------------------------
@@ -184,29 +181,28 @@ public:
     const QList<DisplayFilter>& filters() const;
 };
 
-class DisplayBuilder : public Fe::ItemBuilder<DisplayBuilder, Display>
+class Display::Builder : public Fe::Item::Builder<Display::Builder, Display>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    DisplayBuilder();
+    Builder();
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    DisplayBuilder& wName(QString name);
-    DisplayBuilder& wLayout(QString layout);
-    DisplayBuilder& wRomlist(QString romlist);
-    DisplayBuilder& wInCycle(bool inCycle);
-    DisplayBuilder& wInMenu(bool inMenu);
-    DisplayBuilder& wGlobalFilter(DisplayGlobalFilter globalFilter);
-    DisplayBuilder& wFilter(DisplayFilter filter);
+    Builder& wName(QString name);
+    Builder& wLayout(QString layout);
+    Builder& wRomlist(QString romlist);
+    Builder& wInCycle(bool inCycle);
+    Builder& wInMenu(bool inMenu);
+    Builder& wGlobalFilter(DisplayGlobalFilter globalFilter);
+    Builder& wFilter(DisplayFilter filter);
 };
 
 class OtherSetting : public SettingsItem
 {
-    friend class OtherSettingBuilder;
-
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
+    class Builder;
     class Parser;
 
 //-Class Variables--------------------------------------------------------------------------------------------------
@@ -245,16 +241,16 @@ public:
     QList<ContentLine> contents() const;
 };
 
-class OtherSettingBuilder : public Fe::ItemBuilder<OtherSettingBuilder, OtherSetting>
+class OtherSetting::Builder : public Fe::Item::Builder<OtherSetting::Builder, OtherSetting>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    OtherSettingBuilder();
+    Builder();
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    OtherSettingBuilder& wTypeAndName(QString name, QString type);
-    OtherSettingBuilder& wContent(const OtherSetting::ContentLine& line);
+    Builder& wTypeAndName(QString name, QString type);
+    Builder& wContent(const OtherSetting::ContentLine& line);
 };
 
 }

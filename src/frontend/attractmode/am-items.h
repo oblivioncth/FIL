@@ -19,7 +19,9 @@ namespace Am
 
 class RomEntry : public Fe::Game
 {
-    friend class RomEntryBuilder;
+//-Inner Classes---------------------------------------------------------------------------------------------------
+public:
+    class Builder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -76,40 +78,42 @@ public:
      QString rating() const;
 };
 
-class RomEntryBuilder : public Fe::GameBuilder<RomEntryBuilder, RomEntry>
+class RomEntry::Builder : public Fe::Game::Builder<RomEntry::Builder, RomEntry>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    RomEntryBuilder();
+    Builder();
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    RomEntryBuilder& wName(QString nameAsId);
-    RomEntryBuilder& wTitle(QString title);
-    RomEntryBuilder& wEmulator(QString emulator);
-    RomEntryBuilder& wCloneOf(QString cloneOf);
-    RomEntryBuilder& wYear(QString rawYear);
-    RomEntryBuilder& wManufacturer(QString manufacturer);
-    RomEntryBuilder& wCategory(QString category);
-    RomEntryBuilder& wPlayers(QString players);
-    RomEntryBuilder& wRotation(QString rawRotation);
-    RomEntryBuilder& wControl(QString control);
-    RomEntryBuilder& wStatus(QString status);
-    RomEntryBuilder& wDisplayCount(QString rawDisplayCount);
-    RomEntryBuilder& wDisplayType(QString displayType);
-    RomEntryBuilder& wAltRomName(QString altRomName);
-    RomEntryBuilder& wAltTitle(QString altTitle);
-    RomEntryBuilder& wExtra(QString extra);
-    RomEntryBuilder& wButtons(QString buttons);
-    RomEntryBuilder& wSeries(QString series);
-    RomEntryBuilder& wLanguage(QString language);
-    RomEntryBuilder& wRegion(QString region);
-    RomEntryBuilder& wRating(QString rating);
+    Builder& wName(QString nameAsId);
+    Builder& wTitle(QString title);
+    Builder& wEmulator(QString emulator);
+    Builder& wCloneOf(QString cloneOf);
+    Builder& wYear(QString rawYear);
+    Builder& wManufacturer(QString manufacturer);
+    Builder& wCategory(QString category);
+    Builder& wPlayers(QString players);
+    Builder& wRotation(QString rawRotation);
+    Builder& wControl(QString control);
+    Builder& wStatus(QString status);
+    Builder& wDisplayCount(QString rawDisplayCount);
+    Builder& wDisplayType(QString displayType);
+    Builder& wAltRomName(QString altRomName);
+    Builder& wAltTitle(QString altTitle);
+    Builder& wExtra(QString extra);
+    Builder& wButtons(QString buttons);
+    Builder& wSeries(QString series);
+    Builder& wLanguage(QString language);
+    Builder& wRegion(QString region);
+    Builder& wRating(QString rating);
 };
 
 class EmulatorArtworkEntry : public Fe::Item
 {
-    friend class EmulatorArtworkEntryBuilder;
+//-Inner Classes---------------------------------------------------------------------------------------------------
+public:
+    class Builder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -126,16 +130,16 @@ public:
     QStringList paths() const;
 };
 
-class EmulatorArtworkEntryBuilder : public Fe::ItemBuilder<EmulatorArtworkEntryBuilder, EmulatorArtworkEntry>
+class EmulatorArtworkEntry::Builder : public Fe::Item::Builder<EmulatorArtworkEntry::Builder, EmulatorArtworkEntry>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    EmulatorArtworkEntryBuilder();
+    Builder();
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    EmulatorArtworkEntryBuilder& wType(QString type);
-    EmulatorArtworkEntryBuilder& wPaths(QStringList paths);
+    Builder& wType(QString type);
+    Builder& wPaths(QStringList paths);
 };
 
 }

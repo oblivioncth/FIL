@@ -221,7 +221,7 @@ private:
     bool checkDocValidity(bool& isValid) override;
     Qx::GenericError readTargetDoc() override;
     void parseRomEntry(const QString& rawEntry);
-    void addFieldToBuilder(RomEntryBuilder& builder, QString field, quint8 index);
+    void addFieldToBuilder(RomEntry::Builder& builder, QString field, quint8 index);
 };
 
 class RomlistWriter : public CommonDocWriter

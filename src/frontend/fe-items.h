@@ -31,9 +31,12 @@ namespace Fe
 //-Namespace Global Classes-----------------------------------------------------------------------------------------
 class Item
 {
+//-Inner Classes---------------------------------------------------------------------------------------------------
+public:
     template <typename B, typename T>
         requires std::derived_from<T, Item>
-    friend class ItemBuilder;
+    class Builder;
+
 //-Instance Variables-----------------------------------------------------------------------------------------------
 protected:
     QHash<QString, QString> mOtherFields;
@@ -55,7 +58,7 @@ public:
 
 template <typename B, typename T>
     requires std::derived_from<T, Item>
-class ItemBuilder
+class Item::Builder
 {
 //-Instance Variables------------------------------------------------------------------------------------------
 protected:
@@ -63,11 +66,11 @@ protected:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 protected:
-    ItemBuilder() {}
+    Builder() {}
 
 //-Destructor-------------------------------------------------------------------------------------------------
 public:
-    virtual ~ItemBuilder() {}
+    virtual ~Builder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
@@ -82,9 +85,12 @@ public:
 
 class BasicItem : public Item
 {
+//-Inner Classes---------------------------------------------------------------------------------------------------
+public:
     template <typename B, typename T>
         requires std::derived_from<T, BasicItem>
-    friend class BasicItemBuilder;
+    class Builder;
+
 //-Instance Variables-----------------------------------------------------------------------------------------------
 protected:
     QUuid mId;
@@ -103,20 +109,22 @@ public:
 
 template <typename B, typename T>
     requires std::derived_from<T, BasicItem>
-class BasicItemBuilder : public ItemBuilder<B, T>
+class BasicItem::Builder : public Item::Builder<B, T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    B& wId(QString rawId) { ItemBuilder<B,T>::mItemBlueprint.mId = QUuid(rawId); return static_cast<B&>(*this); }
-    B& wId(QUuid id) { ItemBuilder<B,T>::mItemBlueprint.mId = id; return static_cast<B&>(*this); }
-    B& wName(QString name) { ItemBuilder<B,T>::mItemBlueprint.mName = name; return static_cast<B&>(*this);}
+    B& wId(QString rawId) { Item::Builder<B,T>::mItemBlueprint.mId = QUuid(rawId); return static_cast<B&>(*this); }
+    B& wId(QUuid id) { Item::Builder<B,T>::mItemBlueprint.mId = id; return static_cast<B&>(*this); }
+    B& wName(QString name) { Item::Builder<B,T>::mItemBlueprint.mName = name; return static_cast<B&>(*this);}
 };
 
 class Game : public BasicItem
 {
+//-Inner Classes---------------------------------------------------------------------------------------------------
+public:
     template <typename B, typename T>
         requires std::derived_from<T, Game>
-    friend class GameBuilder;
+    class Builder;
 
 //-Class Variables--------------------------------------------------------------------------------------------------
 protected:
@@ -139,18 +147,21 @@ public:
 
 template <typename B, typename T>
     requires std::derived_from<T, Game>
-class GameBuilder : public BasicItemBuilder<B, T>
+class Game::Builder : public BasicItem::Builder<B, T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    B& wPlatform(QString platform) { ItemBuilder<B,T>::mItemBlueprint.mPlatform = platform; return static_cast<B&>(*this); }
+    B& wPlatform(QString platform) { Item::Builder<B,T>::mItemBlueprint.mPlatform = platform; return static_cast<B&>(*this); }
 };
 
 class AddApp : public BasicItem
 {
+//-Inner Classes---------------------------------------------------------------------------------------------------
+public:
     template <typename B, typename T>
         requires std::derived_from<T, AddApp>
-    friend class AddAppBuilder;
+    class Builder;
+
 //-Instance Variables-----------------------------------------------------------------------------------------------
 protected:
     QUuid mGameId;
@@ -167,19 +178,22 @@ public:
 
 template <typename B, typename T>
     requires std::derived_from<T, AddApp>
-class AddAppBuilder : public BasicItemBuilder<B, T>
+class AddApp::Builder : public BasicItem::Builder<B, T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    B& wGameId(QString rawGameId) { ItemBuilder<B,T>::mItemBlueprint.mGameId = QUuid(rawGameId); return static_cast<B&>(*this); }
-    B& wGameId(QUuid gameId) { ItemBuilder<B,T>::mItemBlueprint.mGameId = gameId; return *this; }
+    B& wGameId(QString rawGameId) { Item::Builder<B,T>::mItemBlueprint.mGameId = QUuid(rawGameId); return static_cast<B&>(*this); }
+    B& wGameId(QUuid gameId) { Item::Builder<B,T>::mItemBlueprint.mGameId = gameId; return *this; }
 };
 
 class PlaylistHeader : public BasicItem
 {
+//-Inner Classes---------------------------------------------------------------------------------------------------
+public:
     template <typename B, typename T>
         requires std::derived_from<T, PlaylistHeader>
-    friend class PlaylistHeaderBuilder;
+    class Builder;
+
 //-Constructor-------------------------------------------------------------------------------------------------
 protected:
     PlaylistHeader();
@@ -188,14 +202,17 @@ protected:
 
 template <typename B, typename T>
     requires std::derived_from<T, PlaylistHeader>
-class PlaylistHeaderBuilder : public BasicItemBuilder<B, T>
+class PlaylistHeader::Builder : public BasicItem::Builder<B, T>
 {};
 
 class PlaylistGame : public BasicItem
 {
+//-Inner Classes---------------------------------------------------------------------------------------------------
+public:
     template <typename B, typename T>
         requires std::derived_from<T, PlaylistGame>
-    friend class PlaylistGameBuilder;
+    class Builder;
+
 //-Instance Variables-----------------------------------------------------------------------------------------------
 protected:
 
@@ -211,13 +228,13 @@ public:
 
 template <typename B, typename T>
     requires std::derived_from<T, PlaylistGame>
-class PlaylistGameBuilder : public BasicItemBuilder<B, T>
+class PlaylistGame::Builder : public BasicItem::Builder<B, T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
     // These reuse the main ID on purpose, in this case gameId is a proxy for Id
-    B& wGameId(QString rawGameId) { ItemBuilder<B,T>::mItemBlueprint.mId = QUuid(rawGameId); return static_cast<B&>(*this); }
-    B& wGameId(QUuid gameId) { ItemBuilder<B,T>::mItemBlueprint.mId = gameId; return static_cast<B&>(*this); }
+    B& wGameId(QString rawGameId) { Item::Builder<B,T>::mItemBlueprint.mId = QUuid(rawGameId); return static_cast<B&>(*this); }
+    B& wGameId(QUuid gameId) { Item::Builder<B,T>::mItemBlueprint.mId = gameId; return static_cast<B&>(*this); }
 };
 
 }

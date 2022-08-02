@@ -157,7 +157,7 @@ std::shared_ptr<Fe::Game> PlatformDoc::prepareGame(const Fp::Game& game, const F
     static_cast<Install*>(parent())->mPlaylistGameDetailsCache.insert(game.id(), PlaylistGame::EntryDetails(*lbGame));
 
     // Add language as custom field
-    CustomFieldBuilder cfb;
+    CustomField::Builder cfb;
     cfb.wGameId(game.id());
     cfb.wName(CustomField::LANGUAGE);
     cfb.wValue(game.language());
@@ -242,7 +242,7 @@ bool PlatformDocReader::readTargetDoc()
 void PlatformDocReader::parseGame()
 {
     // Game to build
-    GameBuilder gb;
+    Game::Builder gb;
 
     // Cover all children
     while(mStreamReader.readNextStartElement())
@@ -299,7 +299,7 @@ void PlatformDocReader::parseGame()
 void PlatformDocReader::parseAddApp()
 {
     // Additional App to Build
-    AddAppBuilder aab;
+    AddApp::Builder aab;
 
     // Cover all children
     while(mStreamReader.readNextStartElement())
@@ -330,7 +330,7 @@ void PlatformDocReader::parseAddApp()
 void PlatformDocReader::parseCustomField()
 {
     // Custom Field to Build
-    CustomFieldBuilder cfb;
+    CustomField::Builder cfb;
 
     // Cover all children
     while(mStreamReader.readNextStartElement())
@@ -557,7 +557,7 @@ bool PlaylistDocReader::readTargetDoc()
 void PlaylistDocReader::parsePlaylistHeader()
 {
     // Playlist Header to Build
-    PlaylistHeaderBuilder phb;
+    PlaylistHeader::Builder phb;
 
     // Cover all children
     while(mStreamReader.readNextStartElement())
@@ -581,7 +581,7 @@ void PlaylistDocReader::parsePlaylistHeader()
 void PlaylistDocReader::parsePlaylistGame()
 {
     // Playlist Game to Build
-    PlaylistGameBuilder pgb;
+    PlaylistGame::Builder pgb;
 
     // Cover all children
     while(mStreamReader.readNextStartElement())
@@ -736,7 +736,7 @@ void PlatformsConfigDoc::setMediaFolder(QString platform, QString mediaType, QSt
     // Add platform if it's missing as LB will not add it by default just because it has media folders
     if(!containsPlatform(platform))
     {
-        PlatformBuilder pb;
+        Platform::Builder pb;
         pb.wName(platform);
         addPlatform(pb.build());
     }
@@ -779,7 +779,7 @@ bool PlatformsConfigDocReader::readTargetDoc()
 void PlatformsConfigDocReader::parsePlatform()
 {
     // Platform Config Doc to Build
-    PlatformBuilder pb;
+    Platform::Builder pb;
 
     // Cover all children
     while(mStreamReader.readNextStartElement())
@@ -822,7 +822,7 @@ void PlatformsConfigDocReader::parsePlatformFolder()
 void PlatformsConfigDocReader::parsePlatformCategory()
 {
     // Platform Config Doc to Build
-    PlatformCategoryBuilder pcb;
+    PlatformCategory::Builder pcb;
 
     // Cover all children
     while(mStreamReader.readNextStartElement())
