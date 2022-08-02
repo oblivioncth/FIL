@@ -99,7 +99,7 @@ fetch_magicenum("v0.8.0")
 
 # Fetch libfp (build and import from source)
 include(FIL/Fetchlibfp)
-fetch_libfp("cb8158ffecd35318a618bb6d2fa02ab676495f4b")
+fetch_libfp("787476d811fdae593b8664a7b2fe799f76cda7b8")
 
 # Fetch CLIFp (build and import from source)
 include(FIL/FetchCLIFp)

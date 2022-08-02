@@ -43,7 +43,7 @@ const QList<QUuid> ImportWorker::preloadPlaylists(Fp::Db::QueryBuffer& playlistQ
         playlistQuery.result.next();
 
         // Form playlist from record
-        Fp::PlaylistBuilder fpPb;
+        Fp::Playlist::Builder fpPb;
         fpPb.wId(playlistQuery.result.value(Fp::Db::Table_Playlist::COL_ID).toString());
         fpPb.wTitle(playlistQuery.result.value(Fp::Db::Table_Playlist::COL_TITLE).toString());
         fpPb.wDescription(playlistQuery.result.value(Fp::Db::Table_Playlist::COL_DESCRIPTION).toString());
@@ -170,7 +170,7 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& 
         gameQueryResult.result.next();
 
         // Form game from record
-        Fp::GameBuilder fpGb;
+        Fp::Game::Builder fpGb;
         fpGb.wId(gameQueryResult.result.value(Fp::Db::Table_Game::COL_ID).toString());
         fpGb.wTitle(gameQueryResult.result.value(Fp::Db::Table_Game::COL_TITLE).toString());
         fpGb.wSeries(gameQueryResult.result.value(Fp::Db::Table_Game::COL_SERIES).toString());
@@ -196,7 +196,7 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& 
         Fp::Game builtGame = fpGb.build();
 
         // Construct full game set
-        Fp::SetBuilder sb;
+        Fp::Set::Builder sb;
         sb.wGame(builtGame); // From above
         sb.wAddApps(mAddAppsCache.values(builtGame.id())); // All associated additional apps from cache
         mAddAppsCache.remove(builtGame.id());
@@ -266,7 +266,7 @@ ImportWorker::ImportResult ImportWorker::preloadAddApps(Qx::GenericError& errorR
         addAppQuery.result.next();
 
         // Form additional app from record
-        Fp::AddAppBuilder fpAab;
+        Fp::AddApp::Builder fpAab;
         fpAab.wId(addAppQuery.result.value(Fp::Db::Table_Add_App::COL_ID).toString());
         fpAab.wAppPath(addAppQuery.result.value(Fp::Db::Table_Add_App::COL_APP_PATH).toString());
         fpAab.wAutorunBefore(addAppQuery.result.value(Fp::Db::Table_Add_App::COL_AUTORUN).toString());
@@ -404,7 +404,7 @@ ImportWorker::ImportResult ImportWorker::processPlaylists(Qx::GenericError& erro
             if(mImportedGameIdsCache.contains(QUuid(currentPlaylistGameResult.result.value(Fp::Db::Table_Playlist_Game::COL_GAME_ID).toString())))
             {
                 // Form game from record
-                Fp::PlaylistGameBuilder fpPgb;
+                Fp::PlaylistGame::Builder fpPgb;
                 fpPgb.wId(currentPlaylistGameResult.result.value(Fp::Db::Table_Playlist_Game::COL_ID).toString());
                 fpPgb.wPlaylistId(currentPlaylistGameResult.result.value(Fp::Db::Table_Playlist_Game::COL_PLAYLIST_ID).toString());
                 fpPgb.wOrder(currentPlaylistGameResult.result.value(Fp::Db::Table_Playlist_Game::COL_ORDER).toString());
