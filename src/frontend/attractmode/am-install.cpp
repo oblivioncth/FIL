@@ -522,11 +522,12 @@ Qx::GenericError Install::postImport()
     for(QString tagFile : tagFiles)
     {
         // Escape brackets in name since AM uses regex for value
-        QString escaped = tagFile.replace("[", "\\[").replace("]", "\\]");
+        QString escaped = tagFile;
+        escaped.replace("[", "\\[").replace("]", "\\]");
 
         DisplayFilterBuilder dfb;
         dfb = DisplayFilterBuilder();
-        dfb.wName(tagFile);
+        dfb.wName('"' + tagFile + '"');
         dfb.wSortBy(DisplayFilter::Sort::AltTitle);
         dfb.wRule("Tags contains " + escaped);
 
