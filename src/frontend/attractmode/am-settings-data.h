@@ -181,7 +181,7 @@ public:
     void addOtherSetting(const OtherSetting& setting);
 };
 
-class CrudeSettingsReader : public ConfigDocReader
+class CrudeSettingsReader : public ConfigDoc::Reader
 {
 //-Class Variables--------------------------------------------------------------------------------------------------
 private:
@@ -206,7 +206,7 @@ private:
     void initializeGenericSubSetting(QString key, QString value);
 };
 
-class CrudeSettingsWriter : public ConfigDocWriter
+class CrudeSettingsWriter : public ConfigDoc::Writer
 {
 //-Class Variables-------------------------------------------------------------------------------------------------
 private:

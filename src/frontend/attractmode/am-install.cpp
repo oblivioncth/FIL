@@ -143,7 +143,7 @@ QString Install::imageDestinationPath(Fp::ImageType imageType, const Fe::Game* g
            '.' + IMAGE_EXT;
 }
 
-std::shared_ptr<Fe::PlatformDocReader> Install::preparePlatformDocCheckout(std::unique_ptr<Fe::PlatformDoc>& platformDoc, const QString& translatedName)
+std::shared_ptr<Fe::PlatformDoc::Reader> Install::preparePlatformDocCheckout(std::unique_ptr<Fe::PlatformDoc>& platformDoc, const QString& translatedName)
 {
     // Determine path to the taglist that corresponds with the interface
     QString taglistPath = mFpTagDirectory.absoluteFilePath(translatedName + "." + TAG_EXT) ;
@@ -155,10 +155,10 @@ std::shared_ptr<Fe::PlatformDocReader> Install::preparePlatformDocCheckout(std::
     platformDoc = std::make_unique<PlatformInterface>(this, taglistPath, translatedName, overviewDir, DocKey{});
 
     // No reading to be done for this interface (tag lists are always overwritten)
-    return std::shared_ptr<Fe::PlatformDocReader>();
+    return std::shared_ptr<Fe::PlatformDoc::Reader>();
 }
 
-std::shared_ptr<Fe::PlaylistDocReader> Install::preparePlaylistDocCheckout(std::unique_ptr<Fe::PlaylistDoc>& playlistDoc, const QString& translatedName)
+std::shared_ptr<Fe::PlaylistDoc::Reader> Install::preparePlaylistDocCheckout(std::unique_ptr<Fe::PlaylistDoc>& playlistDoc, const QString& translatedName)
 {
     // Determine path to the taglist that corresponds with the interface
     QString taglistPath = mFpTagDirectory.absoluteFilePath(translatedName + "." + TAG_EXT) ;
@@ -167,22 +167,22 @@ std::shared_ptr<Fe::PlaylistDocReader> Install::preparePlaylistDocCheckout(std::
     playlistDoc = std::make_unique<PlaylistInterface>(this, taglistPath, translatedName, DocKey{});
 
     // No reading to be done for this interface (tag lists are always overwritten)
-    return std::shared_ptr<Fe::PlaylistDocReader>();
+    return std::shared_ptr<Fe::PlaylistDoc::Reader>();
 }
 
-std::shared_ptr<Fe::PlatformDocWriter> Install::preparePlatformDocCommit(const std::unique_ptr<Fe::PlatformDoc>& platformDoc)
+std::shared_ptr<Fe::PlatformDoc::Writer> Install::preparePlatformDocCommit(const std::unique_ptr<Fe::PlatformDoc>& platformDoc)
 {
     // Construct doc writer
-    std::shared_ptr<Fe::PlatformDocWriter> docWriter = std::make_shared<PlatformInterfaceWriter>(static_cast<PlatformInterface*>(platformDoc.get()));
+    std::shared_ptr<Fe::PlatformDoc::Writer> docWriter = std::make_shared<PlatformInterface::Writer>(static_cast<PlatformInterface*>(platformDoc.get()));
 
     // Return writer
     return docWriter;
 }
 
-std::shared_ptr<Fe::PlaylistDocWriter> Install::preparePlaylistDocCommit(const std::unique_ptr<Fe::PlaylistDoc>& playlistDoc)
+std::shared_ptr<Fe::PlaylistDoc::Writer> Install::preparePlaylistDocCommit(const std::unique_ptr<Fe::PlaylistDoc>& playlistDoc)
 {
     // Construct doc writer
-    std::shared_ptr<Fe::PlaylistDocWriter> docWriter = std::make_shared<PlaylistInterfaceWriter>(static_cast<PlaylistInterface*>(playlistDoc.get()));
+    std::shared_ptr<Fe::PlaylistDoc::Writer> docWriter = std::make_shared<PlaylistInterface::Writer>(static_cast<PlaylistInterface*>(playlistDoc.get()));
 
     // Return writer
     return docWriter;
@@ -213,7 +213,7 @@ Qx::GenericError Install::checkoutFlashpointRomlist(std::unique_ptr<Romlist>& re
     returnBuffer = std::make_unique<Romlist>(this, mFpRomlist.fileName(), Fp::NAME, mImportDetails->updateOptions, DocKey{});
 
     // Construct doc reader
-    std::shared_ptr<RomlistReader> docReader = std::make_shared<RomlistReader>(returnBuffer.get());
+    std::shared_ptr<Romlist::Reader> docReader = std::make_shared<Romlist::Reader>(returnBuffer.get());
 
     // Open document
     Qx::GenericError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
@@ -267,7 +267,7 @@ Qx::GenericError Install::commitFlashpointRomlist(std::unique_ptr<Romlist> docum
     assert(document->parent() == this);
 
     // Prepare writer
-    std::shared_ptr<RomlistWriter> docWriter = std::make_shared<RomlistWriter>(document.get());
+    std::shared_ptr<Romlist::Writer> docWriter = std::make_shared<Romlist::Writer>(document.get());
 
     // Write
     Qx::GenericError writeErrorStatus = commitDataDocument(document.get(), docWriter);
@@ -285,7 +285,7 @@ Qx::GenericError Install::commitClifpEmulatorConfig(std::unique_ptr<Emulator> do
     assert(document->parent() == this);
 
     // Prepare writer
-    std::shared_ptr<EmulatorWriter> docWriter = std::make_shared<EmulatorWriter>(document.get());
+    std::shared_ptr<Emulator::Writer> docWriter = std::make_shared<Emulator::Writer>(document.get());
 
     // Write
     Qx::GenericError writeErrorStatus = commitDataDocument(document.get(), docWriter);

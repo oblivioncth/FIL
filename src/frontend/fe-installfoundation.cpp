@@ -111,7 +111,7 @@ void InstallFoundation::declareValid(bool valid)
 QString InstallFoundation::translateDocName(const QString& originalName, DataDoc::Type type) const { return originalName; }
 void InstallFoundation::catalogueExistingDoc(DataDoc::Identifier existingDoc) { mExistingDocuments.insert(existingDoc); }
 
-Qx::GenericError InstallFoundation::checkoutDataDocument(DataDoc* docToOpen, std::shared_ptr<DataDocReader> docReader)
+Qx::GenericError InstallFoundation::checkoutDataDocument(DataDoc* docToOpen, std::shared_ptr<DataDoc::Reader> docReader)
 {
     // Error report to return
     Qx::GenericError openReadError; // Defaults to no error
@@ -135,7 +135,7 @@ Qx::GenericError InstallFoundation::checkoutDataDocument(DataDoc* docToOpen, std
     return openReadError;
 }
 
-Qx::GenericError InstallFoundation::commitDataDocument(DataDoc* docToSave, std::shared_ptr<DataDocWriter> docWriter)
+Qx::GenericError InstallFoundation::commitDataDocument(DataDoc* docToSave, std::shared_ptr<DataDoc::Writer> docWriter)
 {
     // Error template
     Qx::GenericError errorTemplate(Qx::GenericError::Critical, docHandlingErrorString(docToSave, DocHandlingError::DocCantSave));

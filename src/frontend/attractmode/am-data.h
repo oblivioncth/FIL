@@ -23,7 +23,7 @@ private:
     DocKey(const DocKey&) = default;
 };
 
-class CommonDocReader : public Fe::DataDocReader
+class CommonDocReader : public Fe::DataDoc::Reader
 {
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
@@ -44,7 +44,7 @@ public:
     Qx::GenericError readInto() override;
 };
 
-class CommonDocWriter : public Fe::DataDocWriter
+class CommonDocWriter : public Fe::DataDoc::Writer
 {
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
@@ -64,8 +64,10 @@ public:
 
 class ConfigDoc : public Fe::DataDoc
 {
-    friend class ConfigDocReader;
-    friend class ConfigDocWriter;
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Reader;
+    class Writer;
 
 //-Class Variables--------------------------------------------------------------------------------------------------
 public:
@@ -81,7 +83,7 @@ protected:
 };
 
 
-class ConfigDocReader : public CommonDocReader
+class ConfigDoc::Reader : public CommonDocReader
 {
 //-Class Variables----------------------------------------------------------------------------------------------------
 protected:
@@ -90,7 +92,7 @@ protected:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    ConfigDocReader(ConfigDoc* targetDoc);
+    Reader(ConfigDoc* targetDoc);
 
 //-Class Functions-------------------------------------------------------------------------------------------------
 protected:
@@ -101,11 +103,11 @@ protected:
     bool checkDocValidity(bool& isValid) override;
 };
 
-class ConfigDocWriter : public CommonDocWriter
+class ConfigDoc::Writer : public CommonDocWriter
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    ConfigDocWriter(ConfigDoc* targetDoc);
+    Writer(ConfigDoc* targetDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 protected:
@@ -115,7 +117,9 @@ protected:
 
 class Taglist : public Fe::DataDoc
 {
-    friend class TaglistWriter;
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Writer;
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
@@ -133,11 +137,11 @@ public:
     void appendTag(QString tag);
 };
 
-class TaglistWriter : public CommonDocWriter
+class Taglist::Writer : public CommonDocWriter
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    TaglistWriter(Taglist* sourceDoc);
+    Writer(Taglist* sourceDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
@@ -176,8 +180,10 @@ class Romlist : public Fe::UpdateableDoc
      * doc since its usage is internal to Am::Install
      */
 
-    friend class RomlistReader;
-    friend class RomlistWriter;
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Reader;
+    class Writer;
 
 //-Class Variables----------------------------------------------------------------------------------------------------
 private:
@@ -209,11 +215,11 @@ public:
     void finalize() override;
 };
 
-class RomlistReader : public CommonDocReader
+class Romlist::Reader : public CommonDocReader
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    RomlistReader(Romlist* targetDoc);
+    Reader(Romlist* targetDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
@@ -224,11 +230,11 @@ private:
     void addFieldToBuilder(RomEntry::Builder& builder, QString field, quint8 index);
 };
 
-class RomlistWriter : public CommonDocWriter
+class Romlist::Writer : public CommonDocWriter
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    RomlistWriter(Romlist* sourceDoc);
+    Writer(Romlist* sourceDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
@@ -257,7 +263,9 @@ public:
 
 class PlatformInterface : public Fe::PlatformDoc
 {
-    friend class PlatformInterfaceWriter;
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Writer;
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
@@ -282,17 +290,17 @@ public:
     void addSet(const Fp::Set& set, const Fe::ImageSources& images) override;
 };
 
-class PlatformInterfaceWriter : public Fe::PlatformDocWriter
+class PlatformInterface::Writer : public Fe::PlatformDoc::Writer
 {
     // Shell for writing the taglist of the interface
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
-    TaglistWriter mTaglistWriter;
+    Taglist::Writer mTaglistWriter;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    PlatformInterfaceWriter(PlatformInterface* sourceDoc);
+    Writer(PlatformInterface* sourceDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 public:
@@ -301,7 +309,9 @@ public:
 
 class PlaylistInterface : public Fe::PlaylistDoc
 {
-    friend class PlaylistInterfaceWriter;
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Writer;
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
@@ -322,17 +332,17 @@ public:
     void addPlaylistGame(const Fp::PlaylistGame& playlistGame) override;
 };
 
-class PlaylistInterfaceWriter : public Fe::PlaylistDocWriter
+class PlaylistInterface::Writer : public Fe::PlaylistDoc::Writer
 {
     // Shell for writing the taglist of the interface
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
-    TaglistWriter mTaglistWriter;
+    Taglist::Writer mTaglistWriter;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    PlaylistInterfaceWriter(PlaylistInterface* sourceDoc);
+    Writer(PlaylistInterface* sourceDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
@@ -341,8 +351,10 @@ private:
 
 class Emulator : public ConfigDoc
 {
-    friend class EmulatorReader;
-    friend class EmulatorWriter;
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Reader;
+    class Writer;
 
 //-Inner Classes-------------------------------------------------------------------------------------------------------
 public:
@@ -416,7 +428,7 @@ public:
     void setArtworkEntry(EmulatorArtworkEntry entry);
 };
 
-class EmulatorReader : public ConfigDocReader
+class EmulatorReader : public ConfigDoc::Reader
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -439,7 +451,7 @@ private:
     Emulator* targetEmulator(); // TODO: Example of what isn't needed if readers/writers are made into templates
 };
 
-class EmulatorWriter : public ConfigDocWriter
+class Emulator::Writer : public ConfigDoc::Writer
 {
 //-Class Values-------------------------------------------------------------------------------------------------------
 private:
@@ -449,7 +461,7 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    EmulatorWriter(Emulator* sourceDoc);
+    Writer(Emulator* sourceDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:

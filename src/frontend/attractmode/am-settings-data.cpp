@@ -183,13 +183,13 @@ void CrudeSettings::addOtherSetting(const OtherSetting& setting)
 }
 
 //===============================================================================================================
-// CrudeSettingsReader
+// CrudeSettings::Reader
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
 CrudeSettingsReader::CrudeSettingsReader(CrudeSettings* targetDoc) :
-    ConfigDocReader(targetDoc)
+    ConfigDoc::Reader(targetDoc)
 {}
 
 //-Class Functions--------------------------------------------------------------------------------------------------
@@ -280,13 +280,13 @@ void CrudeSettingsReader::initializeGenericSubSetting(QString key, QString value
 }
 
 //===============================================================================================================
-// CrudeSettingsWriter
+// CrudeSettings::Writer
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
 CrudeSettingsWriter::CrudeSettingsWriter(CrudeSettings* sourceDoc) :
-    ConfigDocWriter(sourceDoc),
+    ConfigDoc::Writer(sourceDoc),
     mTabDepth(0)
 {
     // Global alignment

@@ -44,7 +44,8 @@ class Install;
 
 //-Enums----------------------------------------------------------------------------------------------------------
 enum class ImportMode {OnlyNew, NewAndExisting};
-enum class DocHandlingError {DocAlreadyOpen, DocCantOpen, DocCantSave, NotParentDoc, CantRemoveBackup, CantCreateBackup, DocInvalidType, DocReadFailed, DocWriteFailed};
+enum class DocHandlingError {DocAlreadyOpen, DocCantOpen, DocCantSave, NotParentDoc, CantRemoveBackup, CantCreateBackup,
+                             DocInvalidType, DocReadFailed, DocWriteFailed};
 QX_SCOPED_ENUM_HASH_FUNC(DocHandlingError);
 
 //-Structs---------------------------------------------------------------------------------------------------------
@@ -88,6 +89,9 @@ public:
 
 //-Inner Classes----------------------------------------------------------------------------------------------------
 public:
+    class Reader;
+    class Writer;
+
     class Identifier
     {
         friend bool operator== (const Identifier& lhs, const Identifier& rhs) noexcept;
@@ -139,7 +143,7 @@ public:
 };
 QX_SCOPED_ENUM_HASH_FUNC(DataDoc::Type);
 
-class DataDocReader
+class DataDoc::Reader
 {
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
@@ -148,18 +152,18 @@ protected:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    DataDocReader(DataDoc* targetDoc);
+    Reader(DataDoc* targetDoc);
 
 //-Destructor-------------------------------------------------------------------------------------------------
 public:
-    virtual ~DataDocReader();
+    virtual ~Reader();
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 public:
     virtual Qx::GenericError readInto() = 0;
 };
 
-class DataDocWriter
+class DataDoc::Writer
 {
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
@@ -168,11 +172,11 @@ protected:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    DataDocWriter(DataDoc* sourceDoc);
+    Writer(DataDoc* sourceDoc);
 
 //-Destructor-------------------------------------------------------------------------------------------------
 public:
-    virtual ~DataDocWriter();
+    virtual ~Writer();
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 public:
@@ -270,6 +274,11 @@ public:
 
 class PlatformDoc : public UpdateableDoc, public Errorable
 {
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Reader;
+    class Writer;
+
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
     explicit PlatformDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions);
@@ -288,10 +297,27 @@ public:
     virtual void addSet(const Fp::Set& set, const ImageSources& images) = 0;
 };
 
+class PlatformDoc::Reader : public virtual DataDoc::Reader
+{
+//-Constructor-------------------------------------------------------------------------------------------------------
+protected:
+    Reader(DataDoc* targetDoc);
+};
+
+class PlatformDoc::Writer : public virtual DataDoc::Writer
+{
+//-Constructor-------------------------------------------------------------------------------------------------------
+protected:
+    Writer(DataDoc* sourceDoc);
+};
+
 class BasicPlatformDoc : public PlatformDoc
 {
-    friend class BasicPlatformDocReader;
-    friend class BasicPlatformDocWriter;
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Reader;
+    class Writer;
+
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
     QHash<QUuid, std::shared_ptr<Game>> mGamesFinal;
@@ -322,18 +348,11 @@ public:
     void finalize() override;
 };
 
-class PlatformDocReader : public virtual DataDocReader
+class BasicPlatformDoc::Reader : public PlatformDoc::Reader
 {
 //-Constructor-------------------------------------------------------------------------------------------------------
 protected:
-    PlatformDocReader(DataDoc* targetDoc);
-};
-
-class BasicPlatformDocReader : public PlatformDocReader
-{
-//-Constructor-------------------------------------------------------------------------------------------------------
-protected:
-    BasicPlatformDocReader(DataDoc* targetDoc);
+    Reader(DataDoc* targetDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 protected:
@@ -341,22 +360,20 @@ protected:
     QHash<QUuid, std::shared_ptr<AddApp>>& targetDocExistingAddApps();
 };
 
-class PlatformDocWriter : public virtual DataDocWriter
+class BasicPlatformDoc::Writer : public PlatformDoc::Writer
 {
 //-Constructor-------------------------------------------------------------------------------------------------------
 protected:
-    PlatformDocWriter(DataDoc* sourceDoc);
-};
-
-class BasicPlatformDocWriter : public PlatformDocWriter
-{
-//-Constructor-------------------------------------------------------------------------------------------------------
-protected:
-    BasicPlatformDocWriter(DataDoc* sourceDoc);
+    Writer(DataDoc* sourceDoc);
 };
 
 class PlaylistDoc : public UpdateableDoc, public Errorable
 {
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Reader;
+    class Writer;
+
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
     explicit PlaylistDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions);
@@ -372,10 +389,26 @@ public:
     virtual void addPlaylistGame(const Fp::PlaylistGame& playlistGame) = 0;
 };
 
+class PlaylistDoc::Reader : public virtual DataDoc::Reader
+{
+//-Constructor-------------------------------------------------------------------------------------------------------
+protected:
+    Reader(DataDoc* targetDoc);
+};
+
+class PlaylistDoc::Writer : public virtual DataDoc::Writer
+{
+//-Constructor-------------------------------------------------------------------------------------------------------
+protected:
+    Writer(DataDoc* sourceDoc);
+};
+
 class BasicPlaylistDoc : public PlaylistDoc
 {
-    friend class BasicPlaylistDocReader;
-    friend class BasicPlaylistDocWriter;
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Reader;
+    class Writer;
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
@@ -406,13 +439,6 @@ public:
     void finalize() override;
 };
 
-class PlaylistDocReader : public virtual DataDocReader
-{
-//-Constructor-------------------------------------------------------------------------------------------------------
-protected:
-    PlaylistDocReader(DataDoc* targetDoc);
-};
-
 /* TODO: Consider making the existing items accessible through a public getter, or at least a function to add
  * them through a public function (similar todo already exists). If this is done then these base readers and writers
  * for specific docs can be removed since they only exist to define the "workaround" getters for existing items.
@@ -420,11 +446,11 @@ protected:
  * This would mean that virtual inheritance wouldn't be required for the other readers/writers and greatly simplify
  * things
  */
-class BasicPlaylistDocReader : public PlaylistDocReader
+class BasicPlaylistDoc::Reader : public PlaylistDoc::Reader
 {
 //-Constructor-------------------------------------------------------------------------------------------------------
 protected:
-    BasicPlaylistDocReader(DataDoc* targetDoc);
+    Reader(DataDoc* targetDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 protected:
@@ -432,18 +458,11 @@ protected:
     std::shared_ptr<PlaylistHeader>& targetDocPlaylistHeader();
 };
 
-class PlaylistDocWriter : public virtual DataDocWriter
+class BasicPlaylistDoc::Writer : public PlaylistDoc::Writer
 {
 //-Constructor-------------------------------------------------------------------------------------------------------
 protected:
-    PlaylistDocWriter(DataDoc* sourceDoc);
-};
-
-class BasicPlaylistDocWriter : public PlaylistDocWriter
-{
-//-Constructor-------------------------------------------------------------------------------------------------------
-protected:
-    BasicPlaylistDocWriter(DataDoc* sourceDoc);
+    Writer(DataDoc* sourceDoc);
 };
 
 //-Functions-------------------------------------------------------------------------------------------------------

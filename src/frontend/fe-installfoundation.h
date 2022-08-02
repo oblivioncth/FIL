@@ -106,8 +106,8 @@ protected:
     virtual QString translateDocName(const QString& originalName, DataDoc::Type type) const;
     void catalogueExistingDoc(DataDoc::Identifier existingDoc);
 
-    Qx::GenericError checkoutDataDocument(DataDoc* docToOpen, std::shared_ptr<DataDocReader> docReader);
-    Qx::GenericError commitDataDocument(DataDoc* docToSave, std::shared_ptr<DataDocWriter> docWriter);
+    Qx::GenericError checkoutDataDocument(DataDoc* docToOpen, std::shared_ptr<DataDoc::Reader> docReader);
+    Qx::GenericError commitDataDocument(DataDoc* docToSave, std::shared_ptr<DataDoc::Writer> docWriter);
 
     QList<QString> modifiedPlatforms() const;
     QList<QString> modifiedPlaylists() const;

@@ -65,10 +65,10 @@ protected:
     virtual QString translateDocName(const QString& originalName, DataDoc::Type type) const override;
 
     // Doc Handling
-    virtual std::shared_ptr<PlatformDocReader> preparePlatformDocCheckout(std::unique_ptr<PlatformDoc>& platformDoc, const QString& translatedName) = 0;
-    virtual std::shared_ptr<PlaylistDocReader> preparePlaylistDocCheckout(std::unique_ptr<PlaylistDoc>& playlistDoc, const QString& translatedName) = 0;
-    virtual std::shared_ptr<PlatformDocWriter> preparePlatformDocCommit(const std::unique_ptr<PlatformDoc>& document) = 0;
-    virtual std::shared_ptr<PlaylistDocWriter> preparePlaylistDocCommit(const std::unique_ptr<PlaylistDoc>& document) = 0;
+    virtual std::shared_ptr<PlatformDoc::Reader> preparePlatformDocCheckout(std::unique_ptr<PlatformDoc>& platformDoc, const QString& translatedName) = 0;
+    virtual std::shared_ptr<PlaylistDoc::Reader> preparePlaylistDocCheckout(std::unique_ptr<PlaylistDoc>& playlistDoc, const QString& translatedName) = 0;
+    virtual std::shared_ptr<PlatformDoc::Writer> preparePlatformDocCommit(const std::unique_ptr<PlatformDoc>& document) = 0;
+    virtual std::shared_ptr<PlaylistDoc::Writer> preparePlaylistDocCommit(const std::unique_ptr<PlaylistDoc>& document) = 0;
 
 public:
     // Install management

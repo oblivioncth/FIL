@@ -11,7 +11,6 @@
 // Project Includes
 #include "lb-install.h"
 
-
 namespace Lb
 {
 //===============================================================================================================
@@ -21,7 +20,7 @@ namespace Lb
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
 XmlDocReader::XmlDocReader(Fe::DataDoc* targetDoc) :
-    Fe::DataDocReader(targetDoc),
+    Fe::DataDoc::Reader(targetDoc),
     mXmlFile(targetDoc->path()),
     mStreamReader(&mXmlFile)
 {}
@@ -73,7 +72,7 @@ Qx::GenericError XmlDocReader::readInto()
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
 XmlDocWriter::XmlDocWriter(Fe::DataDoc* sourceDoc) :
-    Fe::DataDocWriter(sourceDoc),
+    Fe::DataDoc::Writer(sourceDoc),
     mXmlFile(sourceDoc->path()),
     mStreamWriter(&mXmlFile)
 {}
@@ -208,20 +207,20 @@ void PlatformDoc::finalize()
 }
 
 //===============================================================================================================
-// PlatformDocReader
+// PlatformDoc::Reader
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlatformDocReader::PlatformDocReader(PlatformDoc* targetDoc) :
-    Fe::DataDocReader(targetDoc),
-    Fe::BasicPlatformDocReader(targetDoc),
+PlatformDoc::Reader::Reader(PlatformDoc* targetDoc) :
+    Fe::DataDoc::Reader(targetDoc),
+    Fe::BasicPlatformDoc::Reader(targetDoc),
     XmlDocReader(targetDoc)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-bool PlatformDocReader::readTargetDoc()
+bool PlatformDoc::Reader::readTargetDoc()
 {
     while(mStreamReader.readNextStartElement())
     {
@@ -239,7 +238,7 @@ bool PlatformDocReader::readTargetDoc()
     return !mStreamReader.hasError();
 }
 
-void PlatformDocReader::parseGame()
+void PlatformDoc::Reader::parseGame()
 {
     // Game to build
     Game::Builder gb;
@@ -296,7 +295,7 @@ void PlatformDocReader::parseGame()
     targetDocExistingGames()[existingGame->id()] = existingGame;
 }
 
-void PlatformDocReader::parseAddApp()
+void PlatformDoc::Reader::parseAddApp()
 {
     // Additional App to Build
     AddApp::Builder aab;
@@ -327,7 +326,7 @@ void PlatformDocReader::parseAddApp()
     targetDocExistingAddApps()[existingAddApp->id()] = existingAddApp;
 }
 
-void PlatformDocReader::parseCustomField()
+void PlatformDoc::Reader::parseCustomField()
 {
     // Custom Field to Build
     CustomField::Builder cfb;
@@ -352,20 +351,20 @@ void PlatformDocReader::parseCustomField()
 }
 
 //===============================================================================================================
-// PlatformDocWriter
+// PlatformDoc::Writer
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlatformDocWriter::PlatformDocWriter(PlatformDoc* sourceDoc) :
-    Fe::DataDocWriter(sourceDoc),
-    Fe::BasicPlatformDocWriter(sourceDoc),
+PlatformDoc::Writer::Writer(PlatformDoc* sourceDoc) :
+    Fe::DataDoc::Writer(sourceDoc),
+    Fe::BasicPlatformDoc::Writer(sourceDoc),
     XmlDocWriter(sourceDoc)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-bool PlatformDocWriter::writeSourceDoc()
+bool PlatformDoc::Writer::writeSourceDoc()
 {
     // Write all games
     for(const std::shared_ptr<Fe::Game>& game : static_cast<PlatformDoc*>(mSourceDocument)->finalGames())
@@ -392,7 +391,7 @@ bool PlatformDocWriter::writeSourceDoc()
     return true;
 }
 
-bool PlatformDocWriter::writeGame(const Game& game)
+bool PlatformDoc::Writer::writeGame(const Game& game)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Xml::Element_Game::NAME);
@@ -437,7 +436,7 @@ bool PlatformDocWriter::writeGame(const Game& game)
     return !mStreamWriter.hasError();
 }
 
-bool PlatformDocWriter::writeAddApp(const AddApp& addApp)
+bool PlatformDoc::Writer::writeAddApp(const AddApp& addApp)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Xml::Element_AddApp::NAME);
@@ -461,7 +460,7 @@ bool PlatformDocWriter::writeAddApp(const AddApp& addApp)
     return !mStreamWriter.hasError();
 }
 
-bool PlatformDocWriter::writeCustomField(const CustomField& customField)
+bool PlatformDoc::Writer::writeCustomField(const CustomField& customField)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Xml::Element_CustomField::NAME);
@@ -525,20 +524,20 @@ std::shared_ptr<Fe::PlaylistGame> PlaylistDoc::preparePlaylistGame(const Fp::Pla
 }
 
 //===============================================================================================================
-// PlaylistDocReader
+// PlaylistDoc::Reader
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlaylistDocReader::PlaylistDocReader(PlaylistDoc* targetDoc) :
-    Fe::DataDocReader(targetDoc),
-    Fe::BasicPlaylistDocReader(targetDoc),
+PlaylistDoc::Reader::Reader(PlaylistDoc* targetDoc) :
+    Fe::DataDoc::Reader(targetDoc),
+    Fe::BasicPlaylistDoc::Reader(targetDoc),
     XmlDocReader(targetDoc)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-bool PlaylistDocReader::readTargetDoc()
+bool PlaylistDoc::Reader::readTargetDoc()
 {
     while(mStreamReader.readNextStartElement())
     {
@@ -554,7 +553,7 @@ bool PlaylistDocReader::readTargetDoc()
     return !mStreamReader.hasError();
 }
 
-void PlaylistDocReader::parsePlaylistHeader()
+void PlaylistDoc::Reader::parsePlaylistHeader()
 {
     // Playlist Header to Build
     PlaylistHeader::Builder phb;
@@ -578,7 +577,7 @@ void PlaylistDocReader::parsePlaylistHeader()
     targetDocPlaylistHeader() = phb.buildShared();
 }
 
-void PlaylistDocReader::parsePlaylistGame()
+void PlaylistDoc::Reader::parsePlaylistGame()
 {
     // Playlist Game to Build
     PlaylistGame::Builder pgb;
@@ -615,23 +614,21 @@ void PlaylistDocReader::parsePlaylistGame()
     targetDocExistingPlaylistGames()[existingPlaylistGame->gameId()] = existingPlaylistGame;
 }
 
-
-
 //===============================================================================================================
-// PlaylistDocWriter
+// PlaylistDoc::Writer
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlaylistDocWriter::PlaylistDocWriter(PlaylistDoc* sourceDoc) :
-    Fe::DataDocWriter(sourceDoc),
-    Fe::BasicPlaylistDocWriter(sourceDoc),
+PlaylistDoc::Writer::Writer(PlaylistDoc* sourceDoc) :
+    Fe::DataDoc::Writer(sourceDoc),
+    Fe::BasicPlaylistDoc::Writer(sourceDoc),
     XmlDocWriter(sourceDoc)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-bool PlaylistDocWriter::writeSourceDoc()
+bool PlaylistDoc::Writer::writeSourceDoc()
 {
     // Write playlist header
     std::shared_ptr<Fe::PlaylistHeader> playlistHeader = static_cast<PlaylistDoc*>(mSourceDocument)->playlistHeader();
@@ -649,7 +646,7 @@ bool PlaylistDocWriter::writeSourceDoc()
     return true;
 }
 
-bool PlaylistDocWriter::writePlaylistHeader(const PlaylistHeader& playlistHeader)
+bool PlaylistDoc::Writer::writePlaylistHeader(const PlaylistHeader& playlistHeader)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Xml::Element_PlaylistHeader::NAME);
@@ -670,7 +667,7 @@ bool PlaylistDocWriter::writePlaylistHeader(const PlaylistHeader& playlistHeader
     return !mStreamWriter.hasError();
 }
 
-bool PlaylistDocWriter::writePlaylistGame(const PlaylistGame& playlistGame)
+bool PlaylistDoc::Writer::writePlaylistGame(const PlaylistGame& playlistGame)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Xml::Element_PlaylistGame::NAME);
@@ -746,19 +743,19 @@ void PlatformsConfigDoc::setMediaFolder(QString platform, QString mediaType, QSt
 }
 
 //===============================================================================================================
-// PlatformsConfigDocReader
+// PlatformsConfigDoc::Reader
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlatformsConfigDocReader::PlatformsConfigDocReader(PlatformsConfigDoc* targetDoc) :
-    Fe::DataDocReader(targetDoc),
+PlatformsConfigDoc::Reader::Reader(PlatformsConfigDoc* targetDoc) :
+    Fe::DataDoc::Reader(targetDoc),
     XmlDocReader(targetDoc)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-bool PlatformsConfigDocReader::readTargetDoc()
+bool PlatformsConfigDoc::Reader::readTargetDoc()
 {
     while(mStreamReader.readNextStartElement())
     {
@@ -776,7 +773,7 @@ bool PlatformsConfigDocReader::readTargetDoc()
     return !mStreamReader.hasError();
 }
 
-void PlatformsConfigDocReader::parsePlatform()
+void PlatformsConfigDoc::Reader::parsePlatform()
 {
     // Platform Config Doc to Build
     Platform::Builder pb;
@@ -795,7 +792,7 @@ void PlatformsConfigDocReader::parsePlatform()
     static_cast<PlatformsConfigDoc*>(mTargetDocument)->mPlatforms.insert(existingPlatform->name(), *existingPlatform);
 }
 
-void PlatformsConfigDocReader::parsePlatformFolder()
+void PlatformsConfigDoc::Reader::parsePlatformFolder()
 {
     // Platform Folder to Build
     QString platform;
@@ -819,7 +816,7 @@ void PlatformsConfigDocReader::parsePlatformFolder()
     static_cast<PlatformsConfigDoc*>(mTargetDocument)->mPlatformFolders[platform][mediaType] = folderPath;
 }
 
-void PlatformsConfigDocReader::parsePlatformCategory()
+void PlatformsConfigDoc::Reader::parsePlatformCategory()
 {
     // Platform Config Doc to Build
     PlatformCategory::Builder pcb;
@@ -836,19 +833,19 @@ void PlatformsConfigDocReader::parsePlatformCategory()
 }
 
 //===============================================================================================================
-// PlatformsDocWriter
+// PlatformsConfigDoc::Writer
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlatformsConfigDocWriter::PlatformsConfigDocWriter(PlatformsConfigDoc* sourceDoc) :
-    Fe::DataDocWriter(sourceDoc),
+PlatformsConfigDoc::Writer::Writer(PlatformsConfigDoc* sourceDoc) :
+    Fe::DataDoc::Writer(sourceDoc),
     XmlDocWriter(sourceDoc)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-bool PlatformsConfigDocWriter::writeSourceDoc()
+bool PlatformsConfigDoc::Writer::writeSourceDoc()
 {
     // Write all platforms
     for(const Platform& platform : static_cast<PlatformsConfigDoc*>(mSourceDocument)->platforms())
@@ -879,7 +876,7 @@ bool PlatformsConfigDocWriter::writeSourceDoc()
     return true;
 }
 
-bool PlatformsConfigDocWriter::writePlatform(const Platform& platform)
+bool PlatformsConfigDoc::Writer::writePlatform(const Platform& platform)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Xml::Element_Platform::NAME);
@@ -897,7 +894,7 @@ bool PlatformsConfigDocWriter::writePlatform(const Platform& platform)
     return !mStreamWriter.hasError();
 }
 
-bool PlatformsConfigDocWriter::writePlatformFolder(const QString& platform, const QString& mediaType, const QString& folderPath)
+bool PlatformsConfigDoc::Writer::writePlatformFolder(const QString& platform, const QString& mediaType, const QString& folderPath)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Xml::Element_PlatformFolder::NAME);
@@ -914,7 +911,7 @@ bool PlatformsConfigDocWriter::writePlatformFolder(const QString& platform, cons
     return !mStreamWriter.hasError();
 }
 
-bool PlatformsConfigDocWriter::writePlatformCategory(const PlatformCategory& platformCategory)
+bool PlatformsConfigDoc::Writer::writePlatformCategory(const PlatformCategory& platformCategory)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Xml::Element_PlatformCategory::NAME);

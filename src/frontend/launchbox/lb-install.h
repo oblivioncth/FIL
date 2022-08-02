@@ -81,10 +81,10 @@ private:
 
     // Doc handling
     QString dataDocPath(Fe::DataDoc::Identifier identifier) const;
-    std::shared_ptr<Fe::PlatformDocReader> preparePlatformDocCheckout(std::unique_ptr<Fe::PlatformDoc>& platformDoc, const QString& translatedName) override;
-    std::shared_ptr<Fe::PlaylistDocReader> preparePlaylistDocCheckout(std::unique_ptr<Fe::PlaylistDoc>& playlistDoc, const QString& translatedName) override;
-    std::shared_ptr<Fe::PlatformDocWriter> preparePlatformDocCommit(const std::unique_ptr<Fe::PlatformDoc>& platformDoc) override;
-    std::shared_ptr<Fe::PlaylistDocWriter> preparePlaylistDocCommit(const std::unique_ptr<Fe::PlaylistDoc>& playlistDoc) override;
+    std::shared_ptr<Fe::PlatformDoc::Reader> preparePlatformDocCheckout(std::unique_ptr<Fe::PlatformDoc>& platformDoc, const QString& translatedName) override;
+    std::shared_ptr<Fe::PlaylistDoc::Reader> preparePlaylistDocCheckout(std::unique_ptr<Fe::PlaylistDoc>& playlistDoc, const QString& translatedName) override;
+    std::shared_ptr<Fe::PlatformDoc::Writer> preparePlatformDocCommit(const std::unique_ptr<Fe::PlatformDoc>& platformDoc) override;
+    std::shared_ptr<Fe::PlaylistDoc::Writer> preparePlaylistDocCommit(const std::unique_ptr<Fe::PlaylistDoc>& playlistDoc) override;
 
     Qx::GenericError checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc>& returnBuffer);
     Qx::GenericError commitPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc> document);

@@ -106,7 +106,7 @@ Qx::GenericError Install::checkoutPlatformDoc(std::unique_ptr<PlatformDoc>& retu
     QString translatedName = translateDocName(name, DataDoc::Type::Platform);
 
     // Get initialized blank doc and reader
-    std::shared_ptr<PlatformDocReader> docReader = preparePlatformDocCheckout(returnBuffer, translatedName);
+    std::shared_ptr<PlatformDoc::Reader> docReader = preparePlatformDocCheckout(returnBuffer, translatedName);
 
     // Open document
     Qx::GenericError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
@@ -125,7 +125,7 @@ Qx::GenericError Install::checkoutPlaylistDoc(std::unique_ptr<PlaylistDoc>& retu
     QString translatedName = translateDocName(name, DataDoc::Type::Playlist);
 
     // Get initialized blank doc and reader
-    std::shared_ptr<PlaylistDocReader> docReader = preparePlaylistDocCheckout(returnBuffer, translatedName);
+    std::shared_ptr<PlaylistDoc::Reader> docReader = preparePlaylistDocCheckout(returnBuffer, translatedName);
 
     // Open document
     Qx::GenericError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
@@ -144,7 +144,7 @@ Qx::GenericError Install::commitPlatformDoc(std::unique_ptr<PlatformDoc> documen
     assert(document->parent() == this);
 
     // Prepare writer
-    std::shared_ptr<PlatformDocWriter> docWriter = preparePlatformDocCommit(document);
+    std::shared_ptr<PlatformDoc::Writer> docWriter = preparePlatformDocCommit(document);
 
     // Write
     Qx::GenericError writeErrorStatus = commitDataDocument(document.get(), docWriter);
@@ -162,7 +162,7 @@ Qx::GenericError Install::commitPlaylistDoc(std::unique_ptr<PlaylistDoc> documen
     assert(document->parent() == this);
 
     // Prepare writer
-    std::shared_ptr<PlaylistDocWriter> docWriter = preparePlaylistDocCommit(document);
+    std::shared_ptr<PlaylistDoc::Writer> docWriter = preparePlaylistDocCommit(document);
 
     // Write
     Qx::GenericError writeErrorStatus = commitDataDocument(document.get(), docWriter);

@@ -19,7 +19,7 @@ namespace Am
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Protected:
 CommonDocReader::CommonDocReader(Fe::DataDoc* targetDoc) :
-    Fe::DataDocReader(targetDoc),
+    Fe::DataDoc::Reader(targetDoc),
     mStreamReader(targetDoc->path())
 {}
 
@@ -81,7 +81,7 @@ Qx::GenericError CommonDocReader::readInto()
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Protected:
 CommonDocWriter::CommonDocWriter(Fe::DataDoc* sourceDoc) :
-    Fe::DataDocWriter(sourceDoc),
+    Fe::DataDoc::Writer(sourceDoc),
     mStreamWriter(sourceDoc->path(), Qx::WriteMode::Truncate)
 {}
 
@@ -126,18 +126,18 @@ QString ConfigDoc::versionedTagline()
 }
 
 //===============================================================================================================
-// ConfigDocReader
+// ConfigDoc::Reader
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Protected:
-ConfigDocReader::ConfigDocReader(ConfigDoc* targetDoc) :
+ConfigDoc::Reader::Reader(ConfigDoc* targetDoc) :
     CommonDocReader(targetDoc)
 {}
 
 //-Class Functions-------------------------------------------------------------------------------------------------
 //Protected:
-bool ConfigDocReader::splitKeyValue(const QString& line, QString& key, QString& value)
+bool ConfigDoc::Reader::splitKeyValue(const QString& line, QString& key, QString& value)
 {
     /* TODO: The result from this function is currently unused due to no easy way to raise a custom
      * error with the stream reader in this class (and how the current paradigm is to return bools
@@ -166,7 +166,7 @@ bool ConfigDocReader::splitKeyValue(const QString& line, QString& key, QString& 
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Protected:
-bool ConfigDocReader::checkDocValidity(bool& isValid)
+bool ConfigDoc::Reader::checkDocValidity(bool& isValid)
 {
     // Check for config "header"
     QString firstLine = mStreamReader.readLine();
@@ -181,18 +181,18 @@ bool ConfigDocReader::checkDocValidity(bool& isValid)
 }
 
 //===============================================================================================================
-// ConfigDocWriter
+// ConfigDoc::Writer
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-ConfigDocWriter::ConfigDocWriter(ConfigDoc* sourceDoc) :
+ConfigDoc::Writer::Writer(ConfigDoc* sourceDoc) :
     CommonDocWriter(sourceDoc)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-bool ConfigDocWriter::writeSourceDoc()
+bool ConfigDoc::Writer::writeSourceDoc()
 {
     // Write config doc "header"
     mStreamWriter.writeLine(static_cast<ConfigDoc*>(mSourceDocument)->versionedTagline());
@@ -226,18 +226,18 @@ bool Taglist::containsTag(QString tag) const { return mTags.contains(tag); }
 void Taglist::appendTag(QString tag) { mTags.append(tag); }
 
 //===============================================================================================================
-// TaglistWriter
+// Taglist::Writer
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-TaglistWriter::TaglistWriter(Taglist* sourceDoc) :
+Taglist::Writer::Writer(Taglist* sourceDoc) :
     CommonDocWriter(sourceDoc)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-bool TaglistWriter::writeSourceDoc()
+bool Taglist::Writer::writeSourceDoc()
 {
     // Get actual tag list
     Taglist* sourceList =  static_cast<Taglist*>(mSourceDocument);
@@ -337,23 +337,23 @@ void Romlist::finalize()
 }
 
 //===============================================================================================================
-// RomlistReader
+// Romlist::Reader
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-RomlistReader::RomlistReader(Romlist* targetDoc) :
+Romlist::Reader::Reader(Romlist* targetDoc) :
     CommonDocReader(targetDoc)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-QHash<QUuid, std::shared_ptr<RomEntry>>& RomlistReader::targetDocExistingRomEntries()
+QHash<QUuid, std::shared_ptr<RomEntry>>& Romlist::Reader::targetDocExistingRomEntries()
 {
     return static_cast<Romlist*>(mTargetDocument)->mEntriesExisting;
 }
 
-bool RomlistReader::checkDocValidity(bool& isValid)
+bool Romlist::Reader::checkDocValidity(bool& isValid)
 {
     // See if first line is the romlist header
     QString header = mStreamReader.readLine();
@@ -363,7 +363,7 @@ bool RomlistReader::checkDocValidity(bool& isValid)
     return !mStreamReader.hasError();
 }
 
-Qx::GenericError RomlistReader::readTargetDoc()
+Qx::GenericError Romlist::Reader::readTargetDoc()
 {
     // Read all romlist entries
     while(!mStreamReader.atEnd())
@@ -376,7 +376,7 @@ Qx::GenericError RomlistReader::readTargetDoc()
     return Qx::GenericError();
 }
 
-void RomlistReader::parseRomEntry(const QString& rawEntry)
+void Romlist::Reader::parseRomEntry(const QString& rawEntry)
 {
     // Prepare builder and iterator
     RomEntry::Builder reb;
@@ -419,7 +419,7 @@ void RomlistReader::parseRomEntry(const QString& rawEntry)
     targetDocExistingRomEntries()[existingEntry->id()] = existingEntry;
 }
 
-void RomlistReader::addFieldToBuilder(RomEntry::Builder& builder, QString field, quint8 index)
+void Romlist::Reader::addFieldToBuilder(RomEntry::Builder& builder, QString field, quint8 index)
 {
     switch(index)
     {
@@ -492,18 +492,18 @@ void RomlistReader::addFieldToBuilder(RomEntry::Builder& builder, QString field,
 }
 
 //===============================================================================================================
-// RomlistWriter
+// Romlist::Writer
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-RomlistWriter::RomlistWriter(Romlist* sourceDoc) :
+Romlist::Writer::Writer(Romlist* sourceDoc) :
     CommonDocWriter(sourceDoc)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-bool RomlistWriter::writeSourceDoc()
+bool Romlist::Writer::writeSourceDoc()
 {
     // Write rom list header
     mStreamWriter.writeLine(Romlist::HEADER);
@@ -519,7 +519,7 @@ bool RomlistWriter::writeSourceDoc()
     return true;
 }
 
-bool RomlistWriter::writeRomEntry(const RomEntry& romEntry)
+bool Romlist::Writer::writeRomEntry(const RomEntry& romEntry)
 {
     writeEntryField(romEntry.name().toString(QUuid::WithoutBraces));
     writeEntryField(romEntry.title());
@@ -547,7 +547,7 @@ bool RomlistWriter::writeRomEntry(const RomEntry& romEntry)
     return !mStreamWriter.hasError();
 }
 
-void RomlistWriter::writeEntryField(const QString& entryField, bool writeSeperator)
+void Romlist::Writer::writeEntryField(const QString& entryField, bool writeSeperator)
 {
     mStreamWriter << '"' << entryField << '"';
     if(writeSeperator)
@@ -668,20 +668,20 @@ void PlatformInterface::addSet(const Fp::Set& set, const Fe::ImageSources& image
 }
 
 //===============================================================================================================
-// PlatformInterfaceWriter
+// PlatformInterface::Writer
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlatformInterfaceWriter::PlatformInterfaceWriter(PlatformInterface* sourceDoc) :
-    Fe::DataDocWriter(sourceDoc),
-    Fe::PlatformDocWriter(sourceDoc),
+PlatformInterface::Writer::Writer(PlatformInterface* sourceDoc) :
+    Fe::DataDoc::Writer(sourceDoc),
+    Fe::PlatformDoc::Writer(sourceDoc),
     mTaglistWriter(&sourceDoc->mPlatformTaglist)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-Qx::GenericError PlatformInterfaceWriter::writeOutOf() { return mTaglistWriter.writeOutOf(); }
+Qx::GenericError PlatformInterface::Writer::writeOutOf() { return mTaglistWriter.writeOutOf(); }
 
 //===============================================================================================================
 // PlaylistInterface
@@ -712,20 +712,20 @@ void PlaylistInterface::addPlaylistGame(const Fp::PlaylistGame& playlistGame)
 };
 
 //===============================================================================================================
-// PlaylistInterfaceWriter
+// PlaylistInterface::Writer
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlaylistInterfaceWriter::PlaylistInterfaceWriter(PlaylistInterface* sourceDoc) :
-    Fe::DataDocWriter(sourceDoc),
-    Fe::PlaylistDocWriter(sourceDoc),
+PlaylistInterface::Writer::Writer(PlaylistInterface* sourceDoc) :
+    Fe::DataDoc::Writer(sourceDoc),
+    Fe::PlaylistDoc::Writer(sourceDoc),
     mTaglistWriter(&sourceDoc->mPlaylistTaglist)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-Qx::GenericError PlaylistInterfaceWriter::writeOutOf() { return mTaglistWriter.writeOutOf(); }
+Qx::GenericError PlaylistInterface::Writer::writeOutOf() { return mTaglistWriter.writeOutOf(); }
 
 //===============================================================================================================
 // Emulator
@@ -764,13 +764,13 @@ void Emulator::setExitHotkey(QString exitHotkey) { mExitHotkey = exitHotkey; }
 void Emulator::setArtworkEntry(EmulatorArtworkEntry entry) { mArtworkEntries[entry.type()] = entry; }
 
 //===============================================================================================================
-// EmulatorReader
+// Emulator::Reader
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
 EmulatorReader::EmulatorReader(Emulator* targetDoc) :
-    ConfigDocReader(targetDoc)
+    ConfigDoc::Reader(targetDoc)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -842,18 +842,18 @@ void EmulatorReader::parseArtwork(const QString& value)
 Emulator* EmulatorReader::targetEmulator() { return static_cast<Emulator*>(mTargetDocument); }
 
 //===============================================================================================================
-// EmulatorWriter
+// Emulator::Writer
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-EmulatorWriter::EmulatorWriter(Emulator* sourceDoc) :
-    ConfigDocWriter(sourceDoc)
+Emulator::Writer::Writer(Emulator* sourceDoc) :
+    ConfigDoc::Writer(sourceDoc)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-bool EmulatorWriter::writeConfigDoc()
+bool Emulator::Writer::writeConfigDoc()
 {
     // Set field alignment
     mStreamWriter.setFieldAlignment(QTextStream::AlignLeft);
@@ -877,7 +877,7 @@ bool EmulatorWriter::writeConfigDoc()
     return !mStreamWriter.hasError();
 }
 
-void EmulatorWriter::writeStandardKeyValue(const QString& key, const QString& value)
+void Emulator::Writer::writeStandardKeyValue(const QString& key, const QString& value)
 {
     mStreamWriter.setFieldWidth(STD_KEY_FIELD_WIDTH);
     mStreamWriter << key;
@@ -885,7 +885,7 @@ void EmulatorWriter::writeStandardKeyValue(const QString& key, const QString& va
     mStreamWriter << value << '\n';
 }
 
-void EmulatorWriter::writeArtworkEntry(const EmulatorArtworkEntry& entry)
+void Emulator::Writer::writeArtworkEntry(const EmulatorArtworkEntry& entry)
 {
     mStreamWriter.setFieldWidth(ARTWORK_KEY_FIELD_WIDTH);
     mStreamWriter << Emulator::Keys::ARTWORK;
@@ -896,6 +896,6 @@ void EmulatorWriter::writeArtworkEntry(const EmulatorArtworkEntry& entry)
     mStreamWriter << '\n';
 }
 
-Emulator* EmulatorWriter::sourceEmulator() { return static_cast<Emulator*>(mSourceDocument); }
+Emulator* Emulator::Writer::sourceEmulator() { return static_cast<Emulator*>(mSourceDocument); }
 
 }

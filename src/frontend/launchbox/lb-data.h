@@ -137,7 +137,7 @@ private:
     DocKey(const DocKey&) = default;
 };
 
-class XmlDocReader : public virtual Fe::DataDocReader
+class XmlDocReader : public virtual Fe::DataDoc::Reader
 {
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
@@ -156,7 +156,7 @@ public:
     Qx::GenericError readInto() override;
 };
 
-class XmlDocWriter : public virtual Fe::DataDocWriter
+class XmlDocWriter : public virtual Fe::DataDoc::Writer
 {
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
@@ -179,8 +179,10 @@ public:
 
 class PlatformDoc : public Fe::BasicPlatformDoc
 {
-    friend class PlatformDocReader;
-    friend class PlatformDocWriter;
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Reader;
+    class Writer;
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
@@ -205,11 +207,11 @@ public:
     void finalize() override;
 };
 
-class PlatformDocReader : public Fe::BasicPlatformDocReader, public XmlDocReader
+class PlatformDoc::Reader : public Fe::BasicPlatformDoc::Reader, public XmlDocReader
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    PlatformDocReader(PlatformDoc* targetDoc);
+    Reader(PlatformDoc* targetDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
@@ -219,11 +221,11 @@ private:
     void parseCustomField();
 };
 
-class PlatformDocWriter : public Fe::BasicPlatformDocWriter, public XmlDocWriter
+class PlatformDoc::Writer : public Fe::BasicPlatformDoc::Writer, public XmlDocWriter
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    PlatformDocWriter(PlatformDoc* sourceDoc);
+    Writer(PlatformDoc* sourceDoc);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
@@ -235,8 +237,10 @@ private:
 
 class PlaylistDoc : public Fe::BasicPlaylistDoc
 {
-    friend class PlaylistDocReader;
-    friend class PlaylistDocWriter;
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Reader;
+    class Writer;
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
@@ -253,11 +257,11 @@ private:
     std::shared_ptr<Fe::PlaylistGame> preparePlaylistGame(const Fp::PlaylistGame& game) override;
 };
 
-class PlaylistDocReader : public Fe::BasicPlaylistDocReader, public XmlDocReader
+class PlaylistDoc::Reader : public Fe::BasicPlaylistDoc::Reader, public XmlDocReader
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    PlaylistDocReader(PlaylistDoc* targetDoc);
+    Reader(PlaylistDoc* targetDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
@@ -266,11 +270,11 @@ private:
     void parsePlaylistGame();
 };
 
-class PlaylistDocWriter : public Fe::BasicPlaylistDocWriter, XmlDocWriter
+class PlaylistDoc::Writer : public Fe::BasicPlaylistDoc::Writer, XmlDocWriter
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    PlaylistDocWriter(PlaylistDoc* sourceDoc);
+    Writer(PlaylistDoc* sourceDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
@@ -281,8 +285,10 @@ private:
 
 class PlatformsConfigDoc : public Fe::DataDoc
 {
-    friend class PlatformsConfigDocReader;
-    friend class PlatformsConfigDocWriter;
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Reader;
+    class Writer;
 
 //-Class Variables-----------------------------------------------------------------------------------------------------
 public:
@@ -318,11 +324,11 @@ public:
 
 };
 
-class PlatformsConfigDocReader : public XmlDocReader
+class PlatformsConfigDoc::Reader : public XmlDocReader
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    PlatformsConfigDocReader(PlatformsConfigDoc* targetDoc);
+    Reader(PlatformsConfigDoc* targetDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
@@ -332,11 +338,11 @@ private:
     void parsePlatformCategory();
 };
 
-class PlatformsConfigDocWriter : public XmlDocWriter
+class PlatformsConfigDoc::Writer : public XmlDocWriter
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    PlatformsConfigDocWriter(PlatformsConfigDoc* sourceDoc);
+    Writer(PlatformsConfigDoc* sourceDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:

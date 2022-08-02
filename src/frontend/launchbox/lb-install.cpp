@@ -166,7 +166,7 @@ QString Install::dataDocPath(Fe::DataDoc::Identifier identifier) const
     }
 }
 
-std::shared_ptr<Fe::PlatformDocReader> Install::preparePlatformDocCheckout(std::unique_ptr<Fe::PlatformDoc>& platformDoc, const QString& translatedName)
+std::shared_ptr<Fe::PlatformDoc::Reader> Install::preparePlatformDocCheckout(std::unique_ptr<Fe::PlatformDoc>& platformDoc, const QString& translatedName)
 {
     // Create doc file reference
     Fe::DataDoc::Identifier docId(Fe::DataDoc::Type::Platform, translatedName);
@@ -175,13 +175,13 @@ std::shared_ptr<Fe::PlatformDocReader> Install::preparePlatformDocCheckout(std::
     platformDoc = std::make_unique<PlatformDoc>(this, dataDocPath(docId), translatedName, mImportDetails->updateOptions, DocKey{});
 
     // Construct doc reader (need to downcast pointer since doc pointer is upcasted after construction above)
-    std::shared_ptr<Fe::PlatformDocReader> docReader = std::make_shared<PlatformDocReader>(static_cast<PlatformDoc*>(platformDoc.get()));
+    std::shared_ptr<Fe::PlatformDoc::Reader> docReader = std::make_shared<PlatformDoc::Reader>(static_cast<PlatformDoc*>(platformDoc.get()));
 
     // Return reader and doc
     return docReader;
 }
 
-std::shared_ptr<Fe::PlaylistDocReader> Install::preparePlaylistDocCheckout(std::unique_ptr<Fe::PlaylistDoc>& playlistDoc, const QString& translatedName)
+std::shared_ptr<Fe::PlaylistDoc::Reader> Install::preparePlaylistDocCheckout(std::unique_ptr<Fe::PlaylistDoc>& playlistDoc, const QString& translatedName)
 {
      // Create doc file reference
     Fe::DataDoc::Identifier docId(Fe::DataDoc::Type::Playlist, translatedName);
@@ -190,25 +190,25 @@ std::shared_ptr<Fe::PlaylistDocReader> Install::preparePlaylistDocCheckout(std::
     playlistDoc = std::make_unique<PlaylistDoc>(this, dataDocPath(docId), translatedName, mImportDetails->updateOptions, DocKey{});
 
     // Construct doc reader (need to downcast pointer since doc pointer is upcasted after construction above)
-    std::shared_ptr<Fe::PlaylistDocReader> docReader = std::make_shared<PlaylistDocReader>(static_cast<PlaylistDoc*>(playlistDoc.get()));
+    std::shared_ptr<Fe::PlaylistDoc::Reader> docReader = std::make_shared<PlaylistDoc::Reader>(static_cast<PlaylistDoc*>(playlistDoc.get()));
 
     // Return reader and doc
     return docReader;
 }
 
-std::shared_ptr<Fe::PlatformDocWriter> Install::preparePlatformDocCommit(const std::unique_ptr<Fe::PlatformDoc>& platformDoc)
+std::shared_ptr<Fe::PlatformDoc::Writer> Install::preparePlatformDocCommit(const std::unique_ptr<Fe::PlatformDoc>& platformDoc)
 {
     // Construct doc writer
-    std::shared_ptr<Fe::PlatformDocWriter> docWriter = std::make_shared<PlatformDocWriter>(static_cast<PlatformDoc*>(platformDoc.get()));
+    std::shared_ptr<Fe::PlatformDoc::Writer> docWriter = std::make_shared<PlatformDoc::Writer>(static_cast<PlatformDoc*>(platformDoc.get()));
 
     // Return writer
     return docWriter;
 }
 
-std::shared_ptr<Fe::PlaylistDocWriter> Install::preparePlaylistDocCommit(const std::unique_ptr<Fe::PlaylistDoc>& playlistDoc)
+std::shared_ptr<Fe::PlaylistDoc::Writer> Install::preparePlaylistDocCommit(const std::unique_ptr<Fe::PlaylistDoc>& playlistDoc)
 {
     // Construct doc writer
-    std::shared_ptr<Fe::PlaylistDocWriter> docWriter = std::make_shared<PlaylistDocWriter>(static_cast<PlaylistDoc*>(playlistDoc.get()));
+    std::shared_ptr<Fe::PlaylistDoc::Writer> docWriter = std::make_shared<PlaylistDoc::Writer>(static_cast<PlaylistDoc*>(playlistDoc.get()));
 
     // Return writer
     return docWriter;
@@ -223,7 +223,7 @@ Qx::GenericError Install::checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsCo
     returnBuffer = std::make_unique<PlatformsConfigDoc>(this, dataDocPath(docId), DocKey{});
 
     // Construct doc reader
-    std::shared_ptr<PlatformsConfigDocReader> docReader = std::make_shared<PlatformsConfigDocReader>(returnBuffer.get());
+    std::shared_ptr<PlatformsConfigDoc::Reader> docReader = std::make_shared<PlatformsConfigDoc::Reader>(returnBuffer.get());
 
     // Open document
     Qx::GenericError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
@@ -241,7 +241,7 @@ Qx::GenericError Install::commitPlatformsConfigDoc(std::unique_ptr<PlatformsConf
     assert(document->parent() == this);
 
     // Prepare writer
-    std::shared_ptr<PlatformsConfigDocWriter> docWriter = std::make_shared<PlatformsConfigDocWriter>(document.get());
+    std::shared_ptr<PlatformsConfigDoc::Writer> docWriter = std::make_shared<PlatformsConfigDoc::Writer>(document.get());
 
     // Write
     Qx::GenericError writeErrorStatus = commitDataDocument(document.get(), docWriter);

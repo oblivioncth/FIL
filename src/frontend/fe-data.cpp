@@ -114,34 +114,34 @@ QString DataDoc::path() const { return mDocumentPath; }
 DataDoc::Identifier DataDoc::identifier() const { return Identifier(type(), mName); }
 
 //===============================================================================================================
-// DataDocReader
+// DataDoc::Reader
 //===============================================================================================================
 
 //-Constructor-----------------------------------------------------------------------------------------------------
 //Protected:
-DataDocReader::DataDocReader(DataDoc* targetDoc) :
+DataDoc::Reader::Reader(DataDoc* targetDoc) :
     mTargetDocument(targetDoc),
     mStdReadErrorStr(docHandlingErrorString(targetDoc, DocHandlingError::DocReadFailed))
 {}
 
 //-Destructor------------------------------------------------------------------------------------------------
 //Public:
-DataDocReader::~DataDocReader() {}
+DataDoc::Reader::~Reader() {}
 
 //===============================================================================================================
-// DataDocWriter
+// DataDoc::Writer
 //===============================================================================================================
 
 //-Constructor-----------------------------------------------------------------------------------------------------
 //Protected:
-DataDocWriter::DataDocWriter(DataDoc* sourceDoc) :
+DataDoc::Writer::Writer(DataDoc* sourceDoc) :
     mSourceDocument(sourceDoc),
     mStdWriteErrorStr(docHandlingErrorString(sourceDoc, DocHandlingError::DocWriteFailed))
 {}
 
 //-Destructor------------------------------------------------------------------------------------------------
 //Public:
-DataDocWriter::~DataDocWriter() {}
+DataDoc::Writer::~Writer() {}
 
 //===============================================================================================================
 // Errorable
@@ -188,6 +188,24 @@ PlatformDoc::PlatformDoc(Install* const parent, const QString& docPath, QString 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
 DataDoc::Type PlatformDoc::type() const { return Type::Platform; }
+
+//===============================================================================================================
+// PlatformDoc::Reader
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Protected:
+PlatformDoc::Reader::Reader(DataDoc* targetDoc) :
+    DataDoc::Reader(targetDoc)
+{}
+
+//===============================================================================================================
+// PlatformDoc::Writer
+//===============================================================================================================
+
+PlatformDoc::Writer::Writer(DataDoc* sourceDoc) :
+    DataDoc::Writer(sourceDoc)
+{}
 
 //===============================================================================================================
 // BasicPlatformDoc
@@ -252,23 +270,13 @@ void BasicPlatformDoc::finalize()
 }
 
 //===============================================================================================================
-// PlatformDocReader
+// BasicPlatformDoc::Reader
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Protected:
-PlatformDocReader::PlatformDocReader(DataDoc* targetDoc) :
-    DataDocReader(targetDoc)
-{}
-
-//===============================================================================================================
-// BasicPlatformDocReader
-//===============================================================================================================
-
-//-Constructor--------------------------------------------------------------------------------------------------------
-//Protected:
-BasicPlatformDocReader::BasicPlatformDocReader(DataDoc* targetDoc) :
-    PlatformDocReader(targetDoc)
+BasicPlatformDoc::Reader::Reader(DataDoc* targetDoc) :
+    PlatformDoc::Reader(targetDoc)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -277,32 +285,24 @@ BasicPlatformDocReader::BasicPlatformDocReader(DataDoc* targetDoc) :
  *       Right now this is considered to break encapsulation too much, but it might not be that big of a deal
  *       and would be cleaner from a usability standpoint that doing this
  */
-QHash<QUuid, std::shared_ptr<Game>>& BasicPlatformDocReader::targetDocExistingGames()
+QHash<QUuid, std::shared_ptr<Game>>& BasicPlatformDoc::Reader::targetDocExistingGames()
 {
     return static_cast<BasicPlatformDoc*>(mTargetDocument)->mGamesExisting;
 }
 
-QHash<QUuid, std::shared_ptr<AddApp>>& BasicPlatformDocReader::targetDocExistingAddApps()
+QHash<QUuid, std::shared_ptr<AddApp>>& BasicPlatformDoc::Reader::targetDocExistingAddApps()
 {
     return static_cast<BasicPlatformDoc*>(mTargetDocument)->mAddAppsExisting;
 }
 
 //===============================================================================================================
-// PlatformDocWriter
-//===============================================================================================================
-
-PlatformDocWriter::PlatformDocWriter(DataDoc* sourceDoc) :
-    DataDocWriter(sourceDoc)
-{}
-
-//===============================================================================================================
-// BasicPlatformDocWriter
+// BasicPlatformDoc::Writer
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Protected:
-BasicPlatformDocWriter::BasicPlatformDocWriter(DataDoc* sourceDoc) :
-    PlatformDocWriter(sourceDoc)
+BasicPlatformDoc::Writer::Writer(DataDoc* sourceDoc) :
+    PlatformDoc::Writer(sourceDoc)
 {}
 
 //===============================================================================================================
@@ -318,6 +318,26 @@ PlaylistDoc::PlaylistDoc(Install* const parent, const QString& docPath, QString 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
 DataDoc::Type PlaylistDoc::type() const { return Type::Platform; }
+
+//===============================================================================================================
+// PlaylistDoc::Reader
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Protected:
+PlaylistDoc::Reader::Reader(DataDoc* targetDoc) :
+    DataDoc::Reader(targetDoc)
+{}
+
+//===============================================================================================================
+// PlaylistDoc::Writer
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Protected:
+PlaylistDoc::Writer::Writer(DataDoc* sourceDoc) :
+    DataDoc::Writer(sourceDoc)
+{}
 
 //===============================================================================================================
 // BasicPlaylistDoc
@@ -390,55 +410,35 @@ void BasicPlaylistDoc::finalize()
 }
 
 //===============================================================================================================
-// PlaylistDocReader
+// BasicPlaylistDoc::Reader
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Protected:
-PlaylistDocReader::PlaylistDocReader(DataDoc* targetDoc) :
-    DataDocReader(targetDoc)
-{}
-
-//===============================================================================================================
-// BasicPlaylistDocReader
-//===============================================================================================================
-
-//-Constructor--------------------------------------------------------------------------------------------------------
-//Protected:
-BasicPlaylistDocReader::BasicPlaylistDocReader(DataDoc* targetDoc) :
-    PlaylistDocReader(targetDoc)
+BasicPlaylistDoc::Reader::Reader(DataDoc* targetDoc) :
+    PlaylistDoc::Reader(targetDoc)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Protected:
-QHash<QUuid, std::shared_ptr<PlaylistGame>>& BasicPlaylistDocReader::targetDocExistingPlaylistGames()
+QHash<QUuid, std::shared_ptr<PlaylistGame>>& BasicPlaylistDoc::Reader::targetDocExistingPlaylistGames()
 {
     return static_cast<BasicPlaylistDoc*>(mTargetDocument)->mPlaylistGamesExisting;
 }
 
-std::shared_ptr<PlaylistHeader>& BasicPlaylistDocReader::targetDocPlaylistHeader()
+std::shared_ptr<PlaylistHeader>& BasicPlaylistDoc::Reader::targetDocPlaylistHeader()
 {
     return static_cast<BasicPlaylistDoc*>(mTargetDocument)->mPlaylistHeader;
 }
 
 //===============================================================================================================
-// PlaylistDocWriter
+// BasicPlaylistDoc::Writer
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Protected:
-PlaylistDocWriter::PlaylistDocWriter(DataDoc* sourceDoc) :
-    DataDocWriter(sourceDoc)
-{}
-
-//===============================================================================================================
-// BasicPlaylistDocWriter
-//===============================================================================================================
-
-//-Constructor--------------------------------------------------------------------------------------------------------
-//Protected:
-BasicPlaylistDocWriter::BasicPlaylistDocWriter(DataDoc* sourceDoc) :
-    PlaylistDocWriter(sourceDoc)
+BasicPlaylistDoc::Writer::Writer(DataDoc* sourceDoc) :
+    PlaylistDoc::Writer(sourceDoc)
 {}
 
 }
