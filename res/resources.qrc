@@ -1,14 +1,14 @@
 <RCC>
     <qresource prefix="/">
-        <file>icon/Invalid_Install.png</file>
-        <file>icon/Mismatch_Install.png</file>
-        <file>icon/No_Install.png</file>
-        <file>icon/Valid_Install.png</file>
-        <file>icon/Update_Mode_Info.png</file>
-        <file>icon/CLIFp.png</file>
-        <file>icon/Exit.png</file>
-        <file>icon/GitHub.png</file>
-        <file>icon/frontend/LaunchBox.svg</file>
-        <file>icon/frontend/AttractMode.png</file>
+        <file>ui/Invalid_Install.png</file>
+        <file>ui/Mismatch_Install.png</file>
+        <file>ui/No_Install.png</file>
+        <file>ui/Valid_Install.png</file>
+        <file>ui/Update_Mode_Info.png</file>
+        <file>ui/CLIFp.png</file>
+        <file>ui/Exit.png</file>
+        <file>ui/GitHub.png</file>
+        <file>frontend/LaunchBox/icon.svg</file>
+        <file>frontend/AttractMode/icon.png</file>
     </qresource>
 </RCC>

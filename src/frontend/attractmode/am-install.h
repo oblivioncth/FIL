@@ -21,7 +21,7 @@ class Install : public Fe::Install
 public:
     // Identity
     static inline const QString NAME = "AttractMode";
-    static inline const QString ICON_PATH = ":/icon/frontend/AttractMode.png";
+    static inline const QString ICON_PATH = ":/frontend/AttractMode/icon.png";
     static inline const QUrl HELP_URL = QUrl("");
 
     // Naming

@@ -23,7 +23,7 @@ class Install : public Fe::Install
 public:
     // Identity
     static inline const QString NAME = "LaunchBox";
-    static inline const QString ICON_PATH = ":/icon/frontend/LaunchBox.svg";
+    static inline const QString ICON_PATH = ":/frontend/LaunchBox/icon.svg";
     static inline const QUrl HELP_URL = QUrl("https://forums.launchbox-app.com/files/file/2652-obbys-flashpoint-importer-for-launchbox");
 
     // Paths

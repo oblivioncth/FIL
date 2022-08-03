@@ -90,7 +90,7 @@
           <enum>Qt::PlainText</enum>
          </property>
          <property name="pixmap">
-          <pixmap resource="../res/resources.qrc">:/icon/No_Install.png</pixmap>
+          <pixmap resource="../res/resources.qrc">:/ui/No_Install.png</pixmap>
          </property>
          <property name="scaledContents">
           <bool>true</bool>
@@ -124,7 +124,7 @@
           <string/>
          </property>
          <property name="pixmap">
-          <pixmap resource="../res/resources.qrc">:/icon/No_Install.png</pixmap>
+          <pixmap resource="../res/resources.qrc">:/ui/No_Install.png</pixmap>
          </property>
          <property name="scaledContents">
           <bool>true</bool>
@@ -485,7 +485,7 @@
          </property>
          <property name="icon">
           <iconset resource="../res/resources.qrc">
-           <normaloff>:/icon/Update_Mode_Info.png</normaloff>:/icon/Update_Mode_Info.png</iconset>
+           <normaloff>:/ui/Update_Mode_Info.png</normaloff>:/ui/Update_Mode_Info.png</iconset>
          </property>
          <attribute name="buttonGroup">
           <string notr="true">buttonGroup_imageMode</string>
@@ -580,7 +580,7 @@
          </property>
          <property name="icon">
           <iconset resource="../res/resources.qrc">
-           <normaloff>:/icon/Update_Mode_Info.png</normaloff>:/icon/Update_Mode_Info.png</iconset>
+           <normaloff>:/ui/Update_Mode_Info.png</normaloff>:/ui/Update_Mode_Info.png</iconset>
          </property>
         </widget>
        </item>
@@ -837,7 +837,7 @@
          </property>
          <property name="icon">
           <iconset resource="../res/resources.qrc">
-           <normaloff>:/icon/Update_Mode_Info.png</normaloff>:/icon/Update_Mode_Info.png</iconset>
+           <normaloff>:/ui/Update_Mode_Info.png</normaloff>:/ui/Update_Mode_Info.png</iconset>
          </property>
         </widget>
        </item>
@@ -969,7 +969,7 @@
   <action name="action_exit">
    <property name="icon">
     <iconset resource="../res/resources.qrc">
-     <normaloff>:/icon/Exit.png</normaloff>:/icon/Exit.png</iconset>
+     <normaloff>:/ui/Exit.png</normaloff>:/ui/Exit.png</iconset>
    </property>
    <property name="text">
     <string>Exit</string>
@@ -978,7 +978,7 @@
   <action name="action_goToOFLIbGitHub">
    <property name="icon">
     <iconset resource="../res/resources.qrc">
-     <normaloff>:/icon/GitHub.png</normaloff>:/icon/GitHub.png</iconset>
+     <normaloff>:/ui/GitHub.png</normaloff>:/ui/GitHub.png</iconset>
    </property>
    <property name="text">
     <string>OFLIb (This Import Tool) GitHub</string>
@@ -987,7 +987,7 @@
   <action name="action_goToCLIFpGitHub">
    <property name="icon">
     <iconset resource="../res/resources.qrc">
-     <normaloff>:/icon/GitHub.png</normaloff>:/icon/GitHub.png</iconset>
+     <normaloff>:/ui/GitHub.png</normaloff>:/ui/GitHub.png</iconset>
    </property>
    <property name="text">
     <string>CLIFp (Command-line Interface) GitHub</string>
@@ -996,7 +996,7 @@
   <action name="action_goToLBForums">
    <property name="icon">
     <iconset>
-     <normaloff>:/icon/LaunchBox.png</normaloff>:/icon/LaunchBox.png</iconset>
+     <normaloff>:/ui/LaunchBox.png</normaloff>:/ui/LaunchBox.png</iconset>
    </property>
    <property name="text">
     <string>LaunchBox Forums Release Page</string>
@@ -1005,7 +1005,7 @@
   <action name="action_deployCLIFp">
    <property name="icon">
     <iconset resource="../res/resources.qrc">
-     <normaloff>:/icon/CLIFp.png</normaloff>:/icon/CLIFp.png</iconset>
+     <normaloff>:/ui/CLIFp.png</normaloff>:/ui/CLIFp.png</iconset>
    </property>
    <property name="text">
     <string>Deploy CLIFp</string>

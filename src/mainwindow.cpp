@@ -230,7 +230,7 @@ void MainWindow::validateInstall(QString installPath, InstallType install)
             mFrontendInstall = Fe::Install::acquireMatch(installPath);
             if(mFrontendInstall)
             {
-                ui->icon_frontend_install_status->setPixmap(QPixmap(":/icon/Valid_Install.png"));
+                ui->icon_frontend_install_status->setPixmap(QPixmap(":/ui/Valid_Install.png"));
                 ui->label_frontendVersion->setText(mFrontendInstall->name() + " " + mFrontendInstall->versionString());
             }
             else
@@ -243,10 +243,10 @@ void MainWindow::validateInstall(QString installPath, InstallType install)
             {
                 ui->label_flashpointVersion->setText(mFlashpointInstall->nameVersionString());
                 if(installMatchesTargetSeries(*mFlashpointInstall))
-                    ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/icon/Valid_Install.png"));
+                    ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/ui/Valid_Install.png"));
                 else
                 {
-                    ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/icon/Mismatch_Install.png"));
+                    ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/ui/Mismatch_Install.png"));
                     QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_VER_NOT_TARGET);
                 }
             }
@@ -399,7 +399,7 @@ void MainWindow::invalidateInstall(InstallType install, bool informUser)
     switch(install)
     {
         case InstallType::Frontend:
-            ui->icon_frontend_install_status->setPixmap(QPixmap(":/icon/Invalid_Install.png"));
+            ui->icon_frontend_install_status->setPixmap(QPixmap(":/ui/Invalid_Install.png"));
             ui->label_frontendVersion->clear();
             if(informUser)
                 QMessageBox::critical(this, QApplication::applicationName(), MSG_FE_INSTALL_INVALID);
@@ -407,7 +407,7 @@ void MainWindow::invalidateInstall(InstallType install, bool informUser)
             break;
 
         case InstallType::Flashpoint:
-            ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/icon/Invalid_Install.png"));
+            ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/ui/Invalid_Install.png"));
             ui->label_flashpointVersion->clear();
             if(informUser)
                 Qx::postError(mFlashpointInstall->error(), QMessageBox::Ok);
