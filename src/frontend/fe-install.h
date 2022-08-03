@@ -76,7 +76,7 @@ public:
 
     // Info
     virtual QString name() const = 0;
-    virtual QString executablePath() const = 0;
+    virtual QString executableName() const = 0;
     virtual QList<ImageMode> preferredImageModeOrder() const = 0;
     bool supportsImageMode(ImageMode imageMode) const;
     virtual QString versionString() const;

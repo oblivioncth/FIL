@@ -95,7 +95,7 @@ public:
 
     // Info
     QString name() const override;
-    QString executablePath() const override;
+    QString executableName() const override;
     QList<Fe::ImageMode> preferredImageModeOrder() const override;
     QString versionString() const override;
 

@@ -615,7 +615,7 @@ void MainWindow::prepareImport()
 
     // Only allow proceeding if frontend isn't running
     bool feRunning;
-    while((feRunning = Qx::processIsRunning(mFrontendInstall->executablePath())))
+    while((feRunning = Qx::processIsRunning(mFrontendInstall->executableName())))
         if(QMessageBox::critical(this, QApplication::applicationName(), MSG_FRONTEND_CLOSE_PROMPT, QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Retry) == QMessageBox::Cancel)
             break;
 
