@@ -251,7 +251,7 @@ add_generated_resources_collection(${TARGET_NAME}
 # Set target exe details
 include(FIL/WinExecutableDetails)
 set_win_executable_details(${TARGET_NAME}
-    ICON "res/icon/FIL.ico"
+    ICON "res/app/FIL.ico"
     FILE_VER ${PROJECT_VERSION}
     PRODUCT_VER ${TARGET_FP_VERSION_PREFIX}
     COMPANY_NAME "oblivioncth"
