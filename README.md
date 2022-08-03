@@ -168,6 +168,7 @@ This tool automatically handles installing/updating the command-line interface F
 - [Qx](https://github.com/oblivioncth/Qx/)
 - [libfp](https://github.com/oblivioncth/libfp/)
 - [CLIFp](https://github.com/oblivioncth/CLIFp)
+- [Neargye's Magic Enum](https://github.com/Neargye/magic_enum)
 
 ### Builds
 Tested with MSVC2022.
