@@ -39,16 +39,19 @@ Using a version of FIL that does not target the version of Flashpoint you wish t
 
 The title of each [release](github.com/oblivioncth/FIL/releases) will indicate which version of Flashpoint it targets.
 
-### Launcher Specific Details
+## Launcher Specific Details
 *If enough frontends are added this section will likely be converted into a wiki.*
 
+--------------------------------------------------------------------------------------------------
 **LaunchBox**
+
 The import strategy for LaunchBox results in a setup that is straightforward and very similar to when Flashpoint used LaunchBox as its frontend. Platforms to platforms, playlists to playlists, games to games, additional apps to additional apps, and so forth.
 
 All entry metadata is converted to its nearest LaunchBox equivalent, with nearly all fields being covered. One minor exception is the Flashpoint "Language" field, as it is added as a LaunchBox Custom Field, which requires a premium license to see.
 
 Everything should work out-of-the-box after an import.
 
+--------------------------------------------------------------------------------------------------
 **AttractMode**
 
 Summary:
