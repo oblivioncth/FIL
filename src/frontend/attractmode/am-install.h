@@ -40,6 +40,7 @@ public:
     static inline const QString LOGO_FOLDER_NAME = "flyer";
     static inline const QString SCREENSHOT_FOLDER_NAME = "snap";
     static inline const QString OVERVIEW_FOLDER_NAME = "overview";
+    static inline const QString MARQUEE_FOLDER_NAME = "marquee";
 
     // Files
     static inline const QString TXT_EXT = "txt";
@@ -55,6 +56,9 @@ public:
      * NOTE: In order to support reference, thousands of folders would have to be added to the image search list which is likely impractical.
      * It could be attempted I suppose.
      */
+
+    // Extra
+    static inline const QString MARQUEE_PATH = ":/frontend/AttractMode/marquee.png";
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:

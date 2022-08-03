@@ -535,7 +535,20 @@ Qx::GenericError Install::postImport()
     }
 
     // Commit main config
-    return commitMainConfig(std::move(mainConfig));
+    Qx::GenericError configCommitError = commitMainConfig(std::move(mainConfig));
+
+    // Stop import if error occurred
+    if(configCommitError.isValid())
+        return configCommitError;
+
+    // Add/Update marquee (if it fails, not worth aborting over so ignore error status)
+    QDir fpMarqueeDirectory(mFpScraperDirectory.absoluteFilePath(MARQUEE_FOLDER_NAME));
+    fpMarqueeDirectory.mkpath(".");
+    QFileInfo srcMarqueeInfo(MARQUEE_PATH);
+    QFile::copy(MARQUEE_PATH, fpMarqueeDirectory.absoluteFilePath(Fp::NAME + '.' + srcMarqueeInfo.completeSuffix()));
+
+    // Return success
+    return Qx::GenericError();
 }
 
 void Install::processDirectGameImages(const Fe::Game* game, const Fe::ImageSources& imageSources)
