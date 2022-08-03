@@ -93,6 +93,7 @@ All of the default AttractMode layouts don't work particularly well with Flashpo
  - Not enough space for many titles, especially additional apps
  - Some layouts showing the "AltTitle" of each entry beside them, wasting further space since that field is used for sorting purposes in this use case and isn't really intended to be displayed.
  - Most layouts stretch the images instead of preserving their aspect ratio. This can be changed for some layouts, though since layout settings are global this will affect all of your displays so I did not configure the importer to make this change automatically.
+ - No layouts actually display overviews
 
 For this reason it is recommended to use a third-party layout that avoids these issues as best as possible. I cannot recommend one as at this time I do not use AttractMode personally. In the future I may try creating a simple one that is ideal for Flashpoint, thought I cannot promise this. If someone wants to share one they end up creating or recommend an existing one that works well that would be appreciated.
 
