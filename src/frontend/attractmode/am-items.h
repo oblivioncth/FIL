@@ -29,7 +29,7 @@ private:
     //mTitle - Handled as alias for Fe::Game::mName
     QString mEmulator;
     QString mCloneOf;
-    QDateTime mYear;
+    QDate mYear;
     QString mManufacturer;
     //mCategory - Handled as alias for Fe::Game::mPlatform
     QString mPlayers;
@@ -59,7 +59,7 @@ public:
      QString title() const; // Alias for Fe::Game::name
      QString emulator() const;
      QString cloneOf() const;
-     QDateTime year() const;
+     QDate year() const;
      QString manufacturer() const;
      QString category() const; // Alias for Fe::Game::platform
      QString players() const;

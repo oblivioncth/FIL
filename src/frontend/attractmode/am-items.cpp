@@ -18,7 +18,7 @@ RomEntry::RomEntry(const Fp::Game& flashpointGame) :
     Fe::Game(flashpointGame.id(), flashpointGame.title(), flashpointGame.platform()),
     mEmulator(Fp::NAME),
     mCloneOf(),
-    mYear(flashpointGame.releaseDate()),
+    mYear(flashpointGame.releaseDate().date()),
     mManufacturer(flashpointGame.developer()),
     mPlayers(flashpointGame.playMode()),
     mRotation(0),
@@ -42,7 +42,7 @@ RomEntry::RomEntry(const Fp::AddApp& flashpointAddApp, const Fp::Game& parentGam
     Fe::Game(flashpointAddApp.id(), parentGame.title() + " |> "+ flashpointAddApp.name(), QString()),
     mEmulator(Fp::NAME),
     mCloneOf(flashpointAddApp.parentId().toString(QUuid::WithoutBraces)),
-    mYear(parentGame.releaseDate()),
+    mYear(parentGame.releaseDate().date()),
     mManufacturer(parentGame.developer()),
     mPlayers(),
     mRotation(0),
@@ -68,7 +68,7 @@ QUuid RomEntry::name() const { return mId; } // Alias for Fe::Game::Id
 QString RomEntry::title() const { return mName; }; // Alias for Fe::Game::name
 QString RomEntry::emulator() const { return mEmulator; }
 QString RomEntry::cloneOf() const { return mCloneOf; }
-QDateTime RomEntry::year() const{ return mYear; }
+QDate RomEntry::year() const{ return mYear; }
 QString RomEntry::manufacturer() const { return mManufacturer; }
 QString RomEntry::category() const { return mPlatform; } // Alias for Fe::Game::platform
 QString RomEntry::players() const { return mPlayers; }
@@ -103,7 +103,7 @@ RomEntry::Builder& RomEntry::Builder::wCloneOf(QString cloneOf) { mItemBlueprint
 
 RomEntry::Builder& RomEntry::Builder::wYear(QString rawYear)
 {
-    mItemBlueprint.mYear = QDateTime::fromString(rawYear);
+    mItemBlueprint.mYear = QDate::fromString(rawYear, Qt::ISODate);
     return *this;
 }
 

@@ -525,7 +525,7 @@ bool Romlist::Writer::writeRomEntry(const RomEntry& romEntry)
     writeEntryField(romEntry.title());
     writeEntryField(romEntry.emulator());
     writeEntryField(romEntry.cloneOf());
-    writeEntryField(romEntry.year().toString());
+    writeEntryField(romEntry.year().toString(Qt::ISODate));
     writeEntryField(romEntry.manufacturer());
     writeEntryField(romEntry.category());
     writeEntryField(romEntry.players());
