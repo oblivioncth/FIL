@@ -4,6 +4,9 @@
 // Qx Includes
 #include <qx/utility/qx-helpers.h>
 
+// magic_enum Includes
+#include "magic_enum.hpp"
+
 namespace Am
 {
 
