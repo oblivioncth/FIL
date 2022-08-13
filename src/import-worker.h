@@ -30,7 +30,6 @@ private:
     {
     public:
         static inline const QString AddAppPreload = "AddAppPreload";
-        static inline const QString AddAppMatchImport = "AddAppMatchImport";
         static inline const QString ImageDownload = "ImageDownload";
         static inline const QString ImageTransfer = "ImageTransfer";
         static inline const QString GameImport = "GameImport";
@@ -48,30 +47,22 @@ public:
     struct OptionSet
     {
         Fe::UpdateOptions updateOptions;
-        Fe::Install::ImageMode imageMode;
+        Fe::ImageMode imageMode;
         bool downloadImages;
         PlaylistGameMode playlistMode;
         Fp::Db::InclusionOptions inclusionOptions;
-    };
-
-    struct ImageTransferJob
-    {
-        QString sourcePath;
-        QString destPath;
     };
 
 //-Class Variables-----------------------------------------------------------------------------------------------
 public:
     // Import Steps
     static inline const QString STEP_ADD_APP_PRELOAD = "Pre-loading Additional Apps...";
-    static inline const QString STEP_IMPORTING_PLATFORM_GAMES = "Importing games for platform %1...";
-    static inline const QString STEP_IMPORTING_PLAYLIST_SPEC_GAMES = "Importing playlist specific games for platform %1...";
-    static inline const QString STEP_IMPORTING_PLATFORM_ADD_APPS = "Importing additional apps for platform %1...";
-    static inline const QString STEP_IMPORTING_PLAYLIST_SPEC_ADD_APPS = "Importing playlist specific additional apps for platform %1...";
+    static inline const QString STEP_IMPORTING_PLATFORM_SETS = "Importing games and additional apps for platform %1...";
+    static inline const QString STEP_IMPORTING_PLAYLIST_SPEC_SETS = "Importing playlist specific and additional apps for platform %1...";
     static inline const QString STEP_IMPORTING_PLAYLIST_GAMES = "Importing playlist %1...";
-    static inline const QString STEP_SETTING_IMAGE_REFERENCES = "Setting image references...";
     static inline const QString STEP_DOWNLOADING_IMAGES = "Downloading images...";
     static inline const QString STEP_IMPORTING_IMAGES = "Importing images...";
+    static inline const QString STEP_FINALIZING = "Finalizing...";
 
     // Import Errors
     static inline const QString MSG_FP_DB_CANT_CONNECT = "Failed to establish a handle to the Flashpoint database:";
@@ -103,10 +94,9 @@ private:
     OptionSet mOptionSet;
 
     // Job Caches
-    QSet<Fp::AddApp> mAddAppsCache;
+    QMultiHash<QUuid, Fp::AddApp> mAddAppsCache; // Stores in groups based on parent ID
     QHash<QUuid, Fp::Playlist> mPlaylistsCache;
     QSet<QUuid> mImportedGameIdsCache;
-    QList<ImageTransferJob> mImageTransferJobs;
 
     // Progress Tracking
     Qx::GroupedProgressManager mProgressManager;

@@ -137,10 +137,11 @@ private:
     DocKey(const DocKey&) = default;
 };
 
-class XmlDocReader : public virtual Fe::DataDocReader
+class XmlDocReader : public virtual Fe::DataDoc::Reader
 {
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
+    QFile mXmlFile;
     QXmlStreamReader mStreamReader;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
@@ -155,10 +156,11 @@ public:
     Qx::GenericError readInto() override;
 };
 
-class XmlDocWriter : public virtual Fe::DataDocWriter
+class XmlDocWriter : public virtual Fe::DataDoc::Writer
 {
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
+    QFile mXmlFile;
     QXmlStreamWriter mStreamWriter;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
@@ -175,11 +177,12 @@ public:
     Qx::GenericError writeOutOf() override;
 };
 
-class PlatformDoc : public Fe::PlatformDoc
+class PlatformDoc : public Fe::BasicPlatformDoc
 {
-    friend class PlatformDocReader;
-    friend class PlatformDocWriter;
-    friend class Install;
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Reader;
+    class Writer;
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
@@ -188,26 +191,27 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlatformDoc(Install* const parent, std::unique_ptr<QFile> xmlFile, QString docName, Fe::UpdateOptions updateOptions,
+    explicit PlatformDoc(Install* const parent, const QString& xmlPath, QString docName, Fe::UpdateOptions updateOptions,
                          const DocKey&);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
-private:
-    Type type() const override;
-    std::shared_ptr<Fe::Game> prepareGame(const Fp::Game& game) override;
+private:    
+    std::shared_ptr<Fe::Game> prepareGame(const Fp::Game& game, const Fe::ImageSources& images) override;
     std::shared_ptr<Fe::AddApp> prepareAddApp(const Fp::AddApp& addApp) override;
 
     void addCustomField(std::shared_ptr<CustomField> customField);
 
 public:
-    void finalizeDerived() override;
+    bool isEmpty() const override;
+
+    void finalize() override;
 };
 
-class PlatformDocReader : public Fe::PlatformDocReader, public XmlDocReader
+class PlatformDoc::Reader : public Fe::BasicPlatformDoc::Reader, public XmlDocReader
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    PlatformDocReader(PlatformDoc* targetDoc);
+    Reader(PlatformDoc* targetDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
@@ -217,11 +221,11 @@ private:
     void parseCustomField();
 };
 
-class PlatformDocWriter : public Fe::PlatformDocWriter, public XmlDocWriter
+class PlatformDoc::Writer : public Fe::BasicPlatformDoc::Writer, public XmlDocWriter
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    PlatformDocWriter(PlatformDoc* sourceDoc);
+    Writer(PlatformDoc* sourceDoc);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
@@ -231,11 +235,12 @@ private:
     bool writeCustomField(const CustomField& customField);
 };
 
-class PlaylistDoc : public Fe::PlaylistDoc
+class PlaylistDoc : public Fe::BasicPlaylistDoc
 {
-    friend class PlaylistDocReader;
-    friend class PlaylistDocWriter;
-    friend class Install;
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Reader;
+    class Writer;
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
@@ -243,21 +248,20 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlaylistDoc(Install* const parent, std::unique_ptr<QFile> xmlFile, QString docName, Fe::UpdateOptions updateOptions,
+    explicit PlaylistDoc(Install* const parent, const QString& xmlPath, QString docName, Fe::UpdateOptions updateOptions,
                          const DocKey&);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
-    Type type() const override;
     std::shared_ptr<Fe::PlaylistHeader> preparePlaylistHeader(const Fp::Playlist& playlist) override;
     std::shared_ptr<Fe::PlaylistGame> preparePlaylistGame(const Fp::PlaylistGame& game) override;
 };
 
-class PlaylistDocReader : public Fe::PlaylistDocReader, public XmlDocReader
+class PlaylistDoc::Reader : public Fe::BasicPlaylistDoc::Reader, public XmlDocReader
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    PlaylistDocReader(PlaylistDoc* targetDoc);
+    Reader(PlaylistDoc* targetDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
@@ -266,11 +270,11 @@ private:
     void parsePlaylistGame();
 };
 
-class PlaylistDocWriter : public Fe::PlaylistDocWriter, XmlDocWriter
+class PlaylistDoc::Writer : public Fe::BasicPlaylistDoc::Writer, XmlDocWriter
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    PlaylistDocWriter(PlaylistDoc* sourceDoc);
+    Writer(PlaylistDoc* sourceDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
@@ -279,11 +283,12 @@ private:
     bool writePlaylistGame(const PlaylistGame& playlistGame);
 };
 
-class PlatformsDoc : public Fe::DataDoc
+class PlatformsConfigDoc : public Fe::DataDoc
 {
-    friend class PlatformsDocReader;
-    friend class PlatformsDocWriter;
-    friend class Install;
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Reader;
+    class Writer;
 
 //-Class Variables-----------------------------------------------------------------------------------------------------
 public:
@@ -297,30 +302,33 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlatformsDoc(Install* const parent, std::unique_ptr<QFile> xmlFile, const DocKey&);
+    explicit PlatformsConfigDoc(Install* const parent, const QString& xmlPath, const DocKey&);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
     Type type() const override;
 
 public:
-    const QHash<QString, Platform>& getPlatforms() const;
-    const QMap<QString, QMap<QString, QString>>& getPlatformFolders() const;
-    const QList<PlatformCategory>& getPlatformCategories() const;
+    bool isEmpty() const override;
+
+    const QHash<QString, Platform>& platforms() const;
+    const QMap<QString, QMap<QString, QString>>& platformFolders() const;
+    const QList<PlatformCategory>& platformCategories() const;
 
     bool containsPlatform(QString name);
 
     void addPlatform(Platform platform);
+    void removePlatform(QString name);
 
     void setMediaFolder(QString platform, QString mediaType, QString folderPath);
 
 };
 
-class PlatformsDocReader : public XmlDocReader
+class PlatformsConfigDoc::Reader : public XmlDocReader
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    PlatformsDocReader(PlatformsDoc* targetDoc);
+    Reader(PlatformsConfigDoc* targetDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
@@ -330,11 +338,11 @@ private:
     void parsePlatformCategory();
 };
 
-class PlatformsDocWriter : public XmlDocWriter
+class PlatformsConfigDoc::Writer : public XmlDocWriter
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    PlatformsDocWriter(PlatformsDoc* sourceDoc);
+    Writer(PlatformsConfigDoc* sourceDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
