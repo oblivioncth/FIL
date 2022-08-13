@@ -4,6 +4,8 @@ FIL  is an importer tool for several launchers/frontends that allows one to add 
 
 For Platforms, the importer is capable of importing each game/animation along with any additional apps, images, and most of the metadata fields (i.e. Title, Description, etc, see below).
 
+[![Dev Builds](https://github.com/oblivioncth/FIL/actions/workflows/push-reaction.yml/badge.svg?branch=dev)](https://github.com/oblivioncth/FIL/actions/workflows/push-reaction.yml)
+
 ## Function
 This utility makes use of its sister project [CLIFp (Command-line Interface for Flashpoint)](https://github.com/oblivioncth/CLIFp) to allow launchers to actually start and exit the games correctly. It is automatically deployed into your Flashpoint installation (updated if necessary) at the end of a successful import and the latest version of CLIFp will be included in each release of this utility so it is not generally something the end-user needs to concern themselves with.
 
