@@ -368,7 +368,7 @@ bool MainWindow::parseFrontendData()
 
     // IO Error Check
     if(existingCheck.isValid())
-        Qx::postError(existingCheck);
+        Qx::postBlockingError(existingCheck);
 
     // Return true on success
     return !existingCheck.isValid();
@@ -410,7 +410,7 @@ void MainWindow::invalidateInstall(InstallType install, bool informUser)
             ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/ui/Invalid_Install.png"));
             ui->label_flashpointVersion->clear();
             if(informUser)
-                Qx::postError(mFlashpointInstall->error(), QMessageBox::Ok);
+                Qx::postBlockingError(mFlashpointInstall->error(), QMessageBox::Ok);
             mFlashpointInstall.reset();
             break;
     }
@@ -699,7 +699,7 @@ void MainWindow::revertAllFrontendChanges()
         else
         {
             currentError.setCaption(CAPTION_REVERT_ERR);
-            retryChoice = Qx::postError(currentError, QMessageBox::Retry | QMessageBox::Ignore | QMessageBox::Abort, QMessageBox::Retry);
+            retryChoice = Qx::postBlockingError(currentError, QMessageBox::Retry | QMessageBox::Ignore | QMessageBox::Abort, QMessageBox::Retry);
 
             if(retryChoice == QMessageBox::Ignore)
                 tempSkip = true;
@@ -749,7 +749,7 @@ void MainWindow::standaloneCLIFpDeploy()
             }
         }
         else
-            Qx::postError(tempFlashpointInstall.error(), QMessageBox::Ok);
+            Qx::postBlockingError(tempFlashpointInstall.error(), QMessageBox::Ok);
     }
 }
 void MainWindow::showTagSelectionDialog()
@@ -998,7 +998,7 @@ void MainWindow::handleBlockingError(std::shared_ptr<int> response, Qx::GenericE
     mWindowTaskbarButton->setProgressState(Qx::TaskbarButton::Stopped);
 
     // Post error and get response
-    int userChoice = Qx::postError(blockingError, choices);
+    int userChoice = Qx::postBlockingError(blockingError, choices);
 
     // Clear taskbar error
     mWindowTaskbarButton->setProgressState(Qx::TaskbarButton::Normal);
@@ -1031,7 +1031,7 @@ void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx:
 
     // Post error report if present
     if(errorReport.isValid())
-        Qx::postError(errorReport, QMessageBox::Ok);
+        Qx::postBlockingError(errorReport, QMessageBox::Ok);
 
     if(importResult == ImportWorker::Successful)
     {

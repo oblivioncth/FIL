@@ -91,7 +91,7 @@ add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 
 # Fetch Qx (build and import from source)
 include(FIL/FetchQx)
-fetch_qx("9f60cb84bab308fee9db0e81d37f4451d26ffeb7")
+fetch_qx("v0.3.1")
 
 # Fetch Neargye's Magic Enum
 include(FIL/FetchMagicEnum)
@@ -99,11 +99,11 @@ fetch_magicenum("v0.8.0")
 
 # Fetch libfp (build and import from source)
 include(FIL/Fetchlibfp)
-fetch_libfp("787476d811fdae593b8664a7b2fe799f76cda7b8")
+fetch_libfp("v0.1.1")
 
 # Fetch CLIFp (build and import from source)
 include(FIL/FetchCLIFp)
-fetch_clifp("0d1359c9bd5ff9c9bcbfa3d83eea8a9a558e7bda")
+fetch_clifp("v0.8.2")
 
 # Setup copy of CLIFp executable to FIL generated resources directory after its built
 # ...
