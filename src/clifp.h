@@ -10,12 +10,12 @@
 // libfp Includes
 #include <fp/flashpoint/fp-install.h>
 
-
 class CLIFp
 {
 // Class members
 public:
-    static inline const QString EXE_NAME = "CLIFp.exe";
+    static inline const QString NAME = "CLIFp";
+    static inline const QString EXE_NAME = NAME + ".exe";
     static inline const QString PLAY_COMMAND = "play";
     static inline const QString RUN_COMMAND = "run";
     static inline const QString SHOW_COMMAND = "show";

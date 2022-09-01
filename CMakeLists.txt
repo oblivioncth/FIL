@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.21.1)
 
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
-set(FIL_BASE_VERSION 0.5) # Required for CI/CD
+set(FIL_BASE_VERSION 0.6) # Required for CI/CD
 project(FIL
     VERSION ${FIL_BASE_VERSION}
     LANGUAGES CXX
@@ -15,7 +15,7 @@ set(FORMAL_NAME "Flashpoint Importer for Launchers")
 string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LC)
 string(TOUPPER ${PROJECT_NAME} PROJECT_NAME_UC)
 
-set(TARGET_FP_VERSION_PREFIX 10.1)
+set(TARGET_FP_VERSION_PREFIX 11)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # C++
@@ -91,15 +91,19 @@ add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 
 # Fetch Qx (build and import from source)
 include(FIL/FetchQx)
-fetch_qx("v0.3.0.3")
+fetch_qx("428c8c300738f3bb7892816e52c198308bbe8505")
 
 # Fetch libfp (build and import from source)
 include(FIL/Fetchlibfp)
-fetch_libfp("v0.1")
+fetch_libfp("d031e25805c20c4638682a695f75d7917b7351c5")
 
 # Fetch CLIFp (build and import from source)
 include(FIL/FetchCLIFp)
-fetch_clifp("v0.8.1")
+fetch_clifp("v0.9")
+
+# Fetch Neargye's Magic Enum
+include(FIL/FetchMagicEnum)
+fetch_magicenum("v0.8.0")
 
 # Setup copy of CLIFp executable to FIL generated resources directory after its built
 # ...
@@ -128,22 +132,35 @@ set(CXX_SOURCES
     src/clifp.cpp
     src/frontend/fe-data.h
     src/frontend/fe-data.cpp
+    src/frontend/fe-installfoundation.h
+    src/frontend/fe-installfoundation.cpp
     src/frontend/fe-install.h
     src/frontend/fe-install.cpp
     src/frontend/fe-items.h
     src/frontend/fe-items.cpp
-    src/frontend/launchbox/lb-data.h
-    src/frontend/launchbox/lb-data.cpp
-    src/frontend/launchbox/lb-install.h
-    src/frontend/launchbox/lb-install.cpp
-    src/frontend/launchbox/lb-items.h
-    src/frontend/launchbox/lb-items.cpp
     src/import-worker.h
     src/import-worker.cpp
     src/mainwindow.h
     src/mainwindow.cpp
     src/main.cpp
 )
+
+set(FRONTEND_SOURCE_DIRS
+    launchbox
+    attractmode
+)
+
+foreach(frontend ${FRONTEND_SOURCE_DIRS})
+    file(GLOB frontend_sources
+         LIST_DIRECTORIES FALSE
+         RELATIVE "${CMAKE_CURRENT_LIST_DIR}"
+         CONFIGURE_DEPENDS
+         "src/frontend/${frontend}/*.h"
+         "src/frontend/${frontend}/*.cpp"
+     )
+
+    list(APPEND CXX_SOURCES ${frontend_sources})
+endforeach()
 
 set(QT_UI_RESOURCES
     src/mainwindow.ui
@@ -200,6 +217,7 @@ target_link_libraries(${TARGET_NAME}
         Qx::Windows-gui
         Qx::Xml
         Fp::Flashpoint
+        magic_enum::magic_enum
 )
 
 # Configure target properties
@@ -233,7 +251,7 @@ add_generated_resources_collection(${TARGET_NAME}
 # Set target exe details
 include(FIL/WinExecutableDetails)
 set_win_executable_details(${TARGET_NAME}
-    ICON "res/icon/FIL.ico"
+    ICON "res/app/FIL.ico"
     FILE_VER ${PROJECT_VERSION}
     PRODUCT_VER ${TARGET_FP_VERSION_PREFIX}
     COMPANY_NAME "oblivioncth"
@@ -264,6 +282,8 @@ write_basic_package_version_file(
 
 #================= Install ==========================
 
+set(TOP_LEVEL_INSTALL_COMPONENT ${PROJECT_NAME_LC})
+
 # Install executable
 install(TARGETS ${TARGET_NAME}
     CONFIGURATIONS Release
@@ -286,6 +306,7 @@ install(EXPORT ${PROJECT_NAME}Targets
 # Install package config
 install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}Config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}ConfigVersion.cmake"
     CONFIGURATIONS Release
     COMPONENT ${TARGET_NAME}
     DESTINATION cmake
@@ -306,6 +327,7 @@ install(FILES
 # For in source builds
 export(EXPORT ${PROJECT_NAME}Targets
     FILE "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}Targets.cmake"
+    NAMESPACE ${PROJECT_NAME}::
 )
 
 #====================== CPack ==============================

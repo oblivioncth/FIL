@@ -59,26 +59,25 @@ private:
                                                        "<br>"
                                                        "<b>%3</b> - Games in your collection that are not present in the target version of Flashpoint will be removed (only for selected items). You will no longer be able to play such "
                                                        "games if this option is unchecked, but this may be useful for archival purposes or in case you later want to revert to a previous version of Flashpoint and maintain the entries personal "
-                                                       "metadata. Note that this option will still cause missing games to be removed even if you are going backwards to a previous version of FP, as implied above. Additionally, this option will "
-                                                       "remove any existing Extreme games in your collection, for the select platforms, if you have the <i>%4</i> option unselected.";
-
+                                                       "metadata. Note that this option will also remove any games that are not covered by your current import selections (i.e. platforms, playlists, tag filter, etc.), even if they still remain "
+                                                       "in Flashpoint";
     static inline const QString MSG_IMAGE_MODE_HELP = "<b>%1</b> - All relevant images from Flashpoint will be fully copied into your frontend installation. This causes zero overhead but will require additional storage space proportional to "
                                                       "the number of games you end up importing, up to double if all platforms are selected.<br>"
                                                       "<b>Space Consumption:</b> High<br>"
                                                       "<b>Import Speed:</b> Very Slow<br>"
-                                                      "<b>Image Cache Build Speed:</b> Fast<br>"
+                                                      "<b>Frontend Access Speed:</b> Fast<br>"
                                                       "<br>"
                                                       "<b>%2</b> - Your frontend platform configuration will be altered so that the relevant image folders within Flashpoint are directly referenced by its media scanner, requiring no "
                                                       "extra space and causing no overhead.<br>"
                                                       "<b>Space Consumption:</b> None<br>"
                                                       "<b>Import Speed:</b> Fast<br>"
-                                                      "<b>Image Cache Build Speed:</b> Very Slow<br>"
+                                                      "<b>>Frontend Access Speed:</b>Varies, but usually slow<br>"
                                                       "<br>"
                                                       "<b>%3</b> - A symbolic link to each relevant image from Flashpoint will be created in your frontend installation. These appear like the real files to the frontend, adding only a minuscule "
                                                       "amount of overhead when it loads images and require almost no extra disk space to store.<br>"
                                                       "<b>Space Consumption:</b> Near-zero<br>"
                                                       "<b>Import Speed:</b> Slow<br>"
-                                                      "<b>Image Cache Build Speed:</b> Fast<br>";
+                                                      "<b>>Frontend Access Speed:</b> Fast<br>";
 
     // Messages - Input
     static inline const QString MSG_FE_INSTALL_INVALID = "The specified directory either doesn't contain a valid frontend install, or it contains a version that is incompatible with this tool.";
@@ -94,7 +93,7 @@ private:
                                                           "\n"
                                                           "Are you sure you want to proceed?";
     static inline const QString MSG_FRONTEND_CLOSE_PROMPT = "The importer has detected that the selected frontend is running. It must be closed in order to continue. If recently closed, wait a few moments before trying to proceed again as it performs significant cleanup in the background.";
-    static inline const QString MSG_POST_IMPORT = "The Flashpoint import has completed successfully. Next time you start the frontend it may take longer than usual as it will have to fill in some default fields for the imported Platforms/Playlists.\n"
+    static inline const QString MSG_POST_IMPORT = "The Flashpoint import has completed successfully. Next time you start the frontend it may take longer than usual as it may have to fill in some default fields for the imported Platforms/Playlists.\n"
                                                   "\n"
                                                   "If you wish to import further selections or update to a newer version of Flashpoint, simply re-run this procedure after pointing it to the desired Flashpoint installation.";
     // Initial import status
@@ -155,6 +154,13 @@ private:
     // Flashpoint version check
     static inline const Qx::VersionNumber TARGET_FP_VERSION_PREFIX = Qx::VersionNumber::fromString(PROJECT_TARGET_FP_VER_PFX_STR);
 
+    // Selection defaults
+    static inline const QList<Fe::ImageMode> DEFAULT_IMAGE_MODE_ORDER = {
+        Fe::ImageMode::Link,
+        Fe::ImageMode::Reference,
+        Fe::ImageMode::Copy
+    };
+
     // User Roles
     static inline const int USER_ROLE_TAG_ID = 0x200; // Value chosen arbitrarily (must be > 0x100)
 
@@ -213,6 +219,7 @@ private:
     void clearListWidgets();
     bool isExistingPlatformSelected();
     bool isExistingPlaylistSelected();
+    bool selectionsMayModify();
 
     void postSqlError(QString mainText, QSqlError sqlError);
     void postListError(QString mainText, QStringList detailedItems);
@@ -225,7 +232,7 @@ private:
     QStringList getSelectedPlaylists() const;
     Fp::Db::InclusionOptions getSelectedInclusionOptions() const;
     Fe::UpdateOptions getSelectedUpdateOptions() const;
-    Fe::Install::ImageMode getSelectedImageMode() const;
+    Fe::ImageMode getSelectedImageMode() const;
     ImportWorker::PlaylistGameMode getSelectedPlaylistGameMode() const;
     bool getForceDownloadImages() const;
 
