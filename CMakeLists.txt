@@ -15,7 +15,7 @@ set(FORMAL_NAME "Flashpoint Importer for Launchers")
 string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LC)
 string(TOUPPER ${PROJECT_NAME} PROJECT_NAME_UC)
 
-set(TARGET_FP_VERSION_PREFIX 10.1)
+set(TARGET_FP_VERSION_PREFIX 11)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # C++
@@ -95,7 +95,7 @@ fetch_qx("428c8c300738f3bb7892816e52c198308bbe8505")
 
 # Fetch libfp (build and import from source)
 include(FIL/Fetchlibfp)
-fetch_libfp("600b90ecaf1e9ea464a35794f8714d737bbdc210")
+fetch_libfp("d031e25805c20c4638682a695f75d7917b7351c5")
 
 # Fetch CLIFp (build and import from source)
 include(FIL/FetchCLIFp)

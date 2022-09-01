@@ -593,7 +593,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     //-Pre-loading-------------------------------------------------------------
 
     // Make initial playlists query
-    queryError = fpDatabase->queryPlaylistsByName(playlistQueries, mImportSelections.playlists);
+    queryError = fpDatabase->queryPlaylistsByName(playlistQueries, mImportSelections.playlists, mOptionSet.inclusionOptions);
     if(queryError.isValid())
     {
         errorReport = Qx::GenericError(Qx::GenericError::Critical, MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());
