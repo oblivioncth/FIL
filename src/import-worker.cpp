@@ -209,7 +209,7 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& 
 
         // Add set to doc
         QString checkedLogoPath = (logoLocalInfo.exists() || mOptionSet.downloadImages) ? logoLocalInfo.absoluteFilePath() : QString();
-        QString checkedScreenshotPath = (ssLocalInfo.exists() || mOptionSet.downloadImages) ? logoLocalInfo.absoluteFilePath() : QString();
+        QString checkedScreenshotPath = (ssLocalInfo.exists() || mOptionSet.downloadImages) ? ssLocalInfo.absoluteFilePath() : QString();
         platformDoc->addSet(builtSet, Fe::ImageSources(checkedLogoPath, checkedScreenshotPath));
 
         // Add ID to imported game cache
@@ -520,12 +520,13 @@ ImportWorker::ImportResult ImportWorker::processImages(Qx::GenericError& errorRe
     // Perform transfers if required
     if(mOptionSet.imageMode == Fe::ImageMode::Copy || mOptionSet.imageMode == Fe::ImageMode::Link)
     {
-        // Account for potential mismatch between assumed and actual job count (shouldn't happen)
+        /*
+         * Account for potential mismatch between assumed and actual job count.
+         * For example, this may happen with infinity if a game hasn't been clicked on, as the logo
+         * will have been downloaded but not the screenshot
+         */
         if(imageTransferJobs.size() != mProgressManager.group(Pg::ImageTransfer)->maximum())
-        {
             mProgressManager.group(Pg::ImageTransfer)->setMaximum(imageTransferJobs.size());
-            qWarning() << Q_FUNC_INFO << "the frontend provided less image transfers than predicted";
-        }
 
         // Setup for image transfers
         Qx::GenericError imageTransferError; // Error return reference
@@ -592,7 +593,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
     //-Pre-loading-------------------------------------------------------------
 
     // Make initial playlists query
-    queryError = fpDatabase->queryPlaylistsByName(playlistQueries, mImportSelections.playlists);
+    queryError = fpDatabase->queryPlaylistsByName(playlistQueries, mImportSelections.playlists, mOptionSet.inclusionOptions);
     if(queryError.isValid())
     {
         errorReport = Qx::GenericError(Qx::GenericError::Critical, MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());

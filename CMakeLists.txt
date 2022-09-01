@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.21.1)
 
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
-set(FIL_BASE_VERSION 0.5) # Required for CI/CD
+set(FIL_BASE_VERSION 0.6) # Required for CI/CD
 project(FIL
     VERSION ${FIL_BASE_VERSION}
     LANGUAGES CXX
@@ -15,7 +15,7 @@ set(FORMAL_NAME "Flashpoint Importer for Launchers")
 string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LC)
 string(TOUPPER ${PROJECT_NAME} PROJECT_NAME_UC)
 
-set(TARGET_FP_VERSION_PREFIX 10.1)
+set(TARGET_FP_VERSION_PREFIX 11)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # C++
@@ -91,19 +91,19 @@ add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 
 # Fetch Qx (build and import from source)
 include(FIL/FetchQx)
-fetch_qx("v0.3.1")
+fetch_qx("428c8c300738f3bb7892816e52c198308bbe8505")
+
+# Fetch libfp (build and import from source)
+include(FIL/Fetchlibfp)
+fetch_libfp("d031e25805c20c4638682a695f75d7917b7351c5")
+
+# Fetch CLIFp (build and import from source)
+include(FIL/FetchCLIFp)
+fetch_clifp("v0.9")
 
 # Fetch Neargye's Magic Enum
 include(FIL/FetchMagicEnum)
 fetch_magicenum("v0.8.0")
-
-# Fetch libfp (build and import from source)
-include(FIL/Fetchlibfp)
-fetch_libfp("v0.1.1")
-
-# Fetch CLIFp (build and import from source)
-include(FIL/FetchCLIFp)
-fetch_clifp("v0.8.2")
 
 # Setup copy of CLIFp executable to FIL generated resources directory after its built
 # ...
