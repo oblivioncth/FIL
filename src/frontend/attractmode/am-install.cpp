@@ -554,16 +554,21 @@ Qx::GenericError Install::postImport()
 void Install::processDirectGameImages(const Fe::Game* game, const Fe::ImageSources& imageSources)
 {
     Fe::ImageMode mode = mImportDetails->imageMode;
-    if((mode == Fe::ImageMode::Link || mode == Fe::ImageMode::Copy) && !imageSources.isNull())
+    if(mode == Fe::ImageMode::Link || mode == Fe::ImageMode::Copy)
     {
-        ImageMap logoMap{.sourcePath = imageSources.logoPath(),
-                         .destPath = imageDestinationPath(Fp::ImageType::Logo, game)};
+        if(!imageSources.logoPath().isEmpty())
+        {
+            ImageMap logoMap{.sourcePath = imageSources.logoPath(),
+                             .destPath = imageDestinationPath(Fp::ImageType::Logo, game)};
+            mWorkerImageJobs.append(logoMap);
+        }
 
-        ImageMap ssMap{.sourcePath = imageSources.screenshotPath(),
-                       .destPath = imageDestinationPath(Fp::ImageType::Screenshot, game)};
-
-        mWorkerImageJobs.append(logoMap);
-        mWorkerImageJobs.append(ssMap);
+        if(!imageSources.screenshotPath().isEmpty())
+        {
+            ImageMap ssMap{.sourcePath = imageSources.screenshotPath(),
+                           .destPath = imageDestinationPath(Fp::ImageType::Screenshot, game)};
+            mWorkerImageJobs.append(ssMap);
+        }
     }
 }
 

@@ -520,12 +520,13 @@ ImportWorker::ImportResult ImportWorker::processImages(Qx::GenericError& errorRe
     // Perform transfers if required
     if(mOptionSet.imageMode == Fe::ImageMode::Copy || mOptionSet.imageMode == Fe::ImageMode::Link)
     {
-        // Account for potential mismatch between assumed and actual job count (shouldn't happen)
+        /*
+         * Account for potential mismatch between assumed and actual job count.
+         * For example, this may happen with infinity if a game hasn't been clicked on, as the logo
+         * will have been downloaded but not the screenshot
+         */
         if(imageTransferJobs.size() != mProgressManager.group(Pg::ImageTransfer)->maximum())
-        {
             mProgressManager.group(Pg::ImageTransfer)->setMaximum(imageTransferJobs.size());
-            qWarning() << Q_FUNC_INFO << "the frontend provided less image transfers than predicted";
-        }
 
         // Setup for image transfers
         Qx::GenericError imageTransferError; // Error return reference
