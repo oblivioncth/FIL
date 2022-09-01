@@ -209,7 +209,7 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& 
 
         // Add set to doc
         QString checkedLogoPath = (logoLocalInfo.exists() || mOptionSet.downloadImages) ? logoLocalInfo.absoluteFilePath() : QString();
-        QString checkedScreenshotPath = (ssLocalInfo.exists() || mOptionSet.downloadImages) ? logoLocalInfo.absoluteFilePath() : QString();
+        QString checkedScreenshotPath = (ssLocalInfo.exists() || mOptionSet.downloadImages) ? ssLocalInfo.absoluteFilePath() : QString();
         platformDoc->addSet(builtSet, Fe::ImageSources(checkedLogoPath, checkedScreenshotPath));
 
         // Add ID to imported game cache
