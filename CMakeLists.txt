@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.21.1)
 
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
-set(FIL_BASE_VERSION 0.5) # Required for CI/CD
+set(FIL_BASE_VERSION 0.6) # Required for CI/CD
 project(FIL
     VERSION ${FIL_BASE_VERSION}
     LANGUAGES CXX
