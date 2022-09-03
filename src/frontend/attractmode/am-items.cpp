@@ -4,6 +4,9 @@
 // Project Includes
 #include "../../clifp.h"
 
+// Quote escape
+#define ESCAPE(str) (str).replace(R"(")",R"(\")")
+
 namespace Am
 {
 //===============================================================================================================
@@ -15,11 +18,11 @@ namespace Am
 RomEntry::RomEntry() {}
 
 RomEntry::RomEntry(const Fp::Game& flashpointGame) :
-    Fe::Game(flashpointGame.id(), flashpointGame.title(), flashpointGame.platform()),
+    Fe::Game(flashpointGame.id(), ESCAPE(flashpointGame.title()), flashpointGame.platform()),
     mEmulator(Fp::NAME),
     mCloneOf(),
     mYear(flashpointGame.releaseDate().date()),
-    mManufacturer(flashpointGame.developer()),
+    mManufacturer(ESCAPE(flashpointGame.developer())),
     mPlayers(flashpointGame.playMode()),
     mRotation(0),
     mControl(),
@@ -27,23 +30,23 @@ RomEntry::RomEntry(const Fp::Game& flashpointGame) :
     mDisplayCount(1),
     mDisplayType(),
     mAltRomName(),
-    mAltTitle(!flashpointGame.orderTitle().isEmpty() ?
-              flashpointGame.orderTitle() :
-              flashpointGame.title()),
+    mAltTitle(ESCAPE(!flashpointGame.orderTitle().isEmpty() ?
+                     flashpointGame.orderTitle() :
+                     flashpointGame.title())),
     mExtra(),
     mButtons(),
-    mSeries(flashpointGame.series()),
-    mLanguage(flashpointGame.language()),
+    mSeries(ESCAPE(flashpointGame.series())),
+    mLanguage(ESCAPE(flashpointGame.language())),
     mRegion(),
     mRating()
 {}
 
 RomEntry::RomEntry(const Fp::AddApp& flashpointAddApp, const Fp::Game& parentGame) :
-    Fe::Game(flashpointAddApp.id(), addAppTitle(parentGame.title(), flashpointAddApp.name()), QString()),
+    Fe::Game(flashpointAddApp.id(), ESCAPE(addAppTitle(parentGame.title(), flashpointAddApp.name())), parentGame.platform()),
     mEmulator(Fp::NAME),
     mCloneOf(flashpointAddApp.parentId().toString(QUuid::WithoutBraces)),
     mYear(parentGame.releaseDate().date()),
-    mManufacturer(parentGame.developer()),
+    mManufacturer(ESCAPE(parentGame.developer())),
     mPlayers(),
     mRotation(0),
     mControl(),
@@ -51,13 +54,13 @@ RomEntry::RomEntry(const Fp::AddApp& flashpointAddApp, const Fp::Game& parentGam
     mDisplayCount(1),
     mDisplayType(),
     mAltRomName(),
-    mAltTitle(!parentGame.orderTitle().isEmpty() ?
-               addAppSortTitle(parentGame.orderTitle(), flashpointAddApp.name()) :
-               addAppSortTitle(parentGame.title(), flashpointAddApp.name())),
+    mAltTitle(ESCAPE(!parentGame.orderTitle().isEmpty() ?
+                     addAppSortTitle(parentGame.orderTitle(), flashpointAddApp.name()) :
+                     addAppSortTitle(parentGame.title(), flashpointAddApp.name()))),
     mExtra(),
     mButtons(),
-    mSeries(parentGame.series()),
-    mLanguage(parentGame.language()),
+    mSeries(ESCAPE(parentGame.series())),
+    mLanguage(ESCAPE(parentGame.language())),
     mRegion(),
     mRating()
 {}

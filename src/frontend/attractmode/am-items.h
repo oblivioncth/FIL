@@ -20,7 +20,6 @@ class RomEntry : public Fe::Game
 public:
     class Builder;
 
-
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
     //mName - Handled as alias for Fe::Game::mId
