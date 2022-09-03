@@ -103,9 +103,10 @@ private:
 
     // Progress Tracking
     Qx::GroupedProgressManager mProgressManager;
+    quint64 mCurrentProgress;
 
     // Cancel Status
-    bool mCanceled = false;
+    bool mCanceled;
 
     // Error Tracking
     std::shared_ptr<int> mBlockingErrorResponse = std::make_shared<int>();
@@ -135,6 +136,9 @@ public:
     ImportResult doImport(Qx::GenericError& errorReport);
 
 //-Slots----------------------------------------------------------------------------------------------------------
+private slots:
+    void pmProgressUpdated(quint64 currentProgress);
+
 public slots:
     void notifyCanceled();
 

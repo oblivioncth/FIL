@@ -19,7 +19,9 @@ ImportWorker::ImportWorker(std::shared_ptr<Fp::Install> fpInstallForWork,
       mFlashpointInstall(fpInstallForWork),
       mFrontendInstall(feInstallForWork),
       mImportSelections(importSelections),
-      mOptionSet(optionSet)
+      mOptionSet(optionSet),
+      mCurrentProgress(0),
+      mCanceled(false)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------
@@ -704,8 +706,8 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
             pgPlaylistGameMatchImport->increaseMaximum(query.size);
     }
 
-    // Forward progress manager signal
-    connect(&mProgressManager, &Qx::GroupedProgressManager::valueChanged, this, &ImportWorker::progressValueChanged);
+    // Connect progress manager signal
+    connect(&mProgressManager, &Qx::GroupedProgressManager::progressUpdated, this, &ImportWorker::pmProgressUpdated);
 
     //-Handle Frontend Specific Import Setup------------------------------
     QStringList playlistSpecPlatforms;
@@ -791,5 +793,27 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
 }
 
 //-Slots---------------------------------------------------------------------------------------------------------
+//Private Slots:
+void ImportWorker::pmProgressUpdated(quint64 currentProgress)
+{
+    /* NOTE: This is required because if the value isn't actually different than the current when
+     * the connected QProgressDialog::setValue() is triggered then processEvents() won't be called.
+     * This is a problem because the fixed range of QGroupedProgressManager of 0-100 means that groups
+     * with a high number of steps won't actually trigger an emissions of the manager valueChanged() signal
+     * until a large enough number of those steps have been completed to increase its weighted sum by 1.
+     * processEvents() needs to be called every time progress is updated even a little in order to
+     * keep the progress dialog responsive.
+     *
+     * This needs to be removed if ImportWorker is ever returned to its own thread.
+     */
+    if(mCurrentProgress != currentProgress)
+    {
+        mCurrentProgress = currentProgress;
+        emit progressValueChanged(currentProgress);
+    }
+    else
+        qApp->processEvents();
+}
+
 //Public Slots:
 void ImportWorker::notifyCanceled() { mCanceled = true; }
