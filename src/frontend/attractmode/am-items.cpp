@@ -32,7 +32,7 @@ RomEntry::RomEntry(const Fp::Game& flashpointGame) :
     mAltRomName(),
     mAltTitle(ESCAPE(!flashpointGame.orderTitle().isEmpty() ?
                      flashpointGame.orderTitle() :
-                     flashpointGame.title())),
+                     flashpointGame.title()).toUpper()),
     mExtra(),
     mButtons(),
     mSeries(ESCAPE(flashpointGame.series())),
@@ -74,7 +74,11 @@ QString RomEntry::addAppTitle(const QString& parentTitle, const QString& origina
 
 QString RomEntry::addAppSortTitle(const QString& parentTitle, const QString& originalAddAppTitle)
 {
-    return parentTitle + "     " + originalAddAppTitle;
+    /* Multiple space more-or-less ensure this title will directly follow the parent title,
+     * uppercase ensures sorting isn't broken up between lower and uppercase letters as AM's
+     * sorting doesn't account for case and seems to be a basic character code sorter
+     */
+    return (parentTitle + "     " + originalAddAppTitle).toUpper();
 }
 
 //-Instance Functions------------------------------------------------------------------------------------------------
