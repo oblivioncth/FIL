@@ -39,7 +39,7 @@ RomEntry::RomEntry(const Fp::Game& flashpointGame) :
 {}
 
 RomEntry::RomEntry(const Fp::AddApp& flashpointAddApp, const Fp::Game& parentGame) :
-    Fe::Game(flashpointAddApp.id(), parentGame.title() + " |> "+ flashpointAddApp.name(), QString()),
+    Fe::Game(flashpointAddApp.id(), addAppTitle(parentGame.title(), flashpointAddApp.name()), QString()),
     mEmulator(Fp::NAME),
     mCloneOf(flashpointAddApp.parentId().toString(QUuid::WithoutBraces)),
     mYear(parentGame.releaseDate().date()),
@@ -52,8 +52,8 @@ RomEntry::RomEntry(const Fp::AddApp& flashpointAddApp, const Fp::Game& parentGam
     mDisplayType(),
     mAltRomName(),
     mAltTitle(!parentGame.orderTitle().isEmpty() ?
-               parentGame.orderTitle() + "|>"+ flashpointAddApp.name() :
-               parentGame.title() + "|>"+ flashpointAddApp.name()),
+               addAppSortTitle(parentGame.orderTitle(), flashpointAddApp.name()) :
+               addAppSortTitle(parentGame.title(), flashpointAddApp.name())),
     mExtra(),
     mButtons(),
     mSeries(parentGame.series()),
@@ -61,6 +61,18 @@ RomEntry::RomEntry(const Fp::AddApp& flashpointAddApp, const Fp::Game& parentGam
     mRegion(),
     mRating()
 {}
+
+//-Class Functions-----------------------------------------------------------------------------------------------
+//Public:
+QString RomEntry::addAppTitle(const QString& parentTitle, const QString& originalAddAppTitle)
+{
+    return parentTitle + " |> " + originalAddAppTitle;
+}
+
+QString RomEntry::addAppSortTitle(const QString& parentTitle, const QString& originalAddAppTitle)
+{
+    return parentTitle + "     " + originalAddAppTitle;
+}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:

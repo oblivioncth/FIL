@@ -260,6 +260,12 @@ void BasicPlatformDoc::finalize()
 {
     if(!mError.isValid())
     {
+        /* TODO: Have this (and all other implementations of finalize() do something like return
+         * the IDs of titles that were removed, or otherwise populate an internal variable so that afterwards
+         * the list can be used to purge all images or other title related files (like overviews with AM).
+         * Right now only the data portion of old games is removed)
+         */
+
         // Finalize item stores
         finalizeUpdateableItems(mGamesExisting, mGamesFinal);
         finalizeUpdateableItems(mAddAppsExisting, mAddAppsFinal);

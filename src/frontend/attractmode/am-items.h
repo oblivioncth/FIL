@@ -20,6 +20,7 @@ class RomEntry : public Fe::Game
 public:
     class Builder;
 
+
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
     //mName - Handled as alias for Fe::Game::mId
@@ -49,6 +50,11 @@ public:
     RomEntry(const Fp::Game& flashpointGame);
     RomEntry(const Fp::AddApp& flashpointAddApp, const Fp::Game& parentGame);
     RomEntry();
+
+//-Class Functions-----------------------------------------------------------------------------------------------
+private:
+    static QString addAppTitle(const QString& parentTitle, const QString& originalAddAppTitle);
+    static QString addAppSortTitle(const QString& parentTitle, const QString& originalAddAppTitle);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
