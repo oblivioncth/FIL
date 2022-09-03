@@ -80,6 +80,9 @@ public:
     static inline const QString CAPTION_IMAGE_ERR = "Error importing game image(s)";
     static inline const QString IMAGE_RETRY_PROMPT = "Retry?";
 
+    // Regex
+    static inline const QRegularExpression LINEBREAKS = QRegularExpression("[\\r\\n\\v]");
+
 //-Instance Variables--------------------------------------------------------------------------------------------
 private:
     // Install links
@@ -127,7 +130,6 @@ private:
     ImportResult processGames(Qx::GenericError& errorReport, QList<Fp::Db::QueryBuffer>& primary, QList<Fp::Db::QueryBuffer>& playlistSpecific);
     ImportResult processPlaylists(Qx::GenericError& errorReport, QList<Fp::Db::QueryBuffer>& playlistGameQueries);
     ImportResult processImages(Qx::GenericError& errorReport, const QList<Fp::Db::QueryBuffer>& playlistSpecGameQueries);
-
 
 public:
     ImportResult doImport(Qx::GenericError& errorReport);
