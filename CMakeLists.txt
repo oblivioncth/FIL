@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.21.1)
 
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
-set(FIL_BASE_VERSION 0.6) # Required for CI/CD
+set(FIL_BASE_VERSION 0.6.0.1) # Required for CI/CD
 project(FIL
     VERSION ${FIL_BASE_VERSION}
     LANGUAGES CXX
@@ -31,6 +31,10 @@ enable_language("RC")
 # Add local modules
 set(PROJ_SCRIPTS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${PROJ_SCRIPTS_PATH}/module")
+
+# Get helper scripts
+include(FIL/FetchOBCMake)
+fetch_ob_cmake("v0.1")
 
 # General Variables
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -72,7 +76,7 @@ set(PACKAGE_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/out/dist")
 #------------Set Global Build Rules----------------
 
 # Versioning
-include(FIL/VerboseVersioning)
+include(OB/VerboseVersioning)
 setup_verbose_versioning(PROJECT_VERSION_VERBOSE)
 
 #================= Build =========================
@@ -90,19 +94,19 @@ find_package(Qt6 REQUIRED COMPONENTS
 add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 
 # Fetch Qx (build and import from source)
-include(FIL/FetchQx)
-fetch_qx("428c8c300738f3bb7892816e52c198308bbe8505")
+include(OB/FetchQx)
+fetch_qx("4b5331be777c1adff3b02d73fc93530ad8e83a2c")
 
 # Fetch libfp (build and import from source)
-include(FIL/Fetchlibfp)
-fetch_libfp("d031e25805c20c4638682a695f75d7917b7351c5")
+include(OB/Fetchlibfp)
+fetch_libfp("v0.1.2")
 
 # Fetch CLIFp (build and import from source)
-include(FIL/FetchCLIFp)
-fetch_clifp("v0.9")
+include(OB/FetchCLIFp)
+fetch_clifp("v0.9.0.1")
 
 # Fetch Neargye's Magic Enum
-include(FIL/FetchMagicEnum)
+include(OB/FetchMagicEnum)
 fetch_magicenum("v0.8.0")
 
 # Setup copy of CLIFp executable to FIL generated resources directory after its built
@@ -231,7 +235,7 @@ set_target_properties(${TARGET_NAME} PROPERTIES
 add_dependencies(${TARGET_NAME} fil_copy_clifp)
 
 # Forward select project variables to C++ code
-include(FIL/ProjectVars)
+include(OB/ProjectVars)
 set_cxx_project_vars(${TARGET_NAME}
     FULL_NAME "\"${FORMAL_NAME}\""
     SHORT_NAME "\"${PROJECT_NAME}\""
@@ -240,7 +244,7 @@ set_cxx_project_vars(${TARGET_NAME}
 
 # Generate resource collection for CLIFp
 get_target_property(CLIFP_PATH CLIFp::CLIFp IMPORTED_LOCATION)
-include(FIL/GeneratedResources)
+include(OB/GeneratedResources)
 add_generated_resources_collection(${TARGET_NAME}
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/res"
     PREFIX "/"
@@ -249,7 +253,7 @@ add_generated_resources_collection(${TARGET_NAME}
 )
 
 # Set target exe details
-include(FIL/WinExecutableDetails)
+include(OB/WinExecutableDetails)
 set_win_executable_details(${TARGET_NAME}
     ICON "res/app/FIL.ico"
     FILE_VER ${PROJECT_VERSION}

@@ -50,6 +50,11 @@ public:
     RomEntry(const Fp::AddApp& flashpointAddApp, const Fp::Game& parentGame);
     RomEntry();
 
+//-Class Functions-----------------------------------------------------------------------------------------------
+private:
+    static QString addAppTitle(const QString& parentTitle, const QString& originalAddAppTitle);
+    static QString addAppSortTitle(const QString& parentTitle, const QString& originalAddAppTitle);
+
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
      QUuid name() const; // Alias for Fe::Game::Id
