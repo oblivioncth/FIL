@@ -21,7 +21,7 @@
 #include <qx/widgets/qx-treeinputdialog.h>
 #include <qx/widgets/qx-logindialog.h>
 #include <qx/windows/qx-filedetails.h>
-#include <qx/windows/qx-common-windows.h>
+#include <qx/core/qx-system.h>
 
 // Project Includes
 #include "mainwindow.h"
@@ -82,7 +82,7 @@ MainWindow::MainWindow(QWidget *parent) :
     initializeFrontendHelpActions();
 
     // Check if Flashpoint is running
-    if(Qx::processIsRunning(Fp::Install::LAUNCHER_INFO.fileName()))
+    if(Qx::processIsRunning(Fp::Install::LAUNCHER_NAME))
         QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_CLOSE_PROMPT);
 
     mInitCompleted = true;
@@ -610,7 +610,7 @@ void MainWindow::prepareImport()
 
     // Warn user if Flashpoint is running
     // Check if Flashpoint is running
-    if(Qx::processIsRunning(Fp::Install::LAUNCHER_INFO.fileName()))
+    if(Qx::processIsRunning(Fp::Install::LAUNCHER_NAME))
         QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_CLOSE_PROMPT);
 
     // Only allow proceeding if frontend isn't running

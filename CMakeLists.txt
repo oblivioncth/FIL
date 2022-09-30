@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.21.1)
 
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
-set(FIL_BASE_VERSION 0.6.0.1) # Required for CI/CD
+set(FIL_BASE_VERSION 0.6.0.2) # Required for CI/CD
 project(FIL
     VERSION ${FIL_BASE_VERSION}
     LANGUAGES CXX
@@ -95,15 +95,15 @@ add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 
 # Fetch Qx (build and import from source)
 include(OB/FetchQx)
-fetch_qx("4b5331be777c1adff3b02d73fc93530ad8e83a2c")
+fetch_qx("v0.4")
 
 # Fetch libfp (build and import from source)
 include(OB/Fetchlibfp)
-fetch_libfp("v0.1.2")
+fetch_libfp("v0.1.4")
 
 # Fetch CLIFp (build and import from source)
 include(OB/FetchCLIFp)
-fetch_clifp("v0.9.0.1")
+fetch_clifp("v0.9.1")
 
 # Fetch Neargye's Magic Enum
 include(OB/FetchMagicEnum)
