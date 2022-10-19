@@ -21,7 +21,7 @@ class ImportWorker : public QObject
 
 //-Class Enums---------------------------------------------------------------------------------------------------
 public:
-    enum ImportResult {Failed, Canceled, Successful};
+    enum ImportResult {Failed, Canceled, Taskless, Successful};
     enum PlaylistGameMode {SelectedPlatform, ForceAll};
 
 //-Inner Classes------------------------------------------------------------------------------------------------

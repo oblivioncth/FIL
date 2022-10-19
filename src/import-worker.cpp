@@ -666,6 +666,10 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
        return Failed;
     }
 
+    // Bail if there's no work to be done
+    if(gameQueries.isEmpty() && playlistSpecGameQueries.isEmpty() && playlistGameQueries.isEmpty())
+        return Taskless;
+
     //-Determine Workload-------------------------------------------------
     quint64 totalGameCount = 0;
 

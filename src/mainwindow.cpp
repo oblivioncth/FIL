@@ -1060,15 +1060,21 @@ void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx:
         // Update selection lists to reflect newly existing platforms
         gatherInstallInfo();
     }
+    else if(importResult == ImportWorker::Taskless)
+    {
+        QMessageBox::warning(this, CAPTION_TASKLESS_IMPORT, MSG_NO_WORK);
+    }
     else if(importResult == ImportWorker::Canceled)
     {
         QMessageBox::critical(this, CAPTION_REVERT, MSG_USER_CANCELED);
         revertAllFrontendChanges();
     }
-    else
+    else if(importResult == ImportWorker::Failed)
     {
         // Show general next steps message
         QMessageBox::warning(this, CAPTION_REVERT, MSG_HAVE_TO_REVERT);
         revertAllFrontendChanges();
     }
+    else
+        throw std::runtime_error(Q_FUNC_INFO " unhandled import worker result type.");
 }

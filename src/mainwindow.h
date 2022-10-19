@@ -120,7 +120,7 @@ private:
                                                            "\n"
                                                            "If you choose to ignore this you will have to place CLIFp in your Flashpoint install directory manually.";
 
-    // Messages - Revert
+    // Messages - Import Result
     static inline const QString MSG_HAVE_TO_REVERT = "Due to previous unrecoverable errors, all changes that occurred during import will now be reverted (other than existing images that were replaced with newer versions).\n"
                                                      "\n"
                                                      "Afterwards, check to see if there is a newer version of " PROJECT_SHORT_NAME " and try again using that version. If not ask for help on the relevant forums where this tool was released (see Help).\n"
@@ -128,6 +128,7 @@ private:
                                                      "If you believe this to be due to a bug with this software, please submit an issue to its GitHub page (listed under help)";
 
     static inline const QString MSG_USER_CANCELED = "Import canceled by user, all changes that occurred during import will now be reverted (other than existing images that were replaced with newer versions).";
+    static inline const QString MSG_NO_WORK = "The provided import selections/options resulted in no tasks to perform. Double-check your settings.";
 
     // Dialog captions
     static inline const QString CAPTION_GENERAL_FATAL_ERROR = "Fatal Error!";
@@ -135,7 +136,8 @@ private:
     static inline const QString CAPTION_FLASHPOINT_BROWSE = "Select the root directory of your Flashpoint install...";
     static inline const QString CAPTION_PLAYLIST_GAME_MODE_HELP = "Playlist game mode options";
     static inline const QString CAPTION_UPDATE_MODE_HELP = "Update mode options";
-    static inline const QString CAPTION_IMAGE_MODE_HELP = "Image mode options";\
+    static inline const QString CAPTION_IMAGE_MODE_HELP = "Image mode options";
+    static inline const QString CAPTION_TASKLESS_IMPORT = "Nothing to do";
     static inline const QString CAPTION_REVERT = "Reverting changes...";
     static inline const QString CAPTION_REVERT_ERR = "Error reverting changes";
     static inline const QString CAPTION_CLIFP_ERR = "Error deploying CLIFp";
