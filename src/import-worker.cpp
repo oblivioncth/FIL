@@ -240,12 +240,15 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& 
                 mProgressManager.group(Pg::ImageDownload)->decrementMaximum(); // Already exists, remove download step from progress bar
         }
 
-        // Adjust progress if images aren't available
-        if(checkedLogoPath.isEmpty())
-            mProgressManager.group(Pg::ImageTransfer)->decrementMaximum(); // Can't transfer image that doesn't/won't exist
-        if(checkedScreenshotPath.isEmpty())
-            mProgressManager.group(Pg::ImageTransfer)->decrementMaximum(); // Can't transfer image that doesn't/won't exist
-
+        // Handle image transfer progress
+        if(mOptionSet.imageMode == Fe::ImageMode::Copy || mOptionSet.imageMode == Fe::ImageMode::Link)
+        {
+            // Adjust progress if images aren't available
+            if(checkedLogoPath.isEmpty())
+                mProgressManager.group(Pg::ImageTransfer)->decrementMaximum(); // Can't transfer image that doesn't/won't exist
+            if(checkedScreenshotPath.isEmpty())
+                mProgressManager.group(Pg::ImageTransfer)->decrementMaximum(); // Can't transfer image that doesn't/won't exist
+        }
 
         // Update progress dialog value for game addition
         if(mCanceled)
@@ -639,7 +642,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
             unselectedPlatforms.removeAll(selPlatform);
 
         // Make game query
-        queryError = fpDatabase->queryGamesByPlatform(playlistSpecGameQueries, unselectedPlatforms, mOptionSet.inclusionOptions, targetPlaylistGameIds);
+        queryError = fpDatabase->queryGamesByPlatform(playlistSpecGameQueries, unselectedPlatforms, mOptionSet.inclusionOptions, &targetPlaylistGameIds);
         if(queryError.isValid())
         {
             errorReport = Qx::GenericError(Qx::GenericError::Critical, MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());
@@ -662,6 +665,10 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::GenericError& errorReport)
        errorReport = Qx::GenericError(Qx::GenericError::Critical, MSG_FP_DB_UNEXPECTED_ERROR, queryError.text());
        return Failed;
     }
+
+    // Bail if there's no work to be done
+    if(gameQueries.isEmpty() && playlistSpecGameQueries.isEmpty() && playlistGameQueries.isEmpty())
+        return Taskless;
 
     //-Determine Workload-------------------------------------------------
     quint64 totalGameCount = 0;

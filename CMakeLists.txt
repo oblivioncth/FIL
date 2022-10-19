@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.21.1)
 
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
-set(FIL_BASE_VERSION 0.6.0.2) # Required for CI/CD
+set(FIL_BASE_VERSION 0.6.0.3) # Required for CI/CD
 project(FIL
     VERSION ${FIL_BASE_VERSION}
     LANGUAGES CXX
@@ -95,11 +95,11 @@ add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 
 # Fetch Qx (build and import from source)
 include(OB/FetchQx)
-fetch_qx("v0.4")
+fetch_qx("10cf4f1f48aa552bbcefd45e0d75bf00b9cb03d3")
 
 # Fetch libfp (build and import from source)
 include(OB/Fetchlibfp)
-fetch_libfp("v0.1.4")
+fetch_libfp("cd37f71bcda682f53e7166b5b590857c99dac3dc")
 
 # Fetch CLIFp (build and import from source)
 include(OB/FetchCLIFp)
@@ -243,13 +243,11 @@ set_cxx_project_vars(${TARGET_NAME}
 )
 
 # Generate resource collection for CLIFp
-get_target_property(CLIFP_PATH CLIFp::CLIFp IMPORTED_LOCATION)
-include(OB/GeneratedResources)
-add_generated_resources_collection(${TARGET_NAME}
-    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/res"
+qt_add_resources(${TARGET_NAME} "${TARGET_NAME}_clifp_res"
     PREFIX "/"
+    BASE "${CMAKE_CURRENT_BINARY_DIR}/res"
     FILES
-        PATH "file/CLIFp.exe"
+        "${CLIFP_RES_PATH}"
 )
 
 # Set target exe details
