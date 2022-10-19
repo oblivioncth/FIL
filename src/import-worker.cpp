@@ -240,12 +240,15 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::GenericError& 
                 mProgressManager.group(Pg::ImageDownload)->decrementMaximum(); // Already exists, remove download step from progress bar
         }
 
-        // Adjust progress if images aren't available
-        if(checkedLogoPath.isEmpty())
-            mProgressManager.group(Pg::ImageTransfer)->decrementMaximum(); // Can't transfer image that doesn't/won't exist
-        if(checkedScreenshotPath.isEmpty())
-            mProgressManager.group(Pg::ImageTransfer)->decrementMaximum(); // Can't transfer image that doesn't/won't exist
-
+        // Handle image transfer progress
+        if(mOptionSet.imageMode == Fe::ImageMode::Copy || mOptionSet.imageMode == Fe::ImageMode::Link)
+        {
+            // Adjust progress if images aren't available
+            if(checkedLogoPath.isEmpty())
+                mProgressManager.group(Pg::ImageTransfer)->decrementMaximum(); // Can't transfer image that doesn't/won't exist
+            if(checkedScreenshotPath.isEmpty())
+                mProgressManager.group(Pg::ImageTransfer)->decrementMaximum(); // Can't transfer image that doesn't/won't exist
+        }
 
         // Update progress dialog value for game addition
         if(mCanceled)
