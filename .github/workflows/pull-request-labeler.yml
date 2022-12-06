@@ -9,5 +9,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Label via convention
-        if: steps.cache-qt.outputs.cache-hit != 'true'
         uses: oblivioncth/actions/pull-request/label-pr-conventionally@dev
