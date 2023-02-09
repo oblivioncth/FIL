@@ -60,7 +60,6 @@ jobs:
         cpack -C "Release"
         echo "Build complete."
     - name: Get FIL artifact name
-      id: get_artifact_name
       run: |
         $artifact_name=$((Get-ChildItem -Path "${{ env.fil_package_path }}" -Filter *.zip)[0].BaseName)
         echo "current_artifact_name=$artifact_name" >> $Env:GITHUB_ENV
