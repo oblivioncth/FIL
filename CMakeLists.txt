@@ -33,7 +33,7 @@ list(APPEND CMAKE_MODULE_PATH "${PROJ_SCRIPTS_PATH}/module")
 
 # Get helper scripts
 include(FIL/FetchOBCMake)
-fetch_ob_cmake("v0.1")
+fetch_ob_cmake("2f0d673668b636bcd193241b90af88c405b3a746")
 
 # General Variables
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -94,7 +94,17 @@ add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 
 # Fetch Qx (build and import from source)
 include(OB/FetchQx)
-fetch_qx("4661b909d8c7d2df5a45aa7786ec7f458a733d48")
+fetch_qx(
+    REF "4661b909d8c7d2df5a45aa7786ec7f458a733d48"
+    COMPONENTS
+        Core
+        Io
+        Gui
+        Network
+        Widgets
+        Windows-gui
+        Xml
+)
 
 # Fetch libfp (build and import from source)
 include(OB/Fetchlibfp)
@@ -234,11 +244,14 @@ set_target_properties(${TARGET_NAME} PROPERTIES
 add_dependencies(${TARGET_NAME} fil_copy_clifp)
 
 # Forward select project variables to C++ code
-include(OB/ProjectVars)
-set_cxx_project_vars(${TARGET_NAME}
-    FULL_NAME "\"${FORMAL_NAME}\""
-    SHORT_NAME "\"${PROJECT_NAME}\""
-    TARGET_FP_VER_PFX_STR "\"${TARGET_FP_VERSION_PREFIX}\""
+include(OB/CppVars)
+add_cpp_vars(${TARGET_NAME}
+    NAME "project_vars"
+    PREFIX "PROJECT_"
+    VARS
+        FULL_NAME "\"${FORMAL_NAME}\""
+        SHORT_NAME "\"${PROJECT_NAME}\""
+        TARGET_FP_VER_PFX_STR "\"${TARGET_FP_VERSION_PREFIX}\""
 )
 
 # Generate resource collection for CLIFp
