@@ -1,7 +1,7 @@
 #================= Project Setup ==========================
 
 # CMake
-cmake_minimum_required(VERSION 3.25.0)
+cmake_minimum_required(VERSION 3.24.0)
 
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
@@ -94,15 +94,15 @@ add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 
 # Fetch Qx (build and import from source)
 include(OB/FetchQx)
-fetch_qx("10cf4f1f48aa552bbcefd45e0d75bf00b9cb03d3")
+fetch_qx("4661b909d8c7d2df5a45aa7786ec7f458a733d48")
 
 # Fetch libfp (build and import from source)
 include(OB/Fetchlibfp)
-fetch_libfp("cd37f71bcda682f53e7166b5b590857c99dac3dc")
+fetch_libfp("1648e92b9b2009c1bce20bf87a8440040ce1b30a")
 
 # Fetch CLIFp (build and import from source)
 include(OB/FetchCLIFp)
-fetch_clifp("v0.9.1")
+fetch_clifp("9b68367140d7d5fab2762eb3210d1d47c57a7c68")
 
 # Fetch Neargye's Magic Enum
 include(OB/FetchMagicEnum)
