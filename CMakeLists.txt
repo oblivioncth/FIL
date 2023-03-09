@@ -13,7 +13,7 @@ project(FIL
 
 # Get helper scripts
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FetchOBCMake.cmake)
-fetch_ob_cmake("990d4c4a3987722a173f948b59fd45ce924a7d9c")
+fetch_ob_cmake("35544f88f92469a441c4f5fe62fb4df873b22a3c")
 
 # Initialize project according to standard rules
 include(OB/Project)
@@ -41,6 +41,7 @@ enable_language("RC")
 set(FIL_QT_COMPONENTS
     Core
     Gui
+    Network
     Widgets
     Xml
     Sql
