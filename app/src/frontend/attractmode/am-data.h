@@ -6,7 +6,7 @@
 #include <qx/io/qx-textstreamwriter.h>
 
 // libfp Includes
-#include <fp/flashpoint/fp-install.h>
+#include <fp/fp-install.h>
 
 // Project Includes
 #include "am-items.h"
