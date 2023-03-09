@@ -41,6 +41,7 @@ enable_language("RC")
 set(FIL_QT_COMPONENTS
     Core
     Gui
+    Network
     Widgets
     Xml
     Sql
