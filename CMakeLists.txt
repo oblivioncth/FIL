@@ -13,7 +13,7 @@ project(FIL
 
 # Get helper scripts
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FetchOBCMake.cmake)
-fetch_ob_cmake("202d606507f26a95c10d15ea170c7aed9e5c5341")
+fetch_ob_cmake("v0.3")
 
 # Initialize project according to standard rules
 include(OB/Project)
@@ -64,19 +64,19 @@ set(FIL_QX_COMPONENTS
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "5b184c1ccea191ae6a885ea9a240a0d15b77b08c"
+    REF "v0.5"
     COMPONENTS
         ${FIL_QX_COMPONENTS}
 )
 
 # Fetch libfp (build and import from source)
 include(OB/Fetchlibfp)
-ob_fetch_libfp("46d4068df217d7b6508c8b5afde10dd9a84fdfc5")
+ob_fetch_libfp("v0.3")
 
 # Fetch CLIFp (build and import from source), force static build
 set(BUILD_SHARED_LIBS OFF) # Shadows CACHE variable
 include(OB/FetchCLIFp)
-ob_fetch_clifp("2cd32b25b0d87e0913932bf62c38ca2b49fd5f31")
+ob_fetch_clifp("v0.9.4")
 unset(BUILD_SHARED_LIBS) # Unshadow CACHE variable
 
 # Fetch Neargye's Magic Enum
