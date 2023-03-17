@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.24.0)
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
 project(FIL
-    VERSION 0.6.0.3
+    VERSION 0.6.1
     LANGUAGES CXX
     DESCRIPTION "Flashpoint Importer for Launchers"
 )
