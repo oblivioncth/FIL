@@ -164,7 +164,7 @@ This tool automatically handles installing/updating the command-line interface F
 ### Summary
 
  - C++20
- - CMake 3.21.1
+ - CMake 3.24.0
  - Targets Windows 10 and above
 
 ### Dependencies
@@ -173,6 +173,7 @@ This tool automatically handles installing/updating the command-line interface F
 - [libfp](https://github.com/oblivioncth/libfp/)
 - [CLIFp](https://github.com/oblivioncth/CLIFp)
 - [Neargye's Magic Enum](https://github.com/Neargye/magic_enum)
+- [OBCMake](https://github.com/oblivioncth/OBCmake)
 
 ### Builds
 Tested with MSVC2022.
