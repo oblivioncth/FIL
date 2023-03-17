@@ -13,7 +13,7 @@ project(FIL
 
 # Get helper scripts
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FetchOBCMake.cmake)
-fetch_ob_cmake("35544f88f92469a441c4f5fe62fb4df873b22a3c")
+fetch_ob_cmake("202d606507f26a95c10d15ea170c7aed9e5c5341")
 
 # Initialize project according to standard rules
 include(OB/Project)
@@ -64,19 +64,19 @@ set(FIL_QX_COMPONENTS
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "a290fd23bb36779aeccf2ae881b542d22d716829"
+    REF "5b184c1ccea191ae6a885ea9a240a0d15b77b08c"
     COMPONENTS
         ${FIL_QX_COMPONENTS}
 )
 
 # Fetch libfp (build and import from source)
 include(OB/Fetchlibfp)
-ob_fetch_libfp("07bf0d772769e38595459d44b71e52e80ef6d972")
+ob_fetch_libfp("46d4068df217d7b6508c8b5afde10dd9a84fdfc5")
 
 # Fetch CLIFp (build and import from source), force static build
 set(BUILD_SHARED_LIBS OFF) # Shadows CACHE variable
 include(OB/FetchCLIFp)
-ob_fetch_clifp("c4764af90f3bd6669ee45b0a8f261b38523429c8")
+ob_fetch_clifp("2cd32b25b0d87e0913932bf62c38ca2b49fd5f31")
 unset(BUILD_SHARED_LIBS) # Unshadow CACHE variable
 
 # Fetch Neargye's Magic Enum
@@ -94,7 +94,7 @@ ob_standard_project_package_config(
     COMPATIBILITY "SameMinorVersion"
     CONFIG STANDARD
         TARGET_CONFIGS
-            "${PROJECT_NAMESPACE}::${APP_ALIAS_NAME}"
+            TARGET "${PROJECT_NAMESPACE}::${APP_ALIAS_NAME}" COMPONENT "${APP_ALIAS_NAME}" DEFAULT
 )
 
 
