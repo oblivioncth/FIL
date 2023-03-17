@@ -13,7 +13,7 @@
 #include <qx/utility/qx-macros.h>
 
 // libfp Includes
-#include <fp/flashpoint/fp-items.h>
+#include <fp/fp-items.h>
 
 // Project Includes
 #include "fe-items.h"

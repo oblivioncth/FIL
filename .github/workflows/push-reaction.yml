@@ -10,4 +10,4 @@ jobs:
     name: Build FIL (Windows)
     uses: ./.github/workflows/build-fil-windows.yml
     secrets:
-      qt_static_url: ${{ secrets.QT_WINDOWS_STATIC_URL }}
+      qt_ffynnon_cred: ${{ secrets.OBYBOT_FFYNNON_CREDS }}

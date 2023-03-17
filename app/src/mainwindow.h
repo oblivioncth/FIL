@@ -15,7 +15,7 @@
 #include <qx/windows-gui/qx-taskbarbutton.h>
 
 // libfp Includes
-#include <fp/flashpoint/fp-install.h>
+#include <fp/fp-install.h>
 
 // Project Includes
 #include "project_vars.h"

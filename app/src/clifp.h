@@ -8,7 +8,7 @@
 #include <qx/core/qx-versionnumber.h>
 
 // libfp Includes
-#include <fp/flashpoint/fp-install.h>
+#include <fp/fp-install.h>
 
 class CLIFp
 {
