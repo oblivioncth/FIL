@@ -80,7 +80,7 @@ jobs:
           $name = $art_dir.name
           $path = $art_dir.fullname
           7z a "${{ env.zips_path }}/${name}.zip" "${path}/*"
-        }"
+        }
     - name: Generate release
       uses: softprops/action-gh-release@v1
       with:
