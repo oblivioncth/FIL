@@ -73,11 +73,22 @@ ob_fetch_qx(
 include(OB/Fetchlibfp)
 ob_fetch_libfp("v0.3")
 
-# Fetch CLIFp (build and import from source), force static build
-set(BUILD_SHARED_LIBS OFF) # Shadows CACHE variable
+# Fetch CLIFp (build and import from source)
 include(OB/FetchCLIFp)
 ob_fetch_clifp("v0.9.4")
-unset(BUILD_SHARED_LIBS) # Unshadow CACHE variable
+
+# TODO: The shared build of this is essentially useless as only the CLIFp executable
+# is deployed, which only works if it's statically linked. There isn't a simple way
+# to force a build of CLIFp static when building FIL shared as the libraries that
+# they share will have already been locked into being built with shared linking
+# by FIL since you can only FetchContent a dependency once. The only real way
+# to get around this would be to change the entire project structure to a "super-build"
+# using ExternalProject.
+#
+# An alternative could be to use preprocessor macros and the like to alter FIL's behavior
+# when built as a shared library. It could instead build CLIFp into the same bin directory
+# and then know to copy that exe along with the required DLLs into the target FP install
+# when deploying it at runtime.
 
 # Fetch Neargye's Magic Enum
 include(OB/FetchMagicEnum)
