@@ -5,6 +5,8 @@ FIL  is an importer tool for several launchers/frontends that allows one to add 
 
 For Platforms, the importer is capable of importing each game/animation along with any additional apps, images, and most of the metadata fields (i.e. Title, Description, etc, see below).
 
+Checkout **[Usage (Primary)](#usage-primary)** to get started.
+
 [![Dev Builds](https://github.com/oblivioncth/FIL/actions/workflows/push-reaction.yml/badge.svg?branch=dev)](https://github.com/oblivioncth/FIL/actions/workflows/push-reaction.yml)
 
 ## Function
@@ -104,24 +106,25 @@ Given that AttractMode is highly customizable and designed to encourage each use
 
 ## Usage (Primary)
 
- 1. Ensure Flashpoint and the launcher are both not running
- 2. Manually specify or browse for the path to your launcher install, the utility will let you know if there are any problems. If everything is OK the icon next to the install path will change to a green check
- 3. Manually specify or browse for the path to your Flashpoint install, the utility will let you know if there are any problems. If everything is OK the icon next to the install path will change to a green check
- 4. The lists of available Platforms and Playlists will quickly load
- 5. Select which Platforms and Playlists you want to import. Existing entries that are considered an update will be highlighted in green
- 6. If importing Playlists, select a Playlist Game Mode. These are described with the nearby Help button in the program, but here is a basic overview of their differences:
+ 1. Download and run the latest [release](https://github.com/oblivioncth/FIL/releases) (the static variant is recommended)
+ 2. Ensure Flashpoint and the launcher are both not running
+ 3. Manually specify or browse for the path to your launcher install, the utility will let you know if there are any problems. If everything is OK the icon next to the install path will change to a green check
+ 4. Manually specify or browse for the path to your Flashpoint install, the utility will let you know if there are any problems. If everything is OK the icon next to the install path will change to a green check
+ 5. The lists of available Platforms and Playlists will quickly load
+ 6. Select which Platforms and Playlists you want to import. Existing entries that are considered an update will be highlighted in green
+ 7. If importing Playlists, select a Playlist Game Mode. These are described with the nearby Help button in the program, but here is a basic overview of their differences:
 	 - **Selected Platforms Only** - Only games that are present within the selected platforms will be included
 	 - **Force All** - All games in the playlist will be included, importing portions of unselected platforms as required
- 7. If any entries you have selected are for updates you may select update mode settings. These are described with the nearby Help button in the program, but here is a basic overview of their differences:
+ 8. If any entries you have selected are for updates you may select update mode settings. These are described with the nearby Help button in the program, but here is a basic overview of their differences:
     - (Exclusive) **New Only** - Only adds new games
     - (Exclusive) **New & Existing** - Adds new games and updates the non-user specific metadata for games already in your collection
     - (Applies to either of the above) **Remove Missing** - Removes any games from your collection for the selected Platforms that are no longer in Flashpoint
- 8. Select a method to handle game images. These are described with the nearby Help button in the program, but here is a basic overview of their differences:
+ 9. Select a method to handle game images. These are described with the nearby Help button in the program, but here is a basic overview of their differences:
     - **Copy** - Copies all relevant images from Flashpoint into your launcher install (slow import)
     - **Reference** - Changes your launcher install configuration to directly use the Flashpoint images in-place (slow image refresh)
     - **Symlink** - Creates a symbolic link to all relevant images from Flashpoint into your launcher install. Overall the best option
 
- 9. Press the "Start Import" button
+ 10. Press the "Start Import" button
 
 The symbolic link related options for handling images require the importer to be run as an administrator or for you to enable [Developer mode](https://www.howtogeek.com/292914/what-is-developer-mode-in-windows-10/#:~:text=How%20to%20Enable%20Developer%20Mode,be%20put%20into%20Developer%20Mode.) within Windows 10
 
