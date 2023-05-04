@@ -17,10 +17,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        lib_linkage: [shared, static]
+        lib_linkage: [static] #[static, shared] shared is broken for since CLIFp has to be static
         include:
-          - lib_linkage: shared
-            cmake_bsl: ON
+          #- lib_linkage: shared
+          #  cmake_bsl: ON
           - lib_linkage: static
             cmake_bsl: OFF
     runs-on: windows-latest
