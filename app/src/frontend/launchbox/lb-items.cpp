@@ -15,7 +15,7 @@ namespace Lb
 Game::Game() {}
 
 Game::Game(const Fp::Game& flashpointGame, QString fullCLIFpPath) :
-    Fe::Game(flashpointGame.id(), flashpointGame.title(), flashpointGame.platform()),
+    Fe::Game(flashpointGame.id(), flashpointGame.title(), flashpointGame.platformName()),
     mSeries(flashpointGame.series()),
     mDeveloper(flashpointGame.developer()),
     mPublisher(flashpointGame.publisher()),
@@ -119,8 +119,6 @@ AddApp::AddApp(const Fp::AddApp& flashpointAddApp, QString fullCLIFpPath) :
     mAutorunBefore(false),
     mWaitForExit(flashpointAddApp.isWaitExit())
 {}
-
-
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:

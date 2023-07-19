@@ -59,7 +59,7 @@ private:
     QList<ImageMap> mWorkerImageJobs;
 
     // Other trackers
-    Qx::FreeIndexTracker<int> mLbDatabaseIdTracker = Qx::FreeIndexTracker<int>(0, -1, {});
+    Qx::FreeIndexTracker mLbDatabaseIdTracker = Qx::FreeIndexTracker(0, -1, {});
     QHash<QUuid, PlaylistGame::EntryDetails> mPlaylistGameDetailsCache;
     // TODO: Even though the playlist game IDs don't seem to matter, at some point for for completeness scan all playlists when hooking an install to get the
     // full list of in use IDs
@@ -72,12 +72,12 @@ public:
 private:
     // Install management
     void nullify() override;
-    Qx::GenericError populateExistingDocs() override;
+    Qx::Error populateExistingDocs() override;
     QString translateDocName(const QString& originalName, Fe::DataDoc::Type type) const override;
 
     // Image Processing
     QString imageDestinationPath(Fp::ImageType imageType, const Fe::Game* game) const;
-    Qx::GenericError editBulkImageReferences(const Fe::ImageSources& imageSources);
+    Fe::DocHandlingError editBulkImageReferences(const Fe::ImageSources& imageSources);
 
     // Doc handling
     QString dataDocPath(Fe::DataDoc::Identifier identifier) const;
@@ -86,8 +86,8 @@ private:
     std::shared_ptr<Fe::PlatformDoc::Writer> preparePlatformDocCommit(const std::unique_ptr<Fe::PlatformDoc>& platformDoc) override;
     std::shared_ptr<Fe::PlaylistDoc::Writer> preparePlaylistDocCommit(const std::unique_ptr<Fe::PlaylistDoc>& playlistDoc) override;
 
-    Qx::GenericError checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc>& returnBuffer);
-    Qx::GenericError commitPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc> document);
+    Fe::DocHandlingError checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc>& returnBuffer);
+    Fe::DocHandlingError commitPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc> document);
 
 public:
     // Install management
@@ -100,7 +100,7 @@ public:
     QString versionString() const override;
 
     // Import stage notifier hooks
-    Qx::GenericError preImageProcessing(QList<ImageMap>& workerTransfers, Fe::ImageSources bulkSources) override;
+    Qx::Error preImageProcessing(QList<ImageMap>& workerTransfers, Fe::ImageSources bulkSources) override;
 
     // Image handling
     void processDirectGameImages(const Fe::Game* game, const Fe::ImageSources& imageSources) override;

@@ -217,9 +217,9 @@ CrudeSettings* CrudeSettingsReader::targetCrudeSettings() const
     return static_cast<CrudeSettings*>(mTargetDocument);
 }
 
-Qx::GenericError CrudeSettingsReader::readTargetDoc()
+Fe::DocHandlingError CrudeSettingsReader::readTargetDoc()
 {
-    Qx::GenericError errorStatus;
+    Fe::DocHandlingError errorStatus;
 
     // Got through all entries
     while(!mStreamReader.atEnd())
@@ -253,9 +253,7 @@ Qx::GenericError CrudeSettingsReader::readTargetDoc()
                 if(!mCurrentSubSettingParser->parse(key, value, depth))
                 {
                     QString setting = mCurrentSubSettingParser->settingName();
-                    errorStatus = Qx::GenericError(Qx::GenericError::Critical,
-                                                   mStdReadErrorStr,
-                                                   UNKNOWN_KEY_ERROR.arg(key, setting));
+                    errorStatus = Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocReadFailed, UNKNOWN_KEY_ERROR.arg(key, setting));
                     break;
                 }
             }

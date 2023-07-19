@@ -11,6 +11,103 @@
 // Project Includes
 #include "lb-install.h"
 
+namespace Xml
+{
+
+namespace Element_Game
+{
+     const QString NAME = "Game";
+
+     const QString ELEMENT_ID = "ID";
+     const QString ELEMENT_TITLE = "Title";
+     const QString ELEMENT_SERIES = "Series";
+     const QString ELEMENT_DEVELOPER = "Developer";
+     const QString ELEMENT_PUBLISHER = "Publisher";
+     const QString ELEMENT_PLATFORM = "Platform";
+     const QString ELEMENT_SORT_TITLE = "SortTitle";
+     const QString ELEMENT_DATE_ADDED = "DateAdded";
+     const QString ELEMENT_DATE_MODIFIED = "DateModified";
+     const QString ELEMENT_BROKEN = "Broken";
+     const QString ELEMENT_PLAYMODE = "PlayMode";
+     const QString ELEMENT_STATUS = "Status";
+     const QString ELEMENT_REGION = "Region";
+     const QString ELEMENT_NOTES = "Notes";
+     const QString ELEMENT_SOURCE = "Source";
+     const QString ELEMENT_APP_PATH = "ApplicationPath";
+     const QString ELEMENT_COMMAND_LINE = "CommandLine";
+     const QString ELEMENT_RELEASE_DATE = "ReleaseDate";
+     const QString ELEMENT_VERSION = "Version";
+     const QString ELEMENT_RELEASE_TYPE = "ReleaseType";
+};
+
+namespace Element_AddApp
+{
+     const QString NAME = "AdditionalApplication";
+
+     const QString ELEMENT_ID = "Id";
+     const QString ELEMENT_GAME_ID = "GameID";
+     const QString ELEMENT_APP_PATH = "ApplicationPath";
+     const QString ELEMENT_COMMAND_LINE = "CommandLine";
+     const QString ELEMENT_AUTORUN_BEFORE = "AutoRunBefore";
+     const QString ELEMENT_NAME = "Name";
+     const QString ELEMENT_WAIT_FOR_EXIT = "WaitForExit";
+};
+
+namespace Element_CustomField
+{
+     const QString NAME = "CustomField";
+
+     const QString ELEMENT_GAME_ID = "GameID";
+     const QString ELEMENT_NAME = "Name";
+     const QString ELEMENT_VALUE = "Value";
+};
+
+namespace Element_PlaylistHeader
+{
+     const QString NAME = "Playlist";
+
+     const QString ELEMENT_ID = "PlaylistId";
+     const QString ELEMENT_NAME = "Name";
+     const QString ELEMENT_NESTED_NAME = "NestedName";
+     const QString ELEMENT_NOTES = "Notes";
+};
+
+namespace Element_PlaylistGame
+{
+     const QString NAME = "PlaylistGame";
+
+     const QString ELEMENT_ID = "GameId";
+     const QString ELEMENT_GAME_TITLE = "GameTitle";
+     const QString ELEMENT_GAME_FILE_NAME = "GameFileName";
+     const QString ELEMENT_GAME_PLATFORM = "GamePlatform";
+     const QString ELEMENT_MANUAL_ORDER = "ManualOrder";
+     const QString ELEMENT_LB_DB_ID = "LaunchBoxDbId";
+};
+
+namespace Element_Platform
+{
+     const QString NAME = "Platform";
+
+     const QString ELEMENT_NAME = "Name";
+};
+
+namespace Element_PlatformFolder
+{
+     const QString NAME = "PlatformFolder";
+
+     const QString ELEMENT_MEDIA_TYPE = "MediaType";
+     const QString ELEMENT_FOLDER_PATH = "FolderPath";
+     const QString ELEMENT_PLATFORM = "Platform";
+};
+
+namespace Element_PlatformCategory
+{
+     const QString NAME = "PlatformCategory";
+};
+
+const QString ROOT_ELEMENT = "LaunchBox";
+};
+
 namespace Lb
 {
 //===============================================================================================================
@@ -26,41 +123,35 @@ XmlDocReader::XmlDocReader(Fe::DataDoc* targetDoc) :
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
+//Protected:
+Fe::DocHandlingError XmlDocReader::streamStatus() const
+{
+    if(mStreamReader.hasError())
+    {
+        Qx::XmlStreamReaderError xmlError(mStreamReader);
+        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocReadFailed, xmlError.text());
+    }
+
+    return Fe::DocHandlingError();
+}
+
 //Public:
-Qx::GenericError XmlDocReader::readInto()
+Fe::DocHandlingError XmlDocReader::readInto()
 {
     // Open File
     if(!mXmlFile.open(QFile::ReadOnly))
+        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocCantOpen, mXmlFile.errorString());
+
+    if(!mStreamReader.readNextStartElement())
     {
-        return Qx::GenericError(Qx::GenericError::Critical,
-                                Fe::docHandlingErrorString(mTargetDocument, Fe::DocHandlingError::DocCantOpen),
-                                mXmlFile.errorString());
+        Qx::XmlStreamReaderError xmlError(mStreamReader);
+        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocReadFailed, xmlError.text());
     }
 
-    // Prepare error return instance
-    Qx::XmlStreamReaderError readError;
+    if(mStreamReader.name() != Xml::ROOT_ELEMENT)
+        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::NotParentDoc);
 
-    if(mStreamReader.readNextStartElement())
-    {
-        if(mStreamReader.name() == Xml::ROOT_ELEMENT)
-        {
-            // Return no error on success
-            if(!readTargetDoc())
-            {
-                if(mStreamReader.error() == QXmlStreamReader::CustomError)
-                    readError = Qx::XmlStreamReaderError(mStreamReader.errorString());
-                else
-                    readError = Qx::XmlStreamReaderError(mStreamReader.error());
-            }
-        }
-        else
-            readError = Qx::XmlStreamReaderError(Fe::docHandlingErrorString(mTargetDocument, Fe::DocHandlingError::NotParentDoc));
-    }
-    else
-        readError = Qx::XmlStreamReaderError(mStreamReader.error());
-
-    return readError.isValid() ? Qx::GenericError(Qx::GenericError::Critical, mStdReadErrorStr, readError.text()) :
-                                 Qx::GenericError();
+    return readTargetDoc();
 
     // File is automatically closed when reader is destroyed...
 }
@@ -93,16 +184,18 @@ void XmlDocWriter::writeOtherFields(const QHash<QString, QString>& otherFields)
         writeCleanTextElement(i.key(), i.value());
 }
 
+Fe::DocHandlingError XmlDocWriter::streamStatus() const
+{
+    return mStreamWriter.hasError() ? Fe::DocHandlingError(*mSourceDocument, Fe::DocHandlingError::DocWriteFailed, mStreamWriter.device()->errorString()) :
+                                      Fe::DocHandlingError();
+}
+
 //Public:
-Qx::GenericError XmlDocWriter::writeOutOf()
+Fe::DocHandlingError XmlDocWriter::writeOutOf()
 {
     // Open File
     if(!mXmlFile.open(QFile::WriteOnly | QFile::Truncate)) // Discard previous contents
-    {
-        return Qx::GenericError(Qx::GenericError::Critical,
-                                Fe::docHandlingErrorString(mSourceDocument, Fe::DocHandlingError::DocCantSave),
-                                mXmlFile.errorString());
-    }
+        return Fe::DocHandlingError(*mSourceDocument, Fe::DocHandlingError::DocCantSave, mXmlFile.errorString());
 
     // Enable auto formatting
     mStreamWriter.setAutoFormatting(true);
@@ -116,7 +209,7 @@ Qx::GenericError XmlDocWriter::writeOutOf()
 
     // Write main body
     if(!writeSourceDoc())
-        return Qx::GenericError(Qx::GenericError::Critical, mStdWriteErrorStr, mStreamWriter.device()->errorString());
+        return streamStatus();
 
     // Close main LaunchBox tag
     mStreamWriter.writeEndElement();
@@ -125,8 +218,7 @@ Qx::GenericError XmlDocWriter::writeOutOf()
     mStreamWriter.writeEndDocument();
 
     // Return null string on success
-    return mStreamWriter.hasError() ? Qx::GenericError(Qx::GenericError::Critical, mStdWriteErrorStr, mStreamWriter.device()->errorString()) :
-                                      Qx::GenericError();
+    return streamStatus();
 
     // File is automatically closed when writer is destroyed...
 }
@@ -220,7 +312,7 @@ PlatformDoc::Reader::Reader(PlatformDoc* targetDoc) :
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-bool PlatformDoc::Reader::readTargetDoc()
+Fe::DocHandlingError PlatformDoc::Reader::readTargetDoc()
 {
     while(mStreamReader.readNextStartElement())
     {
@@ -235,7 +327,7 @@ bool PlatformDoc::Reader::readTargetDoc()
     }
 
     // Return status
-    return !mStreamReader.hasError();
+    return streamStatus();
 }
 
 void PlatformDoc::Reader::parseGame()
@@ -517,7 +609,10 @@ std::shared_ptr<Fe::PlaylistGame> PlaylistDoc::preparePlaylistGame(const Fp::Pla
             lbPlaylistGame->setLBDatabaseId(std::static_pointer_cast<PlaylistGame>(mPlaylistGamesExisting[key])->lbDatabaseId());
     }
     else
-        lbPlaylistGame->setLBDatabaseId(mLaunchBoxDatabaseIdTracker->reserveFirstFree());
+    {
+        auto optIdx = mLaunchBoxDatabaseIdTracker->reserveFirstFree();
+        lbPlaylistGame->setLBDatabaseId(optIdx.value_or(0));
+    }
 
     // Return converted playlist game
     return lbPlaylistGame;
@@ -537,7 +632,7 @@ PlaylistDoc::Reader::Reader(PlaylistDoc* targetDoc) :
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-bool PlaylistDoc::Reader::readTargetDoc()
+Fe::DocHandlingError PlaylistDoc::Reader::readTargetDoc()
 {
     while(mStreamReader.readNextStartElement())
     {
@@ -550,7 +645,7 @@ bool PlaylistDoc::Reader::readTargetDoc()
     }
 
     // Return status
-    return !mStreamReader.hasError();
+    return streamStatus();
 }
 
 void PlaylistDoc::Reader::parsePlaylistHeader()
@@ -606,7 +701,10 @@ void PlaylistDoc::Reader::parsePlaylistGame()
 
     // Correct LB ID if it is invalid and then add it to tracker
     if(existingPlaylistGame->lbDatabaseId() < 0)
-        existingPlaylistGame->setLBDatabaseId(static_cast<PlaylistDoc*>(mTargetDocument)->mLaunchBoxDatabaseIdTracker->reserveFirstFree());
+    {
+        auto optIdx = static_cast<PlaylistDoc*>(mTargetDocument)->mLaunchBoxDatabaseIdTracker->reserveFirstFree();
+        existingPlaylistGame->setLBDatabaseId(optIdx.value_or(0));
+    }
     else
         static_cast<PlaylistDoc*>(mTargetDocument)->mLaunchBoxDatabaseIdTracker->release(existingPlaylistGame->lbDatabaseId());
 
@@ -636,7 +734,7 @@ bool PlaylistDoc::Writer::writeSourceDoc()
         return false;
 
     // Write all playlist games
-    for(std::shared_ptr<Fe::PlaylistGame> playlistGame : static_cast<PlaylistDoc*>(mSourceDocument)->finalPlaylistGames())
+    for(const std::shared_ptr<Fe::PlaylistGame>& playlistGame : static_cast<PlaylistDoc*>(mSourceDocument)->finalPlaylistGames())
     {
         if(!writePlaylistGame(*std::static_pointer_cast<PlaylistGame>(playlistGame)))
             return false;
@@ -755,14 +853,17 @@ PlatformsConfigDoc::Reader::Reader(PlatformsConfigDoc* targetDoc) :
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-bool PlatformsConfigDoc::Reader::readTargetDoc()
+Fe::DocHandlingError PlatformsConfigDoc::Reader::readTargetDoc()
 {
     while(mStreamReader.readNextStartElement())
     {
         if(mStreamReader.name() == Xml::Element_Platform::NAME)
             parsePlatform();
         else if(mStreamReader.name() == Xml::Element_PlatformFolder::NAME)
-            parsePlatformFolder();
+        {
+            if(Fe::DocHandlingError dhe = parsePlatformFolder(); dhe.isValid())
+                return dhe;
+        }
         else if (mStreamReader.name() == Xml::Element_PlatformCategory::NAME)
             parsePlatformCategory();
         else
@@ -770,7 +871,7 @@ bool PlatformsConfigDoc::Reader::readTargetDoc()
     }
 
     // Return status
-    return !mStreamReader.hasError();
+    return streamStatus();
 }
 
 void PlatformsConfigDoc::Reader::parsePlatform()
@@ -792,7 +893,7 @@ void PlatformsConfigDoc::Reader::parsePlatform()
     static_cast<PlatformsConfigDoc*>(mTargetDocument)->mPlatforms.insert(existingPlatform->name(), *existingPlatform);
 }
 
-void PlatformsConfigDoc::Reader::parsePlatformFolder()
+Fe::DocHandlingError PlatformsConfigDoc::Reader::parsePlatformFolder()
 {
     // Platform Folder to Build
     QString platform;
@@ -809,11 +910,13 @@ void PlatformsConfigDoc::Reader::parsePlatformFolder()
         else if(mStreamReader.name() == Xml::Element_PlatformFolder::ELEMENT_PLATFORM)
             platform = mStreamReader.readElementText();
         else
-            mStreamReader.raiseError(Fe::docHandlingErrorString(mTargetDocument, Fe::DocHandlingError::DocInvalidType));
+            return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocInvalidType);
     }
 
     // Add to document
     static_cast<PlatformsConfigDoc*>(mTargetDocument)->mPlatformFolders[platform][mediaType] = folderPath;
+
+    return Fe::DocHandlingError();
 }
 
 void PlatformsConfigDoc::Reader::parsePlatformCategory()

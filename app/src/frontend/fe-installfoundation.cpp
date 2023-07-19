@@ -10,6 +10,35 @@ namespace Fe
 {
 
 //===============================================================================================================
+// RevertError
+//===============================================================================================================
+
+//-Constructor-------------------------------------------------------------
+//Private:
+RevertError::RevertError(Type t, const QString& s) :
+    mType(t),
+    mSpecific(s)
+{}
+
+//Public:
+RevertError::RevertError() :
+    mType(NoError)
+{}
+
+//-Instance Functions-------------------------------------------------------------
+//Public:
+bool RevertError::isValid() const { return mType != NoError; }
+QString RevertError::specific() const { return mSpecific; }
+RevertError::Type RevertError::type() const { return mType; }
+
+//Private:
+Qx::Severity RevertError::deriveSeverity() const { return Qx::Err; }
+quint32 RevertError::deriveValue() const { return mType; }
+QString RevertError::derivePrimary() const { return ERR_STRINGS.value(mType); }
+QString RevertError::deriveSecondary() const { return mSpecific; }
+QString RevertError::deriveCaption() const { return CAPTION_REVERT_ERR; }
+
+//===============================================================================================================
 // InstallFoundation
 //===============================================================================================================
 
@@ -108,18 +137,22 @@ void InstallFoundation::declareValid(bool valid)
         nullify();
 }
 
-QString InstallFoundation::translateDocName(const QString& originalName, DataDoc::Type type) const { return originalName; }
+QString InstallFoundation::translateDocName(const QString& originalName, DataDoc::Type type) const
+{
+    Q_UNUSED(type);
+    return originalName;
+}
+
 void InstallFoundation::catalogueExistingDoc(DataDoc::Identifier existingDoc) { mExistingDocuments.insert(existingDoc); }
 
-Qx::GenericError InstallFoundation::checkoutDataDocument(DataDoc* docToOpen, std::shared_ptr<DataDoc::Reader> docReader)
+Fe::DocHandlingError InstallFoundation::checkoutDataDocument(DataDoc* docToOpen, std::shared_ptr<DataDoc::Reader> docReader)
 {
     // Error report to return
-    Qx::GenericError openReadError; // Defaults to no error
-    Qx::GenericError errorTemplate(Qx::GenericError::Critical, docHandlingErrorString(docToOpen, DocHandlingError::DocCantOpen));
+    Fe::DocHandlingError openReadError; // Defaults to no error
 
     // Check if lease is already out
     if(mLeasedDocuments.contains(docToOpen->identifier()))
-        openReadError = errorTemplate.setSecondaryInfo(docHandlingErrorString(docToOpen, DocHandlingError::DocAlreadyOpen));
+        openReadError = Fe::DocHandlingError(*docToOpen, Fe::DocHandlingError::DocAlreadyOpen);
     else
     {
         // Read existing file if present and a reader was provided
@@ -135,11 +168,8 @@ Qx::GenericError InstallFoundation::checkoutDataDocument(DataDoc* docToOpen, std
     return openReadError;
 }
 
-Qx::GenericError InstallFoundation::commitDataDocument(DataDoc* docToSave, std::shared_ptr<DataDoc::Writer> docWriter)
+Fe::DocHandlingError InstallFoundation::commitDataDocument(DataDoc* docToSave, std::shared_ptr<DataDoc::Writer> docWriter)
 {
-    // Error template
-    Qx::GenericError errorTemplate(Qx::GenericError::Critical, docHandlingErrorString(docToSave, DocHandlingError::DocCantSave));
-
     // Create backup and add to modified list if required
     if(!mModifiedDocuments.contains(docToSave->identifier()))
     {
@@ -156,16 +186,16 @@ Qx::GenericError InstallFoundation::commitDataDocument(DataDoc* docToSave, std::
             if(QFile::exists(backupPath) && QFileInfo(backupPath).isFile())
             {
                 if(!QFile::remove(backupPath))
-                    return errorTemplate.setSecondaryInfo(docHandlingErrorString(docToSave, DocHandlingError::CantRemoveBackup));
+                    return Fe::DocHandlingError(*docToSave, Fe::DocHandlingError::CantRemoveBackup);
             }
 
             if(!QFile::copy(docPath, backupPath))
-                return errorTemplate.setSecondaryInfo(docHandlingErrorString(docToSave, DocHandlingError::CantCreateBackup));
+                return Fe::DocHandlingError(*docToSave, Fe::DocHandlingError::CantRemoveBackup);
         }
     }
 
     // Write to file if it contains content
-    Qx::GenericError saveWriteError;
+    Fe::DocHandlingError saveWriteError;
     if(!docToSave->isEmpty())
         saveWriteError = docWriter->writeOutOf();
 
@@ -187,11 +217,11 @@ QList<QString> InstallFoundation::modifiedPlaylists() const { return modifiedDat
 bool InstallFoundation::isValid() const { return mValid; }
 QString InstallFoundation::path() const { return mRootDirectory.absolutePath(); }
 
-Qx::GenericError InstallFoundation::refreshExistingDocs(bool* changed)
+Qx::Error InstallFoundation::refreshExistingDocs(bool* changed)
 {
     QSet<DataDoc::Identifier> oldDocSet;
     oldDocSet.swap(mExistingDocuments);
-    Qx::GenericError error = populateExistingDocs();
+    Qx::Error error = populateExistingDocs();
     if(changed)
         *changed = mExistingDocuments != oldDocSet;
     return error;
@@ -220,10 +250,10 @@ bool InstallFoundation::containsAnyPlaylist(const QList<QString>& names) const
 void InstallFoundation::addRevertableFile(QString filePath) { mRevertableFilePaths.append(filePath); }
 int InstallFoundation::revertQueueCount() const { return mRevertableFilePaths.size(); }
 
-int InstallFoundation::revertNextChange(Qx::GenericError& error, bool skipOnFail)
+int InstallFoundation::revertNextChange(RevertError& error, bool skipOnFail)
 {
     // Ensure error message is null
-    error = Qx::GenericError();
+    error = RevertError();
 
     // Get operation count for return
     int operationsLeft = mRevertableFilePaths.size();
@@ -236,13 +266,13 @@ int InstallFoundation::revertNextChange(Qx::GenericError& error, bool skipOnFail
 
         if(QFile::exists(filePath) && !QFile::remove(filePath) && !skipOnFail)
         {
-            error = Qx::GenericError(Qx::GenericError::Error, ERR_FILE_WONT_DEL, filePath);
+            error = RevertError(RevertError::FileWontDelete, filePath);
             return operationsLeft;
         }
 
         if(!QFile::exists(filePath) && QFile::exists(backupPath) && !QFile::rename(backupPath, filePath) && !skipOnFail)
         {
-            error = Qx::GenericError(Qx::GenericError::Error, ERR_FILE_WONT_RESTORE, backupPath);
+            error = RevertError(RevertError::FileWontRestore, backupPath);
             return operationsLeft;
         }
 

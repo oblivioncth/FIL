@@ -23,112 +23,6 @@
 namespace Lb
 {
 
-namespace Xml
-{
-//-Classes-------------------------------------------------------------------------------------------------
-    class Element_Game
-    {
-    public:
-        static inline const QString NAME = "Game";
-
-        static inline const QString ELEMENT_ID = "ID";
-        static inline const QString ELEMENT_TITLE = "Title";
-        static inline const QString ELEMENT_SERIES = "Series";
-        static inline const QString ELEMENT_DEVELOPER = "Developer";
-        static inline const QString ELEMENT_PUBLISHER = "Publisher";
-        static inline const QString ELEMENT_PLATFORM = "Platform";
-        static inline const QString ELEMENT_SORT_TITLE = "SortTitle";
-        static inline const QString ELEMENT_DATE_ADDED = "DateAdded";
-        static inline const QString ELEMENT_DATE_MODIFIED = "DateModified";
-        static inline const QString ELEMENT_BROKEN = "Broken";
-        static inline const QString ELEMENT_PLAYMODE = "PlayMode";
-        static inline const QString ELEMENT_STATUS = "Status";
-        static inline const QString ELEMENT_REGION = "Region";
-        static inline const QString ELEMENT_NOTES = "Notes";
-        static inline const QString ELEMENT_SOURCE = "Source";
-        static inline const QString ELEMENT_APP_PATH = "ApplicationPath";
-        static inline const QString ELEMENT_COMMAND_LINE = "CommandLine";
-        static inline const QString ELEMENT_RELEASE_DATE = "ReleaseDate";
-        static inline const QString ELEMENT_VERSION = "Version";
-        static inline const QString ELEMENT_RELEASE_TYPE = "ReleaseType";
-    };
-
-    class Element_AddApp
-    {
-    public:
-        static inline const QString NAME = "AdditionalApplication";
-
-        static inline const QString ELEMENT_ID = "Id";
-        static inline const QString ELEMENT_GAME_ID = "GameID";
-        static inline const QString ELEMENT_APP_PATH = "ApplicationPath";
-        static inline const QString ELEMENT_COMMAND_LINE = "CommandLine";
-        static inline const QString ELEMENT_AUTORUN_BEFORE = "AutoRunBefore";
-        static inline const QString ELEMENT_NAME = "Name";
-        static inline const QString ELEMENT_WAIT_FOR_EXIT = "WaitForExit";
-    };
-
-    class Element_CustomField
-    {
-    public:
-        static inline const QString NAME = "CustomField";
-
-        static inline const QString ELEMENT_GAME_ID = "GameID";
-        static inline const QString ELEMENT_NAME = "Name";
-        static inline const QString ELEMENT_VALUE = "Value";
-    };
-
-    class Element_PlaylistHeader
-    {
-    public:
-        static inline const QString NAME = "Playlist";
-
-        static inline const QString ELEMENT_ID = "PlaylistId";
-        static inline const QString ELEMENT_NAME = "Name";
-        static inline const QString ELEMENT_NESTED_NAME = "NestedName";
-        static inline const QString ELEMENT_NOTES = "Notes";
-    };
-
-    class Element_PlaylistGame
-    {
-    public:
-        static inline const QString NAME = "PlaylistGame";
-
-        static inline const QString ELEMENT_ID = "GameId";
-        static inline const QString ELEMENT_GAME_TITLE = "GameTitle";
-        static inline const QString ELEMENT_GAME_FILE_NAME = "GameFileName";
-        static inline const QString ELEMENT_GAME_PLATFORM = "GamePlatform";
-        static inline const QString ELEMENT_MANUAL_ORDER = "ManualOrder";
-        static inline const QString ELEMENT_LB_DB_ID = "LaunchBoxDbId";
-    };
-
-    class Element_Platform
-    {
-    public:
-        static inline const QString NAME = "Platform";
-
-        static inline const QString ELEMENT_NAME = "Name";
-    };
-
-    class Element_PlatformFolder
-    {
-    public:
-        static inline const QString NAME = "PlatformFolder";
-
-        static inline const QString ELEMENT_MEDIA_TYPE = "MediaType";
-        static inline const QString ELEMENT_FOLDER_PATH = "FolderPath";
-        static inline const QString ELEMENT_PLATFORM = "Platform";
-    };
-
-    class Element_PlatformCategory
-    {
-    public:
-        static inline const QString NAME = "PlatformCategory";
-    };
-
-//-Variables--------------------------------------------------------------------------------------------------
-    const QString ROOT_ELEMENT = "LaunchBox";
-};
-
 class DocKey
 {
     friend class Install;
@@ -150,10 +44,13 @@ public:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
-    virtual bool readTargetDoc() = 0;
+    virtual Fe::DocHandlingError readTargetDoc() = 0;
+
+protected:
+    Fe::DocHandlingError streamStatus() const;
 
 public:
-    Qx::GenericError readInto() override;
+    Fe::DocHandlingError readInto() override;
 };
 
 class XmlDocWriter : public virtual Fe::DataDoc::Writer
@@ -172,9 +69,10 @@ protected:
     virtual bool writeSourceDoc() = 0;
     void writeCleanTextElement(const QString& qualifiedName, const QString& text);
     void writeOtherFields(const QHash<QString, QString>& otherFields);
+    Fe::DocHandlingError streamStatus() const;
 
 public:
-    Qx::GenericError writeOutOf() override;
+    Fe::DocHandlingError writeOutOf() override;
 };
 
 class PlatformDoc : public Fe::BasicPlatformDoc
@@ -215,7 +113,7 @@ public:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
-    bool readTargetDoc() override;
+    Fe::DocHandlingError readTargetDoc() override;
     void parseGame();
     void parseAddApp();
     void parseCustomField();
@@ -244,7 +142,7 @@ public:
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
-    Qx::FreeIndexTracker<int>* mLaunchBoxDatabaseIdTracker;
+    Qx::FreeIndexTracker* mLaunchBoxDatabaseIdTracker;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -265,7 +163,7 @@ public:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
-    bool readTargetDoc() override;
+    Fe::DocHandlingError readTargetDoc() override;
     void parsePlaylistHeader();
     void parsePlaylistGame();
 };
@@ -332,9 +230,9 @@ public:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
-    bool readTargetDoc() override;
+    Fe::DocHandlingError readTargetDoc() override;
     void parsePlatform();
-    void parsePlatformFolder();
+    Fe::DocHandlingError parsePlatformFolder();
     void parsePlatformCategory();
 };
 

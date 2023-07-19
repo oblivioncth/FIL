@@ -38,10 +38,10 @@ protected:
     bool lineIsComment(const QString& line);
     QString readLineIgnoringComments(qint64 maxlen = 0);
     virtual bool checkDocValidity(bool& isValid) = 0;
-    virtual Qx::GenericError readTargetDoc() = 0;
+    virtual Fe::DocHandlingError readTargetDoc() = 0;
 
 public:
-    Qx::GenericError readInto() override;
+    Fe::DocHandlingError readInto() override;
 };
 
 class CommonDocWriter : public Fe::DataDoc::Writer
@@ -59,7 +59,7 @@ protected:
     virtual bool writeSourceDoc() = 0;
 
 public:
-    Qx::GenericError writeOutOf() override;
+    Fe::DocHandlingError writeOutOf() override;
 };
 
 class ConfigDoc : public Fe::DataDoc
@@ -225,7 +225,7 @@ public:
 private:
     QHash<QUuid, std::shared_ptr<RomEntry>>& targetDocExistingRomEntries();
     bool checkDocValidity(bool& isValid) override;
-    Qx::GenericError readTargetDoc() override;
+    Fe::DocHandlingError readTargetDoc() override;
     void parseRomEntry(const QString& rawEntry);
     void addFieldToBuilder(RomEntry::Builder& builder, QString field, quint8 index);
 };
@@ -304,7 +304,7 @@ public:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 public:
-    Qx::GenericError writeOutOf() override;
+    Fe::DocHandlingError writeOutOf() override;
 };
 
 class PlaylistInterface : public Fe::PlaylistDoc
@@ -328,8 +328,7 @@ public:
 
     bool containsPlaylistGame(QUuid gameId) const override;
 
-    void setPlaylistHeader(const Fp::Playlist& playlist) override;
-    void addPlaylistGame(const Fp::PlaylistGame& playlistGame) override;
+    void setPlaylistData(const Fp::Playlist& playlist) override;
 };
 
 class PlaylistInterface::Writer : public Fe::PlaylistDoc::Writer
@@ -346,7 +345,7 @@ public:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
-    Qx::GenericError writeOutOf() override;
+    Fe::DocHandlingError writeOutOf() override;
 };
 
 class Emulator : public ConfigDoc
@@ -436,7 +435,7 @@ public:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
-    Qx::GenericError readTargetDoc() override;
+    Fe::DocHandlingError readTargetDoc() override;
     void parseKeyValue(const QString& key, const QString& value);
     void parseExecutable(const QString& value);
     void parseArgs(const QString& value);

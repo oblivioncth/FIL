@@ -9,7 +9,8 @@
 #include <QFile>
 
 // Qx Includes
-#include <qx/core/qx-genericerror.h>
+#include <qx/core/qx-error.h>
+#include <qx/core/qx-abstracterror.h>
 #include <qx/utility/qx-macros.h>
 
 // libfp Includes
@@ -41,12 +42,10 @@ namespace Fe
 {
 //-External Reference--------------------------------------------------------------------------------------------
 class Install;
+class DataDoc;
 
 //-Enums----------------------------------------------------------------------------------------------------------
 enum class ImportMode {OnlyNew, NewAndExisting};
-enum class DocHandlingError {DocAlreadyOpen, DocCantOpen, DocCantSave, NotParentDoc, CantRemoveBackup, CantCreateBackup,
-                             DocInvalidType, DocReadFailed, DocWriteFailed};
-QX_SCOPED_ENUM_HASH_FUNC(DocHandlingError);
 
 //-Structs---------------------------------------------------------------------------------------------------------
 struct UpdateOptions
@@ -56,6 +55,74 @@ struct UpdateOptions
 };
 
 //-Classes-----------------------------------------------------------------------------------------------------------
+class QX_ERROR_TYPE(DocHandlingError, "Fe::DocHandlingError", 1310)
+{
+//-Class Enums-------------------------------------------------------------
+public:
+    enum Type
+    {
+        NoError = 0,
+        DocAlreadyOpen = 1,
+        DocCantOpen = 2,
+        DocCantSave = 3,
+        NotParentDoc = 4,
+        CantRemoveBackup = 5,
+        CantCreateBackup = 6,
+        DocInvalidType = 7,
+        DocReadFailed = 8,
+        DocWriteFailed = 9
+    };
+
+//-Class Variables-------------------------------------------------------------
+private:
+    // Message Macros
+    static inline const QString M_DOC_TYPE = "<docType>";
+    static inline const QString M_DOC_NAME = "<docName>";
+    static inline const QString M_DOC_PARENT = "<docParent>";
+
+    static inline const QHash<Type, QString> ERR_STRINGS{
+        {NoError, QSL("")},
+        {DocAlreadyOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is already open."},
+        {DocCantOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be opened."},
+        {DocCantSave, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be saved."},
+        {NotParentDoc, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is not a" + M_DOC_PARENT + "document."},
+        {CantRemoveBackup, "The existing backup of the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") could not be removed."},
+        {CantCreateBackup, "Could not create a backup of the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ")."},
+        {DocInvalidType, "The document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is invalid or of the wrong type."},
+        {DocReadFailed, "Reading the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") failed."},
+        {DocWriteFailed, "Writing to the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") failed."}
+    };
+
+//-Instance Variables-------------------------------------------------------------
+private:
+    Type mType;
+    QString mErrorStr;
+    QString mSpecific;
+
+//-Constructor-------------------------------------------------------------
+public:
+    DocHandlingError();
+    DocHandlingError(const DataDoc& doc, Type t, const QString& s = {});
+
+//-Class Functions-------------------------------------------------------------
+private:
+    static QString generatePrimaryString(const DataDoc& doc, Type t);
+
+//-Instance Functions-------------------------------------------------------------
+public:
+    bool isValid() const;
+    Type type() const;
+
+    QString errorString() const;
+    QString specific() const;
+
+private:
+    Qx::Severity deriveSeverity() const override;
+    quint32 deriveValue() const override;
+    QString derivePrimary() const override;
+    QString deriveSecondary() const override;
+};
+
 class ImageSources
 {
 //-Instance Members--------------------------------------------------------------------------------------------------
@@ -148,7 +215,6 @@ class DataDoc::Reader
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
     DataDoc* mTargetDocument;
-    QString mStdReadErrorStr;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
@@ -160,7 +226,7 @@ public:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 public:
-    virtual Qx::GenericError readInto() = 0;
+    virtual Fe::DocHandlingError readInto() = 0;
 };
 
 class DataDoc::Writer
@@ -168,7 +234,6 @@ class DataDoc::Writer
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
     DataDoc* mSourceDocument;
-    QString mStdWriteErrorStr;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
@@ -180,14 +245,14 @@ public:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 public:
-    virtual Qx::GenericError writeOutOf() = 0;
+    virtual Fe::DocHandlingError writeOutOf() = 0;
 };
 
 class Errorable
 {
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
-    Qx::GenericError mError;
+    Qx::Error mError;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
@@ -200,7 +265,7 @@ public:
 //-Instance Functions--------------------------------------------------------------------------------------------------
 public:
     bool hasError() const;
-    Qx::GenericError error() const;
+    Qx::Error error() const;
 };
 
 class UpdateableDoc : public DataDoc
@@ -385,8 +450,7 @@ private:
 public:
     virtual bool containsPlaylistGame(QUuid gameId) const = 0; // NOTE: UNUSED
 
-    virtual void setPlaylistHeader(const Fp::Playlist& playlist) = 0;
-    virtual void addPlaylistGame(const Fp::PlaylistGame& playlistGame) = 0;
+    virtual void setPlaylistData(const Fp::Playlist& playlist) = 0;
 };
 
 class PlaylistDoc::Reader : public virtual DataDoc::Reader
@@ -433,8 +497,7 @@ public:
 
     bool containsPlaylistGame(QUuid gameId) const override;
 
-    void setPlaylistHeader(const Fp::Playlist& playlist) override;
-    void addPlaylistGame(const Fp::PlaylistGame& playlistGame) override;
+    void setPlaylistData(const Fp::Playlist& playlist) override;
 
     void finalize() override;
 };
@@ -464,9 +527,6 @@ class BasicPlaylistDoc::Writer : public PlaylistDoc::Writer
 protected:
     Writer(DataDoc* sourceDoc);
 };
-
-//-Functions-------------------------------------------------------------------------------------------------------
-QString docHandlingErrorString(const DataDoc* doc, DocHandlingError handlingError);
 
 }
 #endif // FE_DATA

@@ -64,18 +64,18 @@ set(FIL_QX_COMPONENTS
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "v0.5.0.1"
+    REF "2ff15119534672fb04d47c24628054e03a645819"
     COMPONENTS
         ${FIL_QX_COMPONENTS}
 )
 
 # Fetch libfp (build and import from source)
 include(OB/Fetchlibfp)
-ob_fetch_libfp("v0.3.1")
+ob_fetch_libfp("8bdbad935bb790435cf60966555bd086292d1383")
 
 # Fetch CLIFp (build and import from source)
 include(OB/FetchCLIFp)
-ob_fetch_clifp("v0.9.4.1")
+ob_fetch_clifp("269da20a7bb36a3d0ea19073ca790aa5d5e86885")
 
 # TODO: The shared build of this is essentially useless as only the CLIFp executable
 # is deployed, which only works if it's statically linked. There isn't a simple way
@@ -92,7 +92,7 @@ ob_fetch_clifp("v0.9.4.1")
 
 # Fetch Neargye's Magic Enum
 include(OB/FetchMagicEnum)
-ob_fetch_magicenum("v0.8.0")
+ob_fetch_magicenum("v0.9.3")
 
 # Process Targets
 set(APP_TARGET_NAME ${PROJECT_NAMESPACE_LC}_${PROJECT_NAMESPACE_LC})
@@ -107,7 +107,6 @@ ob_standard_project_package_config(
         TARGET_CONFIGS
             TARGET "${PROJECT_NAMESPACE}::${APP_ALIAS_NAME}" COMPONENT "${APP_ALIAS_NAME}" DEFAULT
 )
-
 
 #================= Install ==========================
 

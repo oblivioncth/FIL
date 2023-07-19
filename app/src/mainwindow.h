@@ -8,7 +8,6 @@
 #include <QMessageBox>
 
 // Qx Includes
-#include <qx/core/qx-genericerror.h>
 #include <qx/core/qx-versionnumber.h>
 #include <qx/io/qx-common-io.h>
 #include <qx/widgets/qx-standarditemmodel.h>
@@ -139,7 +138,6 @@ private:
     static inline const QString CAPTION_IMAGE_MODE_HELP = "Image mode options";
     static inline const QString CAPTION_TASKLESS_IMPORT = "Nothing to do";
     static inline const QString CAPTION_REVERT = "Reverting changes...";
-    static inline const QString CAPTION_REVERT_ERR = "Error reverting changes";
     static inline const QString CAPTION_CLIFP_ERR = "Error deploying CLIFp";
     static inline const QString CAPTION_CLIFP_DOWNGRADE = "Downgrade CLIFp?";
     static inline const QString CAPTION_IMPORTING = "FP Import";
@@ -261,9 +259,9 @@ private slots:
     void all_on_menu_triggered(QAction *action);
 
     // Import Exception Handling
-    void handleBlockingError(std::shared_ptr<int> response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices);
+    void handleBlockingError(std::shared_ptr<int> response, Qx::Error blockingError, QMessageBox::StandardButtons choices);
     void handleAuthRequest(QString prompt, QAuthenticator* authenticator);
-    void handleImportResult(ImportWorker::ImportResult importResult, Qx::GenericError errorReport);
+    void handleImportResult(ImportWorker::ImportResult importResult, Qx::Error errorReport);
 };
 
 #endif // MAINWINDOW_H

@@ -57,18 +57,15 @@ void Install::nullify()
     mPlatformImagesDirectory = QDir();
 }
 
-Qx::GenericError Install::populateExistingDocs()
+Qx::Error Install::populateExistingDocs()
 {
-    // Error template
-    Qx::GenericError error(Qx::GenericError::Critical, ERR_INSEPECTION);
-
     // Temp storage
     QFileInfoList existingList;
 
     // Check for platforms
     Qx::IoOpReport existingCheck = Qx::dirContentInfoList(existingList, mPlatformsDirectory, {"*." + XML_EXT}, QDir::NoFilter, QDirIterator::Subdirectories);
     if(existingCheck.isFailure())
-        return error.setSecondaryInfo(existingCheck.outcome()).setDetailedInfo(existingCheck.outcomeInfo());
+        return existingCheck;
 
     for(const QFileInfo& platformFile : qAsConst(existingList))
          catalogueExistingDoc(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Platform, platformFile.baseName()));
@@ -76,7 +73,7 @@ Qx::GenericError Install::populateExistingDocs()
     // Check for playlists
     existingCheck = Qx::dirContentInfoList(existingList, mPlaylistsDirectory, {"*." + XML_EXT}, QDir::NoFilter, QDirIterator::Subdirectories);
     if(existingCheck.isFailure())
-        return error.setSecondaryInfo(existingCheck.outcome()).setDetailedInfo(existingCheck.outcomeInfo());
+        return existingCheck;
 
     for(const QFileInfo& playlistFile : qAsConst(existingList))
         catalogueExistingDoc(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Playlist, playlistFile.baseName()));
@@ -84,17 +81,19 @@ Qx::GenericError Install::populateExistingDocs()
     // Check for config docs
     existingCheck = Qx::dirContentInfoList(existingList, mDataDirectory, {"*." + XML_EXT});
     if(existingCheck.isFailure())
-        return error.setSecondaryInfo(existingCheck.outcome()).setDetailedInfo(existingCheck.outcomeInfo());
+        return existingCheck;
 
     for(const QFileInfo& configDocFile : qAsConst(existingList))
         catalogueExistingDoc(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Config, configDocFile.baseName()));
 
     // Return success
-    return Qx::GenericError();
+    return Qx::Error();
 }
 
 QString Install::translateDocName(const QString& originalName, Fe::DataDoc::Type type) const
 {
+    Q_UNUSED(type);
+
     // Perform general kosherization
     QString translatedName = Qx::kosherizeFileName(originalName);
 
@@ -114,11 +113,11 @@ QString Install::imageDestinationPath(Fp::ImageType imageType, const Fe::Game* g
            '.' + IMAGE_EXT;
 }
 
-Qx::GenericError Install::editBulkImageReferences(const Fe::ImageSources& imageSources)
+Fe::DocHandlingError Install::editBulkImageReferences(const Fe::ImageSources& imageSources)
 {
     // Open platforms document
     std::unique_ptr<PlatformsConfigDoc> platformsConfig;
-    Qx::GenericError platformsConfigReadError = checkoutPlatformsConfigDoc(platformsConfig);
+    Fe::DocHandlingError platformsConfigReadError = checkoutPlatformsConfigDoc(platformsConfig);
 
     // Stop import if error occurred
     if(platformsConfigReadError.isValid())
@@ -139,7 +138,7 @@ Qx::GenericError Install::editBulkImageReferences(const Fe::ImageSources& imageS
     }
 
     // Save platforms document
-    Qx::GenericError saveError = commitPlatformsConfigDoc(std::move(platformsConfig));
+    Fe::DocHandlingError saveError = commitPlatformsConfigDoc(std::move(platformsConfig));
 
     return saveError;
 }
@@ -214,7 +213,7 @@ std::shared_ptr<Fe::PlaylistDoc::Writer> Install::preparePlaylistDocCommit(const
     return docWriter;
 }
 
-Qx::GenericError Install::checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc>& returnBuffer)
+Fe::DocHandlingError Install::checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc>& returnBuffer)
 {
     // Create doc file reference
     Fe::DataDoc::Identifier docId(Fe::DataDoc::Type::Config, PlatformsConfigDoc::STD_NAME);
@@ -226,7 +225,7 @@ Qx::GenericError Install::checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsCo
     std::shared_ptr<PlatformsConfigDoc::Reader> docReader = std::make_shared<PlatformsConfigDoc::Reader>(returnBuffer.get());
 
     // Open document
-    Qx::GenericError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
+    Fe::DocHandlingError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
 
     // Set return null on failure
     if(readErrorStatus.isValid())
@@ -236,7 +235,7 @@ Qx::GenericError Install::checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsCo
     return readErrorStatus;
 }
 
-Qx::GenericError Install::commitPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc> document)
+Fe::DocHandlingError Install::commitPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc> document)
 {
     assert(document->parent() == this);
 
@@ -244,7 +243,7 @@ Qx::GenericError Install::commitPlatformsConfigDoc(std::unique_ptr<PlatformsConf
     std::shared_ptr<PlatformsConfigDoc::Writer> docWriter = std::make_shared<PlatformsConfigDoc::Writer>(document.get());
 
     // Write
-    Qx::GenericError writeErrorStatus = commitDataDocument(document.get(), docWriter);
+    Fe::DocHandlingError writeErrorStatus = commitDataDocument(document.get(), docWriter);
 
     // Ensure document is cleared
     document.reset();
@@ -258,7 +257,7 @@ void Install::softReset()
 {
     Fe::Install::softReset();
 
-    mLbDatabaseIdTracker = Qx::FreeIndexTracker<int>(0, -1);
+    mLbDatabaseIdTracker = Qx::FreeIndexTracker(0, -1);
     mPlaylistGameDetailsCache.clear();
     mWorkerImageJobs.clear();
 }
@@ -282,7 +281,7 @@ QString Install::versionString() const
         if(!settingsObj.isEmpty())
         {
             // Get key that should have version
-            QList<QJsonValue> res = Qx::Json::findAllValues(QJsonValue(settingsObj), "Unbroken.LaunchBox.Windows");
+            QList<QJsonValue> res = Qx::findAllValues(QJsonValue(settingsObj), u"Unbroken.LaunchBox.Windows");
 
             if(!res.isEmpty() && res.first().isString())
             {
@@ -309,7 +308,7 @@ QString Install::versionString() const
     return Fe::Install::versionString();
 }
 
-Qx::GenericError Install::preImageProcessing(QList<ImageMap>& workerTransfers, Fe::ImageSources bulkSources)
+Qx::Error Install::preImageProcessing(QList<ImageMap>& workerTransfers, Fe::ImageSources bulkSources)
 {
     switch(mImportDetails->imageMode)
     {
@@ -321,7 +320,7 @@ Qx::GenericError Install::preImageProcessing(QList<ImageMap>& workerTransfers, F
             return editBulkImageReferences(bulkSources);
         default:
             qWarning() << Q_FUNC_INFO << "unhandled image mode";
-            return Qx::GenericError();
+            return Qx::Error();
     }
 }
 

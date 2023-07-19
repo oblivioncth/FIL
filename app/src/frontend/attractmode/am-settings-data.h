@@ -202,7 +202,7 @@ private:
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
     CrudeSettings* targetCrudeSettings() const;
-    Qx::GenericError readTargetDoc() override;
+    Fe::DocHandlingError readTargetDoc() override;
     void initializeGenericSubSetting(QString key, QString value);
 };
 

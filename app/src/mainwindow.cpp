@@ -3,10 +3,10 @@
 #include <filesystem>
 
 // Qt Includes
+#include <QApplication>
 #include <QSet>
 #include <QFile>
 #include <QFileDialog>
-#include <QtXml>
 #include <QFileInfo>
 #include <QPushButton>
 #include <QLineEdit>
@@ -51,7 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
      * See https://forum.qt.io/topic/136627/undocumented-automatic-metatype-registration-in-qt6
      */
     //qRegisterMetaType<ImportWorker::ImportResult>();
-    //qRegisterMetaType<Qx::GenericError>();
+    //qRegisterMetaType<Qx::Error>();
     //qRegisterMetaType<std::shared_ptr<int>>();
 
     // Get built-in CLIFp version
@@ -89,10 +89,7 @@ MainWindow::MainWindow(QWidget *parent) :
 }
 
 //-Destructor----------------------------------------------------------------------------------------------------
-MainWindow::~MainWindow()
-{
-    delete ui;
-}
+MainWindow::~MainWindow() { delete ui; }
 
 //-Instance Functions--------------------------------------------------------------------------------------------
 //Private:
@@ -286,8 +283,8 @@ void MainWindow::populateImportSelectionBoxes()
 {
     // Populate import selection boxes
     clearListWidgets();
-    ui->listWidget_platformChoices->addItems(mFlashpointInstall->database()->platformList());
-    ui->listWidget_playlistChoices->addItems(mFlashpointInstall->database()->playlistList());
+    ui->listWidget_platformChoices->addItems(mFlashpointInstall->database()->platformNames());
+    ui->listWidget_playlistChoices->addItems(mFlashpointInstall->playlistManager()->playlistTitles());
 
     // Set item attributes
     QListWidgetItem* currentItem;
@@ -361,7 +358,7 @@ void MainWindow::generateTagSelectionOptions()
 bool MainWindow::parseFrontendData()
 {
     // IO Error check instance
-    Qx::GenericError existingCheck;
+    Qx::Error existingCheck;
 
     // Get list of existing platforms and playlists
     existingCheck = mFrontendInstall->refreshExistingDocs();
@@ -458,7 +455,7 @@ bool MainWindow::selectionsMayModify()
 {
     return isExistingPlatformSelected() || isExistingPlaylistSelected() ||
                (getSelectedPlaylistGameMode() ==  ImportWorker::ForceAll &&
-                mFrontendInstall->containsAnyPlatform(mFlashpointInstall->database()->platformList()));
+                mFrontendInstall->containsAnyPlatform(mFlashpointInstall->database()->platformNames()));
 }
 
 void MainWindow::postSqlError(QString mainText, QSqlError sqlError)
@@ -667,7 +664,7 @@ void MainWindow::prepareImport()
         connect(mImportProgressDialog.get(), &QProgressDialog::canceled, &importWorker, &ImportWorker::notifyCanceled);
 
         // Import error tracker
-        Qx::GenericError importError;
+        Qx::Error importError;
 
         // Start import and forward result to handler
         ImportWorker::ImportResult importResult = importWorker.doImport(importError);
@@ -680,7 +677,7 @@ void MainWindow::revertAllFrontendChanges()
     // Trackers
     bool tempSkip = false;
     bool alwaysSkip = false;
-    Qx::GenericError currentError;
+    Fe::RevertError currentError;
     int retryChoice;
 
     // Progress
@@ -698,7 +695,6 @@ void MainWindow::revertAllFrontendChanges()
         }
         else
         {
-            currentError.setCaption(CAPTION_REVERT_ERR);
             retryChoice = Qx::postBlockingError(currentError, QMessageBox::Retry | QMessageBox::Ignore | QMessageBox::Abort, QMessageBox::Retry);
 
             if(retryChoice == QMessageBox::Ignore)
@@ -992,7 +988,7 @@ void MainWindow::all_on_menu_triggered(QAction *action)
         throw std::runtime_error("Unhandled use of all_on_menu_triggered() slot");
 }
 
-void MainWindow::handleBlockingError(std::shared_ptr<int> response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices)
+void MainWindow::handleBlockingError(std::shared_ptr<int> response, Qx::Error blockingError, QMessageBox::StandardButtons choices)
 {
     // Get taskbar progress and indicate error
     mWindowTaskbarButton->setProgressState(Qx::TaskbarButton::Stopped);
@@ -1022,7 +1018,7 @@ void MainWindow::handleAuthRequest(QString prompt, QAuthenticator* authenticator
     }
 }
 
-void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx::GenericError errorReport)
+void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx::Error errorReport)
 {
     // Close progress dialog and reset taskbar progress indicator
     mImportProgressDialog->close();

@@ -61,7 +61,7 @@ public:
 protected:
     // Install management
     virtual void nullify() override;
-    virtual Qx::GenericError populateExistingDocs() override = 0;
+    virtual Qx::Error populateExistingDocs() override = 0;
     virtual QString translateDocName(const QString& originalName, DataDoc::Type type) const override;
 
     // Doc Handling
@@ -82,20 +82,20 @@ public:
     virtual QString versionString() const;
 
     // Import stage notifier hooks
-    virtual Qx::GenericError preImport(const ImportDetails& details);
-    virtual Qx::GenericError postImport();
-    virtual Qx::GenericError prePlatformsImport();
-    virtual Qx::GenericError postPlatformsImport();
-    virtual Qx::GenericError preImageProcessing(QList<ImageMap>& workerTransfers, ImageSources bulkSources);
-    virtual Qx::GenericError postImageProcessing();
-    virtual Qx::GenericError prePlaylistsImport();
-    virtual Qx::GenericError postPlaylistsImport();
+    virtual Qx::Error preImport(const ImportDetails& details);
+    virtual Qx::Error postImport();
+    virtual Qx::Error prePlatformsImport();
+    virtual Qx::Error postPlatformsImport();
+    virtual Qx::Error preImageProcessing(QList<ImageMap>& workerTransfers, ImageSources bulkSources);
+    virtual Qx::Error postImageProcessing();
+    virtual Qx::Error prePlaylistsImport();
+    virtual Qx::Error postPlaylistsImport();
 
     // Doc handling
-    Qx::GenericError checkoutPlatformDoc(std::unique_ptr<PlatformDoc>& returnBuffer, QString name);
-    Qx::GenericError checkoutPlaylistDoc(std::unique_ptr<PlaylistDoc>& returnBuffer, QString name);
-    Qx::GenericError commitPlatformDoc(std::unique_ptr<PlatformDoc> platformDoc);
-    Qx::GenericError commitPlaylistDoc(std::unique_ptr<PlaylistDoc> playlistDoc);
+    Fe::DocHandlingError checkoutPlatformDoc(std::unique_ptr<PlatformDoc>& returnBuffer, QString name);
+    Fe::DocHandlingError checkoutPlaylistDoc(std::unique_ptr<PlaylistDoc>& returnBuffer, QString name);
+    Fe::DocHandlingError commitPlatformDoc(std::unique_ptr<PlatformDoc> platformDoc);
+    Fe::DocHandlingError commitPlaylistDoc(std::unique_ptr<PlaylistDoc> playlistDoc);
 
     // Image handling
     // NOTE: The image paths provided here can be null (i.e. images unavailable). Handle accordingly in derived.

@@ -89,7 +89,7 @@ public:
 private:
     // Install management
     void nullify() override;
-    Qx::GenericError populateExistingDocs() override;
+    Qx::Error populateExistingDocs() override;
     QString translateDocName(const QString& originalName, Fe::DataDoc::Type type) const override;
 
     // Image Processing
@@ -101,12 +101,12 @@ private:
     std::shared_ptr<Fe::PlatformDoc::Writer> preparePlatformDocCommit(const std::unique_ptr<Fe::PlatformDoc>& platformDoc) override;
     std::shared_ptr<Fe::PlaylistDoc::Writer> preparePlaylistDocCommit(const std::unique_ptr<Fe::PlaylistDoc>& playlistDoc) override;
 
-    Qx::GenericError checkoutMainConfig(std::unique_ptr<CrudeSettings>& returnBuffer);
-    Qx::GenericError checkoutFlashpointRomlist(std::unique_ptr<Romlist>& returnBuffer);
-    Qx::GenericError checkoutClifpEmulatorConfig(std::unique_ptr<Emulator>& returnBuffer);
-    Qx::GenericError commitMainConfig(std::unique_ptr<CrudeSettings> document);
-    Qx::GenericError commitFlashpointRomlist(std::unique_ptr<Romlist> document);
-    Qx::GenericError commitClifpEmulatorConfig(std::unique_ptr<Emulator> document);
+    Fe::DocHandlingError checkoutMainConfig(std::unique_ptr<CrudeSettings>& returnBuffer);
+    Fe::DocHandlingError checkoutFlashpointRomlist(std::unique_ptr<Romlist>& returnBuffer);
+    Fe::DocHandlingError checkoutClifpEmulatorConfig(std::unique_ptr<Emulator>& returnBuffer);
+    Fe::DocHandlingError commitMainConfig(std::unique_ptr<CrudeSettings> document);
+    Fe::DocHandlingError commitFlashpointRomlist(std::unique_ptr<Romlist> document);
+    Fe::DocHandlingError commitClifpEmulatorConfig(std::unique_ptr<Emulator> document);
 
 public:
     // Install management
@@ -119,11 +119,11 @@ public:
     QString versionString() const override;
 
     // Import stage notifier hooks
-    Qx::GenericError preImport(const ImportDetails& details) override;
-    Qx::GenericError prePlatformsImport() override;
-    Qx::GenericError postPlatformsImport() override;
-    Qx::GenericError preImageProcessing(QList<ImageMap>& workerTransfers, Fe::ImageSources bulkSources) override;
-    Qx::GenericError postImport() override;
+    Qx::Error preImport(const ImportDetails& details) override;
+    Qx::Error prePlatformsImport() override;
+    Qx::Error postPlatformsImport() override;
+    Qx::Error preImageProcessing(QList<ImageMap>& workerTransfers, Fe::ImageSources bulkSources) override;
+    Qx::Error postImport() override;
 
     // Image handling
     void processDirectGameImages(const Fe::Game* game, const Fe::ImageSources& imageSources) override;

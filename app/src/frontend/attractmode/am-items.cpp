@@ -2,7 +2,7 @@
 #include "am-items.h"
 
 // Project Includes
-#include "../../clifp.h"
+#include <fp/fp-install.h>
 
 // Quote escape
 #define ESCAPE(str) (str).replace(R"(")",R"(\")")
@@ -18,7 +18,7 @@ namespace Am
 RomEntry::RomEntry() {}
 
 RomEntry::RomEntry(const Fp::Game& flashpointGame) :
-    Fe::Game(flashpointGame.id(), ESCAPE(flashpointGame.title()), flashpointGame.platform()),
+    Fe::Game(flashpointGame.id(), ESCAPE(flashpointGame.title()), flashpointGame.platformName()),
     mEmulator(Fp::NAME),
     mCloneOf(),
     mYear(flashpointGame.releaseDate().date()),
@@ -42,7 +42,7 @@ RomEntry::RomEntry(const Fp::Game& flashpointGame) :
 {}
 
 RomEntry::RomEntry(const Fp::AddApp& flashpointAddApp, const Fp::Game& parentGame) :
-    Fe::Game(flashpointAddApp.id(), ESCAPE(addAppTitle(parentGame.title(), flashpointAddApp.name())), parentGame.platform()),
+    Fe::Game(flashpointAddApp.id(), ESCAPE(addAppTitle(parentGame.title(), flashpointAddApp.name())), parentGame.platformName()),
     mEmulator(Fp::NAME),
     mCloneOf(flashpointAddApp.parentId().toString(QUuid::WithoutBraces)),
     mYear(parentGame.releaseDate().date()),

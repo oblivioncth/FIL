@@ -13,6 +13,54 @@ namespace Fe
 //-Enums----------------------------------------------------------------------------------------------------------
 enum class ImageMode {Copy, Reference, Link};
 
+class QX_ERROR_TYPE(RevertError, "Fe::RevertError", 1301)
+{
+    friend class InstallFoundation;
+//-Class Enums-------------------------------------------------------------
+public:
+    enum Type
+    {
+        NoError = 0,
+        FileWontDelete = 1,
+        FileWontRestore = 2
+    };
+
+//-Class Variables-------------------------------------------------------------
+private:
+    static inline const QHash<Type, QString> ERR_STRINGS{
+        {NoError, QSL("")},
+        {FileWontDelete, QSL("Cannot remove a file. It may need to be deleted manually.")},
+        {FileWontRestore, QSL("Cannot restore a file backup. It may need to be renamed manually..")}
+    };
+
+    static inline const QString CAPTION_REVERT_ERR = "Error reverting changes";
+
+//-Instance Variables-------------------------------------------------------------
+private:
+    Type mType;
+    QString mSpecific;
+
+//-Constructor-------------------------------------------------------------
+private:
+    RevertError(Type t, const QString& s);
+
+public:
+    RevertError();
+
+//-Instance Functions-------------------------------------------------------------
+public:
+    bool isValid() const;
+    Type type() const;
+    QString specific() const;
+
+private:
+    Qx::Severity deriveSeverity() const override;
+    quint32 deriveValue() const override;
+    QString derivePrimary() const override;
+    QString deriveSecondary() const override;
+    QString deriveCaption() const override;
+};
+
 class InstallFoundation
 {
 //-Class Structs------------------------------------------------------------------------------------------------------
@@ -43,16 +91,8 @@ protected:
 
 public:
     // Base errors
+    // TODO: This is unused, should it be in-use somewhere?
     static inline const QString ERR_UNSUPPORTED_FEATURE = "A feature unsupported by the frontend was called upon!";
-    static inline const QString ERR_INSEPECTION = "An unexpected error occurred while inspecting the frontend.";
-
-    // File Errors
-    static inline const QString ERR_FILE_WONT_BACKUP = R"(Cannot rename an existing file for backup:)";
-    static inline const QString ERR_FILE_WONT_COPY = R"(Cannot copy the file "%1" to its destination:)";
-    static inline const QString ERR_FILE_WONT_LINK = R"(Cannot create a symbolic link for "%1" at:)";
-    static inline const QString ERR_CANT_MAKE_DIR = R"(Could not create the following directory. Make sure you have write permissions at that location.)";
-    static inline const QString ERR_FILE_WONT_DEL = R"(Cannot remove a file. It may need to be deleted manually.)";
-    static inline const QString ERR_FILE_WONT_RESTORE = R"(Cannot restore a file backup. It may need to be renamed manually.)";
 
     // Image Errors
     static inline const QString CAPTION_IMAGE_ERR = "Error importing game image(s)";
@@ -101,13 +141,13 @@ protected:
     virtual void nullify();
     virtual void softReset();
     void declareValid(bool valid);
-    virtual Qx::GenericError populateExistingDocs() = 0; // Stated redundantly again in Install to make it clear its part of the main interface
+    virtual Qx::Error populateExistingDocs() = 0; // Stated redundantly again in Install to make it clear its part of the main interface
 
     virtual QString translateDocName(const QString& originalName, DataDoc::Type type) const;
     void catalogueExistingDoc(DataDoc::Identifier existingDoc);
 
-    Qx::GenericError checkoutDataDocument(DataDoc* docToOpen, std::shared_ptr<DataDoc::Reader> docReader);
-    Qx::GenericError commitDataDocument(DataDoc* docToSave, std::shared_ptr<DataDoc::Writer> docWriter);
+    Fe::DocHandlingError checkoutDataDocument(DataDoc* docToOpen, std::shared_ptr<DataDoc::Reader> docReader);
+    Fe::DocHandlingError commitDataDocument(DataDoc* docToSave, std::shared_ptr<DataDoc::Writer> docWriter);
 
     QList<QString> modifiedPlatforms() const;
     QList<QString> modifiedPlaylists() const;
@@ -116,7 +156,7 @@ public:
     bool isValid() const;
     QString path() const;
 
-    Qx::GenericError refreshExistingDocs(bool* changed = nullptr);
+    Qx::Error refreshExistingDocs(bool* changed = nullptr);
     bool containsPlatform(const QString& name) const;
     bool containsPlaylist(const QString& name) const;
     bool containsAnyPlatform(const QList<QString>& names) const;
@@ -124,7 +164,7 @@ public:
 
     void addRevertableFile(QString filePath);
     int revertQueueCount() const;
-    int revertNextChange(Qx::GenericError& error, bool skipOnFail);
+    int revertNextChange(RevertError& error, bool skipOnFail);
 };
 
 }

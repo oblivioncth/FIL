@@ -39,28 +39,22 @@ QString CommonDocReader::readLineIgnoringComments(qint64 maxlen)
 }
 
 //Public:
-Qx::GenericError CommonDocReader::readInto()
+Fe::DocHandlingError CommonDocReader::readInto()
 {
-    // Error template
-    Qx::GenericError error(Qx::GenericError::Critical, mStdReadErrorStr);
-
     // Open file
     Qx::IoOpReport openError =  mStreamReader.openFile();
     if(openError.isFailure())
-        return error.setSecondaryInfo(openError.outcomeInfo());
+        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocCantOpen, openError.outcomeInfo());
 
     // Check that doc is valid
     bool isValid = false;
     if(!checkDocValidity(isValid))
-        return error.setSecondaryInfo(mStreamReader.status().outcomeInfo());
+        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocWriteFailed, mStreamReader.status().outcomeInfo());
     else if(!isValid)
-    {
-        QString errReason = Fe::docHandlingErrorString(mTargetDocument, Fe::DocHandlingError::DocInvalidType);
-        return error.setSecondaryInfo(errReason);
-    }
+        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocInvalidType);
 
     // Read doc
-    Qx::GenericError parseError = readTargetDoc();
+    Fe::DocHandlingError parseError = readTargetDoc();
 
     // Close file
     mStreamReader.closeFile();
@@ -69,9 +63,9 @@ Qx::GenericError CommonDocReader::readInto()
     if(parseError.isValid())
         return parseError;
     else if(mStreamReader.hasError())
-        return error.setSecondaryInfo(mStreamReader.status().outcomeInfo());
+        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocWriteFailed, mStreamReader.status().outcomeInfo());
     else
-        return Qx::GenericError();
+        return Fe::DocHandlingError();
 }
 
 //===============================================================================================================
@@ -87,15 +81,12 @@ CommonDocWriter::CommonDocWriter(Fe::DataDoc* sourceDoc) :
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Public:
-Qx::GenericError CommonDocWriter::writeOutOf()
+Fe::DocHandlingError CommonDocWriter::writeOutOf()
 {
-    // Error template
-    Qx::GenericError error(Qx::GenericError::Critical, mStdWriteErrorStr);
-
     // Open file
     Qx::IoOpReport openError =  mStreamWriter.openFile();
     if(openError.isFailure())
-        return error.setSecondaryInfo(openError.outcomeInfo());
+        return Fe::DocHandlingError(*mSourceDocument, Fe::DocHandlingError::DocCantOpen, openError.outcomeInfo());
 
     // Write doc
     bool writeSuccess = writeSourceDoc();
@@ -104,7 +95,8 @@ Qx::GenericError CommonDocWriter::writeOutOf()
     mStreamWriter.closeFile();
 
     // Return outcome
-    return writeSuccess ? Qx::GenericError() : error.setSecondaryInfo(mStreamWriter.status().outcomeInfo());
+    return writeSuccess ? Fe::DocHandlingError() :
+                          Fe::DocHandlingError(*mSourceDocument, Fe::DocHandlingError::DocWriteFailed, mStreamWriter.status().outcomeInfo());
 }
 
 //===============================================================================================================
@@ -363,7 +355,7 @@ bool Romlist::Reader::checkDocValidity(bool& isValid)
     return !mStreamReader.hasError();
 }
 
-Qx::GenericError Romlist::Reader::readTargetDoc()
+Fe::DocHandlingError Romlist::Reader::readTargetDoc()
 {
     // Read all romlist entries
     while(!mStreamReader.atEnd())
@@ -373,7 +365,7 @@ Qx::GenericError Romlist::Reader::readTargetDoc()
     }
 
     // Only can have stream errors
-    return Qx::GenericError();
+    return Fe::DocHandlingError();
 }
 
 void Romlist::Reader::parseRomEntry(const QString& rawEntry)
@@ -641,11 +633,7 @@ void PlatformInterface::addSet(const Fp::Set& set, const Fe::ImageSources& image
             if(written)
                 parent()->addRevertableFile(mOverviewWriter.currentFilePath());
             else
-            {
-                mError = Qx::GenericError(Qx::GenericError::Critical,
-                                          Fe::docHandlingErrorString(this, Fe::DocHandlingError::DocWriteFailed),
-                                          mOverviewWriter.fileErrorString());
-            }
+                mError = Fe::DocHandlingError(*this, Fe::DocHandlingError::DocWriteFailed, mOverviewWriter.fileErrorString());
         }
 
         //-Handle add apps-------------------------------------------------------
@@ -681,7 +669,7 @@ PlatformInterface::Writer::Writer(PlatformInterface* sourceDoc) :
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-Qx::GenericError PlatformInterface::Writer::writeOutOf() { return mTaglistWriter.writeOutOf(); }
+Fe::DocHandlingError PlatformInterface::Writer::writeOutOf() { return mTaglistWriter.writeOutOf(); }
 
 //===============================================================================================================
 // PlaylistInterface
@@ -704,12 +692,11 @@ bool PlaylistInterface::containsPlaylistGame(QUuid gameId) const
     return mPlaylistTaglist.containsTag(gameId.toString(QUuid::WithoutBraces));
 }
 
-void PlaylistInterface::setPlaylistHeader(const Fp::Playlist& playlist) {} // No playlist header for AttractMode
-
-void PlaylistInterface::addPlaylistGame(const Fp::PlaylistGame& playlistGame)
+void PlaylistInterface::setPlaylistData(const Fp::Playlist& playlist)
 {
-    mPlaylistTaglist.appendTag(playlistGame.gameId().toString(QUuid::WithoutBraces));
-};
+    for(const auto& pl : playlist.playlistGames())
+        mPlaylistTaglist.appendTag(pl.gameId().toString(QUuid::WithoutBraces));
+}
 
 //===============================================================================================================
 // PlaylistInterface::Writer
@@ -725,7 +712,7 @@ PlaylistInterface::Writer::Writer(PlaylistInterface* sourceDoc) :
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-Qx::GenericError PlaylistInterface::Writer::writeOutOf() { return mTaglistWriter.writeOutOf(); }
+Fe::DocHandlingError PlaylistInterface::Writer::writeOutOf() { return mTaglistWriter.writeOutOf(); }
 
 //===============================================================================================================
 // Emulator
@@ -775,7 +762,7 @@ EmulatorReader::EmulatorReader(Emulator* targetDoc) :
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-Qx::GenericError EmulatorReader::readTargetDoc()
+Fe::DocHandlingError EmulatorReader::readTargetDoc()
 {
     while(!mStreamReader.atEnd())
     {
@@ -787,7 +774,7 @@ Qx::GenericError EmulatorReader::readTargetDoc()
     }
 
     // Only can have stream related errors
-    return Qx::GenericError();
+    return Fe::DocHandlingError();
 }
 
 void EmulatorReader::parseKeyValue(const QString& key, const QString& value)
