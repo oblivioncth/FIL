@@ -64,7 +64,7 @@ set(FIL_QX_COMPONENTS
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "2ff15119534672fb04d47c24628054e03a645819"
+    REF "4951c7abcb49033122f08545f80bf38ccf025b21"
     COMPONENTS
         ${FIL_QX_COMPONENTS}
 )

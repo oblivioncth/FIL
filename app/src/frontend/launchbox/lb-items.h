@@ -282,14 +282,18 @@ public:
     class Builder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
+private:
     QString mName;
+    QString mCategory;
 
 //-Constructor------------------------------------------------------------------------------------------------------
 public:
     Platform();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
+public:
     QString name() const;
+    QString category() const;
 };
 
 class Platform::Builder : public Fe::Item::Builder<Platform::Builder, Platform>
@@ -301,40 +305,45 @@ public:
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
     Builder& wName(QString name);
+    Builder& wCategory(QString category);
 };
 
-//class PlatformFolder : public Fe::Item
-//{
-//    friend class PlatformFolderBuilder;
+class PlatformFolder : public Fe::Item
+{
+//-Inner Classes---------------------------------------------------------------------------------------------------
+public:
+    class Builder;
 
-////-Instance Variables-----------------------------------------------------------------------------------------------
-//private:
-//    QString mMediaType;
-//    QString mFolderPath;
-//    QString mPlatform;
+//-Instance Variables-----------------------------------------------------------------------------------------------
+private:
+    QString mMediaType;
+    QString mFolderPath;
+    QString mPlatform;
 
-////-Constructor------------------------------------------------------------------------------------------------------
-//public:
-//    PlatformFolder();
+//-Constructor------------------------------------------------------------------------------------------------------
+public:
+    PlatformFolder();
 
-////-Instance Functions------------------------------------------------------------------------------------------------------
-//    QString mediaType();
-//    QString folderPath();
-//    QString platform();
-//};
+//-Instance Functions------------------------------------------------------------------------------------------------------
+    QString mediaType() const;
+    QString folderPath() const;
+    QString platform() const;
 
-//class PlatformFolderBuilder : public Fe::ItemBuilder<PlatformFolderBuilder, PlatformFolder>
-//{
-////-Constructor-------------------------------------------------------------------------------------------------
-//public:
-//    PlatformFolderBuilder();
+    QString identifier() const;
+};
 
-////-Instance Functions------------------------------------------------------------------------------------------
-//public:
-//    PlatformFolderBuilder& wMediaType(QString mediaType);
-//    PlatformFolderBuilder& wFolderPath(QString folderPath);
-//    PlatformFolderBuilder& wPlatform(QString platform);
-//};
+class PlatformFolder::Builder : public Fe::Item::Builder<PlatformFolder::Builder, PlatformFolder>
+{
+//-Constructor-------------------------------------------------------------------------------------------------
+public:
+    Builder();
+
+//-Instance Functions------------------------------------------------------------------------------------------
+public:
+    Builder& wMediaType(QString mediaType);
+    Builder& wFolderPath(QString folderPath);
+    Builder& wPlatform(QString platform);
+};
 
 class PlatformCategory  : public Fe::Item
 {
@@ -342,11 +351,19 @@ class PlatformCategory  : public Fe::Item
 public:
     class Builder;
 
+//-Instance Variables-----------------------------------------------------------------------------------------------
+private:
+    QString mName;
+    QString mNestedName;
+
 //-Constructor------------------------------------------------------------------------------------------------------
 public:
     PlatformCategory();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
+public:
+    QString name() const;
+    QString nestedName() const;
 };
 
 class PlatformCategory::Builder : public Fe::Item::Builder<PlatformCategory::Builder, PlatformCategory>
@@ -354,6 +371,11 @@ class PlatformCategory::Builder : public Fe::Item::Builder<PlatformCategory::Bui
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
     Builder();
+
+//-Instance Functions------------------------------------------------------------------------------------------
+public:
+    Builder& wName(const QString& name);
+    Builder& wNestedName(const QString& nestedName);
 };
 
 

@@ -181,7 +181,7 @@ private:
     bool writePlaylistGame(const PlaylistGame& playlistGame);
 };
 
-class PlatformsConfigDoc : public Fe::DataDoc
+class PlatformsConfigDoc : public Fe::UpdateableDoc
 {
 //-Inner Classes----------------------------------------------------------------------------------------------------
 public:
@@ -194,13 +194,17 @@ public:
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
-    QHash<QString, Platform> mPlatforms;
-    QMap<QString, QMap<QString, QString>> mPlatformFolders;
-    QList<PlatformCategory> mPlatformCategories;
+    QHash<QString, Platform> mPlatformsFinal;
+    QHash<QString, Platform> mPlatformsExisting;
+    QMap<QString, PlatformFolder> mPlatformFoldersFinal;
+    QMap<QString, PlatformFolder> mPlatformFoldersExisting;
+    QMap<QString, PlatformCategory> mPlatformCategoriesFinal;
+    QMap<QString, PlatformCategory> mPlatformCategoriesExisting;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlatformsConfigDoc(Install* const parent, const QString& xmlPath, const DocKey&);
+    explicit PlatformsConfigDoc(Install* const parent, const QString& xmlPath, Fe::UpdateOptions updateOptions,
+                                const DocKey&);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
@@ -209,17 +213,20 @@ private:
 public:
     bool isEmpty() const override;
 
-    const QHash<QString, Platform>& platforms() const;
-    const QMap<QString, QMap<QString, QString>>& platformFolders() const;
-    const QList<PlatformCategory>& platformCategories() const;
-
-    bool containsPlatform(QString name);
+    const QHash<QString, Platform>& finalPlatforms() const;
+    const QMap<QString, PlatformFolder>& finalPlatformFolders() const;
+    const QMap<QString, PlatformCategory>& finalPlatformCategories() const;
 
     void addPlatform(Platform platform);
-    void removePlatform(QString name);
+    void removePlatform(QString platformName);
 
-    void setMediaFolder(QString platform, QString mediaType, QString folderPath);
+    void addPlatformFolder(PlatformFolder platformFolder);
+    void removePlatformFolders(QString platformName);
 
+    void addPlatformCategory(PlatformCategory platformCategory);
+    void removePlatformCategory(QString categoryName);
+
+    void finalize() override;
 };
 
 class PlatformsConfigDoc::Reader : public XmlDocReader
@@ -246,7 +253,7 @@ public:
 private:
     bool writeSourceDoc() override;
     bool writePlatform(const Platform& platform);
-    bool writePlatformFolder(const QString& platform, const QString& mediaType, const QString& folderPath);
+    bool writePlatformFolder(const PlatformFolder& platformFoler);
     bool writePlatformCategory(const PlatformCategory& platformCategory);
 };
 

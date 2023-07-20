@@ -113,34 +113,30 @@ QString Install::imageDestinationPath(Fp::ImageType imageType, const Fe::Game* g
            '.' + IMAGE_EXT;
 }
 
-Fe::DocHandlingError Install::editBulkImageReferences(const Fe::ImageSources& imageSources)
+void Install::editBulkImageReferences(const Fe::ImageSources& imageSources)
 {
-    // Open platforms document
-    std::unique_ptr<PlatformsConfigDoc> platformsConfig;
-    Fe::DocHandlingError platformsConfigReadError = checkoutPlatformsConfigDoc(platformsConfig);
-
-    // Stop import if error occurred
-    if(platformsConfigReadError.isValid())
-        return platformsConfigReadError;
-
     // Set media folder paths
     const QList<QString> affectedPlatforms = modifiedPlatforms();
     for(const QString& platform : affectedPlatforms)
     {
         if(!imageSources.isNull())
         {
-            // Setting the folders also makes sure that the platform is added
-            platformsConfig->setMediaFolder(platform, Lb::Install::LOGO_PATH, imageSources.logoPath());
-            platformsConfig->setMediaFolder(platform, Lb::Install::SCREENSHOT_PATH, imageSources.screenshotPath());
+            Lb::PlatformFolder::Builder pfbLogos;
+            pfbLogos.wPlatform(platform);
+            pfbLogos.wMediaType(Lb::Install::LOGO_PATH);
+            pfbLogos.wFolderPath(imageSources.logoPath());
+
+            Lb::PlatformFolder::Builder pfbScreenshots;
+            pfbScreenshots.wPlatform(platform);
+            pfbScreenshots.wMediaType(Lb::Install::SCREENSHOT_PATH);
+            pfbScreenshots.wFolderPath(imageSources.screenshotPath());
+
+            mPlatformsConfig->addPlatformFolder(pfbLogos.build());
+            mPlatformsConfig->addPlatformFolder(pfbScreenshots.build());
         }
         else
-            platformsConfig->removePlatform(platform);
+            mPlatformsConfig->removePlatformFolders(platform);
     }
-
-    // Save platforms document
-    Fe::DocHandlingError saveError = commitPlatformsConfigDoc(std::move(platformsConfig));
-
-    return saveError;
 }
 
 QString Install::dataDocPath(Fe::DataDoc::Identifier identifier) const
@@ -219,7 +215,8 @@ Fe::DocHandlingError Install::checkoutPlatformsConfigDoc(std::unique_ptr<Platfor
     Fe::DataDoc::Identifier docId(Fe::DataDoc::Type::Config, PlatformsConfigDoc::STD_NAME);
 
     // Construct unopened document
-    returnBuffer = std::make_unique<PlatformsConfigDoc>(this, dataDocPath(docId), DocKey{});
+    Fe::UpdateOptions uo{.importMode = Fe::ImportMode::NewAndExisting, .removeObsolete = false};
+    returnBuffer = std::make_unique<PlatformsConfigDoc>(this, dataDocPath(docId), uo, DocKey{});
 
     // Construct doc reader
     std::shared_ptr<PlatformsConfigDoc::Reader> docReader = std::make_shared<PlatformsConfigDoc::Reader>(returnBuffer.get());
@@ -308,20 +305,63 @@ QString Install::versionString() const
     return Fe::Install::versionString();
 }
 
+Qx::Error Install::prePlatformsImport()
+{
+    if(Qx::Error superErr = Fe::Install::prePlatformsImport(); superErr.isValid())
+        return superErr;
+
+    // Open platforms document
+    return checkoutPlatformsConfigDoc(mPlatformsConfig);
+}
+
+Qx::Error Install::postPlatformsImport()
+{
+    if(Qx::Error superErr = Fe::Install::postPlatformsImport(); superErr.isValid())
+        return superErr;
+
+    const QList<QString> affectedPlatforms = modifiedPlatforms();
+    for(const QString& pn :affectedPlatforms)
+    {
+        Lb::Platform::Builder pb;
+        pb.wName(pn);
+        pb.wCategory(PLATFORM_CATEGORY);
+
+        mPlatformsConfig->addPlatform(pb.build());
+    }
+
+    return Qx::Error();
+}
+
 Qx::Error Install::preImageProcessing(QList<ImageMap>& workerTransfers, Fe::ImageSources bulkSources)
 {
+    if(Qx::Error superErr = Fe::Install::preImageProcessing(workerTransfers, bulkSources); superErr.isValid())
+        return superErr;
+
     switch(mImportDetails->imageMode)
     {
         case Fe::ImageMode::Link:
         case Fe::ImageMode::Copy:
             workerTransfers.swap(mWorkerImageJobs);
-            return editBulkImageReferences(bulkSources);
+            editBulkImageReferences(bulkSources);
         case Fe::ImageMode::Reference:
-            return editBulkImageReferences(bulkSources);
+            editBulkImageReferences(bulkSources);
         default:
             qWarning() << Q_FUNC_INFO << "unhandled image mode";
-            return Qx::Error();
     }
+
+    return Qx::Error();
+}
+
+Qx::Error Install::postImageProcessing()
+{
+    if(Qx::Error superErr = Fe::Install::postImageProcessing(); superErr.isValid())
+            return superErr;
+
+    // Save platforms document since it's no longer needed at this point
+    mPlatformsConfig->finalize();
+    Fe::DocHandlingError saveError = commitPlatformsConfigDoc(std::move(mPlatformsConfig));
+
+    return saveError;
 }
 
 void Install::processDirectGameImages(const Fe::Game* game, const Fe::ImageSources& imageSources)

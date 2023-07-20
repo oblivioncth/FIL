@@ -39,6 +39,9 @@ public:
     // Files
     static inline const QString XML_EXT = "xml";
 
+    // Other
+    static inline const QString PLATFORM_CATEGORY = "Flashpoint";
+
     // Support
     static inline const QList<Fe::ImageMode> IMAGE_MODE_ORDER {
         Fe::ImageMode::Link,
@@ -57,6 +60,9 @@ private:
 
     // Image transfers for import worker
     QList<ImageMap> mWorkerImageJobs;
+
+    // Persistent platforms config handle
+    std::unique_ptr<PlatformsConfigDoc> mPlatformsConfig;
 
     // Other trackers
     Qx::FreeIndexTracker mLbDatabaseIdTracker = Qx::FreeIndexTracker(0, -1, {});
@@ -77,7 +83,7 @@ private:
 
     // Image Processing
     QString imageDestinationPath(Fp::ImageType imageType, const Fe::Game* game) const;
-    Fe::DocHandlingError editBulkImageReferences(const Fe::ImageSources& imageSources);
+    void editBulkImageReferences(const Fe::ImageSources& imageSources);
 
     // Doc handling
     QString dataDocPath(Fe::DataDoc::Identifier identifier) const;
@@ -100,7 +106,10 @@ public:
     QString versionString() const override;
 
     // Import stage notifier hooks
+    Qx::Error prePlatformsImport() override;
+    Qx::Error postPlatformsImport() override;
     Qx::Error preImageProcessing(QList<ImageMap>& workerTransfers, Fe::ImageSources bulkSources) override;
+    Qx::Error postImageProcessing() override;
 
     // Image handling
     void processDirectGameImages(const Fe::Game* game, const Fe::ImageSources& imageSources) override;

@@ -12,6 +12,7 @@
 #include <qx/core/qx-error.h>
 #include <qx/core/qx-abstracterror.h>
 #include <qx/utility/qx-macros.h>
+#include <qx/utility/qx-concepts.h>
 
 // libfp Includes
 #include <fp/fp-items.h>
@@ -40,6 +41,32 @@
 
 namespace Fe
 {
+//-Concepts------------------------------------------------------------------------------------------------------
+template<typename T>
+concept raw_item = std::derived_from<T, Item>;
+
+template<typename T>
+concept shared_item = Qx::specializes<T, std::shared_ptr> && std::derived_from<typename T::element_type, Item>;
+
+template<typename T>
+concept raw_basic_item = std::derived_from<T, BasicItem>;
+
+template<typename T>
+concept shared_basic_item = Qx::specializes<T, std::shared_ptr> && std::derived_from<typename T::element_type, BasicItem>;
+
+template<typename T>
+concept item = raw_item<T> || shared_item<T>;
+
+template<typename T>
+concept basic_item = raw_basic_item<T> || shared_basic_item<T>;
+
+template<class K>
+concept updateable_item_container = Qx::qassociative<K> && item<typename K::mapped_type>;
+
+template<class K>
+concept updateable_basicitem_container = Qx::qassociative<K> && basic_item<typename K::mapped_type> &&
+                                         std::same_as<typename K::key_type, QUuid>;
+
 //-External Reference--------------------------------------------------------------------------------------------
 class Install;
 class DataDoc;
@@ -278,12 +305,19 @@ protected:
 protected:
     explicit UpdateableDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions);
 
+//-Class Functions-----------------------------------------------------------------------------------------------------
+template<typename T>
+T* itemPtr(T& item) { return &item; }
+
+template<typename T>
+T* itemPtr(std::shared_ptr<T> item) { return item.get(); }
+
 //-Instance Functions--------------------------------------------------------------------------------------------------
 protected:
-    template <typename T, typename K>
-        requires std::derived_from<T, Item>
-    void finalizeUpdateableItems(QHash<K, std::shared_ptr<T>>& existingItems,
-                                 QHash<K, std::shared_ptr<T>>& finalItems)
+    template <typename C>
+        requires updateable_item_container<C>
+    void finalizeUpdateableItems(C& existingItems,
+                                 C& finalItems)
     {
         // Copy items to final list if obsolete entries are to be kept
         if(!mUpdateOptions.removeObsolete)
@@ -293,20 +327,20 @@ protected:
         existingItems.clear();
     }
 
-    template <typename T, typename K>
-        requires std::derived_from<T, Item>
-    void addUpdateableItem(QHash<K, std::shared_ptr<T>>& existingItems,
-                           QHash<K, std::shared_ptr<T>>& finalItems,
-                           K key,
-                           std::shared_ptr<T> newItem)
+    template <typename C>
+        requires updateable_item_container<C>
+    void addUpdateableItem(C& existingItems,
+                           C& finalItems,
+                           C::key_type key,
+                           C::mapped_type newItem)
     {
-        // Check if game exists
+        // Check if item exists
         if(existingItems.contains(key))
         {
             // Replace if existing update is on, move existing otherwise
             if(mUpdateOptions.importMode == ImportMode::NewAndExisting)
             {
-                newItem->transferOtherFields(existingItems[key]->otherFields());
+                itemPtr(newItem)->transferOtherFields(itemPtr(existingItems[key])->otherFields());
                 finalItems[key] = newItem;
                 existingItems.remove(key);
             }
@@ -321,11 +355,11 @@ protected:
             finalItems[key] = newItem;
     }
 
-    template <typename T>
-        requires std::derived_from<T, BasicItem>
-    void addUpdateableItem(QHash<QUuid, std::shared_ptr<T>>& existingItems,
-                           QHash<QUuid, std::shared_ptr<T>>& finalItems,
-                           std::shared_ptr<T> newItem)
+    template <typename C>
+        requires updateable_basicitem_container<C>
+    void addUpdateableItem(C& existingItems,
+                           C& finalItems,
+                           C::mapped_type newItem)
     {
         addUpdateableItem(existingItems,
                           finalItems,

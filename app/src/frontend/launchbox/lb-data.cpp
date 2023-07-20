@@ -89,6 +89,7 @@ namespace Element_Platform
      const QString NAME = "Platform";
 
      const QString ELEMENT_NAME = "Name";
+     const QString ELEMENT_CATEGORY = "Category";
 };
 
 namespace Element_PlatformFolder
@@ -103,6 +104,9 @@ namespace Element_PlatformFolder
 namespace Element_PlatformCategory
 {
      const QString NAME = "PlatformCategory";
+
+     const QString ELEMENT_NAME = "Name";
+     const QString ELEMENT_NESTED_NAME = "NestedName";
 };
 
 const QString ROOT_ELEMENT = "LaunchBox";
@@ -793,8 +797,9 @@ bool PlaylistDoc::Writer::writePlaylistGame(const PlaylistGame& playlistGame)
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlatformsConfigDoc::PlatformsConfigDoc(Install* const parent, const QString& xmlPath, const DocKey&) :
-    Fe::DataDoc(parent, xmlPath, STD_NAME)
+PlatformsConfigDoc::PlatformsConfigDoc(Install* const parent, const QString& xmlPath, Fe::UpdateOptions updateOptions,
+                                       const DocKey&) :
+    Fe::UpdateableDoc(parent, xmlPath, STD_NAME, updateOptions)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -804,40 +809,63 @@ Fe::DataDoc::Type PlatformsConfigDoc::type() const { return Fe::DataDoc::Type::C
 //Public:
 bool PlatformsConfigDoc::isEmpty() const
 {
-    return mPlatforms.isEmpty() && mPlatformFolders.isEmpty() && mPlatformCategories.isEmpty();
+    return mPlatformsFinal.isEmpty() && mPlatformsExisting.isEmpty() &&
+           mPlatformFoldersFinal.isEmpty() && mPlatformFoldersExisting.isEmpty() &&
+           mPlatformCategoriesFinal.isEmpty() && mPlatformCategoriesExisting.isEmpty();
 }
 
-const QHash<QString, Platform>& PlatformsConfigDoc::platforms() const { return mPlatforms; }
-const QMap<QString, QMap<QString, QString>>& PlatformsConfigDoc::platformFolders() const { return mPlatformFolders; }
-const QList<PlatformCategory>& PlatformsConfigDoc::platformCategories() const { return mPlatformCategories; }
-
-bool PlatformsConfigDoc::containsPlatform(QString name) { return mPlatforms.contains(name); }
+const QHash<QString, Platform>& PlatformsConfigDoc::finalPlatforms() const { return mPlatformsFinal; }
+const QMap<QString, PlatformFolder>& PlatformsConfigDoc::finalPlatformFolders() const { return mPlatformFoldersFinal; }
+const QMap<QString, PlatformCategory>& PlatformsConfigDoc::finalPlatformCategories() const { return mPlatformCategoriesFinal; }
 
 void PlatformsConfigDoc::addPlatform(Platform platform)
 {
     // Add platform, don't need to add media folders as LB will automatically set them to the defaults
-    mPlatforms[platform.name()] = platform;
+    addUpdateableItem(mPlatformsExisting, mPlatformsFinal, platform.name(), platform);
 }
 
 void PlatformsConfigDoc::removePlatform(QString name)
 {
     // Remove platform and any of its media folders (so LB will reset them to default)
-    mPlatforms.remove(name);
-    mPlatformFolders.remove(name);
+    mPlatformsFinal.remove(name);
+    mPlatformsExisting.remove(name);
+    removePlatformFolders(name);
 }
 
-void PlatformsConfigDoc::setMediaFolder(QString platform, QString mediaType, QString folderPath)
+void PlatformsConfigDoc::addPlatformFolder(PlatformFolder platformFolder)
 {
-    // Add platform if it's missing as LB will not add it by default just because it has media folders
-    if(!containsPlatform(platform))
-    {
-        Platform::Builder pb;
-        pb.wName(platform);
-        addPlatform(pb.build());
-    }
+    addUpdateableItem(mPlatformFoldersExisting, mPlatformFoldersFinal, platformFolder.identifier(), platformFolder);
+}
 
-    // Set/add media folder
-    mPlatformFolders[platform][mediaType] = folderPath;
+void PlatformsConfigDoc::removePlatformFolders(QString platformName)
+{
+    auto culler = [&platformName](QMap<QString, PlatformFolder>::iterator itr){
+        return itr.value().platform() == platformName;
+    };
+    mPlatformFoldersExisting.removeIf(culler);
+    mPlatformFoldersFinal.removeIf(culler);
+}
+
+void PlatformsConfigDoc::addPlatformCategory(PlatformCategory platformCategory)
+{
+    addUpdateableItem(mPlatformCategoriesExisting, mPlatformCategoriesFinal, platformCategory.name(), platformCategory);
+}
+
+void PlatformsConfigDoc::removePlatformCategory(QString categoryName)
+{
+    mPlatformCategoriesFinal.remove(categoryName);
+    mPlatformCategoriesExisting.remove(categoryName);
+}
+
+void PlatformsConfigDoc::finalize()
+{
+    // Finalize derived
+    finalizeUpdateableItems(mPlatformsExisting, mPlatformsFinal);
+    finalizeUpdateableItems(mPlatformFoldersExisting, mPlatformFoldersFinal);
+    finalizeUpdateableItems(mPlatformCategoriesExisting, mPlatformCategoriesFinal);
+
+    // Finalize base
+    Fe::UpdateableDoc::finalize();
 }
 
 //===============================================================================================================
@@ -889,32 +917,31 @@ void PlatformsConfigDoc::Reader::parsePlatform()
     }
 
     // Build Platform and add to document
-    std::shared_ptr<Platform> existingPlatform = pb.buildShared();
-    static_cast<PlatformsConfigDoc*>(mTargetDocument)->mPlatforms.insert(existingPlatform->name(), *existingPlatform);
+    Platform existingPlatform = pb.build();
+    static_cast<PlatformsConfigDoc*>(mTargetDocument)->mPlatformsExisting[existingPlatform.name()] = existingPlatform;
 }
 
 Fe::DocHandlingError PlatformsConfigDoc::Reader::parsePlatformFolder()
 {
     // Platform Folder to Build
-    QString platform;
-    QString mediaType;
-    QString folderPath;
+    PlatformFolder::Builder pfb;
 
     // Cover all children
     while(mStreamReader.readNextStartElement())
     {
         if(mStreamReader.name() == Xml::Element_PlatformFolder::ELEMENT_MEDIA_TYPE)
-            mediaType = mStreamReader.readElementText();
+            pfb.wMediaType(mStreamReader.readElementText());
         else if(mStreamReader.name() == Xml::Element_PlatformFolder::ELEMENT_FOLDER_PATH)
-            folderPath = mStreamReader.readElementText();
+            pfb.wFolderPath(mStreamReader.readElementText());
         else if(mStreamReader.name() == Xml::Element_PlatformFolder::ELEMENT_PLATFORM)
-            platform = mStreamReader.readElementText();
+            pfb.wPlatform(mStreamReader.readElementText());
         else
             return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocInvalidType);
     }
 
-    // Add to document
-    static_cast<PlatformsConfigDoc*>(mTargetDocument)->mPlatformFolders[platform][mediaType] = folderPath;
+    // Build PlatformFolder and add to document
+    PlatformFolder existingPlatformFolder = pfb.build();
+    static_cast<PlatformsConfigDoc*>(mTargetDocument)->mPlatformFoldersExisting[existingPlatformFolder.identifier()] = existingPlatformFolder;
 
     return Fe::DocHandlingError();
 }
@@ -927,12 +954,19 @@ void PlatformsConfigDoc::Reader::parsePlatformCategory()
     // Cover all children
     while(mStreamReader.readNextStartElement())
     {
-        // No specific elements are of interest for now
-        pcb.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
+        if(mStreamReader.name() == Xml::Element_PlatformCategory::ELEMENT_NAME)
+            pcb.wName(mStreamReader.readElementText());
+        else if(mStreamReader.name() == Xml::Element_PlatformCategory::ELEMENT_NESTED_NAME)
+            pcb.wNestedName(mStreamReader.readElementText());
+        else
+            pcb.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
     }
 
+    // Build
+    PlatformCategory pc = pcb.build();
+
     // Build Playlist Header and add to document
-   static_cast<PlatformsConfigDoc*>(mTargetDocument)->mPlatformCategories.append(pcb.build());
+   static_cast<PlatformsConfigDoc*>(mTargetDocument)->mPlatformCategoriesExisting[pc.name()] = pc;
 }
 
 //===============================================================================================================
@@ -951,25 +985,21 @@ PlatformsConfigDoc::Writer::Writer(PlatformsConfigDoc* sourceDoc) :
 bool PlatformsConfigDoc::Writer::writeSourceDoc()
 {
     // Write all platforms
-    for(const Platform& platform : static_cast<PlatformsConfigDoc*>(mSourceDocument)->platforms())
+    for(const Platform& platform : static_cast<PlatformsConfigDoc*>(mSourceDocument)->finalPlatforms())
     {
         if(!writePlatform(platform))
             return false;
     }
 
     // Write all platform folders
-    const QMap<QString, QMap<QString, QString>>& platformFolderMap = static_cast<PlatformsConfigDoc*>(mSourceDocument)->platformFolders();
-    QMap<QString, QMap<QString, QString>>::const_iterator i;
-    for(i = platformFolderMap.constBegin(); i != platformFolderMap.constEnd(); i++)
+    for(const PlatformFolder& platformFolder : static_cast<PlatformsConfigDoc*>(mSourceDocument)->finalPlatformFolders())
     {
-         QMap<QString, QString>::const_iterator j;
-         for(j = i.value().constBegin(); j != i.value().constEnd(); j++)
-             if(!writePlatformFolder(i.key(), j.key(), j.value()))
-                 return false;
+        if(!writePlatformFolder(platformFolder))
+            return false;
     }
 
     // Write all platform categories
-    for(const PlatformCategory& platformCategory : static_cast<PlatformsConfigDoc*>(mSourceDocument)->platformCategories())
+    for(const PlatformCategory& platformCategory : static_cast<PlatformsConfigDoc*>(mSourceDocument)->finalPlatformCategories())
     {
         if(!writePlatformCategory(platformCategory))
             return false;
@@ -986,6 +1016,7 @@ bool PlatformsConfigDoc::Writer::writePlatform(const Platform& platform)
 
     // Write known tags
     writeCleanTextElement(Xml::Element_Platform::ELEMENT_NAME, platform.name());
+    writeCleanTextElement(Xml::Element_Platform::ELEMENT_CATEGORY, platform.category());
 
     // Write other tags
     writeOtherFields(platform.otherFields());
@@ -997,15 +1028,15 @@ bool PlatformsConfigDoc::Writer::writePlatform(const Platform& platform)
     return !mStreamWriter.hasError();
 }
 
-bool PlatformsConfigDoc::Writer::writePlatformFolder(const QString& platform, const QString& mediaType, const QString& folderPath)
+bool PlatformsConfigDoc::Writer::writePlatformFolder(const PlatformFolder& platformFoler)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Xml::Element_PlatformFolder::NAME);
 
     // Write known tags
-    writeCleanTextElement(Xml::Element_PlatformFolder::ELEMENT_MEDIA_TYPE, mediaType);
-    writeCleanTextElement(Xml::Element_PlatformFolder::ELEMENT_FOLDER_PATH, folderPath);
-    writeCleanTextElement(Xml::Element_PlatformFolder::ELEMENT_PLATFORM, platform);
+    writeCleanTextElement(Xml::Element_PlatformFolder::ELEMENT_MEDIA_TYPE, platformFoler.mediaType());
+    writeCleanTextElement(Xml::Element_PlatformFolder::ELEMENT_FOLDER_PATH, platformFoler.folderPath());
+    writeCleanTextElement(Xml::Element_PlatformFolder::ELEMENT_PLATFORM, platformFoler.platform());
 
     // Close game tag
     mStreamWriter.writeEndElement();
@@ -1020,9 +1051,8 @@ bool PlatformsConfigDoc::Writer::writePlatformCategory(const PlatformCategory& p
     mStreamWriter.writeStartElement(Xml::Element_PlatformCategory::NAME);
 
     // Write known tags
-    // None for now...
-    if(mStreamWriter.hasError())
-        return false;
+    writeCleanTextElement(Xml::Element_PlatformCategory::ELEMENT_NAME, platformCategory.name());
+    writeCleanTextElement(Xml::Element_PlatformCategory::ELEMENT_NESTED_NAME, platformCategory.nestedName());
 
     // Write other tags
     writeOtherFields(platformCategory.otherFields());

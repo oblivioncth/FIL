@@ -294,6 +294,7 @@ Platform::Platform() {}
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
 QString Platform::name() const { return mName; }
+QString Platform::category() const { return mCategory; }
 
 //===============================================================================================================
 // Platform::Builder
@@ -306,6 +307,8 @@ Platform::Builder::Builder() {}
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
 Platform::Builder& Platform::Builder::wName(QString name) { mItemBlueprint.mName = name; return *this; }
+Platform::Builder& Platform::Builder::wCategory(QString category) { mItemBlueprint.mName = category; return *this; }
+
 
 //===============================================================================================================
 // PlatformFolder
@@ -313,27 +316,28 @@ Platform::Builder& Platform::Builder::wName(QString name) { mItemBlueprint.mName
 
 //-Constructor-------------------------------------------------------------------------------------------------
 //Public:
-//PlatformFolder::PlatformFolder() {}
+PlatformFolder::PlatformFolder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-//QString PlatformFolder::mediaType() { return mMediaType; }
-//QString PlatformFolder::folderPath() { return mFolderPath; }
-//QString PlatformFolder::platform() { return mPlatform; }
+QString PlatformFolder::mediaType() const { return mMediaType; }
+QString PlatformFolder::folderPath() const { return mFolderPath; }
+QString PlatformFolder::platform() const { return mPlatform; }
+QString PlatformFolder::identifier() const { return mPlatform + mMediaType; }
 
 //===============================================================================================================
-// PlatformFolderBuilder
+// PlatformFolder::Builder
 //===============================================================================================================
 
 //-Constructor-------------------------------------------------------------------------------------------------
 //Public:
-//PlatformFolderBuilder::PlatformFolderBuilder() {}
+PlatformFolder::Builder::Builder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-//PlatformFolderBuilder& PlatformFolderBuilder::wMediaType(QString mediaType) { mItemBlueprint.mMediaType = mediaType; return *this; }
-//PlatformFolderBuilder& PlatformFolderBuilder::wFolderPath(QString folderPath) { mItemBlueprint.mFolderPath = folderPath; return *this; }
-//PlatformFolderBuilder& PlatformFolderBuilder::wPlatform(QString platform) { mItemBlueprint.mMediaType = platform; return *this; }
+PlatformFolder::Builder& PlatformFolder::Builder::wMediaType(QString mediaType) { mItemBlueprint.mMediaType = mediaType; return *this; }
+PlatformFolder::Builder& PlatformFolder::Builder::wFolderPath(QString folderPath) { mItemBlueprint.mFolderPath = folderPath; return *this; }
+PlatformFolder::Builder& PlatformFolder::Builder::wPlatform(QString platform) { mItemBlueprint.mMediaType = platform; return *this; }
 
 //===============================================================================================================
 // PlatformCategory
@@ -343,6 +347,11 @@ Platform::Builder& Platform::Builder::wName(QString name) { mItemBlueprint.mName
 //Public:
 PlatformCategory::PlatformCategory() {}
 
+//-Instance Functions------------------------------------------------------------------------------------------
+//Public:
+QString PlatformCategory::name() const { return mName; }
+QString PlatformCategory::nestedName() const { return mNestedName; }
+
 //===============================================================================================================
 // PlatformCategory::Builder
 //===============================================================================================================
@@ -351,4 +360,8 @@ PlatformCategory::PlatformCategory() {}
 //Public:
 PlatformCategory::Builder::Builder() {}
 
+//-Instance Functions------------------------------------------------------------------------------------------
+//Public:
+PlatformCategory::Builder& PlatformCategory::Builder::wName(const QString& name) { mItemBlueprint.mName = name; return *this; }
+PlatformCategory::Builder& PlatformCategory::Builder::wNestedName(const QString& nestedName) { mItemBlueprint.mNestedName = nestedName; return *this; }
 }
