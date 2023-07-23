@@ -304,48 +304,6 @@ void Install::softReset()
 QString Install::name() const { return NAME; }
 QList<Fe::ImageMode> Install::preferredImageModeOrder() const { return IMAGE_MODE_ORDER; }
 
-QString Install::versionString() const
-{
-    // Try LaunchBox.deps.json
-    QFile depsJson(mCoreDirectory.path() + '/' + u"LaunchBox.deps.json"_s);
-    QByteArray settingsData;
-    Qx::IoOpReport settingsLoadReport = Qx::readBytesFromFile(settingsData, depsJson);
-
-    if(!settingsLoadReport.isFailure())
-    {
-        // Parse original JSON data
-        QJsonObject settingsObj = QJsonDocument::fromJson(settingsData).object();
-
-        if(!settingsObj.isEmpty())
-        {
-            // Get key that should have version
-            QList<QJsonValue> res = Qx::findAllValues(QJsonValue(settingsObj), u"Unbroken.LaunchBox.Windows");
-
-            if(!res.isEmpty() && res.first().isString())
-            {
-                // Check for valid version number
-                Qx::VersionNumber ver = Qx::VersionNumber::fromString(res.first().toString());
-
-                if(!ver.isNull())
-                    return ver.toString();
-            }
-        }
-    }
-
-    // Try unins000.exe
-    Qx::FileDetails uninsDetails = Qx::FileDetails::readFileDetails(path() + '/' + u"unins000.exe"_s);
-    if(!uninsDetails.isNull())
-    {
-        Qx::VersionNumber ver = uninsDetails.productVersion();
-
-        if(!ver.isNull())
-            return ver.toString();
-    }
-
-    // Fallback to generic method
-    return Fe::Install::versionString();
-}
-
 Qx::Error Install::prePlatformsImport()
 {
     if(Qx::Error superErr = Fe::Install::prePlatformsImport(); superErr.isValid())

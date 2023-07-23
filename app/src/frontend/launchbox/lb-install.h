@@ -107,7 +107,6 @@ public:
     // Info
     QString name() const override;
     QList<Fe::ImageMode> preferredImageModeOrder() const override;
-    QString versionString() const override;
 
     // Import stage notifier hooks
     Qx::Error prePlatformsImport() override;

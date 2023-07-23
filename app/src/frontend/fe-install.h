@@ -71,7 +71,7 @@ protected:
     virtual std::shared_ptr<PlaylistDoc::Writer> preparePlaylistDocCommit(const std::unique_ptr<PlaylistDoc>& document) = 0;
 
     // Info
-    virtual QString executableSubPath() const = 0;
+    virtual QString executableSubPath() const override = 0;
 
 public:
     // Install management
