@@ -912,6 +912,8 @@ void PlatformsConfigDoc::Reader::parsePlatform()
     {
         if(mStreamReader.name() == Xml::Element_Platform::ELEMENT_NAME)
             pb.wName(mStreamReader.readElementText());
+        else if(mStreamReader.name() == Xml::Element_Platform::ELEMENT_CATEGORY)
+            pb.wCategory(mStreamReader.readElementText());
         else
             pb.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
     }
