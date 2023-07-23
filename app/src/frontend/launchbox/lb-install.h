@@ -31,7 +31,7 @@ public:
     static inline const QString PLAYLISTS_PATH = u"Data/Playlists"_s;
     static inline const QString DATA_PATH = u"Data"_s;
     static inline const QString CORE_PATH = u"Core"_s;
-    static inline const QString MAIN_EXE_PATH = u"LaunchBox.exe"_s;
+    static inline const QString MAIN_EXE_PATH = u"Core/LaunchBox.exe"_s;
     static inline const QString PLATFORM_IMAGES_PATH = u"Images"_s;
     static inline const QString LOGO_PATH = u"Box - Front"_s;
     static inline const QString SCREENSHOT_PATH = u"Screenshot - Gameplay"_s;
@@ -81,6 +81,9 @@ private:
     Qx::Error populateExistingDocs() override;
     QString translateDocName(const QString& originalName, Fe::DataDoc::Type type) const override;
 
+    // Info
+    QString executableSubPath() const override;
+
     // Image Processing
     QString imageDestinationPath(Fp::ImageType imageType, const Fe::Game* game) const;
     void editBulkImageReferences(const Fe::ImageSources& imageSources);
@@ -103,7 +106,6 @@ public:
 
     // Info
     QString name() const override;
-    QString executableName() const override;
     QList<Fe::ImageMode> preferredImageModeOrder() const override;
     QString versionString() const override;
 

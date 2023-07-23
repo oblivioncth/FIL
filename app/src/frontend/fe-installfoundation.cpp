@@ -217,6 +217,9 @@ QList<QString> InstallFoundation::modifiedPlaylists() const { return modifiedDat
 bool InstallFoundation::isValid() const { return mValid; }
 QString InstallFoundation::path() const { return mRootDirectory.absolutePath(); }
 
+QString InstallFoundation::executableName() const { return QFileInfo(executableSubPath()).fileName(); }
+QString InstallFoundation::executablePath() const { return mRootDirectory.absoluteFilePath(executableSubPath()); }
+
 Qx::Error InstallFoundation::refreshExistingDocs(bool* changed)
 {
     QSet<DataDoc::Identifier> oldDocSet;

@@ -142,6 +142,7 @@ protected:
     virtual void softReset();
     void declareValid(bool valid);
     virtual Qx::Error populateExistingDocs() = 0; // Stated redundantly again in Install to make it clear its part of the main interface
+    virtual QString executableSubPath() const = 0; // Stated redundantly again in Install to make it clear its part of the main interface
 
     virtual QString translateDocName(const QString& originalName, DataDoc::Type type) const;
     void catalogueExistingDoc(DataDoc::Identifier existingDoc);
@@ -155,6 +156,9 @@ protected:
 public:
     bool isValid() const;
     QString path() const;
+
+    QString executableName() const;
+    QString executablePath() const;
 
     Qx::Error refreshExistingDocs(bool* changed = nullptr);
     bool containsPlatform(const QString& name) const;

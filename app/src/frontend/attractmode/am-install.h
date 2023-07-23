@@ -92,6 +92,9 @@ private:
     Qx::Error populateExistingDocs() override;
     QString translateDocName(const QString& originalName, Fe::DataDoc::Type type) const override;
 
+    // Info
+    QString executableSubPath() const override;
+
     // Image Processing
     QString imageDestinationPath(Fp::ImageType imageType, const Fe::Game* game) const;
 
@@ -114,7 +117,6 @@ public:
 
     // Info
     QString name() const override;
-    QString executableName() const override;
     QList<Fe::ImageMode> preferredImageModeOrder() const override;
     QString versionString() const override;
 

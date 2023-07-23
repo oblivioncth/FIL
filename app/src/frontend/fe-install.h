@@ -70,13 +70,15 @@ protected:
     virtual std::shared_ptr<PlatformDoc::Writer> preparePlatformDocCommit(const std::unique_ptr<PlatformDoc>& document) = 0;
     virtual std::shared_ptr<PlaylistDoc::Writer> preparePlaylistDocCommit(const std::unique_ptr<PlaylistDoc>& document) = 0;
 
+    // Info
+    virtual QString executableSubPath() const = 0;
+
 public:
     // Install management
     virtual void softReset() override;
 
     // Info
     virtual QString name() const = 0;
-    virtual QString executableName() const = 0;
     virtual QList<ImageMode> preferredImageModeOrder() const = 0;
     bool supportsImageMode(ImageMode imageMode) const;
     virtual QString versionString() const;

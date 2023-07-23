@@ -104,6 +104,8 @@ QString Install::translateDocName(const QString& originalName, Fe::DataDoc::Type
     return translatedName;
 }
 
+QString Install::executableSubPath() const { return MAIN_EXE_PATH; }
+
 QString Install::imageDestinationPath(Fp::ImageType imageType, const Fe::Game* game) const
 {
     return mPlatformImagesDirectory.absolutePath() + '/' +
@@ -300,7 +302,6 @@ void Install::softReset()
 }
 
 QString Install::name() const { return NAME; }
-QString Install::executableName() const { return MAIN_EXE_PATH; }
 QList<Fe::ImageMode> Install::preferredImageModeOrder() const { return IMAGE_MODE_ORDER; }
 
 QString Install::versionString() const

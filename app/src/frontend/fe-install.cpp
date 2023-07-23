@@ -68,7 +68,7 @@ bool Install::supportsImageMode(ImageMode imageMode) const { return preferredIma
 
 QString Install::versionString() const
 {
-    Qx::FileDetails exeDetails = Qx::FileDetails::readFileDetails(executableName());
+    Qx::FileDetails exeDetails = Qx::FileDetails::readFileDetails(executablePath());
 
     QString fileVersionStr = exeDetails.stringTable().fileVersion;
     QString productVersionStr = exeDetails.stringTable().productVersion;
