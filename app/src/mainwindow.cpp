@@ -236,7 +236,7 @@ void MainWindow::validateInstall(const QString& installPath, InstallType install
             break;
 
         case InstallType::Flashpoint:
-            mFlashpointInstall = std::make_shared<Fp::Install>(installPath);
+            mFlashpointInstall = std::make_shared<Fp::Install>(installPath, true);
             if(mFlashpointInstall->isValid())
             {
                 ui->label_flashpointVersion->setText(mFlashpointInstall->nameVersionString());

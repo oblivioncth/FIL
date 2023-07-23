@@ -81,14 +81,10 @@ Qx::ProgressGroup* ImportWorker::initializeProgressGroup(const QString& groupNam
 Qx::Error ImportWorker::preloadPlaylists(QList<Fp::Playlist>& targetPlaylists)
 {
     // Reset playlists
-
-    // Get all playlists
-    Fp::PlaylistManager* plm = mFlashpointInstall->playlistManager();
-
-    if(Qx::Error loadErr = plm->populate(); loadErr.isValid())
-        return loadErr;
+    targetPlaylists.clear();
 
     // Create copy of playlists list
+    Fp::PlaylistManager* plm = mFlashpointInstall->playlistManager();
     targetPlaylists = plm->playlists();
 
     // Strip list to only cover targets
