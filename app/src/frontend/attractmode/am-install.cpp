@@ -59,13 +59,13 @@ void Install::nullify()
 
     mEmulatorsDirectory = QDir();
     mRomlistsDirectory = QDir();
-    mMainConfigFile.setFileName("");
+    mMainConfigFile.setFileName(u""_s);
     mFpTagDirectory = QDir();
     mFpScraperDirectory = QDir();
-    mMainExe.setFileName("");
-    mConsoleExe.setFileName("");
-    mFpRomlist.setFileName("");
-    mEmulatorConfigFile.setFileName("");
+    mMainExe.setFileName(u""_s);
+    mConsoleExe.setFileName(u""_s);
+    mFpRomlist.setFileName(u""_s);
+    mEmulatorConfigFile.setFileName(u""_s);
 }
 
 Qx::Error Install::populateExistingDocs()
@@ -433,10 +433,10 @@ Qx::Error Install::postImport()
     emulatorConfig->setExecutable(CLIFp::EXE_NAME);
     emulatorConfig->setArgs(uR"(play -i u"[romfilename]"_s)"_s);
     emulatorConfig->setWorkDir(workingDir);
-    emulatorConfig->setRomPath("");
-    emulatorConfig->setRomExt("");
+    emulatorConfig->setRomPath(u""_s);
+    emulatorConfig->setRomExt(u""_s);
     emulatorConfig->setSystem(Fp::NAME);
-    emulatorConfig->setInfoSource("");
+    emulatorConfig->setInfoSource(u""_s);
 
     // Ensure image directories are clear
     EmulatorArtworkEntry::Builder aeb;

@@ -88,7 +88,7 @@ class ConfigDoc::Reader : public CommonDocReader
 //-Class Variables----------------------------------------------------------------------------------------------------
 protected:
     static inline const QRegularExpression KEY_VALUE_REGEX =
-            QRegularExpression(R"((?<key>\w+)(?!\S)[^\S\r\n]*(?<value>(?:\S+(?:[^\S\r\n]+\S+)*)*))");
+            QRegularExpression(uR"((?<key>\w+)(?!\S)[^\S\r\n]*(?<value>(?:\S+(?:[^\S\r\n]+\S+)*)*))"_s);
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:

@@ -22,7 +22,7 @@ public:
     // Identity
     static inline const QString NAME = u"AttractMode"_s;
     static inline const QString ICON_PATH = u":/frontend/AttractMode/icon.png"_s;
-    static inline const QUrl HELP_URL = QUrl("");
+    static inline const QUrl HELP_URL = QUrl(u""_s);
 
     // Naming
     static inline const QString PLATFORM_TAG_PREFIX = u"[Platform] "_s;

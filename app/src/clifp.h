@@ -19,11 +19,11 @@ public:
     static inline const QString PLAY_COMMAND = u"play"_s;
     static inline const QString RUN_COMMAND = u"run"_s;
     static inline const QString SHOW_COMMAND = u"show"_s;
-    static inline const QString ID_ARG = R"(--id="%1")";
-    static inline const QString APP_ARG = R"(--app="%1")";
-    static inline const QString PARAM_ARG = R"(--param="%1")";
-    static inline const QString MSG_ARG = R"(--msg="%1")";
-    static inline const QString EXTRA_ARG = R"(--extra="%1")";
+    static inline const QString ID_ARG = uR"(--id="%1")"_s;
+    static inline const QString APP_ARG = uR"(--app="%1")"_s;
+    static inline const QString PARAM_ARG = uR"(--param="%1")"_s;
+    static inline const QString MSG_ARG = uR"(--msg="%1")"_s;
+    static inline const QString EXTRA_ARG = uR"(--extra="%1")"_s;
 
     static inline const QString ERR_FP_CANT_DEPLOY_CLIFP = u"Failed to deploy "_s + EXE_NAME + u" to the selected Flashpoint install.\n"_s
                                                            "\n"
