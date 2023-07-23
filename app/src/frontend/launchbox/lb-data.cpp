@@ -16,98 +16,107 @@ namespace Xml
 
 namespace Element_Game
 {
-     const QString NAME = u"Game"_s;
+    const QString NAME = u"Game"_s;
 
-     const QString ELEMENT_ID = u"ID"_s;
-     const QString ELEMENT_TITLE = u"Title"_s;
-     const QString ELEMENT_SERIES = u"Series"_s;
-     const QString ELEMENT_DEVELOPER = u"Developer"_s;
-     const QString ELEMENT_PUBLISHER = u"Publisher"_s;
-     const QString ELEMENT_PLATFORM = u"Platform"_s;
-     const QString ELEMENT_SORT_TITLE = u"SortTitle"_s;
-     const QString ELEMENT_DATE_ADDED = u"DateAdded"_s;
-     const QString ELEMENT_DATE_MODIFIED = u"DateModified"_s;
-     const QString ELEMENT_BROKEN = u"Broken"_s;
-     const QString ELEMENT_PLAYMODE = u"PlayMode"_s;
-     const QString ELEMENT_STATUS = u"Status"_s;
-     const QString ELEMENT_REGION = u"Region"_s;
-     const QString ELEMENT_NOTES = u"Notes"_s;
-     const QString ELEMENT_SOURCE = u"Source"_s;
-     const QString ELEMENT_APP_PATH = u"ApplicationPath"_s;
-     const QString ELEMENT_COMMAND_LINE = u"CommandLine"_s;
-     const QString ELEMENT_RELEASE_DATE = u"ReleaseDate"_s;
-     const QString ELEMENT_VERSION = u"Version"_s;
-     const QString ELEMENT_RELEASE_TYPE = u"ReleaseType"_s;
+    const QString ELEMENT_ID = u"ID"_s;
+    const QString ELEMENT_TITLE = u"Title"_s;
+    const QString ELEMENT_SERIES = u"Series"_s;
+    const QString ELEMENT_DEVELOPER = u"Developer"_s;
+    const QString ELEMENT_PUBLISHER = u"Publisher"_s;
+    const QString ELEMENT_PLATFORM = u"Platform"_s;
+    const QString ELEMENT_SORT_TITLE = u"SortTitle"_s;
+    const QString ELEMENT_DATE_ADDED = u"DateAdded"_s;
+    const QString ELEMENT_DATE_MODIFIED = u"DateModified"_s;
+    const QString ELEMENT_BROKEN = u"Broken"_s;
+    const QString ELEMENT_PLAYMODE = u"PlayMode"_s;
+    const QString ELEMENT_STATUS = u"Status"_s;
+    const QString ELEMENT_REGION = u"Region"_s;
+    const QString ELEMENT_NOTES = u"Notes"_s;
+    const QString ELEMENT_SOURCE = u"Source"_s;
+    const QString ELEMENT_APP_PATH = u"ApplicationPath"_s;
+    const QString ELEMENT_COMMAND_LINE = u"CommandLine"_s;
+    const QString ELEMENT_RELEASE_DATE = u"ReleaseDate"_s;
+    const QString ELEMENT_VERSION = u"Version"_s;
+    const QString ELEMENT_RELEASE_TYPE = u"ReleaseType"_s;
 };
 
 namespace Element_AddApp
 {
-     const QString NAME = u"AdditionalApplication"_s;
+    const QString NAME = u"AdditionalApplication"_s;
 
-     const QString ELEMENT_ID = u"Id"_s;
-     const QString ELEMENT_GAME_ID = u"GameID"_s;
-     const QString ELEMENT_APP_PATH = u"ApplicationPath"_s;
-     const QString ELEMENT_COMMAND_LINE = u"CommandLine"_s;
-     const QString ELEMENT_AUTORUN_BEFORE = u"AutoRunBefore"_s;
-     const QString ELEMENT_NAME = u"Name"_s;
-     const QString ELEMENT_WAIT_FOR_EXIT = u"WaitForExit"_s;
+    const QString ELEMENT_ID = u"Id"_s;
+    const QString ELEMENT_GAME_ID = u"GameID"_s;
+    const QString ELEMENT_APP_PATH = u"ApplicationPath"_s;
+    const QString ELEMENT_COMMAND_LINE = u"CommandLine"_s;
+    const QString ELEMENT_AUTORUN_BEFORE = u"AutoRunBefore"_s;
+    const QString ELEMENT_NAME = u"Name"_s;
+    const QString ELEMENT_WAIT_FOR_EXIT = u"WaitForExit"_s;
 };
 
 namespace Element_CustomField
 {
-     const QString NAME = u"CustomField"_s;
+    const QString NAME = u"CustomField"_s;
 
-     const QString ELEMENT_GAME_ID = u"GameID"_s;
-     const QString ELEMENT_NAME = u"Name"_s;
-     const QString ELEMENT_VALUE = u"Value"_s;
+    const QString ELEMENT_GAME_ID = u"GameID"_s;
+    const QString ELEMENT_NAME = u"Name"_s;
+    const QString ELEMENT_VALUE = u"Value"_s;
 };
 
 namespace Element_PlaylistHeader
 {
-     const QString NAME = u"Playlist"_s;
+    const QString NAME = u"Playlist"_s;
 
-     const QString ELEMENT_ID = u"PlaylistId"_s;
-     const QString ELEMENT_NAME = u"Name"_s;
-     const QString ELEMENT_NESTED_NAME = u"NestedName"_s;
-     const QString ELEMENT_NOTES = u"Notes"_s;
+    const QString ELEMENT_ID = u"PlaylistId"_s;
+    const QString ELEMENT_NAME = u"Name"_s;
+    const QString ELEMENT_NESTED_NAME = u"NestedName"_s;
+    const QString ELEMENT_NOTES = u"Notes"_s;
 };
 
 namespace Element_PlaylistGame
 {
-     const QString NAME = u"PlaylistGame"_s;
+    const QString NAME = u"PlaylistGame"_s;
 
-     const QString ELEMENT_ID = u"GameId"_s;
-     const QString ELEMENT_GAME_TITLE = u"GameTitle"_s;
-     const QString ELEMENT_GAME_FILE_NAME = u"GameFileName"_s;
-     const QString ELEMENT_GAME_PLATFORM = u"GamePlatform"_s;
-     const QString ELEMENT_MANUAL_ORDER = u"ManualOrder"_s;
-     const QString ELEMENT_LB_DB_ID = u"LaunchBoxDbId"_s;
+    const QString ELEMENT_ID = u"GameId"_s;
+    const QString ELEMENT_GAME_TITLE = u"GameTitle"_s;
+    const QString ELEMENT_GAME_FILE_NAME = u"GameFileName"_s;
+    const QString ELEMENT_GAME_PLATFORM = u"GamePlatform"_s;
+    const QString ELEMENT_MANUAL_ORDER = u"ManualOrder"_s;
+    const QString ELEMENT_LB_DB_ID = u"LaunchBoxDbId"_s;
 };
 
 namespace Element_Platform
 {
-     const QString NAME = u"Platform"_s;
+    const QString NAME = u"Platform"_s;
 
-     const QString ELEMENT_NAME = u"Name"_s;
-     const QString ELEMENT_CATEGORY = u"Category"_s;
+    const QString ELEMENT_NAME = u"Name"_s;
+    const QString ELEMENT_CATEGORY = u"Category"_s;
 };
 
 namespace Element_PlatformFolder
 {
-     const QString NAME = u"PlatformFolder"_s;
+    const QString NAME = u"PlatformFolder"_s;
 
-     const QString ELEMENT_MEDIA_TYPE = u"MediaType"_s;
-     const QString ELEMENT_FOLDER_PATH = u"FolderPath"_s;
-     const QString ELEMENT_PLATFORM = u"Platform"_s;
+    const QString ELEMENT_MEDIA_TYPE = u"MediaType"_s;
+    const QString ELEMENT_FOLDER_PATH = u"FolderPath"_s;
+    const QString ELEMENT_PLATFORM = u"Platform"_s;
 };
 
 namespace Element_PlatformCategory
 {
-     const QString NAME = u"PlatformCategory"_s;
+    const QString NAME = u"PlatformCategory"_s;
 
-     const QString ELEMENT_NAME = u"Name"_s;
-     const QString ELEMENT_NESTED_NAME = u"NestedName"_s;
+    const QString ELEMENT_NAME = u"Name"_s;
+    const QString ELEMENT_NESTED_NAME = u"NestedName"_s;
 };
+
+ namespace Element_Parent
+ {
+    const QString NAME = u"Parent"_s;
+
+    const QString ELEMENT_PLATFORM_CATEGORY_NAME = u"PlatformCategoryName"_s;
+    const QString ELEMENT_PLATFORM_NAME = u"PlatformName"_s;
+    const QString ELEMENT_PARENT_PLATFORM_CATEGORY_NAME = u"ParentPlatformCategoryName"_s;
+ };
 
 const QString ROOT_ELEMENT = u"LaunchBox"_s;
 };
@@ -912,8 +921,8 @@ void PlatformsConfigDoc::Reader::parsePlatform()
     {
         if(mStreamReader.name() == Xml::Element_Platform::ELEMENT_NAME)
             pb.wName(mStreamReader.readElementText());
-        else if(mStreamReader.name() == Xml::Element_Platform::ELEMENT_CATEGORY)
-            pb.wCategory(mStreamReader.readElementText());
+//        else if(mStreamReader.name() == Xml::Element_Platform::ELEMENT_CATEGORY)
+//            pb.wCategory(mStreamReader.readElementText());
         else
             pb.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
     }
@@ -1018,7 +1027,7 @@ bool PlatformsConfigDoc::Writer::writePlatform(const Platform& platform)
 
     // Write known tags
     writeCleanTextElement(Xml::Element_Platform::ELEMENT_NAME, platform.name());
-    writeCleanTextElement(Xml::Element_Platform::ELEMENT_CATEGORY, platform.category());
+//    writeCleanTextElement(Xml::Element_Platform::ELEMENT_CATEGORY, platform.category());
 
     // Write other tags
     writeOtherFields(platform.otherFields());
@@ -1060,6 +1069,212 @@ bool PlatformsConfigDoc::Writer::writePlatformCategory(const PlatformCategory& p
     writeOtherFields(platformCategory.otherFields());
 
     // Close game tag
+    mStreamWriter.writeEndElement();
+
+    // Return error status
+    return !mStreamWriter.hasError();
+}
+
+//===============================================================================================================
+// ParentsDoc
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Public:
+ParentsDoc::ParentsDoc(Install* const parent, const QString& xmlPath, const Fe::UpdateOptions& updateOptions,
+                                       const DocKey&) :
+    Fe::UpdateableDoc(parent, xmlPath, STD_NAME, updateOptions)
+{}
+
+//-Instance Functions--------------------------------------------------------------------------------------------------
+//Private:
+Fe::DataDoc::Type ParentsDoc::type() const { return Fe::DataDoc::Type::Config; }
+
+//Public:
+bool ParentsDoc::isEmpty() const
+{
+    return mCategoriesExisting.isEmpty() && mCategoriesFinal.isEmpty() &&
+           mPlatformsExisting.isEmpty() && mPlatformsFinal.isEmpty();
+}
+
+const QHash<QString, ParentCategory>& ParentsDoc::finalParentCategories() const { return mCategoriesFinal; }
+const QHash<QString, ParentPlatform>& ParentsDoc::finalParentPlatforms() const { return mPlatformsFinal; }
+
+void ParentsDoc::addParentCategory(const ParentCategory& parentCategory)
+{
+    addUpdateableItem(mCategoriesExisting, mCategoriesFinal, parentCategory.platformCategoryName(), parentCategory);
+}
+
+void ParentsDoc::addParentPlatform(const ParentPlatform& parentPlatform)
+{
+    addUpdateableItem(mPlatformsExisting, mPlatformsFinal, parentPlatform.platformName(), parentPlatform);
+}
+
+void ParentsDoc::finalize()
+{
+    // Finalize derived
+    finalizeUpdateableItems(mCategoriesExisting, mCategoriesFinal);
+    finalizeUpdateableItems(mPlatformsExisting, mPlatformsFinal);
+
+
+    // Finalize base
+    Fe::UpdateableDoc::finalize();
+}
+
+//===============================================================================================================
+// ParentsDoc::Reader
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Public:
+ParentsDoc::Reader::Reader(ParentsDoc* targetDoc) :
+    Fe::DataDoc::Reader(targetDoc),
+    XmlDocReader(targetDoc)
+{}
+
+//-Instance Functions-------------------------------------------------------------------------------------------------
+//Private:
+Fe::DocHandlingError ParentsDoc::Reader::readTargetDoc()
+{
+    while(mStreamReader.readNextStartElement())
+    {
+        if(mStreamReader.name() == Xml::Element_Parent::NAME)
+        {
+            if(Fe::DocHandlingError dhe = parseParent(); dhe.isValid())
+                return dhe;
+        }
+        else
+            mStreamReader.skipCurrentElement();
+    }
+
+    // Return status
+    return streamStatus();
+}
+
+Fe::DocHandlingError ParentsDoc::Reader::parseParent()
+{
+    // Advance to first element
+    if(!mStreamReader.readNextStartElement())
+        return streamStatus();
+
+    // Branch on parent type
+    if(mStreamReader.name() == Xml::Element_Parent::ELEMENT_PLATFORM_CATEGORY_NAME)
+        parseParentCategory();
+    else if(mStreamReader.name() == Xml::Element_Parent::ELEMENT_PLATFORM_NAME)
+        parseParentPlatform();
+    else
+        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocInvalidType);
+
+    // Return status
+    return streamStatus();
+}
+
+void ParentsDoc::Reader::parseParentCategory()
+{
+    // Platform Config Doc to Build
+    ParentCategory::Builder pc;
+
+    // Cover all children
+    do
+    {
+        if(mStreamReader.name() == Xml::Element_Parent::ELEMENT_PLATFORM_CATEGORY_NAME)
+            pc.wPlatformCategoryName(mStreamReader.readElementText());
+        else
+            pc.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
+    }
+    while(mStreamReader.readNextStartElement());
+
+    // Build Platform and add to document
+    ParentCategory existingParent = pc.build();
+    static_cast<ParentsDoc*>(mTargetDocument)->mCategoriesExisting[existingParent.platformCategoryName()] = existingParent;
+}
+
+void ParentsDoc::Reader::parseParentPlatform()
+{
+    // Platform Config Doc to Build
+    ParentPlatform::Builder pc;
+
+    // Cover all children
+    do
+    {
+        if(mStreamReader.name() == Xml::Element_Parent::ELEMENT_PLATFORM_NAME)
+            pc.wPlatformName(mStreamReader.readElementText());
+        else if(mStreamReader.name() == Xml::Element_Parent::ELEMENT_PARENT_PLATFORM_CATEGORY_NAME)
+            pc.wParentPlatformCategoryName(mStreamReader.readElementText());
+        else
+            pc.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
+    }
+    while(mStreamReader.readNextStartElement());
+
+    // Build Platform and add to document
+    ParentPlatform existingParent = pc.build();
+    static_cast<ParentsDoc*>(mTargetDocument)->mPlatformsExisting[existingParent.platformName()] = existingParent;
+}
+
+//===============================================================================================================
+// PlatformsConfigDoc::Writer
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Public:
+ParentsDoc::Writer::Writer(ParentsDoc* sourceDoc) :
+    Fe::DataDoc::Writer(sourceDoc),
+    XmlDocWriter(sourceDoc)
+{}
+
+//-Instance Functions-------------------------------------------------------------------------------------------------
+//Private:
+bool ParentsDoc::Writer::writeSourceDoc()
+{
+    // Write all categories
+    for(const ParentCategory& parentCategory : static_cast<ParentsDoc*>(mSourceDocument)->finalParentCategories())
+    {
+        if(!writeParentCategory(parentCategory))
+            return false;
+    }
+
+    // Write all platforms
+    for(const ParentPlatform& parentPlatform : static_cast<ParentsDoc*>(mSourceDocument)->finalParentPlatforms())
+    {
+        if(!writeParentPlatform(parentPlatform))
+            return false;
+    }
+
+    // Return true on success
+    return true;
+}
+
+bool ParentsDoc::Writer::writeParentCategory(const ParentCategory& parentCategory)
+{
+    // Write opening tag
+    mStreamWriter.writeStartElement(Xml::Element_Parent::NAME);
+
+    // Write known tags
+    writeCleanTextElement(Xml::Element_Parent::ELEMENT_PLATFORM_CATEGORY_NAME, parentCategory.platformCategoryName());
+
+    // Write other tags
+    writeOtherFields(parentCategory.otherFields());
+
+    // Close tag
+    mStreamWriter.writeEndElement();
+
+    // Return error status
+    return !mStreamWriter.hasError();
+}
+
+bool ParentsDoc::Writer::writeParentPlatform(const ParentPlatform& parentPlatform)
+{
+    // Write opening tag
+    mStreamWriter.writeStartElement(Xml::Element_Parent::NAME);
+
+    // Write known tags
+    writeCleanTextElement(Xml::Element_Parent::ELEMENT_PLATFORM_NAME, parentPlatform.platformName());
+    writeCleanTextElement(Xml::Element_Parent::ELEMENT_PARENT_PLATFORM_CATEGORY_NAME, parentPlatform.parentPlatformCategoryName());
+
+    // Write other tags
+    writeOtherFields(parentPlatform.otherFields());
+
+    // Close tag
     mStreamWriter.writeEndElement();
 
     // Return error status

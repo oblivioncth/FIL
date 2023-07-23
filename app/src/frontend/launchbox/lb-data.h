@@ -257,5 +257,71 @@ private:
     bool writePlatformCategory(const PlatformCategory& platformCategory);
 };
 
+class ParentsDoc : public Fe::UpdateableDoc
+{
+    //-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Reader;
+    class Writer;
+
+    //-Class Variables-----------------------------------------------------------------------------------------------------
+public:
+    static inline const QString STD_NAME = u"Parents"_s;
+
+    //-Instance Variables--------------------------------------------------------------------------------------------------
+private:
+    QHash<QString, ParentCategory> mCategoriesExisting;
+    QHash<QString, ParentCategory> mCategoriesFinal;
+    QHash<QString, ParentPlatform> mPlatformsExisting;
+    QHash<QString, ParentPlatform> mPlatformsFinal;
+
+    //-Constructor--------------------------------------------------------------------------------------------------------
+public:
+    explicit ParentsDoc(Install* const parent, const QString& xmlPath, const Fe::UpdateOptions& updateOptions,
+                        const DocKey&);
+
+    //-Instance Functions--------------------------------------------------------------------------------------------------
+private:
+    Type type() const override;
+
+public:
+    bool isEmpty() const override;
+
+    const QHash<QString, ParentCategory>& finalParentCategories() const;
+    const QHash<QString, ParentPlatform>& finalParentPlatforms() const;
+
+    void addParentCategory(const ParentCategory& parentCategory);
+    void addParentPlatform(const ParentPlatform& parentPlatform);
+
+    void finalize() override;
+};
+
+class ParentsDoc::Reader : public XmlDocReader
+{
+    //-Constructor--------------------------------------------------------------------------------------------------------
+public:
+    Reader(ParentsDoc* targetDoc);
+
+    //-Instance Functions-------------------------------------------------------------------------------------------------
+private:
+    Fe::DocHandlingError readTargetDoc() override;
+    Fe::DocHandlingError parseParent();
+    void parseParentCategory();
+    void parseParentPlatform();
+};
+
+class ParentsDoc::Writer : public XmlDocWriter
+{
+    //-Constructor--------------------------------------------------------------------------------------------------------
+public:
+    Writer(ParentsDoc* sourceDoc);
+
+    //-Instance Functions-------------------------------------------------------------------------------------------------
+private:
+    bool writeSourceDoc() override;
+    bool writeParentCategory(const ParentCategory& parentCategory);
+    bool writeParentPlatform(const ParentPlatform& parentPlatform);
+};
+
 }
 #endif // LAUNCHBOX_XML_H

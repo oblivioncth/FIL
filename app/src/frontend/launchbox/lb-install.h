@@ -94,6 +94,8 @@ private:
 
     Fe::DocHandlingError checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc>& returnBuffer);
     Fe::DocHandlingError commitPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc> document);
+    Fe::DocHandlingError checkoutParentsDoc(std::unique_ptr<ParentsDoc>& returnBuffer);
+    Fe::DocHandlingError commitParentsDoc(std::unique_ptr<ParentsDoc> document);
 
 public:
     // Install management

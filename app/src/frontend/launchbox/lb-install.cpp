@@ -249,6 +249,46 @@ Fe::DocHandlingError Install::commitPlatformsConfigDoc(std::unique_ptr<Platforms
     return writeErrorStatus;
 }
 
+Fe::DocHandlingError Install::checkoutParentsDoc(std::unique_ptr<ParentsDoc>& returnBuffer)
+{
+    // Create doc file reference
+    Fe::DataDoc::Identifier docId(Fe::DataDoc::Type::Config, ParentsDoc::STD_NAME);
+
+    // Construct unopened document
+    Fe::UpdateOptions uo{.importMode = Fe::ImportMode::NewAndExisting, .removeObsolete = false};
+    returnBuffer = std::make_unique<ParentsDoc>(this, dataDocPath(docId), uo, DocKey{});
+
+    // Construct doc reader
+    std::shared_ptr<ParentsDoc::Reader> docReader = std::make_shared<ParentsDoc::Reader>(returnBuffer.get());
+
+    // Open document
+    Fe::DocHandlingError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
+
+    // Set return null on failure
+    if(readErrorStatus.isValid())
+        returnBuffer.reset();
+
+    // Return status
+    return readErrorStatus;
+}
+
+Fe::DocHandlingError Install::commitParentsDoc(std::unique_ptr<ParentsDoc> document)
+{
+    assert(document->parent() == this);
+
+    // Prepare writer
+    std::shared_ptr<ParentsDoc::Writer> docWriter = std::make_shared<ParentsDoc::Writer>(document.get());
+
+    // Write
+    Fe::DocHandlingError writeErrorStatus = commitDataDocument(document.get(), docWriter);
+
+    // Ensure document is cleared
+    document.reset();
+
+    // Return write status and let document ptr auto delete
+    return writeErrorStatus;
+}
+
 //Public:
 void Install::softReset()
 {
@@ -319,16 +359,10 @@ Qx::Error Install::postPlatformsImport()
     if(Qx::Error superErr = Fe::Install::postPlatformsImport(); superErr.isValid())
         return superErr;
 
-    // Add platforms to Platforms.xml
-    const QList<QString> affectedPlatforms = modifiedPlatforms();
-    for(const QString& pn :affectedPlatforms)
-    {
-        Lb::Platform::Builder pb;
-        pb.wName(pn);
-        pb.wCategory(PLATFORM_CATEGORY);
-
-        mPlatformsConfig->addPlatform(pb.build());
-    }
+    // Open Parents.xml
+    std::unique_ptr<ParentsDoc> parentsDoc;
+    if(Fe::DocHandlingError dhe = checkoutParentsDoc(parentsDoc); dhe.isValid())
+        return dhe;
 
     // Add PlatformCategory to Platforms.xml
     Lb::PlatformCategory::Builder pcb;
@@ -336,7 +370,28 @@ Qx::Error Install::postPlatformsImport()
     pcb.wNestedName(PLATFORM_CATEGORY);
     mPlatformsConfig->addPlatformCategory(pcb.build());
 
-    return Qx::Error();
+    // Add ParentCategory to Parents.xml
+    Lb::ParentCategory::Builder prcb;
+    prcb.wPlatformCategoryName(PLATFORM_CATEGORY);
+    parentsDoc->addParentCategory(prcb.build());
+
+    // Add platforms to Platforms.xml and Parents.xml
+    const QList<QString> affectedPlatforms = modifiedPlatforms();
+    for(const QString& pn :affectedPlatforms)
+    {
+        Lb::Platform::Builder pb;
+        pb.wName(pn);
+        mPlatformsConfig->addPlatform(pb.build());
+
+        Lb::ParentPlatform::Builder ppb;
+        ppb.wParentPlatformCategoryName(PLATFORM_CATEGORY);
+        ppb.wPlatformName(pn);
+        parentsDoc->addParentPlatform(ppb.build());
+    }
+
+    // Close Parents.xml
+    parentsDoc->finalize();
+    return commitParentsDoc(std::move(parentsDoc));
 }
 
 Qx::Error Install::preImageProcessing(QList<ImageMap>& workerTransfers, const Fe::ImageSources& bulkSources)
