@@ -343,8 +343,10 @@ Qx::Error Install::preImageProcessing(QList<ImageMap>& workerTransfers, const Fe
         case Fe::ImageMode::Copy:
             workerTransfers.swap(mWorkerImageJobs);
             editBulkImageReferences(bulkSources);
+            break;
         case Fe::ImageMode::Reference:
             editBulkImageReferences(bulkSources);
+            break;
         default:
             qWarning() << Q_FUNC_INFO << u"unhandled image mode"_s;
     }
