@@ -8,6 +8,8 @@
 #include <QHash>
 #include <QUuid>
 
+using namespace Qt::Literals::StringLiterals;
+
 namespace Fe
 {
 
@@ -124,8 +126,8 @@ public:
 
 //-Class Variables--------------------------------------------------------------------------------------------------
 protected:
-    static inline const QString RELEASE_TYPE_GAME = "Game";
-    static inline const QString RELEASE_TYPE_ANIM = "Animation";
+    static inline const QString RELEASE_TYPE_GAME = u"Game"_s;
+    static inline const QString RELEASE_TYPE_ANIM = u"Animation"_s;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 protected:

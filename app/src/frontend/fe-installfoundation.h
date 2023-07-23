@@ -28,12 +28,12 @@ public:
 //-Class Variables-------------------------------------------------------------
 private:
     static inline const QHash<Type, QString> ERR_STRINGS{
-        {NoError, QSL("")},
-        {FileWontDelete, QSL("Cannot remove a file. It may need to be deleted manually.")},
-        {FileWontRestore, QSL("Cannot restore a file backup. It may need to be renamed manually..")}
+        {NoError, u""_s},
+        {FileWontDelete, u"Cannot remove a file. It may need to be deleted manually."_s},
+        {FileWontRestore, u"Cannot restore a file backup. It may need to be renamed manually.."_s}
     };
 
-    static inline const QString CAPTION_REVERT_ERR = "Error reverting changes";
+    static inline const QString CAPTION_REVERT_ERR = u"Error reverting changes"_s;
 
 //-Instance Variables-------------------------------------------------------------
 private:
@@ -83,19 +83,19 @@ public:
 //-Class Variables-----------------------------------------------------------------------------------------------
 private:
     // Files
-    static inline const QString BACKUP_FILE_EXT = "fbk";
+    static inline const QString BACKUP_FILE_EXT = u"fbk"_s;
 
 protected:
     // Files
-    static inline const QString IMAGE_EXT = "png";
+    static inline const QString IMAGE_EXT = u"png"_s;
 
 public:
     // Base errors
     // TODO: This is unused, should it be in-use somewhere?
-    static inline const QString ERR_UNSUPPORTED_FEATURE = "A feature unsupported by the frontend was called upon!";
+    static inline const QString ERR_UNSUPPORTED_FEATURE = u"A feature unsupported by the frontend was called upon!"_s;
 
     // Image Errors
-    static inline const QString CAPTION_IMAGE_ERR = "Error importing game image(s)";
+    static inline const QString CAPTION_IMAGE_ERR = u"Error importing game image(s)"_s;
 
 //-Instance Variables--------------------------------------------------------------------------------------------
 private:

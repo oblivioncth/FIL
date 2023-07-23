@@ -123,32 +123,32 @@ public:
     class Keys
     {
     public:
-        static inline const QString DISPLAY = "display";
+        static inline const QString DISPLAY = u"display"_s;
         class Display
         {
         public:
-            static inline const QString LAYOUT = "layout";
-            static inline const QString ROMLIST = "romlist";
-            static inline const QString IN_CYCLE = "in_cycle";
-            static inline const QString IN_MENU = "in_menu";
-            static inline const QString GLOBAL_FILTER = "global_filter";
+            static inline const QString LAYOUT = u"layout"_s;
+            static inline const QString ROMLIST = u"romlist"_s;
+            static inline const QString IN_CYCLE = u"in_cycle"_s;
+            static inline const QString IN_MENU = u"in_menu"_s;
+            static inline const QString GLOBAL_FILTER = u"global_filter"_s;
             class GlobalFilter
             {
             public:
-                static inline const QString RULE = "rule";
-                static inline const QString EXCEPTION = "exception";
+                static inline const QString RULE = u"rule"_s;
+                static inline const QString EXCEPTION = u"exception"_s;
             };
 
 
-            static inline const QString FILTER = "filter";
+            static inline const QString FILTER = u"filter"_s;
             class Filter
             {
             public:
-                static inline const QString RULE = "rule";
-                static inline const QString EXCEPTION = "exception";
-                static inline const QString SORT_BY = "sort_by";
-                static inline const QString REVERSE_ORDER = "reverse_order";
-                static inline const QString LIST_LIMIT = "list_limit";
+                static inline const QString RULE = u"rule"_s;
+                static inline const QString EXCEPTION = u"exception"_s;
+                static inline const QString SORT_BY = u"sort_by"_s;
+                static inline const QString REVERSE_ORDER = u"reverse_order"_s;
+                static inline const QString LIST_LIMIT = u"list_limit"_s;
             };
 
         };
@@ -156,7 +156,7 @@ public:
 
 //-Class Variables-----------------------------------------------------------------------------------------------------
 public:
-    static inline const QString STD_NAME = "attract";
+    static inline const QString STD_NAME = u"attract"_s;
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
@@ -185,7 +185,7 @@ class CrudeSettingsReader : public ConfigDoc::Reader
 {
 //-Class Variables--------------------------------------------------------------------------------------------------
 private:
-    static inline const QString UNKNOWN_KEY_ERROR = R"(Unknown key "%1" for setting "%2".)";
+    static inline const QString UNKNOWN_KEY_ERROR = uR"(Unknown key "%1" for setting "%2".)"_s;
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:

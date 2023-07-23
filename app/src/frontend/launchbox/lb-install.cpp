@@ -34,7 +34,7 @@ Install::Install(QString installPath) :
     mPlaylistsDirectory = QDir(installPath + '/' + PLAYLISTS_PATH);
 
     // Check validity
-    QFileInfo mainExe(installPath + "/" + MAIN_EXE_PATH);
+    QFileInfo mainExe(installPath + '/' + MAIN_EXE_PATH);
     if(!mainExe.exists() || !mainExe.isFile() || !mPlatformsDirectory.exists() || !mPlaylistsDirectory.exists())
     {
         declareValid(false);
@@ -63,7 +63,7 @@ Qx::Error Install::populateExistingDocs()
     QFileInfoList existingList;
 
     // Check for platforms
-    Qx::IoOpReport existingCheck = Qx::dirContentInfoList(existingList, mPlatformsDirectory, {"*." + XML_EXT}, QDir::NoFilter, QDirIterator::Subdirectories);
+    Qx::IoOpReport existingCheck = Qx::dirContentInfoList(existingList, mPlatformsDirectory, {u"*."_s + XML_EXT}, QDir::NoFilter, QDirIterator::Subdirectories);
     if(existingCheck.isFailure())
         return existingCheck;
 
@@ -71,7 +71,7 @@ Qx::Error Install::populateExistingDocs()
          catalogueExistingDoc(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Platform, platformFile.baseName()));
 
     // Check for playlists
-    existingCheck = Qx::dirContentInfoList(existingList, mPlaylistsDirectory, {"*." + XML_EXT}, QDir::NoFilter, QDirIterator::Subdirectories);
+    existingCheck = Qx::dirContentInfoList(existingList, mPlaylistsDirectory, {u"*."_s + XML_EXT}, QDir::NoFilter, QDirIterator::Subdirectories);
     if(existingCheck.isFailure())
         return existingCheck;
 
@@ -79,7 +79,7 @@ Qx::Error Install::populateExistingDocs()
         catalogueExistingDoc(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Playlist, playlistFile.baseName()));
 
     // Check for config docs
-    existingCheck = Qx::dirContentInfoList(existingList, mDataDirectory, {"*." + XML_EXT});
+    existingCheck = Qx::dirContentInfoList(existingList, mDataDirectory, {u"*."_s + XML_EXT});
     if(existingCheck.isFailure())
         return existingCheck;
 
@@ -141,7 +141,7 @@ void Install::editBulkImageReferences(const Fe::ImageSources& imageSources)
 
 QString Install::dataDocPath(Fe::DataDoc::Identifier identifier) const
 {
-    QString fileName = identifier.docName() + "." + XML_EXT;
+    QString fileName = identifier.docName() + u"."_s + XML_EXT;
 
     switch(identifier.docType())
     {
@@ -266,7 +266,7 @@ QList<Fe::ImageMode> Install::preferredImageModeOrder() const { return IMAGE_MOD
 QString Install::versionString() const
 {
     // Try LaunchBox.deps.json
-    QFile depsJson(mCoreDirectory.path() + "/" + "LaunchBox.deps.json");
+    QFile depsJson(mCoreDirectory.path() + '/' + u"LaunchBox.deps.json"_s);
     QByteArray settingsData;
     Qx::IoOpReport settingsLoadReport = Qx::readBytesFromFile(settingsData, depsJson);
 
@@ -292,7 +292,7 @@ QString Install::versionString() const
     }
 
     // Try unins000.exe
-    Qx::FileDetails uninsDetails = Qx::FileDetails::readFileDetails(path() + "/" + "unins000.exe");
+    Qx::FileDetails uninsDetails = Qx::FileDetails::readFileDetails(path() + '/' + u"unins000.exe"_s);
     if(!uninsDetails.isNull())
     {
         Qx::VersionNumber ver = uninsDetails.productVersion();
@@ -346,7 +346,7 @@ Qx::Error Install::preImageProcessing(QList<ImageMap>& workerTransfers, Fe::Imag
         case Fe::ImageMode::Reference:
             editBulkImageReferences(bulkSources);
         default:
-            qWarning() << Q_FUNC_INFO << "unhandled image mode";
+            qWarning() << Q_FUNC_INFO << u"unhandled image mode"_s;
     }
 
     return Qx::Error();

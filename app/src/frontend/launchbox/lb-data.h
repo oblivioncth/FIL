@@ -190,7 +190,7 @@ public:
 
 //-Class Variables-----------------------------------------------------------------------------------------------------
 public:
-    static inline const QString STD_NAME = "Platforms";
+    static inline const QString STD_NAME = u"Platforms"_s;
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:

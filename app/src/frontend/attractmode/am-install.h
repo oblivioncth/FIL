@@ -20,32 +20,32 @@ class Install : public Fe::Install
 //-Class Variables--------------------------------------------------------------------------------------------------
 public:
     // Identity
-    static inline const QString NAME = "AttractMode";
-    static inline const QString ICON_PATH = ":/frontend/AttractMode/icon.png";
+    static inline const QString NAME = u"AttractMode"_s;
+    static inline const QString ICON_PATH = u":/frontend/AttractMode/icon.png"_s;
     static inline const QUrl HELP_URL = QUrl("");
 
     // Naming
-    static inline const QString PLATFORM_TAG_PREFIX = "[Platform] ";
-    static inline const QString PLAYLIST_TAG_PREFIX = "[Playlist] ";
+    static inline const QString PLATFORM_TAG_PREFIX = u"[Platform] "_s;
+    static inline const QString PLAYLIST_TAG_PREFIX = u"[Playlist] "_s;
 
     // Paths
-    static inline const QString EMULATORS_PATH = "emulators";
-    static inline const QString ROMLISTS_PATH = "romlists";
-    static inline const QString SCRAPER_PATH = "scraper";
-    static inline const QString MAIN_CFG_PATH = "attract.cfg";
-    static inline const QString MAIN_EXE_PATH = "attract.exe";
-    static inline const QString CONSOLE_EXE_PATH = "attract-console.exe";
+    static inline const QString EMULATORS_PATH = u"emulators"_s;
+    static inline const QString ROMLISTS_PATH = u"romlists"_s;
+    static inline const QString SCRAPER_PATH = u"scraper"_s;
+    static inline const QString MAIN_CFG_PATH = u"attract.cfg"_s;
+    static inline const QString MAIN_EXE_PATH = u"attract.exe"_s;
+    static inline const QString CONSOLE_EXE_PATH = u"attract-console.exe"_s;
 
     // Sub paths
-    static inline const QString LOGO_FOLDER_NAME = "flyer";
-    static inline const QString SCREENSHOT_FOLDER_NAME = "snap";
-    static inline const QString OVERVIEW_FOLDER_NAME = "overview";
-    static inline const QString MARQUEE_FOLDER_NAME = "marquee";
+    static inline const QString LOGO_FOLDER_NAME = u"flyer"_s;
+    static inline const QString SCREENSHOT_FOLDER_NAME = u"snap"_s;
+    static inline const QString OVERVIEW_FOLDER_NAME = u"overview"_s;
+    static inline const QString MARQUEE_FOLDER_NAME = u"marquee"_s;
 
     // Files
-    static inline const QString TXT_EXT = "txt";
-    static inline const QString TAG_EXT = "tag";
-    static inline const QString CFG_EXT = "cfg";
+    static inline const QString TXT_EXT = u"txt"_s;
+    static inline const QString TAG_EXT = u"tag"_s;
+    static inline const QString CFG_EXT = u"cfg"_s;
 
     // Support
     static inline const QList<Fe::ImageMode> IMAGE_MODE_ORDER {
@@ -58,7 +58,7 @@ public:
      */
 
     // Extra
-    static inline const QString MARQUEE_PATH = ":/frontend/AttractMode/marquee.png";
+    static inline const QString MARQUEE_PATH = u":/frontend/AttractMode/marquee.png"_s;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:

@@ -84,7 +84,7 @@ Qx::Error Install::populateExistingDocs()
          */
 
         // Check for platforms
-        Qx::IoOpReport existingCheck = Qx::dirContentInfoList(existingList, mFpTagDirectory, {"[[]Platform[]] *." + TAG_EXT});
+        Qx::IoOpReport existingCheck = Qx::dirContentInfoList(existingList, mFpTagDirectory, {u"[[]Platform[]] *."_s + TAG_EXT});
         if(existingCheck.isFailure())
             return existingCheck;
 
@@ -92,7 +92,7 @@ Qx::Error Install::populateExistingDocs()
              catalogueExistingDoc(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Platform, platformFile.baseName()));
 
         // Check for playlists
-        existingCheck = Qx::dirContentInfoList(existingList, mFpTagDirectory, {"[[]Playlist[]] *." + TAG_EXT},
+        existingCheck = Qx::dirContentInfoList(existingList, mFpTagDirectory, {u"[[]Playlist[]] *."_s + TAG_EXT},
                                                QDir::NoFilter, QDirIterator::Subdirectories);
         if(existingCheck.isFailure())
             return existingCheck;
@@ -143,7 +143,7 @@ QString Install::imageDestinationPath(Fp::ImageType imageType, const Fe::Game* g
 std::shared_ptr<Fe::PlatformDoc::Reader> Install::preparePlatformDocCheckout(std::unique_ptr<Fe::PlatformDoc>& platformDoc, const QString& translatedName)
 {
     // Determine path to the taglist that corresponds with the interface
-    QString taglistPath = mFpTagDirectory.absoluteFilePath(translatedName + "." + TAG_EXT) ;
+    QString taglistPath = mFpTagDirectory.absoluteFilePath(translatedName + u"."_s + TAG_EXT) ;
 
     // Overviews
     QDir overviewDir(mFpScraperDirectory.absoluteFilePath(OVERVIEW_FOLDER_NAME)); // Not a file, but works
@@ -158,7 +158,7 @@ std::shared_ptr<Fe::PlatformDoc::Reader> Install::preparePlatformDocCheckout(std
 std::shared_ptr<Fe::PlaylistDoc::Reader> Install::preparePlaylistDocCheckout(std::unique_ptr<Fe::PlaylistDoc>& playlistDoc, const QString& translatedName)
 {
     // Determine path to the taglist that corresponds with the interface
-    QString taglistPath = mFpTagDirectory.absoluteFilePath(translatedName + "." + TAG_EXT) ;
+    QString taglistPath = mFpTagDirectory.absoluteFilePath(translatedName + u"."_s + TAG_EXT) ;
 
     // Construct unopened document
     playlistDoc = std::make_unique<PlaylistInterface>(this, taglistPath, translatedName, DocKey{});
@@ -346,7 +346,7 @@ QString Install::versionString() const
     }
 
     // Can't determine version
-    return QStringLiteral("UNKNOWN VERSION");
+    return u"UNKNOWN VERSION"_s;
 }
 
 Qx::Error Install::preImport(const ImportDetails& details)
@@ -355,13 +355,13 @@ Qx::Error Install::preImport(const ImportDetails& details)
 
     // Tag dir
     if(!mFpTagDirectory.exists())
-        if(!mFpTagDirectory.mkpath("."))
+        if(!mFpTagDirectory.mkpath(u"."_s))
             return Qx::IoOpReport(Qx::IO_OP_WRITE, Qx::IO_ERR_CANT_CREATE, mFpTagDirectory);
 
     // Overview dir
     QDir overviewDir(mFpScraperDirectory.absoluteFilePath(OVERVIEW_FOLDER_NAME));
     if(!overviewDir.exists())
-        if(!overviewDir.mkpath("."))
+        if(!overviewDir.mkpath(u"."_s))
             return Qx::IoOpReport(Qx::IO_OP_WRITE, Qx::IO_ERR_CANT_CREATE, overviewDir);
 
     // Logo and screenshot dir
@@ -369,12 +369,12 @@ Qx::Error Install::preImport(const ImportDetails& details)
     {
         QDir logoDir(mFpScraperDirectory.absoluteFilePath(LOGO_FOLDER_NAME));
         if(!logoDir.exists())
-            if(!logoDir.mkpath("."))
+            if(!logoDir.mkpath(u"."_s))
                 return Qx::IoOpReport(Qx::IO_OP_WRITE, Qx::IO_ERR_CANT_CREATE, logoDir);
 
         QDir ssDir(mFpScraperDirectory.absoluteFilePath(SCREENSHOT_FOLDER_NAME));
         if(!ssDir.exists())
-            if(!ssDir.mkpath("."))
+            if(!ssDir.mkpath(u"."_s))
                 return Qx::IoOpReport(Qx::IO_OP_WRITE, Qx::IO_ERR_CANT_CREATE, ssDir);
     }
 
@@ -408,10 +408,10 @@ Qx::Error Install::preImageProcessing(QList<ImageMap>& workerTransfers, Fe::Imag
             workerTransfers.swap(mWorkerImageJobs);
             return Qx::Error();
         case Fe::ImageMode::Reference:
-            qWarning() << Q_FUNC_INFO << "unsupported image mode";
+            qWarning() << Q_FUNC_INFO << u"unsupported image mode"_s;
             return Qx::Error();
         default:
-            qWarning() << Q_FUNC_INFO << "unhandled image mode";
+            qWarning() << Q_FUNC_INFO << u"unhandled image mode"_s;
             return Qx::Error();
     }
 }
@@ -431,7 +431,7 @@ Qx::Error Install::postImport()
     // General emulator setup
     QString workingDir = QDir::toNativeSeparators(QFileInfo(mImportDetails->clifpPath).absolutePath());
     emulatorConfig->setExecutable(CLIFp::EXE_NAME);
-    emulatorConfig->setArgs(R"(play -i "[romfilename]")");
+    emulatorConfig->setArgs(uR"(play -i u"[romfilename]"_s)"_s);
     emulatorConfig->setWorkDir(workingDir);
     emulatorConfig->setRomPath("");
     emulatorConfig->setRomExt("");
@@ -443,13 +443,13 @@ Qx::Error Install::postImport()
 
     // Can reuse builder since all fields are set in each entry
     aeb.wPaths({});
-    aeb.wType("flyer");
+    aeb.wType(u"flyer"_s);
     emulatorConfig->setArtworkEntry(aeb.build());
-    aeb.wType("snap");
+    aeb.wType(u"snap"_s);
     emulatorConfig->setArtworkEntry(aeb.build());
-    aeb.wType("marquee");
+    aeb.wType(u"marquee"_s);
     emulatorConfig->setArtworkEntry(aeb.build());
-    aeb.wType("wheel");
+    aeb.wType(u"wheel"_s);
     emulatorConfig->setArtworkEntry(aeb.build());
 
     // Commit emulator config
@@ -474,21 +474,21 @@ Qx::Error Install::postImport()
     {
         Display::Builder db;
         db.wName(Fp::NAME);
-        db.wLayout("Attrac-Man");
+        db.wLayout(u"Attrac-Man"_s);
         db.wRomlist(Fp::NAME);
         db.wInCycle(false);
         db.wInMenu(true);
 
         // All filter
         DisplayFilter::Builder dfb;
-        dfb.wName("All");
-        dfb.wSortBy(DisplayFilter::Sort::AltTitle); // This uses FP's "orderTtile"
+        dfb.wName(u"All"_s);
+        dfb.wSortBy(DisplayFilter::Sort::AltTitle); // This uses FP's u"orderTtile"_s
         db.wFilter(dfb.build());
 
         // Favorites filter
         dfb = DisplayFilter::Builder();
-        dfb.wName("Favourites");
-        dfb.wRule("Favourite equals 1");
+        dfb.wName(u"Favourites"_s);
+        dfb.wRule(u"Favourite equals 1"_s);
         dfb.wSortBy(DisplayFilter::Sort::AltTitle);
         db.wFilter(dfb.build());
 
@@ -504,7 +504,7 @@ Qx::Error Install::postImport()
         const QStringList rules = filter.rules();
         for(const QString& rule : rules)
         {
-            if(rule.contains("\\[Platform\\]") || rule.contains("\\[Playlist\\]"))
+            if(rule.contains(u"\\[Platform\\]"_s) || rule.contains(u"\\[Playlist\\]"_s))
                 return true;
         }
 
@@ -520,13 +520,13 @@ Qx::Error Install::postImport()
     {
         // Escape brackets in name since AM uses regex for value
         QString escaped = tagFile;
-        escaped.replace("[", "\\[").replace("]", "\\]");
+        escaped.replace(u"["_s, u"\\["_s).replace(u"]"_s, u"\\]"_s);
 
         DisplayFilter::Builder dfb;
         dfb = DisplayFilter::Builder();
         dfb.wName('"' + tagFile + '"');
         dfb.wSortBy(DisplayFilter::Sort::AltTitle);
-        dfb.wRule("Tags contains " + escaped);
+        dfb.wRule(u"Tags contains "_s + escaped);
 
         displayFilters.append(dfb.build());
     }
@@ -540,7 +540,7 @@ Qx::Error Install::postImport()
 
     // Add/Update marquee (if it fails, not worth aborting over so ignore error status)
     QDir fpMarqueeDirectory(mFpScraperDirectory.absoluteFilePath(MARQUEE_FOLDER_NAME));
-    fpMarqueeDirectory.mkpath(".");
+    fpMarqueeDirectory.mkpath(u"."_s);
     QFileInfo srcMarqueeInfo(MARQUEE_PATH);
     QFile::copy(MARQUEE_PATH, fpMarqueeDirectory.absoluteFilePath(Fp::NAME + '.' + srcMarqueeInfo.completeSuffix()));
 

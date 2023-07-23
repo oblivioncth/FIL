@@ -16,100 +16,100 @@ namespace Xml
 
 namespace Element_Game
 {
-     const QString NAME = "Game";
+     const QString NAME = u"Game"_s;
 
-     const QString ELEMENT_ID = "ID";
-     const QString ELEMENT_TITLE = "Title";
-     const QString ELEMENT_SERIES = "Series";
-     const QString ELEMENT_DEVELOPER = "Developer";
-     const QString ELEMENT_PUBLISHER = "Publisher";
-     const QString ELEMENT_PLATFORM = "Platform";
-     const QString ELEMENT_SORT_TITLE = "SortTitle";
-     const QString ELEMENT_DATE_ADDED = "DateAdded";
-     const QString ELEMENT_DATE_MODIFIED = "DateModified";
-     const QString ELEMENT_BROKEN = "Broken";
-     const QString ELEMENT_PLAYMODE = "PlayMode";
-     const QString ELEMENT_STATUS = "Status";
-     const QString ELEMENT_REGION = "Region";
-     const QString ELEMENT_NOTES = "Notes";
-     const QString ELEMENT_SOURCE = "Source";
-     const QString ELEMENT_APP_PATH = "ApplicationPath";
-     const QString ELEMENT_COMMAND_LINE = "CommandLine";
-     const QString ELEMENT_RELEASE_DATE = "ReleaseDate";
-     const QString ELEMENT_VERSION = "Version";
-     const QString ELEMENT_RELEASE_TYPE = "ReleaseType";
+     const QString ELEMENT_ID = u"ID"_s;
+     const QString ELEMENT_TITLE = u"Title"_s;
+     const QString ELEMENT_SERIES = u"Series"_s;
+     const QString ELEMENT_DEVELOPER = u"Developer"_s;
+     const QString ELEMENT_PUBLISHER = u"Publisher"_s;
+     const QString ELEMENT_PLATFORM = u"Platform"_s;
+     const QString ELEMENT_SORT_TITLE = u"SortTitle"_s;
+     const QString ELEMENT_DATE_ADDED = u"DateAdded"_s;
+     const QString ELEMENT_DATE_MODIFIED = u"DateModified"_s;
+     const QString ELEMENT_BROKEN = u"Broken"_s;
+     const QString ELEMENT_PLAYMODE = u"PlayMode"_s;
+     const QString ELEMENT_STATUS = u"Status"_s;
+     const QString ELEMENT_REGION = u"Region"_s;
+     const QString ELEMENT_NOTES = u"Notes"_s;
+     const QString ELEMENT_SOURCE = u"Source"_s;
+     const QString ELEMENT_APP_PATH = u"ApplicationPath"_s;
+     const QString ELEMENT_COMMAND_LINE = u"CommandLine"_s;
+     const QString ELEMENT_RELEASE_DATE = u"ReleaseDate"_s;
+     const QString ELEMENT_VERSION = u"Version"_s;
+     const QString ELEMENT_RELEASE_TYPE = u"ReleaseType"_s;
 };
 
 namespace Element_AddApp
 {
-     const QString NAME = "AdditionalApplication";
+     const QString NAME = u"AdditionalApplication"_s;
 
-     const QString ELEMENT_ID = "Id";
-     const QString ELEMENT_GAME_ID = "GameID";
-     const QString ELEMENT_APP_PATH = "ApplicationPath";
-     const QString ELEMENT_COMMAND_LINE = "CommandLine";
-     const QString ELEMENT_AUTORUN_BEFORE = "AutoRunBefore";
-     const QString ELEMENT_NAME = "Name";
-     const QString ELEMENT_WAIT_FOR_EXIT = "WaitForExit";
+     const QString ELEMENT_ID = u"Id"_s;
+     const QString ELEMENT_GAME_ID = u"GameID"_s;
+     const QString ELEMENT_APP_PATH = u"ApplicationPath"_s;
+     const QString ELEMENT_COMMAND_LINE = u"CommandLine"_s;
+     const QString ELEMENT_AUTORUN_BEFORE = u"AutoRunBefore"_s;
+     const QString ELEMENT_NAME = u"Name"_s;
+     const QString ELEMENT_WAIT_FOR_EXIT = u"WaitForExit"_s;
 };
 
 namespace Element_CustomField
 {
-     const QString NAME = "CustomField";
+     const QString NAME = u"CustomField"_s;
 
-     const QString ELEMENT_GAME_ID = "GameID";
-     const QString ELEMENT_NAME = "Name";
-     const QString ELEMENT_VALUE = "Value";
+     const QString ELEMENT_GAME_ID = u"GameID"_s;
+     const QString ELEMENT_NAME = u"Name"_s;
+     const QString ELEMENT_VALUE = u"Value"_s;
 };
 
 namespace Element_PlaylistHeader
 {
-     const QString NAME = "Playlist";
+     const QString NAME = u"Playlist"_s;
 
-     const QString ELEMENT_ID = "PlaylistId";
-     const QString ELEMENT_NAME = "Name";
-     const QString ELEMENT_NESTED_NAME = "NestedName";
-     const QString ELEMENT_NOTES = "Notes";
+     const QString ELEMENT_ID = u"PlaylistId"_s;
+     const QString ELEMENT_NAME = u"Name"_s;
+     const QString ELEMENT_NESTED_NAME = u"NestedName"_s;
+     const QString ELEMENT_NOTES = u"Notes"_s;
 };
 
 namespace Element_PlaylistGame
 {
-     const QString NAME = "PlaylistGame";
+     const QString NAME = u"PlaylistGame"_s;
 
-     const QString ELEMENT_ID = "GameId";
-     const QString ELEMENT_GAME_TITLE = "GameTitle";
-     const QString ELEMENT_GAME_FILE_NAME = "GameFileName";
-     const QString ELEMENT_GAME_PLATFORM = "GamePlatform";
-     const QString ELEMENT_MANUAL_ORDER = "ManualOrder";
-     const QString ELEMENT_LB_DB_ID = "LaunchBoxDbId";
+     const QString ELEMENT_ID = u"GameId"_s;
+     const QString ELEMENT_GAME_TITLE = u"GameTitle"_s;
+     const QString ELEMENT_GAME_FILE_NAME = u"GameFileName"_s;
+     const QString ELEMENT_GAME_PLATFORM = u"GamePlatform"_s;
+     const QString ELEMENT_MANUAL_ORDER = u"ManualOrder"_s;
+     const QString ELEMENT_LB_DB_ID = u"LaunchBoxDbId"_s;
 };
 
 namespace Element_Platform
 {
-     const QString NAME = "Platform";
+     const QString NAME = u"Platform"_s;
 
-     const QString ELEMENT_NAME = "Name";
-     const QString ELEMENT_CATEGORY = "Category";
+     const QString ELEMENT_NAME = u"Name"_s;
+     const QString ELEMENT_CATEGORY = u"Category"_s;
 };
 
 namespace Element_PlatformFolder
 {
-     const QString NAME = "PlatformFolder";
+     const QString NAME = u"PlatformFolder"_s;
 
-     const QString ELEMENT_MEDIA_TYPE = "MediaType";
-     const QString ELEMENT_FOLDER_PATH = "FolderPath";
-     const QString ELEMENT_PLATFORM = "Platform";
+     const QString ELEMENT_MEDIA_TYPE = u"MediaType"_s;
+     const QString ELEMENT_FOLDER_PATH = u"FolderPath"_s;
+     const QString ELEMENT_PLATFORM = u"Platform"_s;
 };
 
 namespace Element_PlatformCategory
 {
-     const QString NAME = "PlatformCategory";
+     const QString NAME = u"PlatformCategory"_s;
 
-     const QString ELEMENT_NAME = "Name";
-     const QString ELEMENT_NESTED_NAME = "NestedName";
+     const QString ELEMENT_NAME = u"Name"_s;
+     const QString ELEMENT_NESTED_NAME = u"NestedName"_s;
 };
 
-const QString ROOT_ELEMENT = "LaunchBox";
+const QString ROOT_ELEMENT = u"LaunchBox"_s;
 };
 
 namespace Lb
@@ -206,7 +206,7 @@ Fe::DocHandlingError XmlDocWriter::writeOutOf()
     mStreamWriter.setAutoFormattingIndent(2);
 
     // Write standard XML header
-    mStreamWriter.writeStartDocument("1.0", true);
+    mStreamWriter.writeStartDocument(u"1.0"_s, true);
 
     // Write main LaunchBox tag
     mStreamWriter.writeStartElement(Xml::ROOT_ELEMENT);
@@ -507,7 +507,7 @@ bool PlatformDoc::Writer::writeGame(const Game& game)
     if(game.dateModified().isValid())// LB is picky with dates
         writeCleanTextElement(Xml::Element_Game::ELEMENT_DATE_MODIFIED, game.dateModified().toString(Qt::ISODateWithMs));
 
-    writeCleanTextElement(Xml::Element_Game::ELEMENT_BROKEN, game.isBroken() ? "true" : "false");
+    writeCleanTextElement(Xml::Element_Game::ELEMENT_BROKEN, game.isBroken() ? u"true"_s : u"false"_s);
     writeCleanTextElement(Xml::Element_Game::ELEMENT_PLAYMODE, game.playMode());
     writeCleanTextElement(Xml::Element_Game::ELEMENT_STATUS, game.status());
     writeCleanTextElement(Xml::Element_Game::ELEMENT_REGION, game.region());
@@ -542,9 +542,9 @@ bool PlatformDoc::Writer::writeAddApp(const AddApp& addApp)
     writeCleanTextElement(Xml::Element_AddApp::ELEMENT_GAME_ID, addApp.gameId().toString(QUuid::WithoutBraces));
     writeCleanTextElement(Xml::Element_AddApp::ELEMENT_APP_PATH, addApp.appPath());
     writeCleanTextElement(Xml::Element_AddApp::ELEMENT_COMMAND_LINE, addApp.commandLine());
-    writeCleanTextElement(Xml::Element_AddApp::ELEMENT_AUTORUN_BEFORE, addApp.isAutorunBefore() ? "true" : "false");
+    writeCleanTextElement(Xml::Element_AddApp::ELEMENT_AUTORUN_BEFORE, addApp.isAutorunBefore() ? u"true"_s : u"false"_s);
     writeCleanTextElement(Xml::Element_AddApp::ELEMENT_NAME, addApp.name());
-    writeCleanTextElement(Xml::Element_AddApp::ELEMENT_WAIT_FOR_EXIT, addApp.isWaitForExit() ? "true" : "false");
+    writeCleanTextElement(Xml::Element_AddApp::ELEMENT_WAIT_FOR_EXIT, addApp.isWaitForExit() ? u"true"_s : u"false"_s);
 
     // Write other tags
     writeOtherFields(addApp.otherFields());

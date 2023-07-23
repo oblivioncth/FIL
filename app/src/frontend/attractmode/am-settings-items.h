@@ -4,6 +4,8 @@
 // Project Includes
 #include "../fe-items.h"
 
+using namespace Qt::Literals::StringLiterals;
+
 namespace Am
 {
 
@@ -31,7 +33,7 @@ public:
 
 //-Class Variables---------------------------------------------------------------------------------------------------
 private:
-    static inline const QString META_NAME = "DisplayGlobalFilter";
+    static inline const QString META_NAME = u"DisplayGlobalFilter"_s;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -101,7 +103,7 @@ public:
 
 //-Class Variables---------------------------------------------------------------------------------------------------
 private:
-    static inline const QString META_NAME = "DisplayFilter";
+    static inline const QString META_NAME = u"DisplayFilter"_s;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -152,7 +154,7 @@ public:
 
 //-Class Variables---------------------------------------------------------------------------------------------------
 private:
-    static inline const QString META_NAME = "Display";
+    static inline const QString META_NAME = u"Display"_s;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -207,8 +209,8 @@ public:
 
 //-Class Variables--------------------------------------------------------------------------------------------------
 private:
-    static inline const QUuid NAMESPACE_SEED = QUuid("13d88ae7-9e9f-4736-bff4-e330e76c3b12");
-    static inline const QString META_NAME = "OtherSetting";
+    static inline const QUuid NAMESPACE_SEED = QUuid(u"13d88ae7-9e9f-4736-bff4-e330e76c3b12"_s);
+    static inline const QString META_NAME = u"OtherSetting"_s;
 
 //-Class Structs---------------------------------------------------------------------------------------------------
 public:

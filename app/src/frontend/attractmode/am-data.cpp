@@ -145,8 +145,8 @@ bool ConfigDoc::Reader::splitKeyValue(const QString& line, QString& key, QString
     QRegularExpressionMatch keyValueCheck = KEY_VALUE_REGEX.match(line);
     if(keyValueCheck.hasMatch())
     {
-        key = keyValueCheck.captured("key");
-        value = keyValueCheck.captured("value");
+        key = keyValueCheck.captured(u"key"_s);
+        value = keyValueCheck.captured(u"value"_s);
         return true;
     }
     else
@@ -188,7 +188,7 @@ bool ConfigDoc::Writer::writeSourceDoc()
 {
     // Write config doc "header"
     mStreamWriter.writeLine(static_cast<ConfigDoc*>(mSourceDocument)->versionedTagline());
-    mStreamWriter.writeLine("#");
+    mStreamWriter.writeLine(u"#"_s);
 
     if(mStreamWriter.hasError())
         return false;
@@ -236,7 +236,7 @@ bool Taglist::Writer::writeSourceDoc()
 
     // Write tags
     for(const QString& tag : qAsConst(sourceList->mTags))
-        mStreamWriter << tag << "\n";
+        mStreamWriter << tag << '\n';
 
     // Return error status
     return !mStreamWriter.hasError();
@@ -565,7 +565,7 @@ QString BulkOverviewWriter::fileErrorString() { return mFile.errorString(); }
 bool BulkOverviewWriter::writeOverview(const QUuid& gameId, const QString& overview)
 {
     // Set file to overview path
-    QString fileName = gameId.toString(QUuid::WithoutBraces) + QStringLiteral(".txt");
+    QString fileName = gameId.toString(QUuid::WithoutBraces) + u".txt"_s;
     mFile.setFileName(mOverviewDir.absoluteFilePath(fileName));
 
     // Open file, always truncate
@@ -804,11 +804,11 @@ void EmulatorReader::parseArgs(const QString& value) { targetEmulator()->setArgs
 void EmulatorReader::parseWorkDir(const QString& value) { targetEmulator()->setWorkDir(value); }
 void EmulatorReader::parseRomPath(const QString& value)
 {
-    targetEmulator()->setRomPath(value == R"("")" ? "" : value);
+    targetEmulator()->setRomPath(value == uR"("")"_s ? u""_s : value);
 }
 void EmulatorReader::parseRomExt(const QString& value)
 {
-    targetEmulator()->setRomPath(value == R"("")" ? "" : value);
+    targetEmulator()->setRomPath(value == uR"("")"_s ? u""_s : value);
 }
 void EmulatorReader::parseSystem(const QString& value) { targetEmulator()->setSystem(value); }
 void EmulatorReader::parseInfoSource(const QString& value) { targetEmulator()->setInfoSource(value); }

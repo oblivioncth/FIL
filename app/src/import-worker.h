@@ -32,18 +32,18 @@ public:
 //-Class Variables-------------------------------------------------------------
 private:
     static inline const QHash<Type, QString> ERR_STRINGS{
-        {NoError, QSL("")},
-        {ImageSourceUnavailable, "An Expected source image does not exist."},
-        {ImageWontBackup, "Cannot rename an existing image for backup."},
-        {ImageWontCopy, "Cannot copy an image to its destination."},
-        {ImageWontLink, "Cannot create a symbolic link for an image."},
-        {CantCreateDirectory, "Could not create a directory for an image destination."}
+        {NoError, u""_s},
+        {ImageSourceUnavailable, u"An Expected source image does not exist."_s},
+        {ImageWontBackup, u"Cannot rename an existing image for backup."_s},
+        {ImageWontCopy, u"Cannot copy an image to its destination."_s},
+        {ImageWontLink, u"Cannot create a symbolic link for an image."_s},
+        {CantCreateDirectory, u"Could not create a directory for an image destination."_s}
     };
 
-    static inline const QString CAPTION_IMAGE_ERR = "Error importing game image(s)";
-    static inline const QString IMAGE_RETRY_PROMPT = "Retry?";
-    static inline const QString SRC_PATH_TEMPLATE = "Source: %1";
-    static inline const QString DEST_PATH_TEMPLATE = "Destination: %1";
+    static inline const QString CAPTION_IMAGE_ERR = u"Error importing game image(s)"_s;
+    static inline const QString IMAGE_RETRY_PROMPT = u"Retry?"_s;
+    static inline const QString SRC_PATH_TEMPLATE = u"Source: %1"_s;
+    static inline const QString DEST_PATH_TEMPLATE = u"Destination: %1"_s;
 
 //-Instance Variables-------------------------------------------------------------
 private:
@@ -83,11 +83,11 @@ private:
     class Pg
     {
     public:
-        static inline const QString AddAppPreload = "AddAppPreload";
-        static inline const QString ImageDownload = "ImageDownload";
-        static inline const QString ImageTransfer = "ImageTransfer";
-        static inline const QString GameImport = "GameImport";
-        static inline const QString PlaylistImport = "PlaylistImport";
+        static inline const QString AddAppPreload = u"AddAppPreload"_s;
+        static inline const QString ImageDownload = u"ImageDownload"_s;
+        static inline const QString ImageTransfer = u"ImageTransfer"_s;
+        static inline const QString GameImport = u"GameImport"_s;
+        static inline const QString PlaylistImport = u"PlaylistImport"_s;
     };
 
 //-Class Structs-------------------------------------------------------------------------------------------------
@@ -110,13 +110,13 @@ public:
 //-Class Variables-----------------------------------------------------------------------------------------------
 public:
     // Import Steps
-    static inline const QString STEP_ADD_APP_PRELOAD = "Pre-loading Additional Apps...";
-    static inline const QString STEP_IMPORTING_PLATFORM_SETS = "Importing games and additional apps for platform %1...";
-    static inline const QString STEP_IMPORTING_PLAYLIST_SPEC_SETS = "Importing playlist specific and additional apps for platform %1...";
-    static inline const QString STEP_IMPORTING_PLAYLISTS = "Importing playlist %1...";
-    static inline const QString STEP_DOWNLOADING_IMAGES = "Downloading images...";
-    static inline const QString STEP_IMPORTING_IMAGES = "Importing images...";
-    static inline const QString STEP_FINALIZING = "Finalizing...";
+    static inline const QString STEP_ADD_APP_PRELOAD = u"Pre-loading Additional Apps..."_s;
+    static inline const QString STEP_IMPORTING_PLATFORM_SETS = u"Importing games and additional apps for platform %1..."_s;
+    static inline const QString STEP_IMPORTING_PLAYLIST_SPEC_SETS = u"Importing playlist specific and additional apps for platform %1..."_s;
+    static inline const QString STEP_IMPORTING_PLAYLISTS = u"Importing playlist %1..."_s;
+    static inline const QString STEP_DOWNLOADING_IMAGES = u"Downloading images..."_s;
+    static inline const QString STEP_IMPORTING_IMAGES = u"Importing images..."_s;
+    static inline const QString STEP_FINALIZING = u"Finalizing..."_s;
 
 //-Instance Variables--------------------------------------------------------------------------------------------
 private:

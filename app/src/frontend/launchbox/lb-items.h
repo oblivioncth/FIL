@@ -144,7 +144,7 @@ public:
 
 //-Class Variables--------------------------------------------------------------------------------------------------
 public:
-    static inline const QString LANGUAGE = "Language";
+    static inline const QString LANGUAGE = u"Language"_s;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:

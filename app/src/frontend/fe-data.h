@@ -103,21 +103,21 @@ public:
 //-Class Variables-------------------------------------------------------------
 private:
     // Message Macros
-    static inline const QString M_DOC_TYPE = "<docType>";
-    static inline const QString M_DOC_NAME = "<docName>";
-    static inline const QString M_DOC_PARENT = "<docParent>";
+    static inline const QString M_DOC_TYPE = u"<docType>"_s;
+    static inline const QString M_DOC_NAME = u"<docName>"_s;
+    static inline const QString M_DOC_PARENT = u"<docParent>"_s;
 
     static inline const QHash<Type, QString> ERR_STRINGS{
-        {NoError, QSL("")},
-        {DocAlreadyOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is already open."},
-        {DocCantOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be opened."},
-        {DocCantSave, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be saved."},
-        {NotParentDoc, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is not a" + M_DOC_PARENT + "document."},
-        {CantRemoveBackup, "The existing backup of the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") could not be removed."},
-        {CantCreateBackup, "Could not create a backup of the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ")."},
-        {DocInvalidType, "The document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is invalid or of the wrong type."},
-        {DocReadFailed, "Reading the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") failed."},
-        {DocWriteFailed, "Writing to the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") failed."}
+        {NoError, u""_s},
+        {DocAlreadyOpen, u"The target document ("_s + M_DOC_TYPE + u" | "_s + M_DOC_NAME + u") is already open."_s},
+        {DocCantOpen, u"The target document ("_s + M_DOC_TYPE + u" | "_s + M_DOC_NAME + u") cannot be opened."_s},
+        {DocCantSave, u"The target document ("_s + M_DOC_TYPE + u" | "_s + M_DOC_NAME + u") cannot be saved."_s},
+        {NotParentDoc, u"The target document ("_s + M_DOC_TYPE + u" | "_s + M_DOC_NAME + u") is not a"_s + M_DOC_PARENT + u"document."_s},
+        {CantRemoveBackup, u"The existing backup of the target document ("_s + M_DOC_TYPE + u" | "_s + M_DOC_NAME + u") could not be removed."_s},
+        {CantCreateBackup, u"Could not create a backup of the target document ("_s + M_DOC_TYPE + u" | "_s + M_DOC_NAME + u")."_s},
+        {DocInvalidType, u"The document ("_s + M_DOC_TYPE + u" | "_s + M_DOC_NAME + u") is invalid or of the wrong type."_s},
+        {DocReadFailed, u"Reading the target document ("_s + M_DOC_TYPE + u" | "_s + M_DOC_NAME + u") failed."_s},
+        {DocWriteFailed, u"Writing to the target document ("_s + M_DOC_TYPE + u" | "_s + M_DOC_NAME + u") failed."_s}
     };
 
 //-Instance Variables-------------------------------------------------------------
@@ -206,9 +206,9 @@ public:
 //-Class Variables-----------------------------------------------------------------------------------------------------
 private:
     static inline const QHash<Type, QString> TYPE_STRINGS = {
-        {Type::Platform, "Platform"},
-        {Type::Playlist, "Playlist"},
-        {Type::Config, "Config"}
+        {Type::Platform, u"Platform"_s},
+        {Type::Playlist, u"Playlist"_s},
+        {Type::Config, u"Config"_s}
     };
 
 //-Instance Variables--------------------------------------------------------------------------------------------------

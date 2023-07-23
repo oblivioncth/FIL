@@ -22,25 +22,25 @@ class Install : public Fe::Install
 //-Class Variables--------------------------------------------------------------------------------------------------
 public:
     // Identity
-    static inline const QString NAME = "LaunchBox";
-    static inline const QString ICON_PATH = ":/frontend/LaunchBox/icon.svg";
-    static inline const QUrl HELP_URL = QUrl("https://forums.launchbox-app.com/files/file/2652-obbys-flashpoint-importer-for-launchbox");
+    static inline const QString NAME = u"LaunchBox"_s;
+    static inline const QString ICON_PATH = u":/frontend/LaunchBox/icon.svg"_s;
+    static inline const QUrl HELP_URL = QUrl(u"https://forums.launchbox-app.com/files/file/2652-obbys-flashpoint-importer-for-launchbox"_s);
 
     // Paths
-    static inline const QString PLATFORMS_PATH = "Data/Platforms";
-    static inline const QString PLAYLISTS_PATH = "Data/Playlists";
-    static inline const QString DATA_PATH = "Data";
-    static inline const QString CORE_PATH = "Core";
-    static inline const QString MAIN_EXE_PATH = "LaunchBox.exe";
-    static inline const QString PLATFORM_IMAGES_PATH = "Images";
-    static inline const QString LOGO_PATH = "Box - Front";
-    static inline const QString SCREENSHOT_PATH = "Screenshot - Gameplay";
+    static inline const QString PLATFORMS_PATH = u"Data/Platforms"_s;
+    static inline const QString PLAYLISTS_PATH = u"Data/Playlists"_s;
+    static inline const QString DATA_PATH = u"Data"_s;
+    static inline const QString CORE_PATH = u"Core"_s;
+    static inline const QString MAIN_EXE_PATH = u"LaunchBox.exe"_s;
+    static inline const QString PLATFORM_IMAGES_PATH = u"Images"_s;
+    static inline const QString LOGO_PATH = u"Box - Front"_s;
+    static inline const QString SCREENSHOT_PATH = u"Screenshot - Gameplay"_s;
 
     // Files
-    static inline const QString XML_EXT = "xml";
+    static inline const QString XML_EXT = u"xml"_s;
 
     // Other
-    static inline const QString PLATFORM_CATEGORY = "Flashpoint";
+    static inline const QString PLATFORM_CATEGORY = u"Flashpoint"_s;
 
     // Support
     static inline const QList<Fe::ImageMode> IMAGE_MODE_ORDER {

@@ -78,7 +78,7 @@ bool DisplayFilter::Parser::parse(QString key, QString value, int depth)
             mSetting->mSortBy = DisplayFilter::Sort::NoSort;
     }
     else if(key == CrudeSettings::Keys::Display::Filter::REVERSE_ORDER)
-        mSetting->mReverseOrder = value == "true" ? true : false;
+        mSetting->mReverseOrder = value == u"true"_s ? true : false;
     else if(key == CrudeSettings::Keys::Display::Filter::LIST_LIMIT)
         mSetting->mListLimit = value.toInt();
     else
@@ -107,9 +107,9 @@ bool Display::Parser::parse(QString key, QString value, int depth)
     else if(key == CrudeSettings::Keys::Display::ROMLIST)
         mSetting->mRomlist = value;
     else if(key == CrudeSettings::Keys::Display::IN_CYCLE)
-        mSetting->mInCycle = value == "yes" ? true : false;
+        mSetting->mInCycle = value == u"yes"_s ? true : false;
     else if(key == CrudeSettings::Keys::Display::IN_MENU)
-        mSetting->mInMenu = value == "yes" ? true : false;
+        mSetting->mInMenu = value == u"yes"_s ? true : false;
     else if(key == CrudeSettings::Keys::Display::GLOBAL_FILTER)
     {
         // Set empty global filter to display
@@ -333,7 +333,7 @@ bool CrudeSettingsWriter::writeConfigDoc()
 bool CrudeSettingsWriter::writeDisplay(const Display& display)
 {
     // Write identifier
-    mStreamWriter << CrudeSettings::Keys::DISPLAY << " " << display.name() << "\n";
+    mStreamWriter << CrudeSettings::Keys::DISPLAY << ' ' << display.name() << '\n';
 
     // Set tab depth
     mTabDepth++;
@@ -343,8 +343,8 @@ bool CrudeSettingsWriter::writeDisplay(const Display& display)
         writeKeyValue(CrudeSettings::Keys::Display::LAYOUT, display.layout());
     if(!display.romlist().isEmpty())
         writeKeyValue(CrudeSettings::Keys::Display::ROMLIST, display.romlist());
-    writeKeyValue(CrudeSettings::Keys::Display::IN_CYCLE, display.inCycle() ? "yes" : "no");
-    writeKeyValue(CrudeSettings::Keys::Display::IN_MENU, display.inMenu() ? "yes" : "no");
+    writeKeyValue(CrudeSettings::Keys::Display::IN_CYCLE, display.inCycle() ? u"yes"_s : u"no"_s);
+    writeKeyValue(CrudeSettings::Keys::Display::IN_MENU, display.inMenu() ? u"yes"_s : u"no"_s);
 
     // Write global filter, if present
     std::optional<DisplayGlobalFilter> globalFilter = display.globalFilter();
@@ -407,7 +407,7 @@ bool CrudeSettingsWriter::writeDisplayFilter(const DisplayFilter& filter)
     }
 
     if(filter.reverseOrder() != false)
-        writeKeyValue(CrudeSettings::Keys::Display::Filter::REVERSE_ORDER, "true");
+        writeKeyValue(CrudeSettings::Keys::Display::Filter::REVERSE_ORDER, u"true"_s);
     if(filter.listLimit() != 0)
         writeKeyValue(CrudeSettings::Keys::Display::Filter::LIST_LIMIT, QString::number(filter.listLimit()));
 

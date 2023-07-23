@@ -78,7 +78,7 @@ QString Install::versionString() const
     else if(!productVersionStr.isEmpty())
         return productVersionStr;
     else
-        return "Unknown Version";
+        return u"Unknown Version"_s;
 }
 
 /* These functions can be overridden by children as needed.

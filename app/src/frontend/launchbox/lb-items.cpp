@@ -27,7 +27,7 @@ Game::Game(const Fp::Game& flashpointGame, QString fullCLIFpPath) :
     mStatus(flashpointGame.status()),
     mRegion(), // Ensures this field is cleared because of older tool versions
     mNotes(flashpointGame.originalDescription() +
-           (!flashpointGame.notes().isEmpty() ? "\n\n" + flashpointGame.notes() : "")),
+           (!flashpointGame.notes().isEmpty() ? u"\n\n"_s + flashpointGame.notes() : u""_s)),
     mSource(flashpointGame.source()),
     mAppPath(QDir::toNativeSeparators(fullCLIFpPath)),
     mCommandLine(CLIFp::parametersFromStandard(flashpointGame.id())),
@@ -139,8 +139,8 @@ AddApp::Builder::Builder() {}
 //Public:
 AddApp::Builder& AddApp::Builder::wAppPath(QString appPath) { mItemBlueprint.mAppPath = appPath; return *this; }
 AddApp::Builder& AddApp::Builder::wCommandLine(QString commandLine) { mItemBlueprint.mCommandLine = commandLine; return *this; }
-AddApp::Builder& AddApp::Builder::wAutorunBefore(QString rawAutorunBefore) { mItemBlueprint.mAutorunBefore = rawAutorunBefore != "0"; return *this; }
-AddApp::Builder& AddApp::Builder::wWaitForExit(QString rawWaitForExit) { mItemBlueprint.mWaitForExit = rawWaitForExit != "0"; return *this; }
+AddApp::Builder& AddApp::Builder::wAutorunBefore(QString rawAutorunBefore) { mItemBlueprint.mAutorunBefore = rawAutorunBefore != u"0"_s; return *this; }
+AddApp::Builder& AddApp::Builder::wWaitForExit(QString rawWaitForExit) { mItemBlueprint.mWaitForExit = rawWaitForExit != u"0"_s; return *this; }
 
 //===============================================================================================================
 // CustomField

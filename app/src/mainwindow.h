@@ -38,20 +38,20 @@ private:
 //-Class Variables--------------------------------------------------------------------------------------------
 private:
     // UI Text
-    static inline const QString REQUIRE_ELEV = " [Run as Admin/Dev Mode]";
+    static inline const QString REQUIRE_ELEV = u" [Run as Admin/Dev Mode]"_s;
 
     // Messages - General
-    static inline const QString MSG_FATAL_NO_INTERNAL_CLIFP_VER = "Failed to get version information from the internal copy of CLIFp.exe!\n"
+    static inline const QString MSG_FATAL_NO_INTERNAL_CLIFP_VER = u"Failed to get version information from the internal copy of CLIFp.exe!\n"
                                                                   "\n"
-                                                                  "Execution cannot continue.";
+                                                                  "Execution cannot continue."_s;
     // Messages - Help
-    static inline const QString MSG_PLAYLIST_GAME_MODE_HELP = "<b>%1</b> - Games found in the selected playlists that are not part of any selected platform will be excluded.<br>"
+    static inline const QString MSG_PLAYLIST_GAME_MODE_HELP = u"<b>%1</b> - Games found in the selected playlists that are not part of any selected platform will be excluded.<br>"
                                                               "<br>"
                                                               "<b>%2</b> - Unselected platforms that contain games from the selected playlists will be partially imported, so that they only contain said games. This guarantees that all games "
                                                               "from each selected playlist will be present in your collection. <i>NOTE:</i> It's possible that this will include existing platforms so make sure you have your update options set as "
-                                                              "intended.";
+                                                              "intended."_s;
 
-    static inline const QString MSG_UPDATE_MODE_HELP = "<b>%1</b> - Only games not already present in your collection will be added, existing entries will be left completely untouched.<br>"
+    static inline const QString MSG_UPDATE_MODE_HELP = u"<b>%1</b> - Only games not already present in your collection will be added, existing entries will be left completely untouched.<br>"
                                                        "<br>"
                                                        "<b>%2</b> - Games not already present in your collection will be added and existing entries will have their descriptive metadata (i.e. Title, Author, Images etc.) replaced by the "
                                                        "the details present in the target Flashpoint version; however, personal metadata (i.e. Playcount, Achievements, etc.) will not be altered.<br>"
@@ -59,8 +59,8 @@ private:
                                                        "<b>%3</b> - Games in your collection that are not present in the target version of Flashpoint will be removed (only for selected items). You will no longer be able to play such "
                                                        "games if this option is unchecked, but this may be useful for archival purposes or in case you later want to revert to a previous version of Flashpoint and maintain the entries personal "
                                                        "metadata. Note that this option will also remove any games that are not covered by your current import selections (i.e. platforms, playlists, tag filter, etc.), even if they still remain "
-                                                       "in Flashpoint";
-    static inline const QString MSG_IMAGE_MODE_HELP = "<b>%1</b> - All relevant images from Flashpoint will be fully copied into your frontend installation. This causes zero overhead but will require additional storage space proportional to "
+                                                       "in Flashpoint"_s;
+    static inline const QString MSG_IMAGE_MODE_HELP = u"<b>%1</b> - All relevant images from Flashpoint will be fully copied into your frontend installation. This causes zero overhead but will require additional storage space proportional to "
                                                       "the number of games you end up importing, up to double if all platforms are selected.<br>"
                                                       "<b>Space Consumption:</b> High<br>"
                                                       "<b>Import Speed:</b> Very Slow<br>"
@@ -76,80 +76,80 @@ private:
                                                       "amount of overhead when it loads images and require almost no extra disk space to store.<br>"
                                                       "<b>Space Consumption:</b> Near-zero<br>"
                                                       "<b>Import Speed:</b> Slow<br>"
-                                                      "<b>>Frontend Access Speed:</b> Fast<br>";
+                                                      "<b>>Frontend Access Speed:</b> Fast<br>"_s;
 
     // Messages - Input
-    static inline const QString MSG_FE_INSTALL_INVALID = "The specified directory either doesn't contain a valid frontend install, or it contains a version that is incompatible with this tool.";
-    static inline const QString MSG_FP_INSTALL_INVALID = "The specified directory either doesn't contain a valid Flashpoint install, or it contains a version that is incompatible with this tool.";
-    static inline const QString MSG_FP_VER_NOT_TARGET = "The selected Flashpoint install contains a version of Flashpoint that is different from the target version series (" PROJECT_TARGET_FP_VER_PFX_STR "), but appears to have a compatible structure. "
-                                                                "You may proceed at your own risk as the tool is not guaranteed to work correctly in this circumstance. Please use a newer version of " PROJECT_SHORT_NAME " if available.";
+    static inline const QString MSG_FE_INSTALL_INVALID = u"The specified directory either doesn't contain a valid frontend install, or it contains a version that is incompatible with this tool."_s;
+    static inline const QString MSG_FP_INSTALL_INVALID = u"The specified directory either doesn't contain a valid Flashpoint install, or it contains a version that is incompatible with this tool."_s;
+    static inline const QString MSG_FP_VER_NOT_TARGET = u"The selected Flashpoint install contains a version of Flashpoint that is different from the target version series (" PROJECT_TARGET_FP_VER_PFX_STR "), but appears to have a compatible structure. "
+                                                                "You may proceed at your own risk as the tool is not guaranteed to work correctly in this circumstance. Please use a newer version of " PROJECT_SHORT_NAME " if available."_s;
 
-    static inline const QString MSG_INSTALL_CONTENTS_CHANGED = "The contents of your installs have been changed since the initial scan and therefore must be re-evaluated. You will need to make your selections again.";
+    static inline const QString MSG_INSTALL_CONTENTS_CHANGED = u"The contents of your installs have been changed since the initial scan and therefore must be re-evaluated. You will need to make your selections again."_s;
 
     // Messages - General import procedure
-    static inline const QString MSG_PRE_EXISTING_IMPORT = "One or more existing Platforms/Playlists may be affected by this import. These will be altered even if they did not originate from this program (i.e. if you "
+    static inline const QString MSG_PRE_EXISTING_IMPORT = u"One or more existing Platforms/Playlists may be affected by this import. These will be altered even if they did not originate from this program (i.e. if you "
                                                           "already happened to have a Platform/Playlist with the same name as one present in Flashpoint).\n"
                                                           "\n"
-                                                          "Are you sure you want to proceed?";
-    static inline const QString MSG_FRONTEND_CLOSE_PROMPT = "The importer has detected that the selected frontend is running. It must be closed in order to continue. If recently closed, wait a few moments before trying to proceed again as it performs significant cleanup in the background.";
-    static inline const QString MSG_POST_IMPORT = "The Flashpoint import has completed successfully. Next time you start the frontend it may take longer than usual as it may have to fill in some default fields for the imported Platforms/Playlists.\n"
+                                                          "Are you sure you want to proceed?"_s;
+    static inline const QString MSG_FRONTEND_CLOSE_PROMPT = u"The importer has detected that the selected frontend is running. It must be closed in order to continue. If recently closed, wait a few moments before trying to proceed again as it performs significant cleanup in the background."_s;
+    static inline const QString MSG_POST_IMPORT = u"The Flashpoint import has completed successfully. Next time you start the frontend it may take longer than usual as it may have to fill in some default fields for the imported Platforms/Playlists.\n"
                                                   "\n"
-                                                  "If you wish to import further selections or update to a newer version of Flashpoint, simply re-run this procedure after pointing it to the desired Flashpoint installation.";
+                                                  "If you wish to import further selections or update to a newer version of Flashpoint, simply re-run this procedure after pointing it to the desired Flashpoint installation."_s;
     // Initial import status
-    static inline const QString STEP_FP_DB_INITIAL_QUERY = "Making initial Flashpoint database queries...";
+    static inline const QString STEP_FP_DB_INITIAL_QUERY = u"Making initial Flashpoint database queries..."_s;
 
     // Messages - FP General
-    static inline const QString MSG_FP_CLOSE_PROMPT = "It is strongly recommended to close Flashpoint before proceeding as it can severely slow or interfere with the import process";
+    static inline const QString MSG_FP_CLOSE_PROMPT = u"It is strongly recommended to close Flashpoint before proceeding as it can severely slow or interfere with the import process"_s;
 
     // Messages - FP Database read
-    static inline const QString MSG_FP_DB_MISSING_TABLE = "The Flashpoint database is missing tables critical to the import process.";
-    static inline const QString MSG_FP_DB_TABLE_MISSING_COLUMN = "The Flashpoint database tables are missing columns critical to the import process.";
-    static inline const QString MSG_FP_DB_UNEXPECTED_ERROR = "An unexpected SQL error occurred while reading the Flashpoint database:";
+    static inline const QString MSG_FP_DB_MISSING_TABLE = u"The Flashpoint database is missing tables critical to the import process."_s;
+    static inline const QString MSG_FP_DB_TABLE_MISSING_COLUMN = u"The Flashpoint database tables are missing columns critical to the import process."_s;
+    static inline const QString MSG_FP_DB_UNEXPECTED_ERROR = u"An unexpected SQL error occurred while reading the Flashpoint database:"_s;
 
     // Messages - FP CLIFp
-    static inline const QString MSG_FP_CLFIP_WILL_DOWNGRADE = "The existing version of " + CLIFp::EXE_NAME +  " in your Flashpoint install is newer than the version package with this tool.\n"
+    static inline const QString MSG_FP_CLFIP_WILL_DOWNGRADE = u"The existing version of "_s + CLIFp::EXE_NAME +  u" in your Flashpoint install is newer than the version package with this tool.\n"
                                                               "\n"
                                                               "Replacing it with the packaged Version (downgrade) will likely cause compatibility issues unless you are specifically re-importing are downgrading your Flashpoint install to a previous version.\n"
                                                               "\n"
-                                                              "Do you wish to downgrade " + CLIFp::EXE_NAME + "?";
+                                                              "Do you wish to downgrade "_s + CLIFp::EXE_NAME + u"?"_s;
 
-    static inline const QString MSG_FP_CANT_DEPLOY_CLIFP = "Failed to deploy " + CLIFp::EXE_NAME + " to the selected Flashpoint install.\n"
+    static inline const QString MSG_FP_CANT_DEPLOY_CLIFP = u"Failed to deploy "_s + CLIFp::EXE_NAME + u" to the selected Flashpoint install.\n"
                                                            "\n"
                                                            "%1\n"
                                                            "\n"
-                                                           "If you choose to ignore this you will have to place CLIFp in your Flashpoint install directory manually.";
+                                                           "If you choose to ignore this you will have to place CLIFp in your Flashpoint install directory manually."_s;
 
     // Messages - Import Result
-    static inline const QString MSG_HAVE_TO_REVERT = "Due to previous unrecoverable errors, all changes that occurred during import will now be reverted (other than existing images that were replaced with newer versions).\n"
+    static inline const QString MSG_HAVE_TO_REVERT = u"Due to previous unrecoverable errors, all changes that occurred during import will now be reverted (other than existing images that were replaced with newer versions).\n"
                                                      "\n"
                                                      "Afterwards, check to see if there is a newer version of " PROJECT_SHORT_NAME " and try again using that version. If not ask for help on the relevant forums where this tool was released (see Help).\n"
                                                      "\n"
-                                                     "If you believe this to be due to a bug with this software, please submit an issue to its GitHub page (listed under help)";
+                                                     "If you believe this to be due to a bug with this software, please submit an issue to its GitHub page (listed under help)"_s;
 
-    static inline const QString MSG_USER_CANCELED = "Import canceled by user, all changes that occurred during import will now be reverted (other than existing images that were replaced with newer versions).";
-    static inline const QString MSG_NO_WORK = "The provided import selections/options resulted in no tasks to perform. Double-check your settings.";
+    static inline const QString MSG_USER_CANCELED = u"Import canceled by user, all changes that occurred during import will now be reverted (other than existing images that were replaced with newer versions)."_s;
+    static inline const QString MSG_NO_WORK = u"The provided import selections/options resulted in no tasks to perform. Double-check your settings."_s;
 
     // Dialog captions
-    static inline const QString CAPTION_GENERAL_FATAL_ERROR = "Fatal Error!";
-    static inline const QString CAPTION_FRONTEND_BROWSE = "Select the root directory of your frontend install...";
-    static inline const QString CAPTION_FLASHPOINT_BROWSE = "Select the root directory of your Flashpoint install...";
-    static inline const QString CAPTION_PLAYLIST_GAME_MODE_HELP = "Playlist game mode options";
-    static inline const QString CAPTION_UPDATE_MODE_HELP = "Update mode options";
-    static inline const QString CAPTION_IMAGE_MODE_HELP = "Image mode options";
-    static inline const QString CAPTION_TASKLESS_IMPORT = "Nothing to do";
-    static inline const QString CAPTION_REVERT = "Reverting changes...";
-    static inline const QString CAPTION_CLIFP_ERR = "Error deploying CLIFp";
-    static inline const QString CAPTION_CLIFP_DOWNGRADE = "Downgrade CLIFp?";
-    static inline const QString CAPTION_IMPORTING = "FP Import";
-    static inline const QString CAPTION_TAG_FILTER = "Tag Filter";
+    static inline const QString CAPTION_GENERAL_FATAL_ERROR = u"Fatal Error!"_s;
+    static inline const QString CAPTION_FRONTEND_BROWSE = u"Select the root directory of your frontend install..."_s;
+    static inline const QString CAPTION_FLASHPOINT_BROWSE = u"Select the root directory of your Flashpoint install..."_s;
+    static inline const QString CAPTION_PLAYLIST_GAME_MODE_HELP = u"Playlist game mode options"_s;
+    static inline const QString CAPTION_UPDATE_MODE_HELP = u"Update mode options"_s;
+    static inline const QString CAPTION_IMAGE_MODE_HELP = u"Image mode options"_s;
+    static inline const QString CAPTION_TASKLESS_IMPORT = u"Nothing to do"_s;
+    static inline const QString CAPTION_REVERT = u"Reverting changes..."_s;
+    static inline const QString CAPTION_CLIFP_ERR = u"Error deploying CLIFp"_s;
+    static inline const QString CAPTION_CLIFP_DOWNGRADE = u"Downgrade CLIFp?"_s;
+    static inline const QString CAPTION_IMPORTING = u"FP Import"_s;
+    static inline const QString CAPTION_TAG_FILTER = u"Tag Filter"_s;
 
     // Menus
-    static inline const QString MENU_FE_HELP_OBJ_NAME_TEMPLATE = "action_%1Help";
-    static inline const QRegularExpression MENU_FE_HELP_KEY_REGEX = QRegularExpression("action_(?<frontend>.*?)Help");
+    static inline const QString MENU_FE_HELP_OBJ_NAME_TEMPLATE = u"action_%1Help"_s;
+    static inline const QRegularExpression MENU_FE_HELP_KEY_REGEX = QRegularExpression(u"action_(?<frontend>.*?)Help"_s);
 
     // URLs
-    static inline const QUrl URL_CLIFP_GITHUB = QUrl("https://github.com/oblivioncth/CLIFp");
-    static inline const QUrl URL_OFLIB_GITHUB =  QUrl("https://github.com/oblivioncth/FIL");
+    static inline const QUrl URL_CLIFP_GITHUB = QUrl(u"https://github.com/oblivioncth/CLIFp"_s);
+    static inline const QUrl URL_OFLIB_GITHUB =  QUrl(u"https://github.com/oblivioncth/FIL"_s);
 
     // Flashpoint version check
     static inline const Qx::VersionNumber TARGET_FP_VERSION_PREFIX = Qx::VersionNumber::fromString(PROJECT_TARGET_FP_VER_PFX_STR);

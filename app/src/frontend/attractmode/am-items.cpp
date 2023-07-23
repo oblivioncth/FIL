@@ -5,7 +5,7 @@
 #include <fp/fp-install.h>
 
 // Quote escape
-#define ESCAPE(str) (str).replace(R"(")",R"(\")")
+#define ESCAPE(str) (str).replace(uR"(")"_s, uR"(\")"_s)
 
 namespace Am
 {
@@ -69,7 +69,7 @@ RomEntry::RomEntry(const Fp::AddApp& flashpointAddApp, const Fp::Game& parentGam
 //Public:
 QString RomEntry::addAppTitle(const QString& parentTitle, const QString& originalAddAppTitle)
 {
-    return parentTitle + " |> " + originalAddAppTitle;
+    return parentTitle + u" |> "_s + originalAddAppTitle;
 }
 
 QString RomEntry::addAppSortTitle(const QString& parentTitle, const QString& originalAddAppTitle)
@@ -78,7 +78,7 @@ QString RomEntry::addAppSortTitle(const QString& parentTitle, const QString& ori
      * uppercase ensures sorting isn't broken up between lower and uppercase letters as AM's
      * sorting doesn't account for case and seems to be a basic character code sorter
      */
-    return (parentTitle + "     " + originalAddAppTitle).toUpper();
+    return (parentTitle + u"     "_s + originalAddAppTitle).toUpper();
 }
 
 //-Instance Functions------------------------------------------------------------------------------------------------

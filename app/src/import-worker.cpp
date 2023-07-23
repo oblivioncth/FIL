@@ -152,7 +152,7 @@ ImageTransferError ImportWorker::transferImage(bool symlink, QString sourcePath,
     }
 
     // Ensure destination path exists
-    if(!destinationDir.mkpath("."))
+    if(!destinationDir.mkpath(u"."_s))
         return ImageTransferError(ImageTransferError::CantCreateDirectory, QString(), destinationDir.absolutePath());
 
     // Determine backup path
