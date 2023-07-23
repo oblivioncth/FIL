@@ -20,7 +20,7 @@ include(OB/Project)
 ob_standard_project_setup()
 
 # Additional Project Variables
-set(TARGET_FP_VERSION_PREFIX 11.1)
+set(TARGET_FP_VERSION_PREFIX 12.0)
 
 # Configuration options
 # Handled by fetched libs, but set this here formally since they aren't part of the main project
@@ -64,7 +64,7 @@ set(FIL_QX_COMPONENTS
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "5c4b3a0f84f6d4e42da9a431f887aafdfb9aae32"
+    REF "d1d6049f53b803ced2f5ec2ddb0a5e1d15af12e6"
     COMPONENTS
         ${FIL_QX_COMPONENTS}
 )
@@ -75,7 +75,7 @@ ob_fetch_libfp("166f04aed3c69bdc3a87d72335e508fdf4bcf97c")
 
 # Fetch CLIFp (build and import from source)
 include(OB/FetchCLIFp)
-ob_fetch_clifp("69596c596798e710ea0d2e202ca63d1f26624651")
+ob_fetch_clifp("76916079cfab7ea16a1cbbacb430fbba6aa5237f")
 
 # TODO: The shared build of this is essentially useless as only the CLIFp executable
 # is deployed, which only works if it's statically linked. There isn't a simple way

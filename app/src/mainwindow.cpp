@@ -203,7 +203,8 @@ void MainWindow::initializeFrontendHelpActions()
 bool MainWindow::installMatchesTargetSeries(const Fp::Install& fpInstall)
 {
     Qx::VersionNumber fpVersion = fpInstall.version();
-    return TARGET_FP_VERSION_PREFIX.isPrefixOf(fpVersion);
+    return TARGET_FP_VERSION_PREFIX.isPrefixOf(fpVersion) ||
+           TARGET_FP_VERSION_PREFIX.normalized() == fpVersion; // Accounts for if FP doesn't use a trailing zero for major releases
 }
 
 void MainWindow::checkManualInstallInput(InstallType install)
