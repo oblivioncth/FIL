@@ -319,6 +319,7 @@ Qx::Error Install::postPlatformsImport()
     if(Qx::Error superErr = Fe::Install::postPlatformsImport(); superErr.isValid())
         return superErr;
 
+    // Add platforms to Platforms.xml
     const QList<QString> affectedPlatforms = modifiedPlatforms();
     for(const QString& pn :affectedPlatforms)
     {
@@ -328,6 +329,12 @@ Qx::Error Install::postPlatformsImport()
 
         mPlatformsConfig->addPlatform(pb.build());
     }
+
+    // Add PlatformCategory to Platforms.xml
+    Lb::PlatformCategory::Builder pcb;
+    pcb.wName(PLATFORM_CATEGORY);
+    pcb.wNestedName(PLATFORM_CATEGORY);
+    mPlatformsConfig->addPlatformCategory(pcb.build());
 
     return Qx::Error();
 }

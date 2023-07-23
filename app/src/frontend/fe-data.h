@@ -391,7 +391,14 @@ public:
     virtual bool containsAddApp(QUuid addAppId) const = 0;
 
     /* NOTE: The image paths provided here can be null (i.e. images unavailable). Handle accordingly in derived.
-     * Also in most cases, addGame should call parent()->processDirectGameImages()
+     * Also in most cases, addSet should call parent()->processDirectGameImages().
+     *
+     * TODO: The back and forth here between this and derived documents is a little silly. It mostly exists
+     * so that BasicPlatformDoc can call processDirectGameImages() directly; since installs need to always
+     * implement custom image processing logic anyway, this maybe should be changed so that BasicPlatformDoc
+     * has a pure virtual function similar to processDirectGameImages() with derived installs then implementing
+     * that if they need to use BasicPlatform doc. This would free Installs that do not use said class from having
+     * to re-implement that function at all (even if they have a close equivalent anyway).
      */
     virtual void addSet(const Fp::Set& set, const ImageSources& images) = 0;
 };
