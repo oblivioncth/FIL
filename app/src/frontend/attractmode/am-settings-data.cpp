@@ -34,7 +34,7 @@ DisplayGlobalFilter::Parser::Parser(DisplayGlobalFilter* display) :
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-bool DisplayGlobalFilter::Parser::parse(QString key, QString value, int depth)
+bool DisplayGlobalFilter::Parser::parse(QStringView key, const QString& value, int depth)
 {
     Q_UNUSED(depth);
 
@@ -61,7 +61,7 @@ DisplayFilter::Parser::Parser(DisplayFilter* display) :
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-bool DisplayFilter::Parser::parse(QString key, QString value, int depth)
+bool DisplayFilter::Parser::parse(QStringView key, const QString& value, int depth)
 {
     Q_UNUSED(depth);
 
@@ -100,7 +100,7 @@ Display::Parser::Parser(Display* display) :
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-bool Display::Parser::parse(QString key, QString value, int depth)
+bool Display::Parser::parse(QStringView key, const QString& value, int depth)
 {
     if(key == CrudeSettings::Keys::Display::LAYOUT)
         mSetting->mLayout = value;
@@ -149,9 +149,9 @@ OtherSetting::Parser::Parser(OtherSetting* otherSetting) :
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-bool OtherSetting::Parser::parse(QString key, QString value, int depth)
+bool OtherSetting::Parser::parse(QStringView key, const QString& value, int depth)
 {
-    mSetting->mContents.append({.key = key, .value = value, .depth = depth});
+    mSetting->mContents.append({.key = key.toString(), .value = value, .depth = depth});
     return true;
 }
 
@@ -170,11 +170,11 @@ CrudeSettings::CrudeSettings(Install* const parent, const QString& filePath, con
 bool CrudeSettings::isEmpty() const { return mDisplays.isEmpty() && mOtherSettings.isEmpty(); };
 Fe::DataDoc::Type CrudeSettings::type() const { return Type::Config; }
 
-bool CrudeSettings::containsDisplay(QString name) { return mDisplays.contains(name); }
+bool CrudeSettings::containsDisplay(const QString& name) { return mDisplays.contains(name); }
 void CrudeSettings::addDisplay(const Display& display) { mDisplays.insert(display.name(), display); }
-Display& CrudeSettings::display(QString name) { return mDisplays[name]; }
+Display& CrudeSettings::display(const QString& name) { return mDisplays[name]; }
 
-bool CrudeSettings::containsOtherSetting(QString type, QString name)
+bool CrudeSettings::containsOtherSetting(const QString& type, const QString& name)
 {
     return mOtherSettings.contains(OtherSetting::equivalentId(type, name));
 }
@@ -269,7 +269,7 @@ Fe::DocHandlingError CrudeSettingsReader::readTargetDoc()
     return errorStatus;
 }
 
-void CrudeSettingsReader::initializeGenericSubSetting(QString key, QString value)
+void CrudeSettingsReader::initializeGenericSubSetting(const QString& key, const QString& value)
 {
     // Add empty generic
     QUuid id = OtherSetting::equivalentId(key, value);

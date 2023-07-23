@@ -45,7 +45,7 @@ public:
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
     virtual QString settingName() = 0;
-    virtual bool parse(QString key, QString value, int depth) = 0;
+    virtual bool parse(QStringView key, const QString& value, int depth) = 0;
 };
 
 
@@ -77,7 +77,7 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    bool parse(QString key, QString value, int depth) override;
+    bool parse(QStringView key, const QString& value, int depth) override;
 };
 
 class DisplayFilter::Parser : public SettingParser<DisplayFilter>
@@ -88,7 +88,7 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    bool parse(QString key, QString value, int depth) override;
+    bool parse(QStringView key, const QString& value, int depth) override;
 };
 
 class Display::Parser : public SettingParser<Display>
@@ -99,7 +99,7 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    bool parse(QString key, QString value, int depth) override;
+    bool parse(QStringView key, const QString& value, int depth) override;
 };
 
 class OtherSetting::Parser : public SettingParser<OtherSetting>
@@ -110,7 +110,7 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    bool parse(QString key, QString value, int depth) override;
+    bool parse(QStringView key, const QString& value, int depth) override;
 };
 
 class CrudeSettings : public ConfigDoc
@@ -173,11 +173,11 @@ public:
     bool isEmpty() const override;
     Type type() const override;
 
-    bool containsDisplay(QString name);
+    bool containsDisplay(const QString& name);
     void addDisplay(const Display& display);
-    Display& display(QString name);
+    Display& display(const QString& name);
 
-    bool containsOtherSetting(QString type, QString name);
+    bool containsOtherSetting(const QString& type, const QString& name);
     void addOtherSetting(const OtherSetting& setting);
 };
 
@@ -203,7 +203,7 @@ private:
 private:
     CrudeSettings* targetCrudeSettings() const;
     Fe::DocHandlingError readTargetDoc() override;
-    void initializeGenericSubSetting(QString key, QString value);
+    void initializeGenericSubSetting(const QString& key, const QString& value);
 };
 
 class CrudeSettingsWriter : public ConfigDoc::Writer

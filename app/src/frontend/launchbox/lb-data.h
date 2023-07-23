@@ -89,7 +89,7 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlatformDoc(Install* const parent, const QString& xmlPath, QString docName, Fe::UpdateOptions updateOptions,
+    explicit PlatformDoc(Install* const parent, const QString& xmlPath, QString docName, const Fe::UpdateOptions& updateOptions,
                          const DocKey&);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -146,7 +146,7 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlaylistDoc(Install* const parent, const QString& xmlPath, QString docName, Fe::UpdateOptions updateOptions,
+    explicit PlaylistDoc(Install* const parent, const QString& xmlPath, QString docName, const Fe::UpdateOptions& updateOptions,
                          const DocKey&);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -203,7 +203,7 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlatformsConfigDoc(Install* const parent, const QString& xmlPath, Fe::UpdateOptions updateOptions,
+    explicit PlatformsConfigDoc(Install* const parent, const QString& xmlPath, const Fe::UpdateOptions& updateOptions,
                                 const DocKey&);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -217,14 +217,14 @@ public:
     const QMap<QString, PlatformFolder>& finalPlatformFolders() const;
     const QMap<QString, PlatformCategory>& finalPlatformCategories() const;
 
-    void addPlatform(Platform platform);
-    void removePlatform(QString platformName);
+    void addPlatform(const Platform& platform);
+    void removePlatform(const QString& platformName);
 
-    void addPlatformFolder(PlatformFolder platformFolder);
-    void removePlatformFolders(QString platformName);
+    void addPlatformFolder(const PlatformFolder& platformFolder);
+    void removePlatformFolders(const QString& platformName);
 
-    void addPlatformCategory(PlatformCategory platformCategory);
-    void removePlatformCategory(QString categoryName);
+    void addPlatformCategory(const PlatformCategory& platformCategory);
+    void removePlatformCategory(const QString& categoryName);
 
     void finalize() override;
 };

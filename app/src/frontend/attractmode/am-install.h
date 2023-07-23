@@ -83,7 +83,7 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    Install(QString installPath);
+    Install(const QString& installPath);
 
 //-Instance Functions-----------------------------------------------------------------------------------------------
 private:
@@ -122,7 +122,7 @@ public:
     Qx::Error preImport(const ImportDetails& details) override;
     Qx::Error prePlatformsImport() override;
     Qx::Error postPlatformsImport() override;
-    Qx::Error preImageProcessing(QList<ImageMap>& workerTransfers, Fe::ImageSources bulkSources) override;
+    Qx::Error preImageProcessing(QList<ImageMap>& workerTransfers, const Fe::ImageSources& bulkSources) override;
     Qx::Error postImport() override;
 
     // Image handling

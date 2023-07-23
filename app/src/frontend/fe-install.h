@@ -21,7 +21,7 @@
             }; \
             Fe::Install::registerInstall(fe_name, entry); \
         } \
-        virtual std::shared_ptr<Fe::Install> produce(QString installPath) const { return std::make_shared<fe_install>(installPath); } \
+        virtual std::shared_ptr<Fe::Install> produce(const QString& installPath) const { return std::make_shared<fe_install>(installPath); } \
     }; \
     static fe_install##Factory _##install##Factory;
 
@@ -32,7 +32,7 @@ class InstallFactory
 {
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    virtual std::shared_ptr<Install> produce(QString installPath) const = 0;
+    virtual std::shared_ptr<Install> produce(const QString& installPath) const = 0;
 };
 
 class Install : public InstallFoundation
@@ -48,13 +48,13 @@ public:
 
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
-    Install(QString installPath);
+    Install(const QString& installPath);
 
 //-Class Functions------------------------------------------------------------------------------------------------------
 public:
     // NOTE: Registry put behind function call to avoid SIOF since otherwise initialization of static registry before calls to registerFrontend would not be guaranteed
     static QMap<QString, Entry>& registry();
-    static void registerInstall(QString name, Entry entry);
+    static void registerInstall(const QString& name, const Entry& entry);
     static std::shared_ptr<Install> acquireMatch(const QString& installPath);
 
 //-Instance Functions---------------------------------------------------------------------------------------------------------
@@ -86,14 +86,14 @@ public:
     virtual Qx::Error postImport();
     virtual Qx::Error prePlatformsImport();
     virtual Qx::Error postPlatformsImport();
-    virtual Qx::Error preImageProcessing(QList<ImageMap>& workerTransfers, ImageSources bulkSources);
+    virtual Qx::Error preImageProcessing(QList<ImageMap>& workerTransfers, const ImageSources& bulkSources);
     virtual Qx::Error postImageProcessing();
     virtual Qx::Error prePlaylistsImport();
     virtual Qx::Error postPlaylistsImport();
 
     // Doc handling
-    Fe::DocHandlingError checkoutPlatformDoc(std::unique_ptr<PlatformDoc>& returnBuffer, QString name);
-    Fe::DocHandlingError checkoutPlaylistDoc(std::unique_ptr<PlaylistDoc>& returnBuffer, QString name);
+    Fe::DocHandlingError checkoutPlatformDoc(std::unique_ptr<PlatformDoc>& returnBuffer, const QString& name);
+    Fe::DocHandlingError checkoutPlaylistDoc(std::unique_ptr<PlaylistDoc>& returnBuffer, const QString& name);
     Fe::DocHandlingError commitPlatformDoc(std::unique_ptr<PlatformDoc> platformDoc);
     Fe::DocHandlingError commitPlaylistDoc(std::unique_ptr<PlaylistDoc> playlistDoc);
 

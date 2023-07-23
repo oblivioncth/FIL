@@ -174,7 +174,7 @@ Qx::Error Errorable::error() const { return mError; }
 
 //-Constructor-----------------------------------------------------------------------------------------------------
 //Protected:
-UpdateableDoc::UpdateableDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions) :
+UpdateableDoc::UpdateableDoc(Install* const parent, const QString& docPath, QString docName, const UpdateOptions& updateOptions) :
     DataDoc(parent, docPath, docName),
     mUpdateOptions(updateOptions)
 {}
@@ -189,7 +189,7 @@ void UpdateableDoc::finalize() {} // Does nothing for base class
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Protected:
-PlatformDoc::PlatformDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions) :
+PlatformDoc::PlatformDoc(Install* const parent, const QString& docPath, QString docName, const UpdateOptions& updateOptions) :
     UpdateableDoc(parent, docPath, docName, updateOptions)
 {}
 
@@ -221,7 +221,7 @@ PlatformDoc::Writer::Writer(DataDoc* sourceDoc) :
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Protected:
-BasicPlatformDoc::BasicPlatformDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions) :
+BasicPlatformDoc::BasicPlatformDoc(Install* const parent, const QString& docPath, QString docName, const UpdateOptions& updateOptions) :
     PlatformDoc(parent, docPath, docName, updateOptions)
 {}
 
@@ -325,7 +325,7 @@ BasicPlatformDoc::Writer::Writer(DataDoc* sourceDoc) :
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlaylistDoc::PlaylistDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions) :
+PlaylistDoc::PlaylistDoc(Install* const parent, const QString& docPath, QString docName, const UpdateOptions& updateOptions) :
     UpdateableDoc(parent, docPath, docName, updateOptions)
 {}
 
@@ -366,7 +366,7 @@ PlaylistDoc::Writer::Writer(DataDoc* sourceDoc) :
  * it may be better to require a value for it in this base class' constructor so that all derivatives must provide
  * a default (likely null/empty) playlist header.
  */
-BasicPlaylistDoc::BasicPlaylistDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions) :
+BasicPlaylistDoc::BasicPlaylistDoc(Install* const parent, const QString& docPath, QString docName, const UpdateOptions& updateOptions) :
     PlaylistDoc(parent, docPath, docName, updateOptions)
 {}
 

@@ -111,9 +111,9 @@ class BasicItem::Builder : public Item::Builder<B, T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    B& wId(QString rawId) { Item::Builder<B,T>::mItemBlueprint.mId = QUuid(rawId); return static_cast<B&>(*this); }
-    B& wId(QUuid id) { Item::Builder<B,T>::mItemBlueprint.mId = id; return static_cast<B&>(*this); }
-    B& wName(QString name) { Item::Builder<B,T>::mItemBlueprint.mName = name; return static_cast<B&>(*this);}
+    B& wId(const QString& rawId) { Item::Builder<B,T>::mItemBlueprint.mId = QUuid(rawId); return static_cast<B&>(*this); }
+    B& wId(const QUuid& id) { Item::Builder<B,T>::mItemBlueprint.mId = id; return static_cast<B&>(*this); }
+    B& wName(const QString& name) { Item::Builder<B,T>::mItemBlueprint.mName = name; return static_cast<B&>(*this);}
 };
 
 class Game : public BasicItem
@@ -149,7 +149,7 @@ class Game::Builder : public BasicItem::Builder<B, T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    B& wPlatform(QString platform) { Item::Builder<B,T>::mItemBlueprint.mPlatform = platform; return static_cast<B&>(*this); }
+    B& wPlatform(const QString& platform) { Item::Builder<B,T>::mItemBlueprint.mPlatform = platform; return static_cast<B&>(*this); }
 };
 
 class AddApp : public BasicItem
@@ -180,8 +180,8 @@ class AddApp::Builder : public BasicItem::Builder<B, T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    B& wGameId(QString rawGameId) { Item::Builder<B,T>::mItemBlueprint.mGameId = QUuid(rawGameId); return static_cast<B&>(*this); }
-    B& wGameId(QUuid gameId) { Item::Builder<B,T>::mItemBlueprint.mGameId = gameId; return *this; }
+    B& wGameId(const QString& rawGameId) { Item::Builder<B,T>::mItemBlueprint.mGameId = QUuid(rawGameId); return static_cast<B&>(*this); }
+    B& wGameId(const QUuid& gameId) { Item::Builder<B,T>::mItemBlueprint.mGameId = gameId; return *this; }
 };
 
 class PlaylistHeader : public BasicItem

@@ -19,7 +19,7 @@ namespace Am
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-Install::Install(QString installPath) :
+Install::Install(const QString& installPath) :
     Fe::Install(installPath),
     mEmulatorsDirectory(installPath + '/' + EMULATORS_PATH),
     mRomlistsDirectory(installPath + '/' + ROMLISTS_PATH),
@@ -397,7 +397,7 @@ Qx::Error Install::postPlatformsImport()
     return commitFlashpointRomlist(std::move(mRomlist));
 }
 
-Qx::Error Install::preImageProcessing(QList<ImageMap>& workerTransfers, Fe::ImageSources bulkSources)
+Qx::Error Install::preImageProcessing(QList<ImageMap>& workerTransfers, const Fe::ImageSources& bulkSources)
 {
     Q_UNUSED(bulkSources);
 

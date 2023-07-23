@@ -181,14 +181,14 @@ signals:
     // Progress
     void progressValueChanged(int currentValue);
     void progressMaximumChanged(int maximumValue);
-    void progressStepChanged(QString currentStep);
+    void progressStepChanged(const QString& currentStep);
 
     // Error handling
-    void blockingErrorOccured(std::shared_ptr<int> response, Qx::Error blockingError, QMessageBox::StandardButtons choices);
-    void authenticationRequired(QString prompt, QAuthenticator* authenticator);
+    void blockingErrorOccured(std::shared_ptr<int> response, const Qx::Error& blockingError, QMessageBox::StandardButtons choices);
+    void authenticationRequired(const QString& prompt, QAuthenticator* authenticator);
 
     // Finished
-    void importCompleted(ImportWorker::ImportResult importResult, Qx::Error errorReport);
+    void importCompleted(ImportWorker::ImportResult importResult, const Qx::Error& errorReport);
 };
 
 //-Metatype declarations-------------------------------------------------------------------------------------------

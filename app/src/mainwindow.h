@@ -207,7 +207,7 @@ private:
     void initializeFrontendHelpActions();
     bool installMatchesTargetSeries(const Fp::Install& fpInstall);
     void checkManualInstallInput(InstallType install);
-    void validateInstall(QString installPath, InstallType install);
+    void validateInstall(const QString& installPath, InstallType install);
     void gatherInstallInfo();
     void populateImportSelectionBoxes();
     void generateTagSelectionOptions();
@@ -221,9 +221,9 @@ private:
     bool isExistingPlaylistSelected();
     bool selectionsMayModify();
 
-    void postSqlError(QString mainText, QSqlError sqlError);
-    void postListError(QString mainText, QStringList detailedItems);
-    void postIOError(QString mainText, Qx::IoOpReport report);
+    void postSqlError(const QString& mainText, const QSqlError& sqlError);
+    void postListError(const QString& mainText, const QStringList& detailedItems);
+    void postIOError(const QString& mainText, const Qx::IoOpReport& report);
 
     void refreshEnableStates();
     void refreshCheckStates();
@@ -259,9 +259,9 @@ private slots:
     void all_on_menu_triggered(QAction *action);
 
     // Import Exception Handling
-    void handleBlockingError(std::shared_ptr<int> response, Qx::Error blockingError, QMessageBox::StandardButtons choices);
-    void handleAuthRequest(QString prompt, QAuthenticator* authenticator);
-    void handleImportResult(ImportWorker::ImportResult importResult, Qx::Error errorReport);
+    void handleBlockingError(std::shared_ptr<int> response, const Qx::Error& blockingError, QMessageBox::StandardButtons choices);
+    void handleAuthRequest(const QString& prompt, QAuthenticator* authenticator);
+    void handleImportResult(ImportWorker::ImportResult importResult, const Qx::Error& errorReport);
 };
 
 #endif // MAINWINDOW_H

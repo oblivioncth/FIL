@@ -303,7 +303,7 @@ protected:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit UpdateableDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions);
+    explicit UpdateableDoc(Install* const parent, const QString& docPath, QString docName, const UpdateOptions& updateOptions);
 
 //-Class Functions-----------------------------------------------------------------------------------------------------
 template<typename T>
@@ -380,7 +380,7 @@ public:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit PlatformDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions);
+    explicit PlatformDoc(Install* const parent, const QString& docPath, QString docName, const UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
@@ -426,7 +426,7 @@ protected:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit BasicPlatformDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions);
+    explicit BasicPlatformDoc(Install* const parent, const QString& docPath, QString docName, const UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 protected:
@@ -475,7 +475,7 @@ public:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit PlaylistDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions);
+    explicit PlaylistDoc(Install* const parent, const QString& docPath, QString docName, const UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
@@ -516,7 +516,7 @@ protected:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit BasicPlaylistDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions);
+    explicit BasicPlaylistDoc(Install* const parent, const QString& docPath, QString docName, const UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 protected:

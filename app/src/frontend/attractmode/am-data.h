@@ -133,8 +133,8 @@ protected:
 public:
     bool isEmpty() const override;
 
-    bool containsTag(QString tag) const;
-    void appendTag(QString tag);
+    bool containsTag(QStringView tag) const;
+    void appendTag(const QString& tag);
 };
 
 class Taglist::Writer : public CommonDocWriter
@@ -197,7 +197,7 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit Romlist(Install* const parent, const QString& listPath, QString docName, Fe::UpdateOptions updateOptions,
+    explicit Romlist(Install* const parent, const QString& listPath, QString docName, const Fe::UpdateOptions& updateOptions,
                      const DocKey&);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -413,18 +413,18 @@ public:
     QString system() const;
     QString infoSource() const;
     QString exitHotkey() const;
-    EmulatorArtworkEntry artworkEntry(QString type) const;
+    EmulatorArtworkEntry artworkEntry(const QString& type) const;
     QList<EmulatorArtworkEntry> artworkEntries() const;
 
-    void setExecutable(QString executable);
-    void setArgs(QString args);
-    void setWorkDir(QString workDir);
-    void setRomPath(QString romPath);
-    void setRomExt(QString romExt);
-    void setSystem(QString system);
-    void setInfoSource(QString infoSource);
-    void setExitHotkey(QString exitHotkey);
-    void setArtworkEntry(EmulatorArtworkEntry entry);
+    void setExecutable(const QString& executable);
+    void setArgs(const QString& args);
+    void setWorkDir(const QString& workDir);
+    void setRomPath(const QString& romPath);
+    void setRomExt(const QString& romExt);
+    void setSystem(const QString& system);
+    void setInfoSource(const QString& infoSource);
+    void setExitHotkey(const QString& exitHotkey);
+    void setArtworkEntry(const EmulatorArtworkEntry& entry);
 };
 
 class EmulatorReader : public ConfigDoc::Reader

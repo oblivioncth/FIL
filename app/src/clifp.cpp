@@ -29,7 +29,7 @@ Qx::VersionNumber CLIFp::currentCLIFpVersion(const Fp::Install& fpInstall)
         return Qx::FileDetails::readFileDetails(standardCLIFpPath(fpInstall)).fileVersion();
 }
 
-bool CLIFp::deployCLIFp(QString& errorMsg, const Fp::Install& fpInstall, QString sourcePath)
+bool CLIFp::deployCLIFp(QString& errorMsg, const Fp::Install& fpInstall, const QString& sourcePath)
 {
     // Delete existing if present
     QFile clifp(standardCLIFpPath(fpInstall));
@@ -58,7 +58,7 @@ bool CLIFp::deployCLIFp(QString& errorMsg, const Fp::Install& fpInstall, QString
     return true;
 }
 
-QString CLIFp::parametersFromStandard(QString originalAppPath, QString originalAppParams)
+QString CLIFp::parametersFromStandard(QStringView originalAppPath, QStringView originalAppParams)
 {
     QString clifpParam = u"-q "_s; // Start with global quiet switch
 

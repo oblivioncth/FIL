@@ -58,8 +58,8 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wRule(QString rule);
-    Builder& wException(QString exception);
+    Builder& wRule(const QString& rule);
+    Builder& wException(const QString& exception);
 };
 
 class DisplayFilter : public SettingsItem
@@ -117,7 +117,7 @@ private:
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
     DisplayFilter();
-    DisplayFilter(QString name);
+    DisplayFilter(const QString& name);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
@@ -137,9 +137,9 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wName(QString name);
-    Builder& wRule(QString rule);
-    Builder& wException(QString exception);
+    Builder& wName(const QString& name);
+    Builder& wRule(const QString& rule);
+    Builder& wException(const QString& exception);
     Builder& wSortBy(DisplayFilter::Sort sortBy);
     Builder& wReverseOrder(bool reverseOrder);
     Builder& wListLimit(int listLimit);
@@ -191,13 +191,13 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wName(QString name);
-    Builder& wLayout(QString layout);
-    Builder& wRomlist(QString romlist);
+    Builder& wName(const QString& name);
+    Builder& wLayout(const QString& layout);
+    Builder& wRomlist(const QString& romlist);
     Builder& wInCycle(bool inCycle);
     Builder& wInMenu(bool inMenu);
-    Builder& wGlobalFilter(DisplayGlobalFilter globalFilter);
-    Builder& wFilter(DisplayFilter filter);
+    Builder& wGlobalFilter(const DisplayGlobalFilter& globalFilter);
+    Builder& wFilter(const DisplayFilter& filter);
 };
 
 class OtherSetting : public SettingsItem
@@ -230,11 +230,11 @@ private:
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
     OtherSetting();
-    OtherSetting(QString type, QString name);
+    OtherSetting(const QString& type, const QString& name);
 
 //-Class Functions--------------------------------------------------------------------------------------------------
 public:
-    static QUuid equivalentId(QString type, QString name);
+    static QUuid equivalentId(const QString& type, const QString& name);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
@@ -251,7 +251,7 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wTypeAndName(QString name, QString type);
+    Builder& wTypeAndName(const QString& name, const QString& type);
     Builder& wContent(const OtherSetting::ContentLine& line);
 };
 

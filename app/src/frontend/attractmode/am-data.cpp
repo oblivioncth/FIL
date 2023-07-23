@@ -214,8 +214,8 @@ bool Taglist::isEmpty() const
     return mTags.isEmpty();
 }
 
-bool Taglist::containsTag(QString tag) const { return mTags.contains(tag); }
-void Taglist::appendTag(QString tag) { mTags.append(tag); }
+bool Taglist::containsTag(QStringView tag) const { return mTags.contains(tag); }
+void Taglist::appendTag(const QString& tag) { mTags.append(tag); }
 
 //===============================================================================================================
 // Taglist::Writer
@@ -276,7 +276,7 @@ Fe::DataDoc::Type PlaylistTaglist::type() const { return Fe::DataDoc::Type::Play
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-Romlist::Romlist(Install* const parent, const QString& listPath, QString docName, Fe::UpdateOptions updateOptions,
+Romlist::Romlist(Install* const parent, const QString& listPath, QString docName, const Fe::UpdateOptions& updateOptions,
                          const DocKey&) :
     Fe::UpdateableDoc(parent, listPath, docName, updateOptions)
 {}
@@ -737,18 +737,18 @@ QString Emulator::romExt() const { return mRomExt; }
 QString Emulator::system() const { return mSystem; }
 QString Emulator::infoSource() const { return mInfoSource; }
 QString Emulator::exitHotkey() const { return mExitHotkey; }
-EmulatorArtworkEntry Emulator::artworkEntry(QString type) const { return mArtworkEntries.value(type); }
+EmulatorArtworkEntry Emulator::artworkEntry(const QString& type) const { return mArtworkEntries.value(type); }
 QList<EmulatorArtworkEntry> Emulator::artworkEntries() const { return mArtworkEntries.values(); }
 
-void Emulator::setExecutable(QString executable) { mExecutable = executable; }
-void Emulator::setArgs(QString args) { mArgs = args; }
-void Emulator::setWorkDir(QString workDir) { mWorkDir = workDir; }
-void Emulator::setRomPath(QString romPath) { mRomPath = romPath; }
-void Emulator::setRomExt(QString romExt) { mRomExt = romExt; }
-void Emulator::setSystem(QString system) { mSystem = system; }
-void Emulator::setInfoSource(QString infoSource) { mInfoSource = infoSource; }
-void Emulator::setExitHotkey(QString exitHotkey) { mExitHotkey = exitHotkey; }
-void Emulator::setArtworkEntry(EmulatorArtworkEntry entry) { mArtworkEntries[entry.type()] = entry; }
+void Emulator::setExecutable(const QString& executable) { mExecutable = executable; }
+void Emulator::setArgs(const QString& args) { mArgs = args; }
+void Emulator::setWorkDir(const QString& workDir) { mWorkDir = workDir; }
+void Emulator::setRomPath(const QString& romPath) { mRomPath = romPath; }
+void Emulator::setRomExt(const QString& romExt) { mRomExt = romExt; }
+void Emulator::setSystem(const QString& system) { mSystem = system; }
+void Emulator::setInfoSource(const QString& infoSource) { mInfoSource = infoSource; }
+void Emulator::setExitHotkey(const QString& exitHotkey) { mExitHotkey = exitHotkey; }
+void Emulator::setArtworkEntry(const EmulatorArtworkEntry& entry) { mArtworkEntries[entry.type()] = entry; }
 
 //===============================================================================================================
 // Emulator::Reader

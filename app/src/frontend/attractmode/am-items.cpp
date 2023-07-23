@@ -115,33 +115,33 @@ RomEntry::Builder::Builder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-RomEntry::Builder& RomEntry::Builder::wName(QString nameAsId) { mItemBlueprint.mId = QUuid(nameAsId); return *this; }
-RomEntry::Builder& RomEntry::Builder::wTitle(QString title) { mItemBlueprint.mName = title; return *this; }
-RomEntry::Builder& RomEntry::Builder::wEmulator(QString emulator) { mItemBlueprint.mEmulator = emulator; return *this; }
-RomEntry::Builder& RomEntry::Builder::wCloneOf(QString cloneOf) { mItemBlueprint.mCloneOf = cloneOf; return *this; }
+RomEntry::Builder& RomEntry::Builder::wName(const QString&  nameAsId) { mItemBlueprint.mId = QUuid(nameAsId); return *this; }
+RomEntry::Builder& RomEntry::Builder::wTitle(const QString&  title) { mItemBlueprint.mName = title; return *this; }
+RomEntry::Builder& RomEntry::Builder::wEmulator(const QString&  emulator) { mItemBlueprint.mEmulator = emulator; return *this; }
+RomEntry::Builder& RomEntry::Builder::wCloneOf(const QString&  cloneOf) { mItemBlueprint.mCloneOf = cloneOf; return *this; }
 
-RomEntry::Builder& RomEntry::Builder::wYear(QString rawYear)
+RomEntry::Builder& RomEntry::Builder::wYear(const QString&  rawYear)
 {
     mItemBlueprint.mYear = QDate::fromString(rawYear, Qt::ISODate);
     return *this;
 }
 
-RomEntry::Builder& RomEntry::Builder::wManufacturer(QString manufacturer) { mItemBlueprint.mManufacturer = manufacturer; return *this; }
-RomEntry::Builder& RomEntry::Builder::wCategory(QString category) { mItemBlueprint.mPlatform = category; return *this; }
-RomEntry::Builder& RomEntry::Builder::wPlayers(QString players) { mItemBlueprint.mPlayers = players; return *this; }
-RomEntry::Builder& RomEntry::Builder::wRotation(QString rawRotation) { mItemBlueprint.mRotation = rawRotation.toUInt(); return *this; }
-RomEntry::Builder& RomEntry::Builder::wControl(QString control) { mItemBlueprint.mControl = control; return *this; }
-RomEntry::Builder& RomEntry::Builder::wStatus(QString status) { mItemBlueprint.mStatus = status; return *this; }
-RomEntry::Builder& RomEntry::Builder::wDisplayCount(QString rawDisplayCount) { mItemBlueprint.mDisplayCount = rawDisplayCount.toUInt(); return *this; }
-RomEntry::Builder& RomEntry::Builder::wDisplayType(QString displayType) { mItemBlueprint.mDisplayType = displayType; return *this; }
-RomEntry::Builder& RomEntry::Builder::wAltRomName(QString altRomName) { mItemBlueprint.mAltRomName = altRomName; return *this; }
-RomEntry::Builder& RomEntry::Builder::wAltTitle(QString altTitle) { mItemBlueprint.mAltTitle = altTitle; return *this; }
-RomEntry::Builder& RomEntry::Builder::wExtra(QString extra) { mItemBlueprint.mExtra = extra; return *this; }
-RomEntry::Builder& RomEntry::Builder::wButtons(QString buttons) { mItemBlueprint.mButtons = buttons; return *this; }
-RomEntry::Builder& RomEntry::Builder::wSeries(QString series) { mItemBlueprint.mSeries = series; return *this; }
-RomEntry::Builder& RomEntry::Builder::wLanguage(QString language) { mItemBlueprint.mLanguage = language; return *this; }
-RomEntry::Builder& RomEntry::Builder::wRegion(QString region) { mItemBlueprint.mRegion = region; return *this; }
-RomEntry::Builder& RomEntry::Builder::wRating(QString rating) { mItemBlueprint.mRating = rating; return *this; }
+RomEntry::Builder& RomEntry::Builder::wManufacturer(const QString& manufacturer) { mItemBlueprint.mManufacturer = manufacturer; return *this; }
+RomEntry::Builder& RomEntry::Builder::wCategory(const QString& category) { mItemBlueprint.mPlatform = category; return *this; }
+RomEntry::Builder& RomEntry::Builder::wPlayers(const QString& players) { mItemBlueprint.mPlayers = players; return *this; }
+RomEntry::Builder& RomEntry::Builder::wRotation(const QString& rawRotation) { mItemBlueprint.mRotation = rawRotation.toUInt(); return *this; }
+RomEntry::Builder& RomEntry::Builder::wControl(const QString& control) { mItemBlueprint.mControl = control; return *this; }
+RomEntry::Builder& RomEntry::Builder::wStatus(const QString& status) { mItemBlueprint.mStatus = status; return *this; }
+RomEntry::Builder& RomEntry::Builder::wDisplayCount(const QString& rawDisplayCount) { mItemBlueprint.mDisplayCount = rawDisplayCount.toUInt(); return *this; }
+RomEntry::Builder& RomEntry::Builder::wDisplayType(const QString& displayType) { mItemBlueprint.mDisplayType = displayType; return *this; }
+RomEntry::Builder& RomEntry::Builder::wAltRomName(const QString& altRomName) { mItemBlueprint.mAltRomName = altRomName; return *this; }
+RomEntry::Builder& RomEntry::Builder::wAltTitle(const QString& altTitle) { mItemBlueprint.mAltTitle = altTitle; return *this; }
+RomEntry::Builder& RomEntry::Builder::wExtra(const QString& extra) { mItemBlueprint.mExtra = extra; return *this; }
+RomEntry::Builder& RomEntry::Builder::wButtons(const QString& buttons) { mItemBlueprint.mButtons = buttons; return *this; }
+RomEntry::Builder& RomEntry::Builder::wSeries(const QString& series) { mItemBlueprint.mSeries = series; return *this; }
+RomEntry::Builder& RomEntry::Builder::wLanguage(const QString& language) { mItemBlueprint.mLanguage = language; return *this; }
+RomEntry::Builder& RomEntry::Builder::wRegion(const QString& region) { mItemBlueprint.mRegion = region; return *this; }
+RomEntry::Builder& RomEntry::Builder::wRating(const QString& rating) { mItemBlueprint.mRating = rating; return *this; }
 
 //===============================================================================================================
 // EmulatorArtworkEntry
@@ -166,7 +166,7 @@ EmulatorArtworkEntry::Builder::Builder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-EmulatorArtworkEntry::Builder& EmulatorArtworkEntry::Builder::wType(QString type) { mItemBlueprint.mType = type; return *this; }
-EmulatorArtworkEntry::Builder& EmulatorArtworkEntry::Builder::wPaths(QStringList paths) { mItemBlueprint.mPaths = paths; return *this; }
+EmulatorArtworkEntry::Builder& EmulatorArtworkEntry::Builder::wType(const QString& type) { mItemBlueprint.mType = type; return *this; }
+EmulatorArtworkEntry::Builder& EmulatorArtworkEntry::Builder::wPaths(const QStringList& paths) { mItemBlueprint.mPaths = paths; return *this; }
 
 }

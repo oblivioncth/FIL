@@ -43,7 +43,7 @@ QString RevertError::deriveCaption() const { return CAPTION_REVERT_ERR; }
 //===============================================================================================================
 
 //-Constructor---------------------------------------------------------------------------------------------------
-InstallFoundation::InstallFoundation(QString installPath) :
+InstallFoundation::InstallFoundation(const QString& installPath) :
     mValid(false), // Path is invalid until proven otherwise
     mRootDirectory(installPath)
 {}
@@ -54,7 +54,7 @@ InstallFoundation::~InstallFoundation() {}
 
 //-Class Functions--------------------------------------------------------------------------------------------
 //Private:
-void InstallFoundation::allowUserWriteOnFile(QString filePath)
+void InstallFoundation::allowUserWriteOnFile(const QString& filePath)
 {
     PACL pDacl,pNewDACL;
     EXPLICIT_ACCESS ExplicitAccess;
@@ -86,7 +86,7 @@ void InstallFoundation::allowUserWriteOnFile(QString filePath)
 }
 
 //Public:
-QString InstallFoundation::filePathToBackupPath(QString filePath)
+QString InstallFoundation::filePathToBackupPath(const QString& filePath)
 {
     return filePath + '.' + BACKUP_FILE_EXT;
 }
@@ -247,7 +247,7 @@ bool InstallFoundation::containsAnyPlaylist(const QList<QString>& names) const
     return containsAnyDataDoc(DataDoc::Type::Playlist, names);
 }
 
-void InstallFoundation::addRevertableFile(QString filePath) { mRevertableFilePaths.append(filePath); }
+void InstallFoundation::addRevertableFile(const QString& filePath) { mRevertableFilePaths.append(filePath); }
 int InstallFoundation::revertQueueCount() const { return mRevertableFilePaths.size(); }
 
 int InstallFoundation::revertNextChange(RevertError& error, bool skipOnFail)

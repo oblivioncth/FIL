@@ -43,7 +43,7 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    Game(const Fp::Game& flashpointGame, QString fullCLIFpPath);
+    Game(const Fp::Game& flashpointGame, const QString& fullCLIFpPath);
     Game();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
@@ -76,24 +76,24 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wTitle(QString title);
-    Builder& wSeries(QString series);
-    Builder& wDeveloper(QString developer);
-    Builder& wPublisher(QString publisher);
-    Builder& wSortTitle(QString sortTitle);
-    Builder& wDateAdded(QString rawDateAdded);
-    Builder& wDateModified(QString rawDateModified);
-    Builder& wBroken(QString rawBroken);
-    Builder& wPlayMode(QString playMode);
-    Builder& wStatus(QString status);
-    Builder& wRegion(QString region);
-    Builder& wNotes(QString notes);
-    Builder& wSource(QString source);
-    Builder& wAppPath(QString appPath);
-    Builder& wCommandLine(QString commandLine);
-    Builder& wReleaseDate(QString rawReleaseDate);
-    Builder& wVersion(QString version);
-    Builder& wReleaseType(QString releaseType);
+    Builder& wTitle(const QString& title);
+    Builder& wSeries(const QString& series);
+    Builder& wDeveloper(const QString& developer);
+    Builder& wPublisher(const QString& publisher);
+    Builder& wSortTitle(const QString& sortTitle);
+    Builder& wDateAdded(const QString& rawDateAdded);
+    Builder& wDateModified(const QString& rawDateModified);
+    Builder& wBroken(const QString& rawBroken);
+    Builder& wPlayMode(const QString& playMode);
+    Builder& wStatus(const QString& status);
+    Builder& wRegion(const QString& region);
+    Builder& wNotes(const QString& notes);
+    Builder& wSource(const QString& source);
+    Builder& wAppPath(const QString& appPath);
+    Builder& wCommandLine(const QString& commandLine);
+    Builder& wReleaseDate(const QString& rawReleaseDate);
+    Builder& wVersion(const QString& version);
+    Builder& wReleaseType(const QString& releaseType);
 };
 
 class AddApp : public Fe::AddApp
@@ -111,7 +111,7 @@ private:
 
 //-Constructor------------------------------------------------------------------------------------------------------
 public:
-    AddApp(const Fp::AddApp& flashpointAddApp, QString fullCLIFpPath);
+    AddApp(const Fp::AddApp& flashpointAddApp, const QString& fullCLIFpPath);
     AddApp();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
@@ -130,10 +130,10 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wAppPath(QString appPath);
-    Builder& wCommandLine(QString commandLine);
-    Builder& wAutorunBefore(QString rawAutorunBefore);
-    Builder& wWaitForExit(QString rawWaitForExit);
+    Builder& wAppPath(const QString& appPath);
+    Builder& wCommandLine(const QString& commandLine);
+    Builder& wAutorunBefore(const QString& rawAutorunBefore);
+    Builder& wWaitForExit(const QString& rawWaitForExit);
 };
 
 class CustomField : public Fe::Item
@@ -171,10 +171,10 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wGameId(QString rawGameId);
-    Builder& wGameId(QUuid gameId);
-    Builder& wName(QString name);
-    Builder& wValue(QString value);
+    Builder& wGameId(const QString& rawGameId);
+    Builder& wGameId(const QUuid& gameId);
+    Builder& wName(const QString& name);
+    Builder& wValue(const QString& value);
 };
 
 class PlaylistHeader : public Fe::PlaylistHeader
@@ -208,9 +208,9 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wPlaylistId(QString rawId);
-    Builder& wNestedName(QString nestedName);
-    Builder& wNotes(QString notes);
+    Builder& wPlaylistId(const QString& rawId);
+    Builder& wNestedName(const QString& nestedName);
+    Builder& wNotes(const QString& notes);
 };
 
 class PlaylistGame : public Fe::PlaylistGame
@@ -268,11 +268,11 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wGameTitle(QString gameTitle);
-    Builder& wLBDatabaseId(QString rawLBDatabaseId);
-    Builder& wGameFileName(QString gameFileName);
-    Builder& wGamePlatform(QString gamePlatform);
-    Builder& wManualOrder(QString rawManualOrder);
+    Builder& wGameTitle(const QString& gameTitle);
+    Builder& wLBDatabaseId(const QString& rawLBDatabaseId);
+    Builder& wGameFileName(const QString& gameFileName);
+    Builder& wGamePlatform(const QString& gamePlatform);
+    Builder& wManualOrder(const QString& rawManualOrder);
 };
 
 class Platform : public Fe::Item
@@ -304,8 +304,8 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wName(QString name);
-    Builder& wCategory(QString category);
+    Builder& wName(const QString& name);
+    Builder& wCategory(const QString& category);
 };
 
 class PlatformFolder : public Fe::Item
@@ -340,9 +340,9 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wMediaType(QString mediaType);
-    Builder& wFolderPath(QString folderPath);
-    Builder& wPlatform(QString platform);
+    Builder& wMediaType(const QString& mediaType);
+    Builder& wFolderPath(const QString& folderPath);
+    Builder& wPlatform(const QString& platform);
 };
 
 class PlatformCategory  : public Fe::Item

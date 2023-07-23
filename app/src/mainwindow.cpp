@@ -219,7 +219,7 @@ void MainWindow::checkManualInstallInput(InstallType install)
         invalidateInstall(install, false);
 }
 
-void MainWindow::validateInstall(QString installPath, InstallType install)
+void MainWindow::validateInstall(const QString& installPath, InstallType install)
 {
     switch(install)
     {
@@ -458,7 +458,7 @@ bool MainWindow::selectionsMayModify()
                 mFrontendInstall->containsAnyPlatform(mFlashpointInstall->database()->platformNames()));
 }
 
-void MainWindow::postSqlError(QString mainText, QSqlError sqlError)
+void MainWindow::postSqlError(const QString& mainText, const QSqlError& sqlError)
 {
     QMessageBox sqlErrorMsg;
     sqlErrorMsg.setIcon(QMessageBox::Critical);
@@ -469,7 +469,7 @@ void MainWindow::postSqlError(QString mainText, QSqlError sqlError)
     sqlErrorMsg.exec();
 }
 
-void MainWindow::postListError(QString mainText, QStringList detailedItems)
+void MainWindow::postListError(const QString& mainText, const QStringList& detailedItems)
 {
     QMessageBox listError;
     listError.setIcon(QMessageBox::Critical);
@@ -480,7 +480,7 @@ void MainWindow::postListError(QString mainText, QStringList detailedItems)
     listError.exec();
 }
 
-void MainWindow::postIOError(QString mainText, Qx::IoOpReport report)
+void MainWindow::postIOError(const QString& mainText, const Qx::IoOpReport& report)
 {
     QMessageBox ioErrorMsg;
     ioErrorMsg.setIcon(QMessageBox::Critical);
@@ -988,7 +988,7 @@ void MainWindow::all_on_menu_triggered(QAction *action)
         throw std::runtime_error("Unhandled use of all_on_menu_triggered() slot");
 }
 
-void MainWindow::handleBlockingError(std::shared_ptr<int> response, Qx::Error blockingError, QMessageBox::StandardButtons choices)
+void MainWindow::handleBlockingError(std::shared_ptr<int> response, const Qx::Error& blockingError, QMessageBox::StandardButtons choices)
 {
     // Get taskbar progress and indicate error
     mWindowTaskbarButton->setProgressState(Qx::TaskbarButton::Stopped);
@@ -1004,7 +1004,7 @@ void MainWindow::handleBlockingError(std::shared_ptr<int> response, Qx::Error bl
         *response = userChoice;
 }
 
-void MainWindow::handleAuthRequest(QString prompt, QAuthenticator* authenticator)
+void MainWindow::handleAuthRequest(const QString& prompt, QAuthenticator* authenticator)
 {
     Qx::LoginDialog ld;
     ld.setPrompt(prompt);
@@ -1018,7 +1018,7 @@ void MainWindow::handleAuthRequest(QString prompt, QAuthenticator* authenticator
     }
 }
 
-void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx::Error errorReport)
+void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, const Qx::Error& errorReport)
 {
     // Close progress dialog and reset taskbar progress indicator
     mImportProgressDialog->close();

@@ -119,7 +119,7 @@ protected:
 
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
-    InstallFoundation(QString installPath);
+    InstallFoundation(const QString& installPath);
 
 //-Destructor-------------------------------------------------------------------------------------------------
 public:
@@ -127,10 +127,10 @@ public:
 
 //-Class Functions------------------------------------------------------------------------------------------------------
 private:
-    static void allowUserWriteOnFile(QString filePath);
+    static void allowUserWriteOnFile(const QString& filePath);
 
 public:
-    static QString filePathToBackupPath(QString filePath);
+    static QString filePathToBackupPath(const QString& filePath);
 
 //-Instance Functions---------------------------------------------------------------------------------------------------------
 private:
@@ -162,7 +162,7 @@ public:
     bool containsAnyPlatform(const QList<QString>& names) const;
     bool containsAnyPlaylist(const QList<QString>& names) const;
 
-    void addRevertableFile(QString filePath);
+    void addRevertableFile(const QString& filePath);
     int revertQueueCount() const;
     int revertNextChange(RevertError& error, bool skipOnFail);
 };

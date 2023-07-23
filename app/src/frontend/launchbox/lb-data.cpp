@@ -233,7 +233,7 @@ Fe::DocHandlingError XmlDocWriter::writeOutOf()
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlatformDoc::PlatformDoc(Install* const parent, const QString& xmlPath, QString docName, Fe::UpdateOptions updateOptions,
+PlatformDoc::PlatformDoc(Install* const parent, const QString& xmlPath, QString docName, const Fe::UpdateOptions& updateOptions,
                          const DocKey&) :
     Fe::BasicPlatformDoc(parent, xmlPath, docName, updateOptions)
 {}
@@ -582,7 +582,7 @@ bool PlatformDoc::Writer::writeCustomField(const CustomField& customField)
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlaylistDoc::PlaylistDoc(Install* const parent, const QString& xmlPath, QString docName, Fe::UpdateOptions updateOptions,
+PlaylistDoc::PlaylistDoc(Install* const parent, const QString& xmlPath, QString docName, const Fe::UpdateOptions& updateOptions,
                          const DocKey&) :
     Fe::BasicPlaylistDoc(parent, xmlPath, docName, updateOptions),
     mLaunchBoxDatabaseIdTracker(&parent->mLbDatabaseIdTracker)
@@ -797,7 +797,7 @@ bool PlaylistDoc::Writer::writePlaylistGame(const PlaylistGame& playlistGame)
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlatformsConfigDoc::PlatformsConfigDoc(Install* const parent, const QString& xmlPath, Fe::UpdateOptions updateOptions,
+PlatformsConfigDoc::PlatformsConfigDoc(Install* const parent, const QString& xmlPath, const Fe::UpdateOptions& updateOptions,
                                        const DocKey&) :
     Fe::UpdateableDoc(parent, xmlPath, STD_NAME, updateOptions)
 {}
@@ -818,13 +818,13 @@ const QHash<QString, Platform>& PlatformsConfigDoc::finalPlatforms() const { ret
 const QMap<QString, PlatformFolder>& PlatformsConfigDoc::finalPlatformFolders() const { return mPlatformFoldersFinal; }
 const QMap<QString, PlatformCategory>& PlatformsConfigDoc::finalPlatformCategories() const { return mPlatformCategoriesFinal; }
 
-void PlatformsConfigDoc::addPlatform(Platform platform)
+void PlatformsConfigDoc::addPlatform(const Platform& platform)
 {
     // Add platform, don't need to add media folders as LB will automatically set them to the defaults
     addUpdateableItem(mPlatformsExisting, mPlatformsFinal, platform.name(), platform);
 }
 
-void PlatformsConfigDoc::removePlatform(QString name)
+void PlatformsConfigDoc::removePlatform(const QString& name)
 {
     // Remove platform and any of its media folders (so LB will reset them to default)
     mPlatformsFinal.remove(name);
@@ -832,12 +832,12 @@ void PlatformsConfigDoc::removePlatform(QString name)
     removePlatformFolders(name);
 }
 
-void PlatformsConfigDoc::addPlatformFolder(PlatformFolder platformFolder)
+void PlatformsConfigDoc::addPlatformFolder(const PlatformFolder& platformFolder)
 {
     addUpdateableItem(mPlatformFoldersExisting, mPlatformFoldersFinal, platformFolder.identifier(), platformFolder);
 }
 
-void PlatformsConfigDoc::removePlatformFolders(QString platformName)
+void PlatformsConfigDoc::removePlatformFolders(const QString& platformName)
 {
     auto culler = [&platformName](QMap<QString, PlatformFolder>::iterator itr){
         return itr.value().platform() == platformName;
@@ -846,12 +846,12 @@ void PlatformsConfigDoc::removePlatformFolders(QString platformName)
     mPlatformFoldersFinal.removeIf(culler);
 }
 
-void PlatformsConfigDoc::addPlatformCategory(PlatformCategory platformCategory)
+void PlatformsConfigDoc::addPlatformCategory(const PlatformCategory& platformCategory)
 {
     addUpdateableItem(mPlatformCategoriesExisting, mPlatformCategoriesFinal, platformCategory.name(), platformCategory);
 }
 
-void PlatformsConfigDoc::removePlatformCategory(QString categoryName)
+void PlatformsConfigDoc::removePlatformCategory(const QString& categoryName)
 {
     mPlatformCategoriesFinal.remove(categoryName);
     mPlatformCategoriesExisting.remove(categoryName);

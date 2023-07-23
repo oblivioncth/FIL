@@ -88,27 +88,27 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wName(QString nameAsId);
-    Builder& wTitle(QString title);
-    Builder& wEmulator(QString emulator);
-    Builder& wCloneOf(QString cloneOf);
-    Builder& wYear(QString rawYear);
-    Builder& wManufacturer(QString manufacturer);
-    Builder& wCategory(QString category);
-    Builder& wPlayers(QString players);
-    Builder& wRotation(QString rawRotation);
-    Builder& wControl(QString control);
-    Builder& wStatus(QString status);
-    Builder& wDisplayCount(QString rawDisplayCount);
-    Builder& wDisplayType(QString displayType);
-    Builder& wAltRomName(QString altRomName);
-    Builder& wAltTitle(QString altTitle);
-    Builder& wExtra(QString extra);
-    Builder& wButtons(QString buttons);
-    Builder& wSeries(QString series);
-    Builder& wLanguage(QString language);
-    Builder& wRegion(QString region);
-    Builder& wRating(QString rating);
+    Builder& wName(const QString& nameAsId);
+    Builder& wTitle(const QString& title);
+    Builder& wEmulator(const QString& emulator);
+    Builder& wCloneOf(const QString& cloneOf);
+    Builder& wYear(const QString& rawYear);
+    Builder& wManufacturer(const QString& manufacturer);
+    Builder& wCategory(const QString& category);
+    Builder& wPlayers(const QString& players);
+    Builder& wRotation(const QString& rawRotation);
+    Builder& wControl(const QString& control);
+    Builder& wStatus(const QString& status);
+    Builder& wDisplayCount(const QString& rawDisplayCount);
+    Builder& wDisplayType(const QString& displayType);
+    Builder& wAltRomName(const QString& altRomName);
+    Builder& wAltTitle(const QString& altTitle);
+    Builder& wExtra(const QString& extra);
+    Builder& wButtons(const QString& buttons);
+    Builder& wSeries(const QString& series);
+    Builder& wLanguage(const QString& language);
+    Builder& wRegion(const QString& region);
+    Builder& wRating(const QString& rating);
 };
 
 class EmulatorArtworkEntry : public Fe::Item
@@ -140,8 +140,8 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wType(QString type);
-    Builder& wPaths(QStringList paths);
+    Builder& wType(const QString& type);
+    Builder& wPaths(const QStringList& paths);
 };
 
 }

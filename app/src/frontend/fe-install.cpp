@@ -15,7 +15,7 @@ namespace Fe
 //===============================================================================================================
 
 //-Constructor---------------------------------------------------------------------------------------------------
-Install::Install(QString installPath) :
+Install::Install(const QString& installPath) :
     InstallFoundation(installPath)
 {}
 
@@ -23,7 +23,7 @@ Install::Install(QString installPath) :
 //Public:
 QMap<QString, Install::Entry>& Install::registry() { static QMap<QString, Entry> registry; return registry; }
 
-void Install::registerInstall(QString name, Entry entry) { registry()[name] = entry; }
+void Install::registerInstall(const QString& name, const Entry& entry) { registry()[name] = entry; }
 
 std::shared_ptr<Install> Install::acquireMatch(const QString& installPath)
 {
@@ -95,7 +95,7 @@ Qx::Error Install::postImport() { return {}; }
 Qx::Error Install::prePlatformsImport() { return {}; }
 Qx::Error Install::postPlatformsImport() { return {}; }
 
-Qx::Error Install::preImageProcessing(QList<ImageMap>& workerTransfers, ImageSources bulkSources)
+Qx::Error Install::preImageProcessing(QList<ImageMap>& workerTransfers, const ImageSources& bulkSources)
 {
     Q_UNUSED(workerTransfers);
     Q_UNUSED(bulkSources);
@@ -106,7 +106,7 @@ Qx::Error Install::postImageProcessing() { return {}; }
 Qx::Error Install::prePlaylistsImport() { return {}; }
 Qx::Error Install::postPlaylistsImport() { return {}; }
 
-Fe::DocHandlingError Install::checkoutPlatformDoc(std::unique_ptr<PlatformDoc>& returnBuffer, QString name)
+Fe::DocHandlingError Install::checkoutPlatformDoc(std::unique_ptr<PlatformDoc>& returnBuffer, const QString& name)
 {
     // Translate to frontend doc name
     QString translatedName = translateDocName(name, DataDoc::Type::Platform);
@@ -125,7 +125,7 @@ Fe::DocHandlingError Install::checkoutPlatformDoc(std::unique_ptr<PlatformDoc>& 
     return readErrorStatus;
 }
 
-Fe::DocHandlingError Install::checkoutPlaylistDoc(std::unique_ptr<PlaylistDoc>& returnBuffer, QString name)
+Fe::DocHandlingError Install::checkoutPlaylistDoc(std::unique_ptr<PlaylistDoc>& returnBuffer, const QString& name)
 {
     // Translate to frontend doc name
     QString translatedName = translateDocName(name, DataDoc::Type::Playlist);

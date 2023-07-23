@@ -23,7 +23,7 @@ namespace Lb
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-Install::Install(QString installPath) :
+Install::Install(const QString& installPath) :
     Fe::Install(installPath)
 {
     // Initialize files and directories;
@@ -332,7 +332,7 @@ Qx::Error Install::postPlatformsImport()
     return Qx::Error();
 }
 
-Qx::Error Install::preImageProcessing(QList<ImageMap>& workerTransfers, Fe::ImageSources bulkSources)
+Qx::Error Install::preImageProcessing(QList<ImageMap>& workerTransfers, const Fe::ImageSources& bulkSources)
 {
     if(Qx::Error superErr = Fe::Install::preImageProcessing(workerTransfers, bulkSources); superErr.isValid())
         return superErr;
