@@ -307,7 +307,7 @@ Platform::Builder::Builder() {}
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
 Platform::Builder& Platform::Builder::wName(const QString& name) { mItemBlueprint.mName = name; return *this; }
-Platform::Builder& Platform::Builder::wCategory(const QString& category) { mItemBlueprint.mName = category; return *this; }
+Platform::Builder& Platform::Builder::wCategory(const QString& category) { mItemBlueprint.mCategory = category; return *this; }
 
 
 //===============================================================================================================
