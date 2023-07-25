@@ -1,7 +1,7 @@
 # FIL (Flashpoint Importer for Launchers)
 <img align="left" src="https://i.imgur.com/WZbXSO2.png" width=25%>
 
-FIL  is an importer tool for several launchers/frontends that allows one to add platforms and playlists from [BlueMaxima's Flashpoint](https://bluemaxima.org/flashpoint/) project to their collection. It is fully automated and only requires the user to provide the paths to their launcher and Flashpoint installs, choose which Platforms/Playlists they wish to import, and select between a few import mode options. Once the import is started the current progress is displayed and any errors that occur are shown to the user, with resolvable errors including a prompt for what the user would like to do. After the process has completed, the specified launcher can be started and the games from Flashpoint can be played like those from any other Platform.
+FIL  is an importer tool for several launchers/frontends that allows one to add platforms and playlists from [Flashpoint Archive](https://flashpointarchive.org/) to their collection. It is fully automated and only requires the user to provide the paths to their launcher and Flashpoint installs, choose which Platforms/Playlists they wish to import, and select between a few import mode options. Once the import is started the current progress is displayed and any errors that occur are shown to the user, with resolvable errors including a prompt for what the user would like to do. After the process has completed, the specified launcher can be started and the games from Flashpoint can be played like those from any other Platform.
 
 For Platforms, the importer is capable of importing each game/animation along with any additional apps, images, and most of the metadata fields (i.e. Title, Description, etc, see below).
 
@@ -38,7 +38,7 @@ Each metadata field (i.e. Title, Author, etc.) is matched to the closest equival
 Both Flashpoint Ultimate and Flashpoint Infinity are supported.
 
 ### Version Matching
-Each release of this application targets a specific version series of BlueMaxima's Flashpoint, which are composed of a major and minor version number, and are designed to work with all Flashpoint updates within that series. For example, a FIL release that targets Flashpoint 10.1 is intended to be used with any version of flashpoint that fits the scheme `10.1.x.x`, such as `10.1`, `10.1.0.3`, `10.1.2`, etc, but **not** `10.2`.
+Each release of this application targets a specific version series of Flashpoint Archive, which are composed of a major and minor version number, and are designed to work with all Flashpoint updates within that series. For example, a FIL release that targets Flashpoint 10.1 is intended to be used with any version of flashpoint that fits the scheme `10.1.x.x`, such as `10.1`, `10.1.0.3`, `10.1.2`, etc, but **not** `10.2`.
 
 Using a version of FIL that does not target the version of Flashpoint you wish to use it with is highly discouraged as some features may not work correctly or at all and in some cases the utility may fail to function entirely or even damage the Flashpoint install it is used with.
 
@@ -50,7 +50,9 @@ The title of each [release](github.com/oblivioncth/FIL/releases) will indicate w
 --------------------------------------------------------------------------------------------------
 **LaunchBox**
 
-The import strategy for LaunchBox results in a setup that is straightforward and very similar to when Flashpoint used LaunchBox as its frontend. Platforms to platforms, playlists to playlists, games to games, additional apps to additional apps, and so forth.
+The import strategy for LaunchBox results in a setup that is straightforward and very similar to when Flashpoint Archive used LaunchBox as its frontend. Platforms to platforms, playlists to playlists, games to games, additional apps to additional apps, and so forth.
+
+Each platform is grouped within the platform category "Flashpoint".
 
 All entry metadata is converted to its nearest LaunchBox equivalent, with nearly all fields being covered. One minor exception is the Flashpoint "Language" field, as it is added as a LaunchBox Custom Field, which requires a premium license to see.
 
