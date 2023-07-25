@@ -86,6 +86,7 @@ private:
         static inline const QString AddAppPreload = u"AddAppPreload"_s;
         static inline const QString ImageDownload = u"ImageDownload"_s;
         static inline const QString ImageTransfer = u"ImageTransfer"_s;
+        static inline const QString IconTransfer = u"IconTransfer"_s;
         static inline const QString GameImport = u"GameImport"_s;
         static inline const QString PlaylistImport = u"PlaylistImport"_s;
     };
@@ -158,6 +159,7 @@ private:
     Qx::Error preloadPlaylists(QList<Fp::Playlist>& targetPlaylists);
     QList<QUuid> getPlaylistSpecificGameIds(const QList<Fp::Playlist>& playlists);
     ImageTransferError transferImage(bool symlink, QString sourcePath, QString destPath);
+    bool performImageJobs(const QList<Fe::Install::ImageMap>& jobs, bool symlink, Qx::ProgressGroup* pg = nullptr);
     ImportResult processPlatformGames(Qx::Error& errorReport, std::unique_ptr<Fe::PlatformDoc>& platformDoc, Fp::Db::QueryBuffer& gameQueryResult);
     void cullUnimportedPlaylistGames(QList<Fp::Playlist>& playlists);
 
@@ -165,6 +167,7 @@ private:
     ImportResult processGames(Qx::Error& errorReport, QList<Fp::Db::QueryBuffer>& primary, QList<Fp::Db::QueryBuffer>& playlistSpecific);
     ImportResult processPlaylists(Qx::Error& errorReport, const QList<Fp::Playlist>& playlists);
     ImportResult processImages(Qx::Error& errorReport);
+    ImportResult processIcons(const QStringList& platforms);
 
 public:
     ImportResult doImport(Qx::Error& errorReport);

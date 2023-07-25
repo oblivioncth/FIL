@@ -193,6 +193,38 @@ ImageTransferError ImportWorker::transferImage(bool symlink, QString sourcePath,
     return ImageTransferError();
 }
 
+bool ImportWorker::performImageJobs(const QList<Fe::Install::ImageMap>& jobs, bool symlink, Qx::ProgressGroup* pg)
+{
+    // Setup for image transfers
+    ImageTransferError imageTransferError; // Error return reference
+    *mBlockingErrorResponse = QMessageBox::NoToAll; // Default to choice "NoToAll" in case the signal is not correctly connected using Qt::BlockingQueuedConnection
+    bool ignoreAllTransferErrors = false; // NoToAll response tracker
+
+    for(const Fe::Install::ImageMap& imageJob : jobs)
+    {
+        while((imageTransferError = transferImage(symlink, imageJob.sourcePath, imageJob.destPath)).isValid() && !ignoreAllTransferErrors)
+        {
+            // Notify GUI Thread of error
+            emit blockingErrorOccured(mBlockingErrorResponse, imageTransferError,
+                                      QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
+
+            // Check response
+            if(*mBlockingErrorResponse == QMessageBox::No)
+                break;
+            else if(*mBlockingErrorResponse == QMessageBox::NoToAll)
+                ignoreAllTransferErrors = true;
+        }
+
+        // Update progress dialog value
+        if(mCanceled)
+            return false;
+        else if(pg)
+            pg->incrementValue();
+    }
+
+    return true;
+}
+
 ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::Error& errorReport, std::unique_ptr<Fe::PlatformDoc>& platformDoc, Fp::Db::QueryBuffer& gameQueryResult)
 {
     // Add/Update games
@@ -236,8 +268,8 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::Error& errorRe
         Fp::Set builtSet = sb.build();
 
         // Get image information
-        QFileInfo logoLocalInfo(mFlashpointInstall->imageLocalPath(Fp::ImageType::Logo, builtGame.id()));
-        QFileInfo ssLocalInfo(mFlashpointInstall->imageLocalPath(Fp::ImageType::Screenshot, builtGame.id()));
+        QFileInfo logoLocalInfo(mFlashpointInstall->entryImageLocalPath(Fp::ImageType::Logo, builtGame.id()));
+        QFileInfo ssLocalInfo(mFlashpointInstall->entryImageLocalPath(Fp::ImageType::Screenshot, builtGame.id()));
 
         // Add set to doc
         QString checkedLogoPath = (logoLocalInfo.exists() || mOptionSet.downloadImages) ? logoLocalInfo.absoluteFilePath() : QString();
@@ -252,7 +284,7 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::Error& errorRe
         {
             if(!logoLocalInfo.exists())
             {
-                QUrl logoRemotePath = mFlashpointInstall->imageRemoteUrl(Fp::ImageType::Logo, builtGame.id());
+                QUrl logoRemotePath = mFlashpointInstall->entryImageRemoteUrl(Fp::ImageType::Logo, builtGame.id());
                 mImageDownloadManager.appendTask(Qx::DownloadTask{logoRemotePath, logoLocalInfo.absoluteFilePath()});
             }
             else
@@ -260,7 +292,7 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::Error& errorRe
 
             if(!ssLocalInfo.exists())
             {
-                QUrl ssRemotePath = mFlashpointInstall->imageRemoteUrl(Fp::ImageType::Screenshot, builtGame.id());
+                QUrl ssRemotePath = mFlashpointInstall->entryImageRemoteUrl(Fp::ImageType::Screenshot, builtGame.id());
                 mImageDownloadManager.appendTask(Qx::DownloadTask{ssRemotePath, ssLocalInfo.absoluteFilePath()});
             }
             else
@@ -525,8 +557,8 @@ ImportWorker::ImportResult ImportWorker::processImages(Qx::Error& errorReport)
     Fe::ImageSources bulkSources;
     if(mOptionSet.imageMode == Fe::ImageMode::Reference)
     {
-        bulkSources.setLogoPath(QDir::toNativeSeparators(mFlashpointInstall->logosDirectory().absolutePath()));
-        bulkSources.setScreenshotPath(QDir::toNativeSeparators(mFlashpointInstall->screenshotsDirectory().absolutePath()));
+        bulkSources.setLogoPath(QDir::toNativeSeparators(mFlashpointInstall->entryLogosDirectory().absolutePath()));
+        bulkSources.setScreenshotPath(QDir::toNativeSeparators(mFlashpointInstall->entryScreenshotsDirectory().absolutePath()));
     }
 
     Qx::Error imageExchangeError = mFrontendInstall->preImageProcessing(imageTransferJobs, bulkSources);
@@ -549,35 +581,8 @@ ImportWorker::ImportResult ImportWorker::processImages(Qx::Error& errorReport)
         if(static_cast<quint64>(imageTransferJobs.size()) != mProgressManager.group(Pg::ImageTransfer)->maximum())
             mProgressManager.group(Pg::ImageTransfer)->setMaximum(imageTransferJobs.size());
 
-        // Setup for image transfers
-        ImageTransferError imageTransferError; // Error return reference
-        *mBlockingErrorResponse = QMessageBox::NoToAll; // Default to choice "NoToAll" in case the signal is not correctly connected using Qt::BlockingQueuedConnection
-        bool ignoreAllTransferErrors = false; // NoToAll response tracker
-
-        for(const Fe::Install::ImageMap& imageJob : qAsConst(imageTransferJobs))
-        {
-            while((imageTransferError = transferImage(mOptionSet.imageMode == Fe::ImageMode::Link, imageJob.sourcePath, imageJob.destPath)).isValid() && !ignoreAllTransferErrors)
-            {
-                // Notify GUI Thread of error
-                emit blockingErrorOccured(mBlockingErrorResponse, imageTransferError,
-                                          QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
-
-                // Check response
-                if(*mBlockingErrorResponse == QMessageBox::No)
-                   break;
-                else if(*mBlockingErrorResponse == QMessageBox::NoToAll)
-                   ignoreAllTransferErrors = true;
-            }
-
-           // Update progress dialog value
-           if(mCanceled)
-           {
-               errorReport = Qx::Error();
-               return Canceled;
-           }
-           else
-               mProgressManager.group(Pg::ImageTransfer)->incrementValue();
-        }
+        if(!performImageJobs(imageTransferJobs, mOptionSet.imageMode == Fe::ImageMode::Link, mProgressManager.group(Pg::ImageTransfer)))
+            return Canceled;
     }
     else if(!imageTransferJobs.isEmpty())
         qWarning() << Q_FUNC_INFO << "the frontend provided image transfers when the mode wasn't link/copy";
@@ -587,6 +592,39 @@ ImportWorker::ImportResult ImportWorker::processImages(Qx::Error& errorReport)
 
     // Report successful step completion
     errorReport = Qx::Error();
+    return Successful;
+}
+
+ImportWorker::ImportResult ImportWorker::processIcons(const QStringList& platforms)
+{
+    QList<Fe::Install::ImageMap> jobs;
+    QString mainDest = mFrontendInstall->platformCategoryIconPath();
+    std::optional<QDir> platformDestDir = mFrontendInstall->platformIconsDirectory();
+
+    // Main Job
+    if(!mainDest.isEmpty())
+        jobs.emplace_back(Fe::Install::ImageMap{.sourcePath = u":/flashpoint/icon.png"_s, .destPath = mainDest});
+
+    // Platform jobs
+    if(platformDestDir)
+    {
+        QDir pdd = platformDestDir.value();
+        for(const QString& p : platforms)
+        {
+            QString src = mFlashpointInstall->platformLogoPath(p);
+            if(QFile::exists(src))
+                jobs.emplace_back(Fe::Install::ImageMap{.sourcePath = src,
+                                                        .destPath = pdd.absoluteFilePath(p + ".png")});
+        }
+    }
+
+    // Perform
+    if(!jobs.isEmpty())
+    {
+        if(!performImageJobs(jobs, false, mProgressManager.group(Pg::IconTransfer))) // Always copy
+            return Canceled;
+    }
+
     return Successful;
 }
 
@@ -664,6 +702,11 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::Error& errorReport)
     //-Determine Workload-------------------------------------------------
     quint64 totalGameCount = 0;
 
+    QStringList playlistSpecPlatforms;
+    for(const Fp::Db::QueryBuffer& query : qAsConst(playlistSpecGameQueries))
+        playlistSpecPlatforms.append(query.source);
+    QStringList involvedPlatforms = mImportSelections.platforms + playlistSpecPlatforms;
+
     // Additional App pre-load
     Qx::ProgressGroup* pgAddAppPreload = initializeProgressGroup(Pg::AddAppPreload, 2);
     pgAddAppPreload->setMaximum(addAppQuery.size);
@@ -699,6 +742,20 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::Error& errorReport)
         pgImageTransfer->setMaximum(totalGameCount * 2);
     }
 
+    // Icon transfers
+    // TOD: Somewhat wasteful because these create a temporary copy, but not a big deal for now
+    quint64 iconCount = 0;
+    if(!mFrontendInstall->platformCategoryIconPath().isEmpty())
+        iconCount++;
+    if(mFrontendInstall->platformIconsDirectory())
+        iconCount += involvedPlatforms.size();
+
+    if(iconCount > 0)
+    {
+        Qx::ProgressGroup* pgIconTransfer = initializeProgressGroup(Pg::IconTransfer, 3);
+        pgIconTransfer->increaseMaximum(iconCount);
+    }
+
     // All playlists
     if(!targetPlaylists.isEmpty())
     {
@@ -710,15 +767,11 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::Error& errorReport)
     connect(&mProgressManager, &Qx::GroupedProgressManager::progressUpdated, this, &ImportWorker::pmProgressUpdated);
 
     //-Handle Frontend Specific Import Setup------------------------------
-    QStringList playlistSpecPlatforms;
-    for(const Fp::Db::QueryBuffer& query : qAsConst(playlistSpecGameQueries))
-        playlistSpecPlatforms.append(query.source);
-
     Fe::Install::ImportDetails details{
         .updateOptions = mOptionSet.updateOptions,
         .imageMode = mOptionSet.imageMode,
         .clifpPath = CLIFp::standardCLIFpPath(*mFlashpointInstall),
-        .involvedPlatforms = mImportSelections.platforms + playlistSpecPlatforms,
+        .involvedPlatforms = involvedPlatforms,
         .involvedPlaylists = mImportSelections.playlists
     };
 
@@ -752,6 +805,10 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::Error& errorReport)
 
     // Process images
     if((importStepStatus = processImages(errorReport)) != Successful)
+        return importStepStatus;
+
+    // Process Icons
+    if((importStepStatus = processIcons(involvedPlatforms)) != Successful)
         return importStepStatus;
 
     // Process playlists

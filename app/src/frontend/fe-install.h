@@ -102,6 +102,11 @@ public:
     // Image handling
     // NOTE: The image paths provided here can be null (i.e. images unavailable). Handle accordingly in derived.
     virtual void processDirectGameImages(const Game* game, const Fe::ImageSources& imageSources) = 0;
+
+    // TODO: These might need to be changed to support launchers where the platform images are tied closely to the platform documents,
+    // but currently none do this so this works.
+    virtual QString platformCategoryIconPath() const; // Unsupported in default implementation, needs to return path with .png extension
+    virtual std::optional<QDir> platformIconsDirectory() const; // Unsupported in default implementation
 };
 
 }

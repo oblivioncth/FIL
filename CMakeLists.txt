@@ -71,7 +71,7 @@ ob_fetch_qx(
 
 # Fetch libfp (build and import from source)
 include(OB/Fetchlibfp)
-ob_fetch_libfp("b95889488ebb71a8be7da6701df45bef5fc149db")
+ob_fetch_libfp("85d14d3a5cd3a4b4b58d1aff3c54dc6210239133")
 
 # Fetch CLIFp (build and import from source)
 include(OB/FetchCLIFp)

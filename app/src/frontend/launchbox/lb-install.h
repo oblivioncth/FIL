@@ -33,6 +33,8 @@ public:
     static inline const QString CORE_PATH = u"Core"_s;
     static inline const QString MAIN_EXE_PATH = u"Core/LaunchBox.exe"_s;
     static inline const QString PLATFORM_IMAGES_PATH = u"Images"_s;
+    static inline const QString PLATFORM_ICONS_PATH = u"Images/Platform Icons/Platforms"_s;
+    static inline const QString PLATFORM_CATEGORY_ICONS_PATH = u"Images/Platform Icons/Platform Categories"_s;
     static inline const QString LOGO_PATH = u"Box - Front"_s;
     static inline const QString SCREENSHOT_PATH = u"Screenshot - Gameplay"_s;
 
@@ -56,6 +58,8 @@ private:
     QDir mPlatformsDirectory;
     QDir mPlaylistsDirectory;
     QDir mPlatformImagesDirectory;
+    QDir mPlatformIconsDirectory;
+    QDir mPlatformCategoryIconsDirectory;
     QDir mCoreDirectory;
 
     // Image transfers for import worker
@@ -116,6 +120,9 @@ public:
 
     // Image handling
     void processDirectGameImages(const Fe::Game* game, const Fe::ImageSources& imageSources) override;
+    QString platformCategoryIconPath() const override;
+    std::optional<QDir> platformIconsDirectory() const override;
+
 };
 REGISTER_FRONTEND(Install::NAME, Install, &Install::ICON_PATH, &Install::HELP_URL);
 
