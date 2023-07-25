@@ -19,7 +19,7 @@ namespace Am
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-Install::Install(QString installPath) :
+Install::Install(const QString& installPath) :
     Fe::Install(installPath),
     mEmulatorsDirectory(installPath + '/' + EMULATORS_PATH),
     mRomlistsDirectory(installPath + '/' + ROMLISTS_PATH),
@@ -59,20 +59,17 @@ void Install::nullify()
 
     mEmulatorsDirectory = QDir();
     mRomlistsDirectory = QDir();
-    mMainConfigFile.setFileName("");
+    mMainConfigFile.setFileName(u""_s);
     mFpTagDirectory = QDir();
     mFpScraperDirectory = QDir();
-    mMainExe.setFileName("");
-    mConsoleExe.setFileName("");
-    mFpRomlist.setFileName("");
-    mEmulatorConfigFile.setFileName("");
+    mMainExe.setFileName(u""_s);
+    mConsoleExe.setFileName(u""_s);
+    mFpRomlist.setFileName(u""_s);
+    mEmulatorConfigFile.setFileName(u""_s);
 }
 
-Qx::GenericError Install::populateExistingDocs()
+Qx::Error Install::populateExistingDocs()
 {
-    // Error template
-    Qx::GenericError error(Qx::GenericError::Critical, ERR_INSEPECTION);
-
     // Temp storage
     QFileInfoList existingList;
 
@@ -87,18 +84,18 @@ Qx::GenericError Install::populateExistingDocs()
          */
 
         // Check for platforms
-        Qx::IoOpReport existingCheck = Qx::dirContentInfoList(existingList, mFpTagDirectory, {"[[]Platform[]] *." + TAG_EXT});
+        Qx::IoOpReport existingCheck = Qx::dirContentInfoList(existingList, mFpTagDirectory, {u"[[]Platform[]] *."_s + TAG_EXT});
         if(existingCheck.isFailure())
-            return error.setSecondaryInfo(existingCheck.outcome()).setDetailedInfo(existingCheck.outcomeInfo());
+            return existingCheck;
 
         for(const QFileInfo& platformFile : qAsConst(existingList))
              catalogueExistingDoc(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Platform, platformFile.baseName()));
 
         // Check for playlists
-        existingCheck = Qx::dirContentInfoList(existingList, mFpTagDirectory, {"[[]Playlist[]] *." + TAG_EXT},
+        existingCheck = Qx::dirContentInfoList(existingList, mFpTagDirectory, {u"[[]Playlist[]] *."_s + TAG_EXT},
                                                QDir::NoFilter, QDirIterator::Subdirectories);
         if(existingCheck.isFailure())
-            return error.setSecondaryInfo(existingCheck.outcome()).setDetailedInfo(existingCheck.outcomeInfo());
+            return existingCheck;
 
         for(const QFileInfo& playlistFile : qAsConst(existingList))
             catalogueExistingDoc(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Playlist, playlistFile.baseName()));
@@ -118,7 +115,7 @@ Qx::GenericError Install::populateExistingDocs()
         catalogueExistingDoc(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Config, emulatorCfgInfo.baseName()));
 
     // Return success
-    return Qx::GenericError();
+    return Qx::Error();
 }
 
 QString Install::translateDocName(const QString& originalName, Fe::DataDoc::Type type) const
@@ -135,6 +132,8 @@ QString Install::translateDocName(const QString& originalName, Fe::DataDoc::Type
     return translatedName;
 }
 
+QString Install::executableSubPath() const { return MAIN_EXE_PATH; }
+
 QString Install::imageDestinationPath(Fp::ImageType imageType, const Fe::Game* game) const
 {
     return mFpScraperDirectory.absolutePath() + '/' +
@@ -146,7 +145,7 @@ QString Install::imageDestinationPath(Fp::ImageType imageType, const Fe::Game* g
 std::shared_ptr<Fe::PlatformDoc::Reader> Install::preparePlatformDocCheckout(std::unique_ptr<Fe::PlatformDoc>& platformDoc, const QString& translatedName)
 {
     // Determine path to the taglist that corresponds with the interface
-    QString taglistPath = mFpTagDirectory.absoluteFilePath(translatedName + "." + TAG_EXT) ;
+    QString taglistPath = mFpTagDirectory.absoluteFilePath(translatedName + u"."_s + TAG_EXT) ;
 
     // Overviews
     QDir overviewDir(mFpScraperDirectory.absoluteFilePath(OVERVIEW_FOLDER_NAME)); // Not a file, but works
@@ -161,7 +160,7 @@ std::shared_ptr<Fe::PlatformDoc::Reader> Install::preparePlatformDocCheckout(std
 std::shared_ptr<Fe::PlaylistDoc::Reader> Install::preparePlaylistDocCheckout(std::unique_ptr<Fe::PlaylistDoc>& playlistDoc, const QString& translatedName)
 {
     // Determine path to the taglist that corresponds with the interface
-    QString taglistPath = mFpTagDirectory.absoluteFilePath(translatedName + "." + TAG_EXT) ;
+    QString taglistPath = mFpTagDirectory.absoluteFilePath(translatedName + u"."_s + TAG_EXT) ;
 
     // Construct unopened document
     playlistDoc = std::make_unique<PlaylistInterface>(this, taglistPath, translatedName, DocKey{});
@@ -188,7 +187,7 @@ std::shared_ptr<Fe::PlaylistDoc::Writer> Install::preparePlaylistDocCommit(const
     return docWriter;
 }
 
-Qx::GenericError Install::checkoutMainConfig(std::unique_ptr<CrudeSettings>& returnBuffer)
+Fe::DocHandlingError Install::checkoutMainConfig(std::unique_ptr<CrudeSettings>& returnBuffer)
 {
     // Construct unopened document
     returnBuffer = std::make_unique<CrudeSettings>(this, mMainConfigFile.fileName(), DocKey{});
@@ -197,7 +196,7 @@ Qx::GenericError Install::checkoutMainConfig(std::unique_ptr<CrudeSettings>& ret
     std::shared_ptr<CrudeSettingsReader> docReader = std::make_shared<CrudeSettingsReader>(returnBuffer.get());
 
     // Open document
-    Qx::GenericError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
+    Fe::DocHandlingError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
 
     // Set return null on failure
     if(readErrorStatus.isValid())
@@ -207,7 +206,7 @@ Qx::GenericError Install::checkoutMainConfig(std::unique_ptr<CrudeSettings>& ret
     return readErrorStatus;
 }
 
-Qx::GenericError Install::checkoutFlashpointRomlist(std::unique_ptr<Romlist>& returnBuffer)
+Fe::DocHandlingError Install::checkoutFlashpointRomlist(std::unique_ptr<Romlist>& returnBuffer)
 {
     // Construct unopened document
     returnBuffer = std::make_unique<Romlist>(this, mFpRomlist.fileName(), Fp::NAME, mImportDetails->updateOptions, DocKey{});
@@ -216,7 +215,7 @@ Qx::GenericError Install::checkoutFlashpointRomlist(std::unique_ptr<Romlist>& re
     std::shared_ptr<Romlist::Reader> docReader = std::make_shared<Romlist::Reader>(returnBuffer.get());
 
     // Open document
-    Qx::GenericError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
+    Fe::DocHandlingError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
 
     // Set return null on failure
     if(readErrorStatus.isValid())
@@ -226,7 +225,7 @@ Qx::GenericError Install::checkoutFlashpointRomlist(std::unique_ptr<Romlist>& re
     return readErrorStatus;
 }
 
-Qx::GenericError Install::checkoutClifpEmulatorConfig(std::unique_ptr<Emulator>& returnBuffer)
+Fe::DocHandlingError Install::checkoutClifpEmulatorConfig(std::unique_ptr<Emulator>& returnBuffer)
 {
     // Construct unopened document
     returnBuffer = std::make_unique<Emulator>(this, mEmulatorConfigFile.fileName(), DocKey{});
@@ -235,7 +234,7 @@ Qx::GenericError Install::checkoutClifpEmulatorConfig(std::unique_ptr<Emulator>&
     std::shared_ptr<EmulatorReader> docReader = std::make_shared<EmulatorReader>(returnBuffer.get());
 
     // Open document
-    Qx::GenericError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
+    Fe::DocHandlingError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
 
     // Set return null on failure
     if(readErrorStatus.isValid())
@@ -245,7 +244,7 @@ Qx::GenericError Install::checkoutClifpEmulatorConfig(std::unique_ptr<Emulator>&
     return readErrorStatus;
 }
 
-Qx::GenericError Install::commitMainConfig(std::unique_ptr<CrudeSettings> document)
+Fe::DocHandlingError Install::commitMainConfig(std::unique_ptr<CrudeSettings> document)
 {
     assert(document->parent() == this);
 
@@ -253,7 +252,7 @@ Qx::GenericError Install::commitMainConfig(std::unique_ptr<CrudeSettings> docume
     std::shared_ptr<CrudeSettingsWriter> docWriter = std::make_shared<CrudeSettingsWriter>(document.get());
 
     // Write
-    Qx::GenericError writeErrorStatus = commitDataDocument(document.get(), docWriter);
+    Fe::DocHandlingError writeErrorStatus = commitDataDocument(document.get(), docWriter);
 
     // Ensure document is cleared
     document.reset();
@@ -262,7 +261,7 @@ Qx::GenericError Install::commitMainConfig(std::unique_ptr<CrudeSettings> docume
     return writeErrorStatus;
 }
 
-Qx::GenericError Install::commitFlashpointRomlist(std::unique_ptr<Romlist> document)
+Fe::DocHandlingError Install::commitFlashpointRomlist(std::unique_ptr<Romlist> document)
 {
     assert(document->parent() == this);
 
@@ -270,7 +269,7 @@ Qx::GenericError Install::commitFlashpointRomlist(std::unique_ptr<Romlist> docum
     std::shared_ptr<Romlist::Writer> docWriter = std::make_shared<Romlist::Writer>(document.get());
 
     // Write
-    Qx::GenericError writeErrorStatus = commitDataDocument(document.get(), docWriter);
+    Fe::DocHandlingError writeErrorStatus = commitDataDocument(document.get(), docWriter);
 
     // Ensure document is cleared
     document.reset();
@@ -280,7 +279,7 @@ Qx::GenericError Install::commitFlashpointRomlist(std::unique_ptr<Romlist> docum
 }
 
 
-Qx::GenericError Install::commitClifpEmulatorConfig(std::unique_ptr<Emulator> document)
+Fe::DocHandlingError Install::commitClifpEmulatorConfig(std::unique_ptr<Emulator> document)
 {
     assert(document->parent() == this);
 
@@ -288,7 +287,7 @@ Qx::GenericError Install::commitClifpEmulatorConfig(std::unique_ptr<Emulator> do
     std::shared_ptr<Emulator::Writer> docWriter = std::make_shared<Emulator::Writer>(document.get());
 
     // Write
-    Qx::GenericError writeErrorStatus = commitDataDocument(document.get(), docWriter);
+    Fe::DocHandlingError writeErrorStatus = commitDataDocument(document.get(), docWriter);
 
     // Ensure document is cleared
     document.reset();
@@ -308,7 +307,6 @@ void Install::softReset()
 }
 
 QString Install::name() const { return NAME; }
-QString Install::executableName() const { return MAIN_EXE_PATH; }
 QList<Fe::ImageMode> Install::preferredImageModeOrder() const { return IMAGE_MODE_ORDER; }
 
 QString Install::versionString() const
@@ -349,51 +347,49 @@ QString Install::versionString() const
     }
 
     // Can't determine version
-    return QStringLiteral("UNKNOWN VERSION");
+    return u"UNKNOWN VERSION"_s;
 }
 
-Qx::GenericError Install::preImport(const ImportDetails& details)
+Qx::Error Install::preImport(const ImportDetails& details)
 {
-    Qx::GenericError reddit;
-
     //-Ensure that required directories exist----------------------------------------------------------------
 
     // Tag dir
     if(!mFpTagDirectory.exists())
-        if(!mFpTagDirectory.mkpath("."))
-            return Qx::IoOpReport(Qx::IO_OP_WRITE, Qx::IO_ERR_CANT_CREATE, mFpTagDirectory).toGenericError();
+        if(!mFpTagDirectory.mkpath(u"."_s))
+            return Qx::IoOpReport(Qx::IO_OP_WRITE, Qx::IO_ERR_CANT_CREATE, mFpTagDirectory);
 
     // Overview dir
     QDir overviewDir(mFpScraperDirectory.absoluteFilePath(OVERVIEW_FOLDER_NAME));
     if(!overviewDir.exists())
-        if(!overviewDir.mkpath("."))
-            return Qx::IoOpReport(Qx::IO_OP_WRITE, Qx::IO_ERR_CANT_CREATE, overviewDir).toGenericError();
+        if(!overviewDir.mkpath(u"."_s))
+            return Qx::IoOpReport(Qx::IO_OP_WRITE, Qx::IO_ERR_CANT_CREATE, overviewDir);
 
     // Logo and screenshot dir
     if(details.imageMode == Fe::ImageMode::Copy || details.imageMode == Fe::ImageMode::Link)
     {
         QDir logoDir(mFpScraperDirectory.absoluteFilePath(LOGO_FOLDER_NAME));
         if(!logoDir.exists())
-            if(!logoDir.mkpath("."))
-                return Qx::IoOpReport(Qx::IO_OP_WRITE, Qx::IO_ERR_CANT_CREATE, logoDir).toGenericError();
+            if(!logoDir.mkpath(u"."_s))
+                return Qx::IoOpReport(Qx::IO_OP_WRITE, Qx::IO_ERR_CANT_CREATE, logoDir);
 
         QDir ssDir(mFpScraperDirectory.absoluteFilePath(SCREENSHOT_FOLDER_NAME));
         if(!ssDir.exists())
-            if(!ssDir.mkpath("."))
-                return Qx::IoOpReport(Qx::IO_OP_WRITE, Qx::IO_ERR_CANT_CREATE, ssDir).toGenericError();
+            if(!ssDir.mkpath(u"."_s))
+                return Qx::IoOpReport(Qx::IO_OP_WRITE, Qx::IO_ERR_CANT_CREATE, ssDir);
     }
 
     // Perform base tasks
     return Fe::Install::preImport(details);
 }
 
-Qx::GenericError Install::prePlatformsImport()
+Qx::Error Install::prePlatformsImport()
 {
     // Checkout romlist
     return checkoutFlashpointRomlist(mRomlist);
 }
 
-Qx::GenericError Install::postPlatformsImport()
+Qx::Error Install::postPlatformsImport()
 {
     // Finalize romlist
     mRomlist->finalize();
@@ -402,30 +398,32 @@ Qx::GenericError Install::postPlatformsImport()
     return commitFlashpointRomlist(std::move(mRomlist));
 }
 
-Qx::GenericError Install::preImageProcessing(QList<ImageMap>& workerTransfers, Fe::ImageSources bulkSources)
+Qx::Error Install::preImageProcessing(QList<ImageMap>& workerTransfers, const Fe::ImageSources& bulkSources)
 {
+    Q_UNUSED(bulkSources);
+
     switch(mImportDetails->imageMode)
     {
         case Fe::ImageMode::Link:
         case Fe::ImageMode::Copy:
             workerTransfers.swap(mWorkerImageJobs);
-            return Qx::GenericError();
+            return Qx::Error();
         case Fe::ImageMode::Reference:
-            qWarning() << Q_FUNC_INFO << "unsupported image mode";
-            return Qx::GenericError();
+            qWarning() << Q_FUNC_INFO << u"unsupported image mode"_s;
+            return Qx::Error();
         default:
-            qWarning() << Q_FUNC_INFO << "unhandled image mode";
-            return Qx::GenericError();
+            qWarning() << Q_FUNC_INFO << u"unhandled image mode"_s;
+            return Qx::Error();
     }
 }
 
-Qx::GenericError Install::postImport()
+Qx::Error Install::postImport()
 {
     //-Create/update emulator settings-----------------------------------
 
     // Checkout emulator config
     std::unique_ptr<Emulator> emulatorConfig;
-    Qx::GenericError emulatorConfigReadError = checkoutClifpEmulatorConfig(emulatorConfig);
+    Fe::DocHandlingError emulatorConfigReadError = checkoutClifpEmulatorConfig(emulatorConfig);
 
     // Stop import if error occurred
     if(emulatorConfigReadError.isValid())
@@ -434,29 +432,29 @@ Qx::GenericError Install::postImport()
     // General emulator setup
     QString workingDir = QDir::toNativeSeparators(QFileInfo(mImportDetails->clifpPath).absolutePath());
     emulatorConfig->setExecutable(CLIFp::EXE_NAME);
-    emulatorConfig->setArgs(R"(play -i "[romfilename]")");
+    emulatorConfig->setArgs(uR"(play -i u"[romfilename]"_s)"_s);
     emulatorConfig->setWorkDir(workingDir);
-    emulatorConfig->setRomPath("");
-    emulatorConfig->setRomExt("");
+    emulatorConfig->setRomPath(u""_s);
+    emulatorConfig->setRomExt(u""_s);
     emulatorConfig->setSystem(Fp::NAME);
-    emulatorConfig->setInfoSource("");
+    emulatorConfig->setInfoSource(u""_s);
 
     // Ensure image directories are clear
     EmulatorArtworkEntry::Builder aeb;
 
     // Can reuse builder since all fields are set in each entry
     aeb.wPaths({});
-    aeb.wType("flyer");
+    aeb.wType(u"flyer"_s);
     emulatorConfig->setArtworkEntry(aeb.build());
-    aeb.wType("snap");
+    aeb.wType(u"snap"_s);
     emulatorConfig->setArtworkEntry(aeb.build());
-    aeb.wType("marquee");
+    aeb.wType(u"marquee"_s);
     emulatorConfig->setArtworkEntry(aeb.build());
-    aeb.wType("wheel");
+    aeb.wType(u"wheel"_s);
     emulatorConfig->setArtworkEntry(aeb.build());
 
     // Commit emulator config
-    Qx::GenericError emulatorConfigWriteError = commitClifpEmulatorConfig(std::move(emulatorConfig));
+    Fe::DocHandlingError emulatorConfigWriteError = commitClifpEmulatorConfig(std::move(emulatorConfig));
 
     // Stop import if error occurred
     if(emulatorConfigWriteError.isValid())
@@ -466,7 +464,7 @@ Qx::GenericError Install::postImport()
 
     // Checkout main config
     std::unique_ptr<CrudeSettings> mainConfig;
-    Qx::GenericError mainConfigReadError = checkoutMainConfig(mainConfig);
+    Fe::DocHandlingError mainConfigReadError = checkoutMainConfig(mainConfig);
 
     // Stop import if error occurred
     if(mainConfigReadError.isValid())
@@ -477,21 +475,21 @@ Qx::GenericError Install::postImport()
     {
         Display::Builder db;
         db.wName(Fp::NAME);
-        db.wLayout("Attrac-Man");
+        db.wLayout(u"Attrac-Man"_s);
         db.wRomlist(Fp::NAME);
         db.wInCycle(false);
         db.wInMenu(true);
 
         // All filter
         DisplayFilter::Builder dfb;
-        dfb.wName("All");
-        dfb.wSortBy(DisplayFilter::Sort::AltTitle); // This uses FP's "orderTtile"
+        dfb.wName(u"All"_s);
+        dfb.wSortBy(DisplayFilter::Sort::AltTitle); // This uses FP's u"orderTtile"_s
         db.wFilter(dfb.build());
 
         // Favorites filter
         dfb = DisplayFilter::Builder();
-        dfb.wName("Favourites");
-        dfb.wRule("Favourite equals 1");
+        dfb.wName(u"Favourites"_s);
+        dfb.wRule(u"Favourite equals 1"_s);
         dfb.wSortBy(DisplayFilter::Sort::AltTitle);
         db.wFilter(dfb.build());
 
@@ -507,7 +505,7 @@ Qx::GenericError Install::postImport()
         const QStringList rules = filter.rules();
         for(const QString& rule : rules)
         {
-            if(rule.contains("\\[Platform\\]") || rule.contains("\\[Playlist\\]"))
+            if(rule.contains(u"\\[Platform\\]"_s) || rule.contains(u"\\[Playlist\\]"_s))
                 return true;
         }
 
@@ -523,19 +521,19 @@ Qx::GenericError Install::postImport()
     {
         // Escape brackets in name since AM uses regex for value
         QString escaped = tagFile;
-        escaped.replace("[", "\\[").replace("]", "\\]");
+        escaped.replace(u"["_s, u"\\["_s).replace(u"]"_s, u"\\]"_s);
 
         DisplayFilter::Builder dfb;
         dfb = DisplayFilter::Builder();
         dfb.wName('"' + tagFile + '"');
         dfb.wSortBy(DisplayFilter::Sort::AltTitle);
-        dfb.wRule("Tags contains " + escaped);
+        dfb.wRule(u"Tags contains "_s + escaped);
 
         displayFilters.append(dfb.build());
     }
 
     // Commit main config
-    Qx::GenericError configCommitError = commitMainConfig(std::move(mainConfig));
+    Fe::DocHandlingError configCommitError = commitMainConfig(std::move(mainConfig));
 
     // Stop import if error occurred
     if(configCommitError.isValid())
@@ -543,12 +541,12 @@ Qx::GenericError Install::postImport()
 
     // Add/Update marquee (if it fails, not worth aborting over so ignore error status)
     QDir fpMarqueeDirectory(mFpScraperDirectory.absoluteFilePath(MARQUEE_FOLDER_NAME));
-    fpMarqueeDirectory.mkpath(".");
+    fpMarqueeDirectory.mkpath(u"."_s);
     QFileInfo srcMarqueeInfo(MARQUEE_PATH);
     QFile::copy(MARQUEE_PATH, fpMarqueeDirectory.absoluteFilePath(Fp::NAME + '.' + srcMarqueeInfo.completeSuffix()));
 
     // Return success
-    return Qx::GenericError();
+    return Qx::Error();
 }
 
 void Install::processDirectGameImages(const Fe::Game* game, const Fe::ImageSources& imageSources)

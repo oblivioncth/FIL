@@ -41,8 +41,8 @@ DisplayGlobalFilter::Builder::Builder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-DisplayGlobalFilter::Builder& DisplayGlobalFilter::Builder::wRule(QString rule) { mItemBlueprint.mRules.append(rule); return *this; }
-DisplayGlobalFilter::Builder& DisplayGlobalFilter::Builder::wException(QString exception)
+DisplayGlobalFilter::Builder& DisplayGlobalFilter::Builder::wRule(const QString& rule) { mItemBlueprint.mRules.append(rule); return *this; }
+DisplayGlobalFilter::Builder& DisplayGlobalFilter::Builder::wException(const QString& exception)
 {
     mItemBlueprint.mExceptions.append(exception); return *this;
 }
@@ -56,7 +56,7 @@ DisplayFilter::DisplayFilter() :
     DisplayFilter(QString())
 {}
 
-DisplayFilter::DisplayFilter(QString name) :
+DisplayFilter::DisplayFilter(const QString& name) :
     SettingsItem(META_NAME),
     mName(name),
     mSortBy(DisplayFilter::Sort::NoSort),
@@ -83,9 +83,9 @@ DisplayFilter::Builder::Builder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-DisplayFilter::Builder& DisplayFilter::Builder::wName(QString name) { mItemBlueprint.mName = name; return *this; }
-DisplayFilter::Builder& DisplayFilter::Builder::wRule(QString rule) { mItemBlueprint.mRules.append(rule); return *this; }
-DisplayFilter::Builder& DisplayFilter::Builder::wException(QString exception) { mItemBlueprint.mExceptions.append(exception); return *this; }
+DisplayFilter::Builder& DisplayFilter::Builder::wName(const QString& name) { mItemBlueprint.mName = name; return *this; }
+DisplayFilter::Builder& DisplayFilter::Builder::wRule(const QString& rule) { mItemBlueprint.mRules.append(rule); return *this; }
+DisplayFilter::Builder& DisplayFilter::Builder::wException(const QString& exception) { mItemBlueprint.mExceptions.append(exception); return *this; }
 DisplayFilter::Builder& DisplayFilter::Builder::wSortBy(DisplayFilter::Sort sortBy) { mItemBlueprint.mSortBy = sortBy; return *this; }
 DisplayFilter::Builder& DisplayFilter::Builder::wReverseOrder(bool reverseOrder) { mItemBlueprint.mReverseOrder = reverseOrder; return *this; }
 DisplayFilter::Builder& DisplayFilter::Builder::wListLimit(int listLimit) { mItemBlueprint.mListLimit = listLimit; return *this; }
@@ -128,16 +128,16 @@ Display::Builder::Builder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-Display::Builder& Display::Builder::wName(QString name) { mItemBlueprint.mName = name; return *this; }
-Display::Builder& Display::Builder::wLayout(QString layout) { mItemBlueprint.mLayout = layout; return *this; }
-Display::Builder& Display::Builder::wRomlist(QString romlist) { mItemBlueprint.mRomlist = romlist; return *this; }
+Display::Builder& Display::Builder::wName(const QString& name) { mItemBlueprint.mName = name; return *this; }
+Display::Builder& Display::Builder::wLayout(const QString& layout) { mItemBlueprint.mLayout = layout; return *this; }
+Display::Builder& Display::Builder::wRomlist(const QString& romlist) { mItemBlueprint.mRomlist = romlist; return *this; }
 Display::Builder& Display::Builder::wInCycle(bool inCycle) { mItemBlueprint.mInCycle = inCycle; return *this; }
 Display::Builder& Display::Builder::wInMenu(bool inMenu) { mItemBlueprint.mInMenu = inMenu; return *this; }
-Display::Builder& Display::Builder::wGlobalFilter(DisplayGlobalFilter globalFilter)
+Display::Builder& Display::Builder::wGlobalFilter(const DisplayGlobalFilter& globalFilter)
 {
     mItemBlueprint.mGlobalFilter = globalFilter; return *this;
 }
-Display::Builder& Display::Builder::wFilter(DisplayFilter filter) { mItemBlueprint.mFilters.append(filter); return *this; }
+Display::Builder& Display::Builder::wFilter(const DisplayFilter& filter) { mItemBlueprint.mFilters.append(filter); return *this; }
 
 //===============================================================================================================
 // OtherSetting
@@ -149,7 +149,7 @@ OtherSetting::OtherSetting() :
     OtherSetting(QString(), QString())
 {}
 
-OtherSetting::OtherSetting(QString type, QString name) :
+OtherSetting::OtherSetting(const QString& type, const QString& name) :
     SettingsItem(META_NAME),
     mType(type),
     mName(name)
@@ -157,7 +157,7 @@ OtherSetting::OtherSetting(QString type, QString name) :
 
 //-Class Functions--------------------------------------------------------------------------------------------------
 //Public:
-QUuid OtherSetting::equivalentId(QString type, QString name)
+QUuid OtherSetting::equivalentId(const QString& type, const QString& name)
 {
     return QUuid::createUuidV5(NAMESPACE_SEED, type + name);
 }
@@ -178,7 +178,7 @@ OtherSetting::Builder::Builder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-OtherSetting::Builder& OtherSetting::Builder::wTypeAndName(QString type, QString name)
+OtherSetting::Builder& OtherSetting::Builder::wTypeAndName(const QString& type, const QString& name)
 {
     mItemBlueprint.mType = type;
     mItemBlueprint.mName = name;

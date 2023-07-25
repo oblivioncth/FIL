@@ -39,28 +39,22 @@ QString CommonDocReader::readLineIgnoringComments(qint64 maxlen)
 }
 
 //Public:
-Qx::GenericError CommonDocReader::readInto()
+Fe::DocHandlingError CommonDocReader::readInto()
 {
-    // Error template
-    Qx::GenericError error(Qx::GenericError::Critical, mStdReadErrorStr);
-
     // Open file
     Qx::IoOpReport openError =  mStreamReader.openFile();
     if(openError.isFailure())
-        return error.setSecondaryInfo(openError.outcomeInfo());
+        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocCantOpen, openError.outcomeInfo());
 
     // Check that doc is valid
     bool isValid = false;
     if(!checkDocValidity(isValid))
-        return error.setSecondaryInfo(mStreamReader.status().outcomeInfo());
+        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocWriteFailed, mStreamReader.status().outcomeInfo());
     else if(!isValid)
-    {
-        QString errReason = Fe::docHandlingErrorString(mTargetDocument, Fe::DocHandlingError::DocInvalidType);
-        return error.setSecondaryInfo(errReason);
-    }
+        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocInvalidType);
 
     // Read doc
-    Qx::GenericError parseError = readTargetDoc();
+    Fe::DocHandlingError parseError = readTargetDoc();
 
     // Close file
     mStreamReader.closeFile();
@@ -69,9 +63,9 @@ Qx::GenericError CommonDocReader::readInto()
     if(parseError.isValid())
         return parseError;
     else if(mStreamReader.hasError())
-        return error.setSecondaryInfo(mStreamReader.status().outcomeInfo());
+        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocWriteFailed, mStreamReader.status().outcomeInfo());
     else
-        return Qx::GenericError();
+        return Fe::DocHandlingError();
 }
 
 //===============================================================================================================
@@ -87,15 +81,12 @@ CommonDocWriter::CommonDocWriter(Fe::DataDoc* sourceDoc) :
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Public:
-Qx::GenericError CommonDocWriter::writeOutOf()
+Fe::DocHandlingError CommonDocWriter::writeOutOf()
 {
-    // Error template
-    Qx::GenericError error(Qx::GenericError::Critical, mStdWriteErrorStr);
-
     // Open file
     Qx::IoOpReport openError =  mStreamWriter.openFile();
     if(openError.isFailure())
-        return error.setSecondaryInfo(openError.outcomeInfo());
+        return Fe::DocHandlingError(*mSourceDocument, Fe::DocHandlingError::DocCantOpen, openError.outcomeInfo());
 
     // Write doc
     bool writeSuccess = writeSourceDoc();
@@ -104,7 +95,8 @@ Qx::GenericError CommonDocWriter::writeOutOf()
     mStreamWriter.closeFile();
 
     // Return outcome
-    return writeSuccess ? Qx::GenericError() : error.setSecondaryInfo(mStreamWriter.status().outcomeInfo());
+    return writeSuccess ? Fe::DocHandlingError() :
+                          Fe::DocHandlingError(*mSourceDocument, Fe::DocHandlingError::DocWriteFailed, mStreamWriter.status().outcomeInfo());
 }
 
 //===============================================================================================================
@@ -153,8 +145,8 @@ bool ConfigDoc::Reader::splitKeyValue(const QString& line, QString& key, QString
     QRegularExpressionMatch keyValueCheck = KEY_VALUE_REGEX.match(line);
     if(keyValueCheck.hasMatch())
     {
-        key = keyValueCheck.captured("key");
-        value = keyValueCheck.captured("value");
+        key = keyValueCheck.captured(u"key"_s);
+        value = keyValueCheck.captured(u"value"_s);
         return true;
     }
     else
@@ -196,7 +188,7 @@ bool ConfigDoc::Writer::writeSourceDoc()
 {
     // Write config doc "header"
     mStreamWriter.writeLine(static_cast<ConfigDoc*>(mSourceDocument)->versionedTagline());
-    mStreamWriter.writeLine("#");
+    mStreamWriter.writeLine(u"#"_s);
 
     if(mStreamWriter.hasError())
         return false;
@@ -222,8 +214,8 @@ bool Taglist::isEmpty() const
     return mTags.isEmpty();
 }
 
-bool Taglist::containsTag(QString tag) const { return mTags.contains(tag); }
-void Taglist::appendTag(QString tag) { mTags.append(tag); }
+bool Taglist::containsTag(QStringView tag) const { return mTags.contains(tag); }
+void Taglist::appendTag(const QString& tag) { mTags.append(tag); }
 
 //===============================================================================================================
 // Taglist::Writer
@@ -244,7 +236,7 @@ bool Taglist::Writer::writeSourceDoc()
 
     // Write tags
     for(const QString& tag : qAsConst(sourceList->mTags))
-        mStreamWriter << tag << "\n";
+        mStreamWriter << tag << '\n';
 
     // Return error status
     return !mStreamWriter.hasError();
@@ -284,7 +276,7 @@ Fe::DataDoc::Type PlaylistTaglist::type() const { return Fe::DataDoc::Type::Play
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-Romlist::Romlist(Install* const parent, const QString& listPath, QString docName, Fe::UpdateOptions updateOptions,
+Romlist::Romlist(Install* const parent, const QString& listPath, QString docName, const Fe::UpdateOptions& updateOptions,
                          const DocKey&) :
     Fe::UpdateableDoc(parent, listPath, docName, updateOptions)
 {}
@@ -363,7 +355,7 @@ bool Romlist::Reader::checkDocValidity(bool& isValid)
     return !mStreamReader.hasError();
 }
 
-Qx::GenericError Romlist::Reader::readTargetDoc()
+Fe::DocHandlingError Romlist::Reader::readTargetDoc()
 {
     // Read all romlist entries
     while(!mStreamReader.atEnd())
@@ -373,7 +365,7 @@ Qx::GenericError Romlist::Reader::readTargetDoc()
     }
 
     // Only can have stream errors
-    return Qx::GenericError();
+    return Fe::DocHandlingError();
 }
 
 void Romlist::Reader::parseRomEntry(const QString& rawEntry)
@@ -573,7 +565,7 @@ QString BulkOverviewWriter::fileErrorString() { return mFile.errorString(); }
 bool BulkOverviewWriter::writeOverview(const QUuid& gameId, const QString& overview)
 {
     // Set file to overview path
-    QString fileName = gameId.toString(QUuid::WithoutBraces) + QStringLiteral(".txt");
+    QString fileName = gameId.toString(QUuid::WithoutBraces) + u".txt"_s;
     mFile.setFileName(mOverviewDir.absoluteFilePath(fileName));
 
     // Open file, always truncate
@@ -641,11 +633,7 @@ void PlatformInterface::addSet(const Fp::Set& set, const Fe::ImageSources& image
             if(written)
                 parent()->addRevertableFile(mOverviewWriter.currentFilePath());
             else
-            {
-                mError = Qx::GenericError(Qx::GenericError::Critical,
-                                          Fe::docHandlingErrorString(this, Fe::DocHandlingError::DocWriteFailed),
-                                          mOverviewWriter.fileErrorString());
-            }
+                mError = Fe::DocHandlingError(*this, Fe::DocHandlingError::DocWriteFailed, mOverviewWriter.fileErrorString());
         }
 
         //-Handle add apps-------------------------------------------------------
@@ -681,7 +669,7 @@ PlatformInterface::Writer::Writer(PlatformInterface* sourceDoc) :
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-Qx::GenericError PlatformInterface::Writer::writeOutOf() { return mTaglistWriter.writeOutOf(); }
+Fe::DocHandlingError PlatformInterface::Writer::writeOutOf() { return mTaglistWriter.writeOutOf(); }
 
 //===============================================================================================================
 // PlaylistInterface
@@ -704,12 +692,11 @@ bool PlaylistInterface::containsPlaylistGame(QUuid gameId) const
     return mPlaylistTaglist.containsTag(gameId.toString(QUuid::WithoutBraces));
 }
 
-void PlaylistInterface::setPlaylistHeader(const Fp::Playlist& playlist) {} // No playlist header for AttractMode
-
-void PlaylistInterface::addPlaylistGame(const Fp::PlaylistGame& playlistGame)
+void PlaylistInterface::setPlaylistData(const Fp::Playlist& playlist)
 {
-    mPlaylistTaglist.appendTag(playlistGame.gameId().toString(QUuid::WithoutBraces));
-};
+    for(const auto& pl : playlist.playlistGames())
+        mPlaylistTaglist.appendTag(pl.gameId().toString(QUuid::WithoutBraces));
+}
 
 //===============================================================================================================
 // PlaylistInterface::Writer
@@ -725,7 +712,7 @@ PlaylistInterface::Writer::Writer(PlaylistInterface* sourceDoc) :
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-Qx::GenericError PlaylistInterface::Writer::writeOutOf() { return mTaglistWriter.writeOutOf(); }
+Fe::DocHandlingError PlaylistInterface::Writer::writeOutOf() { return mTaglistWriter.writeOutOf(); }
 
 //===============================================================================================================
 // Emulator
@@ -750,18 +737,18 @@ QString Emulator::romExt() const { return mRomExt; }
 QString Emulator::system() const { return mSystem; }
 QString Emulator::infoSource() const { return mInfoSource; }
 QString Emulator::exitHotkey() const { return mExitHotkey; }
-EmulatorArtworkEntry Emulator::artworkEntry(QString type) const { return mArtworkEntries.value(type); }
+EmulatorArtworkEntry Emulator::artworkEntry(const QString& type) const { return mArtworkEntries.value(type); }
 QList<EmulatorArtworkEntry> Emulator::artworkEntries() const { return mArtworkEntries.values(); }
 
-void Emulator::setExecutable(QString executable) { mExecutable = executable; }
-void Emulator::setArgs(QString args) { mArgs = args; }
-void Emulator::setWorkDir(QString workDir) { mWorkDir = workDir; }
-void Emulator::setRomPath(QString romPath) { mRomPath = romPath; }
-void Emulator::setRomExt(QString romExt) { mRomExt = romExt; }
-void Emulator::setSystem(QString system) { mSystem = system; }
-void Emulator::setInfoSource(QString infoSource) { mInfoSource = infoSource; }
-void Emulator::setExitHotkey(QString exitHotkey) { mExitHotkey = exitHotkey; }
-void Emulator::setArtworkEntry(EmulatorArtworkEntry entry) { mArtworkEntries[entry.type()] = entry; }
+void Emulator::setExecutable(const QString& executable) { mExecutable = executable; }
+void Emulator::setArgs(const QString& args) { mArgs = args; }
+void Emulator::setWorkDir(const QString& workDir) { mWorkDir = workDir; }
+void Emulator::setRomPath(const QString& romPath) { mRomPath = romPath; }
+void Emulator::setRomExt(const QString& romExt) { mRomExt = romExt; }
+void Emulator::setSystem(const QString& system) { mSystem = system; }
+void Emulator::setInfoSource(const QString& infoSource) { mInfoSource = infoSource; }
+void Emulator::setExitHotkey(const QString& exitHotkey) { mExitHotkey = exitHotkey; }
+void Emulator::setArtworkEntry(const EmulatorArtworkEntry& entry) { mArtworkEntries[entry.type()] = entry; }
 
 //===============================================================================================================
 // Emulator::Reader
@@ -775,7 +762,7 @@ EmulatorReader::EmulatorReader(Emulator* targetDoc) :
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-Qx::GenericError EmulatorReader::readTargetDoc()
+Fe::DocHandlingError EmulatorReader::readTargetDoc()
 {
     while(!mStreamReader.atEnd())
     {
@@ -787,7 +774,7 @@ Qx::GenericError EmulatorReader::readTargetDoc()
     }
 
     // Only can have stream related errors
-    return Qx::GenericError();
+    return Fe::DocHandlingError();
 }
 
 void EmulatorReader::parseKeyValue(const QString& key, const QString& value)
@@ -817,11 +804,11 @@ void EmulatorReader::parseArgs(const QString& value) { targetEmulator()->setArgs
 void EmulatorReader::parseWorkDir(const QString& value) { targetEmulator()->setWorkDir(value); }
 void EmulatorReader::parseRomPath(const QString& value)
 {
-    targetEmulator()->setRomPath(value == R"("")" ? "" : value);
+    targetEmulator()->setRomPath(value == uR"("")"_s ? u""_s : value);
 }
 void EmulatorReader::parseRomExt(const QString& value)
 {
-    targetEmulator()->setRomPath(value == R"("")" ? "" : value);
+    targetEmulator()->setRomPath(value == uR"("")"_s ? u""_s : value);
 }
 void EmulatorReader::parseSystem(const QString& value) { targetEmulator()->setSystem(value); }
 void EmulatorReader::parseInfoSource(const QString& value) { targetEmulator()->setInfoSource(value); }

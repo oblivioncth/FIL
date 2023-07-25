@@ -4,6 +4,8 @@
 // Project Includes
 #include "../fe-items.h"
 
+using namespace Qt::Literals::StringLiterals;
+
 namespace Am
 {
 
@@ -31,7 +33,7 @@ public:
 
 //-Class Variables---------------------------------------------------------------------------------------------------
 private:
-    static inline const QString META_NAME = "DisplayGlobalFilter";
+    static inline const QString META_NAME = u"DisplayGlobalFilter"_s;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -56,8 +58,8 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wRule(QString rule);
-    Builder& wException(QString exception);
+    Builder& wRule(const QString& rule);
+    Builder& wException(const QString& exception);
 };
 
 class DisplayFilter : public SettingsItem
@@ -101,7 +103,7 @@ public:
 
 //-Class Variables---------------------------------------------------------------------------------------------------
 private:
-    static inline const QString META_NAME = "DisplayFilter";
+    static inline const QString META_NAME = u"DisplayFilter"_s;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -115,7 +117,7 @@ private:
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
     DisplayFilter();
-    DisplayFilter(QString name);
+    DisplayFilter(const QString& name);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
@@ -135,9 +137,9 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wName(QString name);
-    Builder& wRule(QString rule);
-    Builder& wException(QString exception);
+    Builder& wName(const QString& name);
+    Builder& wRule(const QString& rule);
+    Builder& wException(const QString& exception);
     Builder& wSortBy(DisplayFilter::Sort sortBy);
     Builder& wReverseOrder(bool reverseOrder);
     Builder& wListLimit(int listLimit);
@@ -152,7 +154,7 @@ public:
 
 //-Class Variables---------------------------------------------------------------------------------------------------
 private:
-    static inline const QString META_NAME = "Display";
+    static inline const QString META_NAME = u"Display"_s;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -189,13 +191,13 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wName(QString name);
-    Builder& wLayout(QString layout);
-    Builder& wRomlist(QString romlist);
+    Builder& wName(const QString& name);
+    Builder& wLayout(const QString& layout);
+    Builder& wRomlist(const QString& romlist);
     Builder& wInCycle(bool inCycle);
     Builder& wInMenu(bool inMenu);
-    Builder& wGlobalFilter(DisplayGlobalFilter globalFilter);
-    Builder& wFilter(DisplayFilter filter);
+    Builder& wGlobalFilter(const DisplayGlobalFilter& globalFilter);
+    Builder& wFilter(const DisplayFilter& filter);
 };
 
 class OtherSetting : public SettingsItem
@@ -207,8 +209,8 @@ public:
 
 //-Class Variables--------------------------------------------------------------------------------------------------
 private:
-    static inline const QUuid NAMESPACE_SEED = QUuid("13d88ae7-9e9f-4736-bff4-e330e76c3b12");
-    static inline const QString META_NAME = "OtherSetting";
+    static inline const QUuid NAMESPACE_SEED = QUuid(u"13d88ae7-9e9f-4736-bff4-e330e76c3b12"_s);
+    static inline const QString META_NAME = u"OtherSetting"_s;
 
 //-Class Structs---------------------------------------------------------------------------------------------------
 public:
@@ -228,11 +230,11 @@ private:
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
     OtherSetting();
-    OtherSetting(QString type, QString name);
+    OtherSetting(const QString& type, const QString& name);
 
 //-Class Functions--------------------------------------------------------------------------------------------------
 public:
-    static QUuid equivalentId(QString type, QString name);
+    static QUuid equivalentId(const QString& type, const QString& name);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
@@ -249,7 +251,7 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wTypeAndName(QString name, QString type);
+    Builder& wTypeAndName(const QString& name, const QString& type);
     Builder& wContent(const OtherSetting::ContentLine& line);
 };
 

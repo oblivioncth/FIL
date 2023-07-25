@@ -6,37 +6,47 @@
 
 namespace Fe
 {
-//-Doc Handling Error--------------------------------------------------------------------------------------------
-namespace Dhe
-{
-    // Message Macros
-    const QString M_DOC_TYPE = "<docType>";
-    const QString M_DOC_NAME = "<docName>";
-    const QString M_DOC_PARENT = "<docParent>";
+//===============================================================================================================
+// DocHandlingError
+//===============================================================================================================
 
-    // Standard Errors
-    static inline const QHash<DocHandlingError, QString> STD_ERRORS = {
-        {DocHandlingError::DocAlreadyOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is already open."},
-        {DocHandlingError::DocCantOpen, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be opened."},
-        {DocHandlingError::DocCantSave, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") cannot be saved."},
-        {DocHandlingError::NotParentDoc, "The target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is not a" + M_DOC_PARENT + "document."},
-        {DocHandlingError::CantRemoveBackup, "The existing backup of the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") could not be removed."},
-        {DocHandlingError::CantCreateBackup, "Could not create a backup of the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ")."},
-        {DocHandlingError::DocInvalidType, "The document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") is invalid or of the wrong type."},
-        {DocHandlingError::DocReadFailed, "Reading the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") failed."},
-        {DocHandlingError::DocWriteFailed, "Writing to the target document (" + M_DOC_TYPE + " | " + M_DOC_NAME + ") failed."}
-    };
-}
+//-Constructor-------------------------------------------------------------
+//Public:
+DocHandlingError::DocHandlingError() :
+    mType(NoError)
+{}
 
-QString docHandlingErrorString(const DataDoc* doc, DocHandlingError handlingError)
+
+DocHandlingError::DocHandlingError(const DataDoc& doc, Type t, const QString& s) :
+    mType(t),
+    mErrorStr(generatePrimaryString(doc, t)),
+    mSpecific(s)
+{}
+
+//-Class Functions-------------------------------------------------------------
+//Private:
+QString DocHandlingError::generatePrimaryString(const DataDoc& doc, Type t)
 {
-    QString formattedError = Dhe::STD_ERRORS[handlingError];
-    formattedError.replace(Dhe::M_DOC_TYPE, doc->identifier().docTypeString());
-    formattedError.replace(Dhe::M_DOC_NAME, doc->identifier().docName());
-    formattedError.replace(Dhe::M_DOC_PARENT, doc->parent()->name());
+    QString formattedError = ERR_STRINGS[t];
+    formattedError.replace(M_DOC_TYPE, doc.identifier().docTypeString());
+    formattedError.replace(M_DOC_NAME, doc.identifier().docName());
+    formattedError.replace(M_DOC_PARENT, doc.parent()->name());
 
     return formattedError;
 }
+
+//-Instance Functions-------------------------------------------------------------
+//Public:
+bool DocHandlingError::isValid() const { return mType != NoError; }
+QString DocHandlingError::errorString() const { return mErrorStr; }
+QString DocHandlingError::specific() const { return mSpecific; }
+DocHandlingError::Type DocHandlingError::type() const { return mType; }
+
+//Private:
+Qx::Severity DocHandlingError::deriveSeverity() const { return Qx::Critical; }
+quint32 DocHandlingError::deriveValue() const { return mType; }
+QString DocHandlingError::derivePrimary() const { return mErrorStr; }
+QString DocHandlingError::deriveSecondary() const { return mSpecific; }
 
 //===============================================================================================================
 // ImageSources
@@ -120,8 +130,7 @@ DataDoc::Identifier DataDoc::identifier() const { return Identifier(type(), mNam
 //-Constructor-----------------------------------------------------------------------------------------------------
 //Protected:
 DataDoc::Reader::Reader(DataDoc* targetDoc) :
-    mTargetDocument(targetDoc),
-    mStdReadErrorStr(docHandlingErrorString(targetDoc, DocHandlingError::DocReadFailed))
+    mTargetDocument(targetDoc)
 {}
 
 //-Destructor------------------------------------------------------------------------------------------------
@@ -135,8 +144,7 @@ DataDoc::Reader::~Reader() {}
 //-Constructor-----------------------------------------------------------------------------------------------------
 //Protected:
 DataDoc::Writer::Writer(DataDoc* sourceDoc) :
-    mSourceDocument(sourceDoc),
-    mStdWriteErrorStr(docHandlingErrorString(sourceDoc, DocHandlingError::DocWriteFailed))
+    mSourceDocument(sourceDoc)
 {}
 
 //-Destructor------------------------------------------------------------------------------------------------
@@ -158,7 +166,7 @@ Errorable::~Errorable() {}
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Protected:
 bool Errorable::hasError() const { return mError.isValid(); }
-Qx::GenericError Errorable::error() const { return mError; }
+Qx::Error Errorable::error() const { return mError; }
 
 //===============================================================================================================
 // UpdateableDoc
@@ -166,7 +174,7 @@ Qx::GenericError Errorable::error() const { return mError; }
 
 //-Constructor-----------------------------------------------------------------------------------------------------
 //Protected:
-UpdateableDoc::UpdateableDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions) :
+UpdateableDoc::UpdateableDoc(Install* const parent, const QString& docPath, QString docName, const UpdateOptions& updateOptions) :
     DataDoc(parent, docPath, docName),
     mUpdateOptions(updateOptions)
 {}
@@ -181,7 +189,7 @@ void UpdateableDoc::finalize() {} // Does nothing for base class
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Protected:
-PlatformDoc::PlatformDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions) :
+PlatformDoc::PlatformDoc(Install* const parent, const QString& docPath, QString docName, const UpdateOptions& updateOptions) :
     UpdateableDoc(parent, docPath, docName, updateOptions)
 {}
 
@@ -213,7 +221,7 @@ PlatformDoc::Writer::Writer(DataDoc* sourceDoc) :
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Protected:
-BasicPlatformDoc::BasicPlatformDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions) :
+BasicPlatformDoc::BasicPlatformDoc(Install* const parent, const QString& docPath, QString docName, const UpdateOptions& updateOptions) :
     PlatformDoc(parent, docPath, docName, updateOptions)
 {}
 
@@ -317,7 +325,7 @@ BasicPlatformDoc::Writer::Writer(DataDoc* sourceDoc) :
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlaylistDoc::PlaylistDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions) :
+PlaylistDoc::PlaylistDoc(Install* const parent, const QString& docPath, QString docName, const UpdateOptions& updateOptions) :
     UpdateableDoc(parent, docPath, docName, updateOptions)
 {}
 
@@ -358,7 +366,7 @@ PlaylistDoc::Writer::Writer(DataDoc* sourceDoc) :
  * it may be better to require a value for it in this base class' constructor so that all derivatives must provide
  * a default (likely null/empty) playlist header.
  */
-BasicPlaylistDoc::BasicPlaylistDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions) :
+BasicPlaylistDoc::BasicPlaylistDoc(Install* const parent, const QString& docPath, QString docName, const UpdateOptions& updateOptions) :
     PlaylistDoc(parent, docPath, docName, updateOptions)
 {}
 
@@ -376,7 +384,7 @@ const QHash<QUuid, std::shared_ptr<PlaylistGame>>& BasicPlaylistDoc::finalPlayli
 bool BasicPlaylistDoc::containsPlaylistGame(QUuid gameId) const { return mPlaylistGamesFinal.contains(gameId) || mPlaylistGamesExisting.contains(gameId); }
 
 
-void BasicPlaylistDoc::setPlaylistHeader(const Fp::Playlist& playlist)
+void BasicPlaylistDoc::setPlaylistData(const Fp::Playlist& playlist)
 {
     if(!mError.isValid())
     {
@@ -388,18 +396,15 @@ void BasicPlaylistDoc::setPlaylistHeader(const Fp::Playlist& playlist)
 
         // Set instance header to new one
         mPlaylistHeader = fePlaylistHeader;
-    }
-}
 
-void BasicPlaylistDoc::addPlaylistGame(const Fp::PlaylistGame& playlistGame)
-{
-    if(!mError.isValid())
-    {
-        // Prepare playlist game
-        std::shared_ptr<PlaylistGame> fePlaylistGame = preparePlaylistGame(playlistGame);
+        for(const auto& plg : playlist.playlistGames())
+        {
+            // Prepare playlist game
+            std::shared_ptr<PlaylistGame> fePlaylistGame = preparePlaylistGame(plg);
 
-        // Add playlist game
-        addUpdateableItem(mPlaylistGamesExisting, mPlaylistGamesFinal, fePlaylistGame);
+            // Add playlist game
+            addUpdateableItem(mPlaylistGamesExisting, mPlaylistGamesFinal, fePlaylistGame);
+        }
     }
 }
 

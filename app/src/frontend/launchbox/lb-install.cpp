@@ -23,18 +23,20 @@ namespace Lb
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-Install::Install(QString installPath) :
+Install::Install(const QString& installPath) :
     Fe::Install(installPath)
 {
     // Initialize files and directories;
     mPlatformImagesDirectory = QDir(installPath + '/' + PLATFORM_IMAGES_PATH);
+    mPlatformIconsDirectory = QDir(installPath + '/' + PLATFORM_ICONS_PATH);
+    mPlatformCategoryIconsDirectory = QDir(installPath + '/' + PLATFORM_CATEGORY_ICONS_PATH);
     mDataDirectory = QDir(installPath + '/' + DATA_PATH);
     mCoreDirectory = QDir(installPath + '/' + CORE_PATH);
     mPlatformsDirectory = QDir(installPath + '/' + PLATFORMS_PATH);
     mPlaylistsDirectory = QDir(installPath + '/' + PLAYLISTS_PATH);
 
     // Check validity
-    QFileInfo mainExe(installPath + "/" + MAIN_EXE_PATH);
+    QFileInfo mainExe(installPath + '/' + MAIN_EXE_PATH);
     if(!mainExe.exists() || !mainExe.isFile() || !mPlatformsDirectory.exists() || !mPlaylistsDirectory.exists())
     {
         declareValid(false);
@@ -55,46 +57,47 @@ void Install::nullify()
     mPlatformsDirectory = QDir();
     mPlaylistsDirectory = QDir();
     mPlatformImagesDirectory = QDir();
+    mPlatformIconsDirectory = QDir();
+    mPlatformCategoryIconsDirectory = QDir();
 }
 
-Qx::GenericError Install::populateExistingDocs()
+Qx::Error Install::populateExistingDocs()
 {
-    // Error template
-    Qx::GenericError error(Qx::GenericError::Critical, ERR_INSEPECTION);
-
     // Temp storage
     QFileInfoList existingList;
 
     // Check for platforms
-    Qx::IoOpReport existingCheck = Qx::dirContentInfoList(existingList, mPlatformsDirectory, {"*." + XML_EXT}, QDir::NoFilter, QDirIterator::Subdirectories);
+    Qx::IoOpReport existingCheck = Qx::dirContentInfoList(existingList, mPlatformsDirectory, {u"*."_s + XML_EXT}, QDir::NoFilter, QDirIterator::Subdirectories);
     if(existingCheck.isFailure())
-        return error.setSecondaryInfo(existingCheck.outcome()).setDetailedInfo(existingCheck.outcomeInfo());
+        return existingCheck;
 
     for(const QFileInfo& platformFile : qAsConst(existingList))
          catalogueExistingDoc(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Platform, platformFile.baseName()));
 
     // Check for playlists
-    existingCheck = Qx::dirContentInfoList(existingList, mPlaylistsDirectory, {"*." + XML_EXT}, QDir::NoFilter, QDirIterator::Subdirectories);
+    existingCheck = Qx::dirContentInfoList(existingList, mPlaylistsDirectory, {u"*."_s + XML_EXT}, QDir::NoFilter, QDirIterator::Subdirectories);
     if(existingCheck.isFailure())
-        return error.setSecondaryInfo(existingCheck.outcome()).setDetailedInfo(existingCheck.outcomeInfo());
+        return existingCheck;
 
     for(const QFileInfo& playlistFile : qAsConst(existingList))
         catalogueExistingDoc(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Playlist, playlistFile.baseName()));
 
     // Check for config docs
-    existingCheck = Qx::dirContentInfoList(existingList, mDataDirectory, {"*." + XML_EXT});
+    existingCheck = Qx::dirContentInfoList(existingList, mDataDirectory, {u"*."_s + XML_EXT});
     if(existingCheck.isFailure())
-        return error.setSecondaryInfo(existingCheck.outcome()).setDetailedInfo(existingCheck.outcomeInfo());
+        return existingCheck;
 
     for(const QFileInfo& configDocFile : qAsConst(existingList))
         catalogueExistingDoc(Fe::DataDoc::Identifier(Fe::DataDoc::Type::Config, configDocFile.baseName()));
 
     // Return success
-    return Qx::GenericError();
+    return Qx::Error();
 }
 
 QString Install::translateDocName(const QString& originalName, Fe::DataDoc::Type type) const
 {
+    Q_UNUSED(type);
+
     // Perform general kosherization
     QString translatedName = Qx::kosherizeFileName(originalName);
 
@@ -105,6 +108,8 @@ QString Install::translateDocName(const QString& originalName, Fe::DataDoc::Type
     return translatedName;
 }
 
+QString Install::executableSubPath() const { return MAIN_EXE_PATH; }
+
 QString Install::imageDestinationPath(Fp::ImageType imageType, const Fe::Game* game) const
 {
     return mPlatformImagesDirectory.absolutePath() + '/' +
@@ -114,39 +119,35 @@ QString Install::imageDestinationPath(Fp::ImageType imageType, const Fe::Game* g
            '.' + IMAGE_EXT;
 }
 
-Qx::GenericError Install::editBulkImageReferences(const Fe::ImageSources& imageSources)
+void Install::editBulkImageReferences(const Fe::ImageSources& imageSources)
 {
-    // Open platforms document
-    std::unique_ptr<PlatformsConfigDoc> platformsConfig;
-    Qx::GenericError platformsConfigReadError = checkoutPlatformsConfigDoc(platformsConfig);
-
-    // Stop import if error occurred
-    if(platformsConfigReadError.isValid())
-        return platformsConfigReadError;
-
     // Set media folder paths
     const QList<QString> affectedPlatforms = modifiedPlatforms();
     for(const QString& platform : affectedPlatforms)
     {
         if(!imageSources.isNull())
         {
-            // Setting the folders also makes sure that the platform is added
-            platformsConfig->setMediaFolder(platform, Lb::Install::LOGO_PATH, imageSources.logoPath());
-            platformsConfig->setMediaFolder(platform, Lb::Install::SCREENSHOT_PATH, imageSources.screenshotPath());
+            Lb::PlatformFolder::Builder pfbLogos;
+            pfbLogos.wPlatform(platform);
+            pfbLogos.wMediaType(Lb::Install::LOGO_PATH);
+            pfbLogos.wFolderPath(imageSources.logoPath());
+
+            Lb::PlatformFolder::Builder pfbScreenshots;
+            pfbScreenshots.wPlatform(platform);
+            pfbScreenshots.wMediaType(Lb::Install::SCREENSHOT_PATH);
+            pfbScreenshots.wFolderPath(imageSources.screenshotPath());
+
+            mPlatformsConfig->addPlatformFolder(pfbLogos.build());
+            mPlatformsConfig->addPlatformFolder(pfbScreenshots.build());
         }
         else
-            platformsConfig->removePlatform(platform);
+            mPlatformsConfig->removePlatformFolders(platform);
     }
-
-    // Save platforms document
-    Qx::GenericError saveError = commitPlatformsConfigDoc(std::move(platformsConfig));
-
-    return saveError;
 }
 
 QString Install::dataDocPath(Fe::DataDoc::Identifier identifier) const
 {
-    QString fileName = identifier.docName() + "." + XML_EXT;
+    QString fileName = identifier.docName() + u"."_s + XML_EXT;
 
     switch(identifier.docType())
     {
@@ -214,19 +215,20 @@ std::shared_ptr<Fe::PlaylistDoc::Writer> Install::preparePlaylistDocCommit(const
     return docWriter;
 }
 
-Qx::GenericError Install::checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc>& returnBuffer)
+Fe::DocHandlingError Install::checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc>& returnBuffer)
 {
     // Create doc file reference
     Fe::DataDoc::Identifier docId(Fe::DataDoc::Type::Config, PlatformsConfigDoc::STD_NAME);
 
     // Construct unopened document
-    returnBuffer = std::make_unique<PlatformsConfigDoc>(this, dataDocPath(docId), DocKey{});
+    Fe::UpdateOptions uo{.importMode = Fe::ImportMode::NewAndExisting, .removeObsolete = false};
+    returnBuffer = std::make_unique<PlatformsConfigDoc>(this, dataDocPath(docId), uo, DocKey{});
 
     // Construct doc reader
     std::shared_ptr<PlatformsConfigDoc::Reader> docReader = std::make_shared<PlatformsConfigDoc::Reader>(returnBuffer.get());
 
     // Open document
-    Qx::GenericError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
+    Fe::DocHandlingError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
 
     // Set return null on failure
     if(readErrorStatus.isValid())
@@ -236,7 +238,7 @@ Qx::GenericError Install::checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsCo
     return readErrorStatus;
 }
 
-Qx::GenericError Install::commitPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc> document)
+Fe::DocHandlingError Install::commitPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc> document)
 {
     assert(document->parent() == this);
 
@@ -244,7 +246,47 @@ Qx::GenericError Install::commitPlatformsConfigDoc(std::unique_ptr<PlatformsConf
     std::shared_ptr<PlatformsConfigDoc::Writer> docWriter = std::make_shared<PlatformsConfigDoc::Writer>(document.get());
 
     // Write
-    Qx::GenericError writeErrorStatus = commitDataDocument(document.get(), docWriter);
+    Fe::DocHandlingError writeErrorStatus = commitDataDocument(document.get(), docWriter);
+
+    // Ensure document is cleared
+    document.reset();
+
+    // Return write status and let document ptr auto delete
+    return writeErrorStatus;
+}
+
+Fe::DocHandlingError Install::checkoutParentsDoc(std::unique_ptr<ParentsDoc>& returnBuffer)
+{
+    // Create doc file reference
+    Fe::DataDoc::Identifier docId(Fe::DataDoc::Type::Config, ParentsDoc::STD_NAME);
+
+    // Construct unopened document
+    Fe::UpdateOptions uo{.importMode = Fe::ImportMode::NewAndExisting, .removeObsolete = false};
+    returnBuffer = std::make_unique<ParentsDoc>(this, dataDocPath(docId), uo, DocKey{});
+
+    // Construct doc reader
+    std::shared_ptr<ParentsDoc::Reader> docReader = std::make_shared<ParentsDoc::Reader>(returnBuffer.get());
+
+    // Open document
+    Fe::DocHandlingError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
+
+    // Set return null on failure
+    if(readErrorStatus.isValid())
+        returnBuffer.reset();
+
+    // Return status
+    return readErrorStatus;
+}
+
+Fe::DocHandlingError Install::commitParentsDoc(std::unique_ptr<ParentsDoc> document)
+{
+    assert(document->parent() == this);
+
+    // Prepare writer
+    std::shared_ptr<ParentsDoc::Writer> docWriter = std::make_shared<ParentsDoc::Writer>(document.get());
+
+    // Write
+    Fe::DocHandlingError writeErrorStatus = commitDataDocument(document.get(), docWriter);
 
     // Ensure document is cleared
     document.reset();
@@ -258,71 +300,95 @@ void Install::softReset()
 {
     Fe::Install::softReset();
 
-    mLbDatabaseIdTracker = Qx::FreeIndexTracker<int>(0, -1);
+    mLbDatabaseIdTracker = Qx::FreeIndexTracker(0, -1);
     mPlaylistGameDetailsCache.clear();
     mWorkerImageJobs.clear();
 }
 
 QString Install::name() const { return NAME; }
-QString Install::executableName() const { return MAIN_EXE_PATH; }
 QList<Fe::ImageMode> Install::preferredImageModeOrder() const { return IMAGE_MODE_ORDER; }
 
-QString Install::versionString() const
+Qx::Error Install::prePlatformsImport()
 {
-    // Try LaunchBox.deps.json
-    QFile depsJson(mCoreDirectory.path() + "/" + "LaunchBox.deps.json");
-    QByteArray settingsData;
-    Qx::IoOpReport settingsLoadReport = Qx::readBytesFromFile(settingsData, depsJson);
+    if(Qx::Error superErr = Fe::Install::prePlatformsImport(); superErr.isValid())
+        return superErr;
 
-    if(!settingsLoadReport.isFailure())
-    {
-        // Parse original JSON data
-        QJsonObject settingsObj = QJsonDocument::fromJson(settingsData).object();
-
-        if(!settingsObj.isEmpty())
-        {
-            // Get key that should have version
-            QList<QJsonValue> res = Qx::Json::findAllValues(QJsonValue(settingsObj), "Unbroken.LaunchBox.Windows");
-
-            if(!res.isEmpty() && res.first().isString())
-            {
-                // Check for valid version number
-                Qx::VersionNumber ver = Qx::VersionNumber::fromString(res.first().toString());
-
-                if(!ver.isNull())
-                    return ver.toString();
-            }
-        }
-    }
-
-    // Try unins000.exe
-    Qx::FileDetails uninsDetails = Qx::FileDetails::readFileDetails(path() + "/" + "unins000.exe");
-    if(!uninsDetails.isNull())
-    {
-        Qx::VersionNumber ver = uninsDetails.productVersion();
-
-        if(!ver.isNull())
-            return ver.toString();
-    }
-
-    // Fallback to generic method
-    return Fe::Install::versionString();
+    // Open platforms document
+    return checkoutPlatformsConfigDoc(mPlatformsConfig);
 }
 
-Qx::GenericError Install::preImageProcessing(QList<ImageMap>& workerTransfers, Fe::ImageSources bulkSources)
+Qx::Error Install::postPlatformsImport()
 {
+    if(Qx::Error superErr = Fe::Install::postPlatformsImport(); superErr.isValid())
+        return superErr;
+
+    // Open Parents.xml
+    std::unique_ptr<ParentsDoc> parentsDoc;
+    if(Fe::DocHandlingError dhe = checkoutParentsDoc(parentsDoc); dhe.isValid())
+        return dhe;
+
+    // Add PlatformCategory to Platforms.xml
+    Lb::PlatformCategory::Builder pcb;
+    pcb.wName(PLATFORM_CATEGORY);
+    pcb.wNestedName(PLATFORM_CATEGORY);
+    mPlatformsConfig->addPlatformCategory(pcb.build());
+
+    // Add ParentCategory to Parents.xml
+    Lb::ParentCategory::Builder prcb;
+    prcb.wPlatformCategoryName(PLATFORM_CATEGORY);
+    parentsDoc->addParentCategory(prcb.build());
+
+    // Add platforms to Platforms.xml and Parents.xml
+    const QList<QString> affectedPlatforms = modifiedPlatforms();
+    for(const QString& pn :affectedPlatforms)
+    {
+        Lb::Platform::Builder pb;
+        pb.wName(pn);
+        mPlatformsConfig->addPlatform(pb.build());
+
+        Lb::ParentPlatform::Builder ppb;
+        ppb.wParentPlatformCategoryName(PLATFORM_CATEGORY);
+        ppb.wPlatformName(pn);
+        parentsDoc->addParentPlatform(ppb.build());
+    }
+
+    // Close Parents.xml
+    parentsDoc->finalize();
+    return commitParentsDoc(std::move(parentsDoc));
+}
+
+Qx::Error Install::preImageProcessing(QList<ImageMap>& workerTransfers, const Fe::ImageSources& bulkSources)
+{
+    if(Qx::Error superErr = Fe::Install::preImageProcessing(workerTransfers, bulkSources); superErr.isValid())
+        return superErr;
+
     switch(mImportDetails->imageMode)
     {
         case Fe::ImageMode::Link:
         case Fe::ImageMode::Copy:
             workerTransfers.swap(mWorkerImageJobs);
-            return editBulkImageReferences(bulkSources);
+            editBulkImageReferences(bulkSources);
+            break;
         case Fe::ImageMode::Reference:
-            return editBulkImageReferences(bulkSources);
+            editBulkImageReferences(bulkSources);
+            break;
         default:
-            qWarning() << Q_FUNC_INFO << "unhandled image mode";
-            return Qx::GenericError();
+            qWarning() << Q_FUNC_INFO << u"unhandled image mode"_s;
     }
+
+    return Qx::Error();
+}
+
+Qx::Error Install::postImageProcessing()
+{
+    if(Qx::Error superErr = Fe::Install::postImageProcessing(); superErr.isValid())
+            return superErr;
+
+    // Save platforms document since it's no longer needed at this point
+    mPlatformsConfig->finalize();
+    Fe::DocHandlingError saveError = commitPlatformsConfigDoc(std::move(mPlatformsConfig));
+
+    return saveError;
 }
 
 void Install::processDirectGameImages(const Fe::Game* game, const Fe::ImageSources& imageSources)
@@ -345,5 +411,8 @@ void Install::processDirectGameImages(const Fe::Game* game, const Fe::ImageSourc
         }
     }
 }
+
+QString Install::platformCategoryIconPath() const { return mPlatformCategoryIconsDirectory.absoluteFilePath(u"Flashpoint.png"_s); }
+std::optional<QDir> Install::platformIconsDirectory() const { return mPlatformIconsDirectory; };
 
 }

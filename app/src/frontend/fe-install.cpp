@@ -15,7 +15,7 @@ namespace Fe
 //===============================================================================================================
 
 //-Constructor---------------------------------------------------------------------------------------------------
-Install::Install(QString installPath) :
+Install::Install(const QString& installPath) :
     InstallFoundation(installPath)
 {}
 
@@ -23,7 +23,7 @@ Install::Install(QString installPath) :
 //Public:
 QMap<QString, Install::Entry>& Install::registry() { static QMap<QString, Entry> registry; return registry; }
 
-void Install::registerInstall(QString name, Entry entry) { registry()[name] = entry; }
+void Install::registerInstall(const QString& name, const Entry& entry) { registry()[name] = entry; }
 
 std::shared_ptr<Install> Install::acquireMatch(const QString& installPath)
 {
@@ -68,7 +68,7 @@ bool Install::supportsImageMode(ImageMode imageMode) const { return preferredIma
 
 QString Install::versionString() const
 {
-    Qx::FileDetails exeDetails = Qx::FileDetails::readFileDetails(executableName());
+    Qx::FileDetails exeDetails = Qx::FileDetails::readFileDetails(executablePath());
 
     QString fileVersionStr = exeDetails.stringTable().fileVersion;
     QString productVersionStr = exeDetails.stringTable().productVersion;
@@ -78,29 +78,35 @@ QString Install::versionString() const
     else if(!productVersionStr.isEmpty())
         return productVersionStr;
     else
-        return "Unknown Version";
+        return u"Unknown Version"_s;
 }
 
 /* These functions can be overridden by children as needed.
  * Work within them should be kept as minimal as possible since they are not accounted
  * for by the import progress indicator.
  */
-Qx::GenericError Install::preImport(const ImportDetails& details)
+Qx::Error Install::preImport(const ImportDetails& details)
 {
     mImportDetails = std::make_unique<ImportDetails>(details);
-    return Qx::GenericError();
+    return Qx::Error();
 }
 
-Qx::GenericError Install::postImport() { return {}; }
-Qx::GenericError Install::prePlatformsImport() { return {}; }
-Qx::GenericError Install::postPlatformsImport() { return {}; }
-Qx::GenericError Install::preImageProcessing(QList<ImageMap>& workerTransfers, ImageSources bulkSources) { return {}; }
-Qx::GenericError Install::postImageProcessing() { return {}; }
-Qx::GenericError Install::prePlaylistsImport() { return {}; }
-Qx::GenericError Install::postPlaylistsImport() { return {}; }
-/* */
+Qx::Error Install::postImport() { return {}; }
+Qx::Error Install::prePlatformsImport() { return {}; }
+Qx::Error Install::postPlatformsImport() { return {}; }
 
-Qx::GenericError Install::checkoutPlatformDoc(std::unique_ptr<PlatformDoc>& returnBuffer, QString name)
+Qx::Error Install::preImageProcessing(QList<ImageMap>& workerTransfers, const ImageSources& bulkSources)
+{
+    Q_UNUSED(workerTransfers);
+    Q_UNUSED(bulkSources);
+    return {};
+}
+
+Qx::Error Install::postImageProcessing() { return {}; }
+Qx::Error Install::prePlaylistsImport() { return {}; }
+Qx::Error Install::postPlaylistsImport() { return {}; }
+
+Fe::DocHandlingError Install::checkoutPlatformDoc(std::unique_ptr<PlatformDoc>& returnBuffer, const QString& name)
 {
     // Translate to frontend doc name
     QString translatedName = translateDocName(name, DataDoc::Type::Platform);
@@ -109,7 +115,7 @@ Qx::GenericError Install::checkoutPlatformDoc(std::unique_ptr<PlatformDoc>& retu
     std::shared_ptr<PlatformDoc::Reader> docReader = preparePlatformDocCheckout(returnBuffer, translatedName);
 
     // Open document
-    Qx::GenericError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
+    Fe::DocHandlingError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
 
     // Set return null on failure
     if(readErrorStatus.isValid())
@@ -119,7 +125,7 @@ Qx::GenericError Install::checkoutPlatformDoc(std::unique_ptr<PlatformDoc>& retu
     return readErrorStatus;
 }
 
-Qx::GenericError Install::checkoutPlaylistDoc(std::unique_ptr<PlaylistDoc>& returnBuffer, QString name)
+Fe::DocHandlingError Install::checkoutPlaylistDoc(std::unique_ptr<PlaylistDoc>& returnBuffer, const QString& name)
 {
     // Translate to frontend doc name
     QString translatedName = translateDocName(name, DataDoc::Type::Playlist);
@@ -128,7 +134,7 @@ Qx::GenericError Install::checkoutPlaylistDoc(std::unique_ptr<PlaylistDoc>& retu
     std::shared_ptr<PlaylistDoc::Reader> docReader = preparePlaylistDocCheckout(returnBuffer, translatedName);
 
     // Open document
-    Qx::GenericError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
+    Fe::DocHandlingError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
 
     // Set return null on failure
     if(readErrorStatus.isValid())
@@ -138,7 +144,7 @@ Qx::GenericError Install::checkoutPlaylistDoc(std::unique_ptr<PlaylistDoc>& retu
     return readErrorStatus;
 }
 
-Qx::GenericError Install::commitPlatformDoc(std::unique_ptr<PlatformDoc> document)
+Fe::DocHandlingError Install::commitPlatformDoc(std::unique_ptr<PlatformDoc> document)
 {
     // Doc should belong to this install
     assert(document->parent() == this);
@@ -147,7 +153,7 @@ Qx::GenericError Install::commitPlatformDoc(std::unique_ptr<PlatformDoc> documen
     std::shared_ptr<PlatformDoc::Writer> docWriter = preparePlatformDocCommit(document);
 
     // Write
-    Qx::GenericError writeErrorStatus = commitDataDocument(document.get(), docWriter);
+    Fe::DocHandlingError writeErrorStatus = commitDataDocument(document.get(), docWriter);
 
     // Ensure document is cleared
     document.reset();
@@ -156,7 +162,7 @@ Qx::GenericError Install::commitPlatformDoc(std::unique_ptr<PlatformDoc> documen
     return writeErrorStatus;
 }
 
-Qx::GenericError Install::commitPlaylistDoc(std::unique_ptr<PlaylistDoc> document)
+Fe::DocHandlingError Install::commitPlaylistDoc(std::unique_ptr<PlaylistDoc> document)
 {
     // Doc should belong to this install
     assert(document->parent() == this);
@@ -165,7 +171,7 @@ Qx::GenericError Install::commitPlaylistDoc(std::unique_ptr<PlaylistDoc> documen
     std::shared_ptr<PlaylistDoc::Writer> docWriter = preparePlaylistDocCommit(document);
 
     // Write
-    Qx::GenericError writeErrorStatus = commitDataDocument(document.get(), docWriter);
+    Fe::DocHandlingError writeErrorStatus = commitDataDocument(document.get(), docWriter);
 
     // Ensure document is cleared
     document.reset();
@@ -173,5 +179,8 @@ Qx::GenericError Install::commitPlaylistDoc(std::unique_ptr<PlaylistDoc> documen
     // Return write status and let document ptr auto delete
     return writeErrorStatus;
 }
+
+QString Install::platformCategoryIconPath() const { return QString(); } // Unsupported in default implementation
+std::optional<QDir> Install::platformIconsDirectory() const { return std::nullopt; }; // Unsupported in default implementation
 
 }

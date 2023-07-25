@@ -13,7 +13,7 @@
 
 //-Class Functions--------------------------------------------------------------------------------------------
 //Public:
-QString CLIFp::standardCLIFpPath(const Fp::Install& fpInstall) { return fpInstall.fullPath() + "/" + EXE_NAME; }
+QString CLIFp::standardCLIFpPath(const Fp::Install& fpInstall) { return fpInstall.fullPath() + '/' + EXE_NAME; }
 
 bool CLIFp::hasCLIFp(const Fp::Install& fpInstall)
 {
@@ -29,7 +29,7 @@ Qx::VersionNumber CLIFp::currentCLIFpVersion(const Fp::Install& fpInstall)
         return Qx::FileDetails::readFileDetails(standardCLIFpPath(fpInstall)).fileVersion();
 }
 
-bool CLIFp::deployCLIFp(QString& errorMsg, const Fp::Install& fpInstall, QString sourcePath)
+bool CLIFp::deployCLIFp(QString& errorMsg, const Fp::Install& fpInstall, const QString& sourcePath)
 {
     // Delete existing if present
     QFile clifp(standardCLIFpPath(fpInstall));
@@ -58,18 +58,18 @@ bool CLIFp::deployCLIFp(QString& errorMsg, const Fp::Install& fpInstall, QString
     return true;
 }
 
-QString CLIFp::parametersFromStandard(QString originalAppPath, QString originalAppParams)
+QString CLIFp::parametersFromStandard(QStringView originalAppPath, QStringView originalAppParams)
 {
-    QString clifpParam = "-q "; // Start with global quiet switch
+    QString clifpParam = u"-q "_s; // Start with global quiet switch
 
     if(originalAppPath == Fp::Db::Table_Add_App::ENTRY_MESSAGE)
-        clifpParam += SHOW_COMMAND + " " + MSG_ARG.arg(originalAppParams);
+        clifpParam += SHOW_COMMAND + ' ' + MSG_ARG.arg(originalAppParams);
     else if(originalAppPath == Fp::Db::Table_Add_App::ENTRY_EXTRAS)
-         clifpParam += SHOW_COMMAND + " " + EXTRA_ARG.arg(originalAppParams);
+        clifpParam += SHOW_COMMAND + ' ' + EXTRA_ARG.arg(originalAppParams);
     else
-         clifpParam += RUN_COMMAND + " " +  APP_ARG.arg(originalAppPath) + " " + PARAM_ARG.arg(originalAppParams);
+        clifpParam += RUN_COMMAND + ' ' +  APP_ARG.arg(originalAppPath) + ' ' + PARAM_ARG.arg(originalAppParams);
 
     return clifpParam;
 }
 
-QString CLIFp::parametersFromStandard(QUuid titleId) { return "-q " + PLAY_COMMAND + " " + ID_ARG.arg(titleId.toString(QUuid::WithoutBraces)); }
+QString CLIFp::parametersFromStandard(QUuid titleId) { return u"-q "_s + PLAY_COMMAND + ' ' + ID_ARG.arg(titleId.toString(QUuid::WithoutBraces)); }

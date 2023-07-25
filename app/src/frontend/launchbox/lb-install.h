@@ -22,22 +22,27 @@ class Install : public Fe::Install
 //-Class Variables--------------------------------------------------------------------------------------------------
 public:
     // Identity
-    static inline const QString NAME = "LaunchBox";
-    static inline const QString ICON_PATH = ":/frontend/LaunchBox/icon.svg";
-    static inline const QUrl HELP_URL = QUrl("https://forums.launchbox-app.com/files/file/2652-obbys-flashpoint-importer-for-launchbox");
+    static inline const QString NAME = u"LaunchBox"_s;
+    static inline const QString ICON_PATH = u":/frontend/LaunchBox/icon.svg"_s;
+    static inline const QUrl HELP_URL = QUrl(u"https://forums.launchbox-app.com/files/file/2652-obbys-flashpoint-importer-for-launchbox"_s);
 
     // Paths
-    static inline const QString PLATFORMS_PATH = "Data/Platforms";
-    static inline const QString PLAYLISTS_PATH = "Data/Playlists";
-    static inline const QString DATA_PATH = "Data";
-    static inline const QString CORE_PATH = "Core";
-    static inline const QString MAIN_EXE_PATH = "LaunchBox.exe";
-    static inline const QString PLATFORM_IMAGES_PATH = "Images";
-    static inline const QString LOGO_PATH = "Box - Front";
-    static inline const QString SCREENSHOT_PATH = "Screenshot - Gameplay";
+    static inline const QString PLATFORMS_PATH = u"Data/Platforms"_s;
+    static inline const QString PLAYLISTS_PATH = u"Data/Playlists"_s;
+    static inline const QString DATA_PATH = u"Data"_s;
+    static inline const QString CORE_PATH = u"Core"_s;
+    static inline const QString MAIN_EXE_PATH = u"Core/LaunchBox.exe"_s;
+    static inline const QString PLATFORM_IMAGES_PATH = u"Images"_s;
+    static inline const QString PLATFORM_ICONS_PATH = u"Images/Platform Icons/Platforms"_s;
+    static inline const QString PLATFORM_CATEGORY_ICONS_PATH = u"Images/Platform Icons/Platform Categories"_s;
+    static inline const QString LOGO_PATH = u"Box - Front"_s;
+    static inline const QString SCREENSHOT_PATH = u"Screenshot - Gameplay"_s;
 
     // Files
-    static inline const QString XML_EXT = "xml";
+    static inline const QString XML_EXT = u"xml"_s;
+
+    // Other
+    static inline const QString PLATFORM_CATEGORY = u"Flashpoint"_s;
 
     // Support
     static inline const QList<Fe::ImageMode> IMAGE_MODE_ORDER {
@@ -53,31 +58,39 @@ private:
     QDir mPlatformsDirectory;
     QDir mPlaylistsDirectory;
     QDir mPlatformImagesDirectory;
+    QDir mPlatformIconsDirectory;
+    QDir mPlatformCategoryIconsDirectory;
     QDir mCoreDirectory;
 
     // Image transfers for import worker
     QList<ImageMap> mWorkerImageJobs;
 
+    // Persistent platforms config handle
+    std::unique_ptr<PlatformsConfigDoc> mPlatformsConfig;
+
     // Other trackers
-    Qx::FreeIndexTracker<int> mLbDatabaseIdTracker = Qx::FreeIndexTracker<int>(0, -1, {});
+    Qx::FreeIndexTracker mLbDatabaseIdTracker = Qx::FreeIndexTracker(0, -1, {});
     QHash<QUuid, PlaylistGame::EntryDetails> mPlaylistGameDetailsCache;
     // TODO: Even though the playlist game IDs don't seem to matter, at some point for for completeness scan all playlists when hooking an install to get the
     // full list of in use IDs
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    Install(QString installPath);
+    Install(const QString& installPath);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 private:
     // Install management
     void nullify() override;
-    Qx::GenericError populateExistingDocs() override;
+    Qx::Error populateExistingDocs() override;
     QString translateDocName(const QString& originalName, Fe::DataDoc::Type type) const override;
+
+    // Info
+    QString executableSubPath() const override;
 
     // Image Processing
     QString imageDestinationPath(Fp::ImageType imageType, const Fe::Game* game) const;
-    Qx::GenericError editBulkImageReferences(const Fe::ImageSources& imageSources);
+    void editBulkImageReferences(const Fe::ImageSources& imageSources);
 
     // Doc handling
     QString dataDocPath(Fe::DataDoc::Identifier identifier) const;
@@ -86,8 +99,10 @@ private:
     std::shared_ptr<Fe::PlatformDoc::Writer> preparePlatformDocCommit(const std::unique_ptr<Fe::PlatformDoc>& platformDoc) override;
     std::shared_ptr<Fe::PlaylistDoc::Writer> preparePlaylistDocCommit(const std::unique_ptr<Fe::PlaylistDoc>& playlistDoc) override;
 
-    Qx::GenericError checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc>& returnBuffer);
-    Qx::GenericError commitPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc> document);
+    Fe::DocHandlingError checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc>& returnBuffer);
+    Fe::DocHandlingError commitPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc> document);
+    Fe::DocHandlingError checkoutParentsDoc(std::unique_ptr<ParentsDoc>& returnBuffer);
+    Fe::DocHandlingError commitParentsDoc(std::unique_ptr<ParentsDoc> document);
 
 public:
     // Install management
@@ -95,15 +110,19 @@ public:
 
     // Info
     QString name() const override;
-    QString executableName() const override;
     QList<Fe::ImageMode> preferredImageModeOrder() const override;
-    QString versionString() const override;
 
     // Import stage notifier hooks
-    Qx::GenericError preImageProcessing(QList<ImageMap>& workerTransfers, Fe::ImageSources bulkSources) override;
+    Qx::Error prePlatformsImport() override;
+    Qx::Error postPlatformsImport() override;
+    Qx::Error preImageProcessing(QList<ImageMap>& workerTransfers, const Fe::ImageSources& bulkSources) override;
+    Qx::Error postImageProcessing() override;
 
     // Image handling
     void processDirectGameImages(const Fe::Game* game, const Fe::ImageSources& imageSources) override;
+    QString platformCategoryIconPath() const override;
+    std::optional<QDir> platformIconsDirectory() const override;
+
 };
 REGISTER_FRONTEND(Install::NAME, Install, &Install::ICON_PATH, &Install::HELP_URL);
 
