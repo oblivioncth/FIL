@@ -11,6 +11,116 @@
 // Project Includes
 #include "lb-install.h"
 
+namespace Xml
+{
+
+namespace Element_Game
+{
+    const QString NAME = u"Game"_s;
+
+    const QString ELEMENT_ID = u"ID"_s;
+    const QString ELEMENT_TITLE = u"Title"_s;
+    const QString ELEMENT_SERIES = u"Series"_s;
+    const QString ELEMENT_DEVELOPER = u"Developer"_s;
+    const QString ELEMENT_PUBLISHER = u"Publisher"_s;
+    const QString ELEMENT_PLATFORM = u"Platform"_s;
+    const QString ELEMENT_SORT_TITLE = u"SortTitle"_s;
+    const QString ELEMENT_DATE_ADDED = u"DateAdded"_s;
+    const QString ELEMENT_DATE_MODIFIED = u"DateModified"_s;
+    const QString ELEMENT_BROKEN = u"Broken"_s;
+    const QString ELEMENT_PLAYMODE = u"PlayMode"_s;
+    const QString ELEMENT_STATUS = u"Status"_s;
+    const QString ELEMENT_REGION = u"Region"_s;
+    const QString ELEMENT_NOTES = u"Notes"_s;
+    const QString ELEMENT_SOURCE = u"Source"_s;
+    const QString ELEMENT_APP_PATH = u"ApplicationPath"_s;
+    const QString ELEMENT_COMMAND_LINE = u"CommandLine"_s;
+    const QString ELEMENT_RELEASE_DATE = u"ReleaseDate"_s;
+    const QString ELEMENT_VERSION = u"Version"_s;
+    const QString ELEMENT_RELEASE_TYPE = u"ReleaseType"_s;
+};
+
+namespace Element_AddApp
+{
+    const QString NAME = u"AdditionalApplication"_s;
+
+    const QString ELEMENT_ID = u"Id"_s;
+    const QString ELEMENT_GAME_ID = u"GameID"_s;
+    const QString ELEMENT_APP_PATH = u"ApplicationPath"_s;
+    const QString ELEMENT_COMMAND_LINE = u"CommandLine"_s;
+    const QString ELEMENT_AUTORUN_BEFORE = u"AutoRunBefore"_s;
+    const QString ELEMENT_NAME = u"Name"_s;
+    const QString ELEMENT_WAIT_FOR_EXIT = u"WaitForExit"_s;
+};
+
+namespace Element_CustomField
+{
+    const QString NAME = u"CustomField"_s;
+
+    const QString ELEMENT_GAME_ID = u"GameID"_s;
+    const QString ELEMENT_NAME = u"Name"_s;
+    const QString ELEMENT_VALUE = u"Value"_s;
+};
+
+namespace Element_PlaylistHeader
+{
+    const QString NAME = u"Playlist"_s;
+
+    const QString ELEMENT_ID = u"PlaylistId"_s;
+    const QString ELEMENT_NAME = u"Name"_s;
+    const QString ELEMENT_NESTED_NAME = u"NestedName"_s;
+    const QString ELEMENT_NOTES = u"Notes"_s;
+};
+
+namespace Element_PlaylistGame
+{
+    const QString NAME = u"PlaylistGame"_s;
+
+    const QString ELEMENT_ID = u"GameId"_s;
+    const QString ELEMENT_GAME_TITLE = u"GameTitle"_s;
+    const QString ELEMENT_GAME_FILE_NAME = u"GameFileName"_s;
+    const QString ELEMENT_GAME_PLATFORM = u"GamePlatform"_s;
+    const QString ELEMENT_MANUAL_ORDER = u"ManualOrder"_s;
+    const QString ELEMENT_LB_DB_ID = u"LaunchBoxDbId"_s;
+};
+
+namespace Element_Platform
+{
+    const QString NAME = u"Platform"_s;
+
+    const QString ELEMENT_NAME = u"Name"_s;
+    const QString ELEMENT_CATEGORY = u"Category"_s;
+};
+
+namespace Element_PlatformFolder
+{
+    const QString NAME = u"PlatformFolder"_s;
+
+    const QString ELEMENT_MEDIA_TYPE = u"MediaType"_s;
+    const QString ELEMENT_FOLDER_PATH = u"FolderPath"_s;
+    const QString ELEMENT_PLATFORM = u"Platform"_s;
+};
+
+namespace Element_PlatformCategory
+{
+    const QString NAME = u"PlatformCategory"_s;
+
+    const QString ELEMENT_NAME = u"Name"_s;
+    const QString ELEMENT_NESTED_NAME = u"NestedName"_s;
+};
+
+ namespace Element_Parent
+ {
+    const QString NAME = u"Parent"_s;
+
+    const QString ELEMENT_PLATFORM_CATEGORY_NAME = u"PlatformCategoryName"_s;
+    const QString ELEMENT_PLATFORM_NAME = u"PlatformName"_s;
+    const QString ELEMENT_PARENT_PLATFORM_CATEGORY_NAME = u"ParentPlatformCategoryName"_s;
+ };
+
+const QString ROOT_ELEMENT = u"LaunchBox"_s;
+};
+
 namespace Lb
 {
 //===============================================================================================================
@@ -26,41 +136,35 @@ XmlDocReader::XmlDocReader(Fe::DataDoc* targetDoc) :
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
+//Protected:
+Fe::DocHandlingError XmlDocReader::streamStatus() const
+{
+    if(mStreamReader.hasError())
+    {
+        Qx::XmlStreamReaderError xmlError(mStreamReader);
+        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocReadFailed, xmlError.text());
+    }
+
+    return Fe::DocHandlingError();
+}
+
 //Public:
-Qx::GenericError XmlDocReader::readInto()
+Fe::DocHandlingError XmlDocReader::readInto()
 {
     // Open File
     if(!mXmlFile.open(QFile::ReadOnly))
+        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocCantOpen, mXmlFile.errorString());
+
+    if(!mStreamReader.readNextStartElement())
     {
-        return Qx::GenericError(Qx::GenericError::Critical,
-                                Fe::docHandlingErrorString(mTargetDocument, Fe::DocHandlingError::DocCantOpen),
-                                mXmlFile.errorString());
+        Qx::XmlStreamReaderError xmlError(mStreamReader);
+        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocReadFailed, xmlError.text());
     }
 
-    // Prepare error return instance
-    Qx::XmlStreamReaderError readError;
+    if(mStreamReader.name() != Xml::ROOT_ELEMENT)
+        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::NotParentDoc);
 
-    if(mStreamReader.readNextStartElement())
-    {
-        if(mStreamReader.name() == Xml::ROOT_ELEMENT)
-        {
-            // Return no error on success
-            if(!readTargetDoc())
-            {
-                if(mStreamReader.error() == QXmlStreamReader::CustomError)
-                    readError = Qx::XmlStreamReaderError(mStreamReader.errorString());
-                else
-                    readError = Qx::XmlStreamReaderError(mStreamReader.error());
-            }
-        }
-        else
-            readError = Qx::XmlStreamReaderError(Fe::docHandlingErrorString(mTargetDocument, Fe::DocHandlingError::NotParentDoc));
-    }
-    else
-        readError = Qx::XmlStreamReaderError(mStreamReader.error());
-
-    return readError.isValid() ? Qx::GenericError(Qx::GenericError::Critical, mStdReadErrorStr, readError.text()) :
-                                 Qx::GenericError();
+    return readTargetDoc();
 
     // File is automatically closed when reader is destroyed...
 }
@@ -93,30 +197,32 @@ void XmlDocWriter::writeOtherFields(const QHash<QString, QString>& otherFields)
         writeCleanTextElement(i.key(), i.value());
 }
 
+Fe::DocHandlingError XmlDocWriter::streamStatus() const
+{
+    return mStreamWriter.hasError() ? Fe::DocHandlingError(*mSourceDocument, Fe::DocHandlingError::DocWriteFailed, mStreamWriter.device()->errorString()) :
+                                      Fe::DocHandlingError();
+}
+
 //Public:
-Qx::GenericError XmlDocWriter::writeOutOf()
+Fe::DocHandlingError XmlDocWriter::writeOutOf()
 {
     // Open File
     if(!mXmlFile.open(QFile::WriteOnly | QFile::Truncate)) // Discard previous contents
-    {
-        return Qx::GenericError(Qx::GenericError::Critical,
-                                Fe::docHandlingErrorString(mSourceDocument, Fe::DocHandlingError::DocCantSave),
-                                mXmlFile.errorString());
-    }
+        return Fe::DocHandlingError(*mSourceDocument, Fe::DocHandlingError::DocCantSave, mXmlFile.errorString());
 
     // Enable auto formatting
     mStreamWriter.setAutoFormatting(true);
     mStreamWriter.setAutoFormattingIndent(2);
 
     // Write standard XML header
-    mStreamWriter.writeStartDocument("1.0", true);
+    mStreamWriter.writeStartDocument(u"1.0"_s, true);
 
     // Write main LaunchBox tag
     mStreamWriter.writeStartElement(Xml::ROOT_ELEMENT);
 
     // Write main body
     if(!writeSourceDoc())
-        return Qx::GenericError(Qx::GenericError::Critical, mStdWriteErrorStr, mStreamWriter.device()->errorString());
+        return streamStatus();
 
     // Close main LaunchBox tag
     mStreamWriter.writeEndElement();
@@ -125,8 +231,7 @@ Qx::GenericError XmlDocWriter::writeOutOf()
     mStreamWriter.writeEndDocument();
 
     // Return null string on success
-    return mStreamWriter.hasError() ? Qx::GenericError(Qx::GenericError::Critical, mStdWriteErrorStr, mStreamWriter.device()->errorString()) :
-                                      Qx::GenericError();
+    return streamStatus();
 
     // File is automatically closed when writer is destroyed...
 }
@@ -137,7 +242,7 @@ Qx::GenericError XmlDocWriter::writeOutOf()
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlatformDoc::PlatformDoc(Install* const parent, const QString& xmlPath, QString docName, Fe::UpdateOptions updateOptions,
+PlatformDoc::PlatformDoc(Install* const parent, const QString& xmlPath, QString docName, const Fe::UpdateOptions& updateOptions,
                          const DocKey&) :
     Fe::BasicPlatformDoc(parent, xmlPath, docName, updateOptions)
 {}
@@ -220,7 +325,7 @@ PlatformDoc::Reader::Reader(PlatformDoc* targetDoc) :
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-bool PlatformDoc::Reader::readTargetDoc()
+Fe::DocHandlingError PlatformDoc::Reader::readTargetDoc()
 {
     while(mStreamReader.readNextStartElement())
     {
@@ -235,7 +340,7 @@ bool PlatformDoc::Reader::readTargetDoc()
     }
 
     // Return status
-    return !mStreamReader.hasError();
+    return streamStatus();
 }
 
 void PlatformDoc::Reader::parseGame()
@@ -411,7 +516,7 @@ bool PlatformDoc::Writer::writeGame(const Game& game)
     if(game.dateModified().isValid())// LB is picky with dates
         writeCleanTextElement(Xml::Element_Game::ELEMENT_DATE_MODIFIED, game.dateModified().toString(Qt::ISODateWithMs));
 
-    writeCleanTextElement(Xml::Element_Game::ELEMENT_BROKEN, game.isBroken() ? "true" : "false");
+    writeCleanTextElement(Xml::Element_Game::ELEMENT_BROKEN, game.isBroken() ? u"true"_s : u"false"_s);
     writeCleanTextElement(Xml::Element_Game::ELEMENT_PLAYMODE, game.playMode());
     writeCleanTextElement(Xml::Element_Game::ELEMENT_STATUS, game.status());
     writeCleanTextElement(Xml::Element_Game::ELEMENT_REGION, game.region());
@@ -446,9 +551,9 @@ bool PlatformDoc::Writer::writeAddApp(const AddApp& addApp)
     writeCleanTextElement(Xml::Element_AddApp::ELEMENT_GAME_ID, addApp.gameId().toString(QUuid::WithoutBraces));
     writeCleanTextElement(Xml::Element_AddApp::ELEMENT_APP_PATH, addApp.appPath());
     writeCleanTextElement(Xml::Element_AddApp::ELEMENT_COMMAND_LINE, addApp.commandLine());
-    writeCleanTextElement(Xml::Element_AddApp::ELEMENT_AUTORUN_BEFORE, addApp.isAutorunBefore() ? "true" : "false");
+    writeCleanTextElement(Xml::Element_AddApp::ELEMENT_AUTORUN_BEFORE, addApp.isAutorunBefore() ? u"true"_s : u"false"_s);
     writeCleanTextElement(Xml::Element_AddApp::ELEMENT_NAME, addApp.name());
-    writeCleanTextElement(Xml::Element_AddApp::ELEMENT_WAIT_FOR_EXIT, addApp.isWaitForExit() ? "true" : "false");
+    writeCleanTextElement(Xml::Element_AddApp::ELEMENT_WAIT_FOR_EXIT, addApp.isWaitForExit() ? u"true"_s : u"false"_s);
 
     // Write other tags
     writeOtherFields(addApp.otherFields());
@@ -486,7 +591,7 @@ bool PlatformDoc::Writer::writeCustomField(const CustomField& customField)
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlaylistDoc::PlaylistDoc(Install* const parent, const QString& xmlPath, QString docName, Fe::UpdateOptions updateOptions,
+PlaylistDoc::PlaylistDoc(Install* const parent, const QString& xmlPath, QString docName, const Fe::UpdateOptions& updateOptions,
                          const DocKey&) :
     Fe::BasicPlaylistDoc(parent, xmlPath, docName, updateOptions),
     mLaunchBoxDatabaseIdTracker(&parent->mLbDatabaseIdTracker)
@@ -517,7 +622,10 @@ std::shared_ptr<Fe::PlaylistGame> PlaylistDoc::preparePlaylistGame(const Fp::Pla
             lbPlaylistGame->setLBDatabaseId(std::static_pointer_cast<PlaylistGame>(mPlaylistGamesExisting[key])->lbDatabaseId());
     }
     else
-        lbPlaylistGame->setLBDatabaseId(mLaunchBoxDatabaseIdTracker->reserveFirstFree());
+    {
+        auto optIdx = mLaunchBoxDatabaseIdTracker->reserveFirstFree();
+        lbPlaylistGame->setLBDatabaseId(optIdx.value_or(0));
+    }
 
     // Return converted playlist game
     return lbPlaylistGame;
@@ -537,7 +645,7 @@ PlaylistDoc::Reader::Reader(PlaylistDoc* targetDoc) :
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-bool PlaylistDoc::Reader::readTargetDoc()
+Fe::DocHandlingError PlaylistDoc::Reader::readTargetDoc()
 {
     while(mStreamReader.readNextStartElement())
     {
@@ -550,7 +658,7 @@ bool PlaylistDoc::Reader::readTargetDoc()
     }
 
     // Return status
-    return !mStreamReader.hasError();
+    return streamStatus();
 }
 
 void PlaylistDoc::Reader::parsePlaylistHeader()
@@ -606,7 +714,10 @@ void PlaylistDoc::Reader::parsePlaylistGame()
 
     // Correct LB ID if it is invalid and then add it to tracker
     if(existingPlaylistGame->lbDatabaseId() < 0)
-        existingPlaylistGame->setLBDatabaseId(static_cast<PlaylistDoc*>(mTargetDocument)->mLaunchBoxDatabaseIdTracker->reserveFirstFree());
+    {
+        auto optIdx = static_cast<PlaylistDoc*>(mTargetDocument)->mLaunchBoxDatabaseIdTracker->reserveFirstFree();
+        existingPlaylistGame->setLBDatabaseId(optIdx.value_or(0));
+    }
     else
         static_cast<PlaylistDoc*>(mTargetDocument)->mLaunchBoxDatabaseIdTracker->release(existingPlaylistGame->lbDatabaseId());
 
@@ -636,7 +747,7 @@ bool PlaylistDoc::Writer::writeSourceDoc()
         return false;
 
     // Write all playlist games
-    for(std::shared_ptr<Fe::PlaylistGame> playlistGame : static_cast<PlaylistDoc*>(mSourceDocument)->finalPlaylistGames())
+    for(const std::shared_ptr<Fe::PlaylistGame>& playlistGame : static_cast<PlaylistDoc*>(mSourceDocument)->finalPlaylistGames())
     {
         if(!writePlaylistGame(*std::static_pointer_cast<PlaylistGame>(playlistGame)))
             return false;
@@ -695,8 +806,9 @@ bool PlaylistDoc::Writer::writePlaylistGame(const PlaylistGame& playlistGame)
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlatformsConfigDoc::PlatformsConfigDoc(Install* const parent, const QString& xmlPath, const DocKey&) :
-    Fe::DataDoc(parent, xmlPath, STD_NAME)
+PlatformsConfigDoc::PlatformsConfigDoc(Install* const parent, const QString& xmlPath, const Fe::UpdateOptions& updateOptions,
+                                       const DocKey&) :
+    Fe::UpdateableDoc(parent, xmlPath, STD_NAME, updateOptions)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -706,40 +818,63 @@ Fe::DataDoc::Type PlatformsConfigDoc::type() const { return Fe::DataDoc::Type::C
 //Public:
 bool PlatformsConfigDoc::isEmpty() const
 {
-    return mPlatforms.isEmpty() && mPlatformFolders.isEmpty() && mPlatformCategories.isEmpty();
+    return mPlatformsFinal.isEmpty() && mPlatformsExisting.isEmpty() &&
+           mPlatformFoldersFinal.isEmpty() && mPlatformFoldersExisting.isEmpty() &&
+           mPlatformCategoriesFinal.isEmpty() && mPlatformCategoriesExisting.isEmpty();
 }
 
-const QHash<QString, Platform>& PlatformsConfigDoc::platforms() const { return mPlatforms; }
-const QMap<QString, QMap<QString, QString>>& PlatformsConfigDoc::platformFolders() const { return mPlatformFolders; }
-const QList<PlatformCategory>& PlatformsConfigDoc::platformCategories() const { return mPlatformCategories; }
+const QHash<QString, Platform>& PlatformsConfigDoc::finalPlatforms() const { return mPlatformsFinal; }
+const QMap<QString, PlatformFolder>& PlatformsConfigDoc::finalPlatformFolders() const { return mPlatformFoldersFinal; }
+const QMap<QString, PlatformCategory>& PlatformsConfigDoc::finalPlatformCategories() const { return mPlatformCategoriesFinal; }
 
-bool PlatformsConfigDoc::containsPlatform(QString name) { return mPlatforms.contains(name); }
-
-void PlatformsConfigDoc::addPlatform(Platform platform)
+void PlatformsConfigDoc::addPlatform(const Platform& platform)
 {
     // Add platform, don't need to add media folders as LB will automatically set them to the defaults
-    mPlatforms[platform.name()] = platform;
+    addUpdateableItem(mPlatformsExisting, mPlatformsFinal, platform.name(), platform);
 }
 
-void PlatformsConfigDoc::removePlatform(QString name)
+void PlatformsConfigDoc::removePlatform(const QString& name)
 {
     // Remove platform and any of its media folders (so LB will reset them to default)
-    mPlatforms.remove(name);
-    mPlatformFolders.remove(name);
+    mPlatformsFinal.remove(name);
+    mPlatformsExisting.remove(name);
+    removePlatformFolders(name);
 }
 
-void PlatformsConfigDoc::setMediaFolder(QString platform, QString mediaType, QString folderPath)
+void PlatformsConfigDoc::addPlatformFolder(const PlatformFolder& platformFolder)
 {
-    // Add platform if it's missing as LB will not add it by default just because it has media folders
-    if(!containsPlatform(platform))
-    {
-        Platform::Builder pb;
-        pb.wName(platform);
-        addPlatform(pb.build());
-    }
+    addUpdateableItem(mPlatformFoldersExisting, mPlatformFoldersFinal, platformFolder.identifier(), platformFolder);
+}
 
-    // Set/add media folder
-    mPlatformFolders[platform][mediaType] = folderPath;
+void PlatformsConfigDoc::removePlatformFolders(const QString& platformName)
+{
+    auto culler = [&platformName](QMap<QString, PlatformFolder>::iterator itr){
+        return itr.value().platform() == platformName;
+    };
+    mPlatformFoldersExisting.removeIf(culler);
+    mPlatformFoldersFinal.removeIf(culler);
+}
+
+void PlatformsConfigDoc::addPlatformCategory(const PlatformCategory& platformCategory)
+{
+    addUpdateableItem(mPlatformCategoriesExisting, mPlatformCategoriesFinal, platformCategory.name(), platformCategory);
+}
+
+void PlatformsConfigDoc::removePlatformCategory(const QString& categoryName)
+{
+    mPlatformCategoriesFinal.remove(categoryName);
+    mPlatformCategoriesExisting.remove(categoryName);
+}
+
+void PlatformsConfigDoc::finalize()
+{
+    // Finalize derived
+    finalizeUpdateableItems(mPlatformsExisting, mPlatformsFinal);
+    finalizeUpdateableItems(mPlatformFoldersExisting, mPlatformFoldersFinal);
+    finalizeUpdateableItems(mPlatformCategoriesExisting, mPlatformCategoriesFinal);
+
+    // Finalize base
+    Fe::UpdateableDoc::finalize();
 }
 
 //===============================================================================================================
@@ -755,14 +890,17 @@ PlatformsConfigDoc::Reader::Reader(PlatformsConfigDoc* targetDoc) :
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-bool PlatformsConfigDoc::Reader::readTargetDoc()
+Fe::DocHandlingError PlatformsConfigDoc::Reader::readTargetDoc()
 {
     while(mStreamReader.readNextStartElement())
     {
         if(mStreamReader.name() == Xml::Element_Platform::NAME)
             parsePlatform();
         else if(mStreamReader.name() == Xml::Element_PlatformFolder::NAME)
-            parsePlatformFolder();
+        {
+            if(Fe::DocHandlingError dhe = parsePlatformFolder(); dhe.isValid())
+                return dhe;
+        }
         else if (mStreamReader.name() == Xml::Element_PlatformCategory::NAME)
             parsePlatformCategory();
         else
@@ -770,7 +908,7 @@ bool PlatformsConfigDoc::Reader::readTargetDoc()
     }
 
     // Return status
-    return !mStreamReader.hasError();
+    return streamStatus();
 }
 
 void PlatformsConfigDoc::Reader::parsePlatform()
@@ -783,37 +921,40 @@ void PlatformsConfigDoc::Reader::parsePlatform()
     {
         if(mStreamReader.name() == Xml::Element_Platform::ELEMENT_NAME)
             pb.wName(mStreamReader.readElementText());
+//        else if(mStreamReader.name() == Xml::Element_Platform::ELEMENT_CATEGORY)
+//            pb.wCategory(mStreamReader.readElementText());
         else
             pb.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
     }
 
     // Build Platform and add to document
-    std::shared_ptr<Platform> existingPlatform = pb.buildShared();
-    static_cast<PlatformsConfigDoc*>(mTargetDocument)->mPlatforms.insert(existingPlatform->name(), *existingPlatform);
+    Platform existingPlatform = pb.build();
+    static_cast<PlatformsConfigDoc*>(mTargetDocument)->mPlatformsExisting[existingPlatform.name()] = existingPlatform;
 }
 
-void PlatformsConfigDoc::Reader::parsePlatformFolder()
+Fe::DocHandlingError PlatformsConfigDoc::Reader::parsePlatformFolder()
 {
     // Platform Folder to Build
-    QString platform;
-    QString mediaType;
-    QString folderPath;
+    PlatformFolder::Builder pfb;
 
     // Cover all children
     while(mStreamReader.readNextStartElement())
     {
         if(mStreamReader.name() == Xml::Element_PlatformFolder::ELEMENT_MEDIA_TYPE)
-            mediaType = mStreamReader.readElementText();
+            pfb.wMediaType(mStreamReader.readElementText());
         else if(mStreamReader.name() == Xml::Element_PlatformFolder::ELEMENT_FOLDER_PATH)
-            folderPath = mStreamReader.readElementText();
+            pfb.wFolderPath(mStreamReader.readElementText());
         else if(mStreamReader.name() == Xml::Element_PlatformFolder::ELEMENT_PLATFORM)
-            platform = mStreamReader.readElementText();
+            pfb.wPlatform(mStreamReader.readElementText());
         else
-            mStreamReader.raiseError(Fe::docHandlingErrorString(mTargetDocument, Fe::DocHandlingError::DocInvalidType));
+            return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocInvalidType);
     }
 
-    // Add to document
-    static_cast<PlatformsConfigDoc*>(mTargetDocument)->mPlatformFolders[platform][mediaType] = folderPath;
+    // Build PlatformFolder and add to document
+    PlatformFolder existingPlatformFolder = pfb.build();
+    static_cast<PlatformsConfigDoc*>(mTargetDocument)->mPlatformFoldersExisting[existingPlatformFolder.identifier()] = existingPlatformFolder;
+
+    return Fe::DocHandlingError();
 }
 
 void PlatformsConfigDoc::Reader::parsePlatformCategory()
@@ -824,12 +965,19 @@ void PlatformsConfigDoc::Reader::parsePlatformCategory()
     // Cover all children
     while(mStreamReader.readNextStartElement())
     {
-        // No specific elements are of interest for now
-        pcb.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
+        if(mStreamReader.name() == Xml::Element_PlatformCategory::ELEMENT_NAME)
+            pcb.wName(mStreamReader.readElementText());
+        else if(mStreamReader.name() == Xml::Element_PlatformCategory::ELEMENT_NESTED_NAME)
+            pcb.wNestedName(mStreamReader.readElementText());
+        else
+            pcb.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
     }
 
+    // Build
+    PlatformCategory pc = pcb.build();
+
     // Build Playlist Header and add to document
-   static_cast<PlatformsConfigDoc*>(mTargetDocument)->mPlatformCategories.append(pcb.build());
+   static_cast<PlatformsConfigDoc*>(mTargetDocument)->mPlatformCategoriesExisting[pc.name()] = pc;
 }
 
 //===============================================================================================================
@@ -848,25 +996,21 @@ PlatformsConfigDoc::Writer::Writer(PlatformsConfigDoc* sourceDoc) :
 bool PlatformsConfigDoc::Writer::writeSourceDoc()
 {
     // Write all platforms
-    for(const Platform& platform : static_cast<PlatformsConfigDoc*>(mSourceDocument)->platforms())
+    for(const Platform& platform : static_cast<PlatformsConfigDoc*>(mSourceDocument)->finalPlatforms())
     {
         if(!writePlatform(platform))
             return false;
     }
 
     // Write all platform folders
-    const QMap<QString, QMap<QString, QString>>& platformFolderMap = static_cast<PlatformsConfigDoc*>(mSourceDocument)->platformFolders();
-    QMap<QString, QMap<QString, QString>>::const_iterator i;
-    for(i = platformFolderMap.constBegin(); i != platformFolderMap.constEnd(); i++)
+    for(const PlatformFolder& platformFolder : static_cast<PlatformsConfigDoc*>(mSourceDocument)->finalPlatformFolders())
     {
-         QMap<QString, QString>::const_iterator j;
-         for(j = i.value().constBegin(); j != i.value().constEnd(); j++)
-             if(!writePlatformFolder(i.key(), j.key(), j.value()))
-                 return false;
+        if(!writePlatformFolder(platformFolder))
+            return false;
     }
 
     // Write all platform categories
-    for(const PlatformCategory& platformCategory : static_cast<PlatformsConfigDoc*>(mSourceDocument)->platformCategories())
+    for(const PlatformCategory& platformCategory : static_cast<PlatformsConfigDoc*>(mSourceDocument)->finalPlatformCategories())
     {
         if(!writePlatformCategory(platformCategory))
             return false;
@@ -883,6 +1027,7 @@ bool PlatformsConfigDoc::Writer::writePlatform(const Platform& platform)
 
     // Write known tags
     writeCleanTextElement(Xml::Element_Platform::ELEMENT_NAME, platform.name());
+//    writeCleanTextElement(Xml::Element_Platform::ELEMENT_CATEGORY, platform.category());
 
     // Write other tags
     writeOtherFields(platform.otherFields());
@@ -894,15 +1039,15 @@ bool PlatformsConfigDoc::Writer::writePlatform(const Platform& platform)
     return !mStreamWriter.hasError();
 }
 
-bool PlatformsConfigDoc::Writer::writePlatformFolder(const QString& platform, const QString& mediaType, const QString& folderPath)
+bool PlatformsConfigDoc::Writer::writePlatformFolder(const PlatformFolder& platformFoler)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Xml::Element_PlatformFolder::NAME);
 
     // Write known tags
-    writeCleanTextElement(Xml::Element_PlatformFolder::ELEMENT_MEDIA_TYPE, mediaType);
-    writeCleanTextElement(Xml::Element_PlatformFolder::ELEMENT_FOLDER_PATH, folderPath);
-    writeCleanTextElement(Xml::Element_PlatformFolder::ELEMENT_PLATFORM, platform);
+    writeCleanTextElement(Xml::Element_PlatformFolder::ELEMENT_MEDIA_TYPE, platformFoler.mediaType());
+    writeCleanTextElement(Xml::Element_PlatformFolder::ELEMENT_FOLDER_PATH, platformFoler.folderPath());
+    writeCleanTextElement(Xml::Element_PlatformFolder::ELEMENT_PLATFORM, platformFoler.platform());
 
     // Close game tag
     mStreamWriter.writeEndElement();
@@ -917,14 +1062,219 @@ bool PlatformsConfigDoc::Writer::writePlatformCategory(const PlatformCategory& p
     mStreamWriter.writeStartElement(Xml::Element_PlatformCategory::NAME);
 
     // Write known tags
-    // None for now...
-    if(mStreamWriter.hasError())
-        return false;
+    writeCleanTextElement(Xml::Element_PlatformCategory::ELEMENT_NAME, platformCategory.name());
+    writeCleanTextElement(Xml::Element_PlatformCategory::ELEMENT_NESTED_NAME, platformCategory.nestedName());
 
     // Write other tags
     writeOtherFields(platformCategory.otherFields());
 
     // Close game tag
+    mStreamWriter.writeEndElement();
+
+    // Return error status
+    return !mStreamWriter.hasError();
+}
+
+//===============================================================================================================
+// ParentsDoc
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Public:
+ParentsDoc::ParentsDoc(Install* const parent, const QString& xmlPath, const Fe::UpdateOptions& updateOptions,
+                                       const DocKey&) :
+    Fe::UpdateableDoc(parent, xmlPath, STD_NAME, updateOptions)
+{}
+
+//-Instance Functions--------------------------------------------------------------------------------------------------
+//Private:
+Fe::DataDoc::Type ParentsDoc::type() const { return Fe::DataDoc::Type::Config; }
+
+//Public:
+bool ParentsDoc::isEmpty() const
+{
+    return mCategoriesExisting.isEmpty() && mCategoriesFinal.isEmpty() &&
+           mPlatformsExisting.isEmpty() && mPlatformsFinal.isEmpty();
+}
+
+const QHash<QString, ParentCategory>& ParentsDoc::finalParentCategories() const { return mCategoriesFinal; }
+const QHash<QString, ParentPlatform>& ParentsDoc::finalParentPlatforms() const { return mPlatformsFinal; }
+
+void ParentsDoc::addParentCategory(const ParentCategory& parentCategory)
+{
+    addUpdateableItem(mCategoriesExisting, mCategoriesFinal, parentCategory.platformCategoryName(), parentCategory);
+}
+
+void ParentsDoc::addParentPlatform(const ParentPlatform& parentPlatform)
+{
+    addUpdateableItem(mPlatformsExisting, mPlatformsFinal, parentPlatform.platformName(), parentPlatform);
+}
+
+void ParentsDoc::finalize()
+{
+    // Finalize derived
+    finalizeUpdateableItems(mCategoriesExisting, mCategoriesFinal);
+    finalizeUpdateableItems(mPlatformsExisting, mPlatformsFinal);
+
+
+    // Finalize base
+    Fe::UpdateableDoc::finalize();
+}
+
+//===============================================================================================================
+// ParentsDoc::Reader
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Public:
+ParentsDoc::Reader::Reader(ParentsDoc* targetDoc) :
+    Fe::DataDoc::Reader(targetDoc),
+    XmlDocReader(targetDoc)
+{}
+
+//-Instance Functions-------------------------------------------------------------------------------------------------
+//Private:
+Fe::DocHandlingError ParentsDoc::Reader::readTargetDoc()
+{
+    while(mStreamReader.readNextStartElement())
+    {
+        if(mStreamReader.name() == Xml::Element_Parent::NAME)
+        {
+            if(Fe::DocHandlingError dhe = parseParent(); dhe.isValid())
+                return dhe;
+        }
+        else
+            mStreamReader.skipCurrentElement();
+    }
+
+    // Return status
+    return streamStatus();
+}
+
+Fe::DocHandlingError ParentsDoc::Reader::parseParent()
+{
+    // Advance to first element
+    if(!mStreamReader.readNextStartElement())
+        return streamStatus();
+
+    // Branch on parent type
+    if(mStreamReader.name() == Xml::Element_Parent::ELEMENT_PLATFORM_CATEGORY_NAME)
+        parseParentCategory();
+    else if(mStreamReader.name() == Xml::Element_Parent::ELEMENT_PLATFORM_NAME)
+        parseParentPlatform();
+    else
+        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocInvalidType);
+
+    // Return status
+    return streamStatus();
+}
+
+void ParentsDoc::Reader::parseParentCategory()
+{
+    // Platform Config Doc to Build
+    ParentCategory::Builder pc;
+
+    // Cover all children
+    do
+    {
+        if(mStreamReader.name() == Xml::Element_Parent::ELEMENT_PLATFORM_CATEGORY_NAME)
+            pc.wPlatformCategoryName(mStreamReader.readElementText());
+        else
+            pc.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
+    }
+    while(mStreamReader.readNextStartElement());
+
+    // Build Platform and add to document
+    ParentCategory existingParent = pc.build();
+    static_cast<ParentsDoc*>(mTargetDocument)->mCategoriesExisting[existingParent.platformCategoryName()] = existingParent;
+}
+
+void ParentsDoc::Reader::parseParentPlatform()
+{
+    // Platform Config Doc to Build
+    ParentPlatform::Builder pc;
+
+    // Cover all children
+    do
+    {
+        if(mStreamReader.name() == Xml::Element_Parent::ELEMENT_PLATFORM_NAME)
+            pc.wPlatformName(mStreamReader.readElementText());
+        else if(mStreamReader.name() == Xml::Element_Parent::ELEMENT_PARENT_PLATFORM_CATEGORY_NAME)
+            pc.wParentPlatformCategoryName(mStreamReader.readElementText());
+        else
+            pc.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
+    }
+    while(mStreamReader.readNextStartElement());
+
+    // Build Platform and add to document
+    ParentPlatform existingParent = pc.build();
+    static_cast<ParentsDoc*>(mTargetDocument)->mPlatformsExisting[existingParent.platformName()] = existingParent;
+}
+
+//===============================================================================================================
+// PlatformsConfigDoc::Writer
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Public:
+ParentsDoc::Writer::Writer(ParentsDoc* sourceDoc) :
+    Fe::DataDoc::Writer(sourceDoc),
+    XmlDocWriter(sourceDoc)
+{}
+
+//-Instance Functions-------------------------------------------------------------------------------------------------
+//Private:
+bool ParentsDoc::Writer::writeSourceDoc()
+{
+    // Write all categories
+    for(const ParentCategory& parentCategory : static_cast<ParentsDoc*>(mSourceDocument)->finalParentCategories())
+    {
+        if(!writeParentCategory(parentCategory))
+            return false;
+    }
+
+    // Write all platforms
+    for(const ParentPlatform& parentPlatform : static_cast<ParentsDoc*>(mSourceDocument)->finalParentPlatforms())
+    {
+        if(!writeParentPlatform(parentPlatform))
+            return false;
+    }
+
+    // Return true on success
+    return true;
+}
+
+bool ParentsDoc::Writer::writeParentCategory(const ParentCategory& parentCategory)
+{
+    // Write opening tag
+    mStreamWriter.writeStartElement(Xml::Element_Parent::NAME);
+
+    // Write known tags
+    writeCleanTextElement(Xml::Element_Parent::ELEMENT_PLATFORM_CATEGORY_NAME, parentCategory.platformCategoryName());
+
+    // Write other tags
+    writeOtherFields(parentCategory.otherFields());
+
+    // Close tag
+    mStreamWriter.writeEndElement();
+
+    // Return error status
+    return !mStreamWriter.hasError();
+}
+
+bool ParentsDoc::Writer::writeParentPlatform(const ParentPlatform& parentPlatform)
+{
+    // Write opening tag
+    mStreamWriter.writeStartElement(Xml::Element_Parent::NAME);
+
+    // Write known tags
+    writeCleanTextElement(Xml::Element_Parent::ELEMENT_PLATFORM_NAME, parentPlatform.platformName());
+    writeCleanTextElement(Xml::Element_Parent::ELEMENT_PARENT_PLATFORM_CATEGORY_NAME, parentPlatform.parentPlatformCategoryName());
+
+    // Write other tags
+    writeOtherFields(parentPlatform.otherFields());
+
+    // Close tag
     mStreamWriter.writeEndElement();
 
     // Return error status

@@ -34,7 +34,7 @@ DisplayGlobalFilter::Parser::Parser(DisplayGlobalFilter* display) :
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-bool DisplayGlobalFilter::Parser::parse(QString key, QString value, int depth)
+bool DisplayGlobalFilter::Parser::parse(QStringView key, const QString& value, int depth)
 {
     Q_UNUSED(depth);
 
@@ -61,7 +61,7 @@ DisplayFilter::Parser::Parser(DisplayFilter* display) :
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-bool DisplayFilter::Parser::parse(QString key, QString value, int depth)
+bool DisplayFilter::Parser::parse(QStringView key, const QString& value, int depth)
 {
     Q_UNUSED(depth);
 
@@ -78,7 +78,7 @@ bool DisplayFilter::Parser::parse(QString key, QString value, int depth)
             mSetting->mSortBy = DisplayFilter::Sort::NoSort;
     }
     else if(key == CrudeSettings::Keys::Display::Filter::REVERSE_ORDER)
-        mSetting->mReverseOrder = value == "true" ? true : false;
+        mSetting->mReverseOrder = value == u"true"_s ? true : false;
     else if(key == CrudeSettings::Keys::Display::Filter::LIST_LIMIT)
         mSetting->mListLimit = value.toInt();
     else
@@ -100,16 +100,16 @@ Display::Parser::Parser(Display* display) :
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-bool Display::Parser::parse(QString key, QString value, int depth)
+bool Display::Parser::parse(QStringView key, const QString& value, int depth)
 {
     if(key == CrudeSettings::Keys::Display::LAYOUT)
         mSetting->mLayout = value;
     else if(key == CrudeSettings::Keys::Display::ROMLIST)
         mSetting->mRomlist = value;
     else if(key == CrudeSettings::Keys::Display::IN_CYCLE)
-        mSetting->mInCycle = value == "yes" ? true : false;
+        mSetting->mInCycle = value == u"yes"_s ? true : false;
     else if(key == CrudeSettings::Keys::Display::IN_MENU)
-        mSetting->mInMenu = value == "yes" ? true : false;
+        mSetting->mInMenu = value == u"yes"_s ? true : false;
     else if(key == CrudeSettings::Keys::Display::GLOBAL_FILTER)
     {
         // Set empty global filter to display
@@ -149,9 +149,9 @@ OtherSetting::Parser::Parser(OtherSetting* otherSetting) :
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-bool OtherSetting::Parser::parse(QString key, QString value, int depth)
+bool OtherSetting::Parser::parse(QStringView key, const QString& value, int depth)
 {
-    mSetting->mContents.append({.key = key, .value = value, .depth = depth});
+    mSetting->mContents.append({.key = key.toString(), .value = value, .depth = depth});
     return true;
 }
 
@@ -170,11 +170,11 @@ CrudeSettings::CrudeSettings(Install* const parent, const QString& filePath, con
 bool CrudeSettings::isEmpty() const { return mDisplays.isEmpty() && mOtherSettings.isEmpty(); };
 Fe::DataDoc::Type CrudeSettings::type() const { return Type::Config; }
 
-bool CrudeSettings::containsDisplay(QString name) { return mDisplays.contains(name); }
+bool CrudeSettings::containsDisplay(const QString& name) { return mDisplays.contains(name); }
 void CrudeSettings::addDisplay(const Display& display) { mDisplays.insert(display.name(), display); }
-Display& CrudeSettings::display(QString name) { return mDisplays[name]; }
+Display& CrudeSettings::display(const QString& name) { return mDisplays[name]; }
 
-bool CrudeSettings::containsOtherSetting(QString type, QString name)
+bool CrudeSettings::containsOtherSetting(const QString& type, const QString& name)
 {
     return mOtherSettings.contains(OtherSetting::equivalentId(type, name));
 }
@@ -217,9 +217,9 @@ CrudeSettings* CrudeSettingsReader::targetCrudeSettings() const
     return static_cast<CrudeSettings*>(mTargetDocument);
 }
 
-Qx::GenericError CrudeSettingsReader::readTargetDoc()
+Fe::DocHandlingError CrudeSettingsReader::readTargetDoc()
 {
-    Qx::GenericError errorStatus;
+    Fe::DocHandlingError errorStatus;
 
     // Got through all entries
     while(!mStreamReader.atEnd())
@@ -253,9 +253,7 @@ Qx::GenericError CrudeSettingsReader::readTargetDoc()
                 if(!mCurrentSubSettingParser->parse(key, value, depth))
                 {
                     QString setting = mCurrentSubSettingParser->settingName();
-                    errorStatus = Qx::GenericError(Qx::GenericError::Critical,
-                                                   mStdReadErrorStr,
-                                                   UNKNOWN_KEY_ERROR.arg(key, setting));
+                    errorStatus = Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocReadFailed, UNKNOWN_KEY_ERROR.arg(key, setting));
                     break;
                 }
             }
@@ -271,7 +269,7 @@ Qx::GenericError CrudeSettingsReader::readTargetDoc()
     return errorStatus;
 }
 
-void CrudeSettingsReader::initializeGenericSubSetting(QString key, QString value)
+void CrudeSettingsReader::initializeGenericSubSetting(const QString& key, const QString& value)
 {
     // Add empty generic
     QUuid id = OtherSetting::equivalentId(key, value);
@@ -335,7 +333,7 @@ bool CrudeSettingsWriter::writeConfigDoc()
 bool CrudeSettingsWriter::writeDisplay(const Display& display)
 {
     // Write identifier
-    mStreamWriter << CrudeSettings::Keys::DISPLAY << " " << display.name() << "\n";
+    mStreamWriter << CrudeSettings::Keys::DISPLAY << ' ' << display.name() << '\n';
 
     // Set tab depth
     mTabDepth++;
@@ -345,8 +343,8 @@ bool CrudeSettingsWriter::writeDisplay(const Display& display)
         writeKeyValue(CrudeSettings::Keys::Display::LAYOUT, display.layout());
     if(!display.romlist().isEmpty())
         writeKeyValue(CrudeSettings::Keys::Display::ROMLIST, display.romlist());
-    writeKeyValue(CrudeSettings::Keys::Display::IN_CYCLE, display.inCycle() ? "yes" : "no");
-    writeKeyValue(CrudeSettings::Keys::Display::IN_MENU, display.inMenu() ? "yes" : "no");
+    writeKeyValue(CrudeSettings::Keys::Display::IN_CYCLE, display.inCycle() ? u"yes"_s : u"no"_s);
+    writeKeyValue(CrudeSettings::Keys::Display::IN_MENU, display.inMenu() ? u"yes"_s : u"no"_s);
 
     // Write global filter, if present
     std::optional<DisplayGlobalFilter> globalFilter = display.globalFilter();
@@ -409,7 +407,7 @@ bool CrudeSettingsWriter::writeDisplayFilter(const DisplayFilter& filter)
     }
 
     if(filter.reverseOrder() != false)
-        writeKeyValue(CrudeSettings::Keys::Display::Filter::REVERSE_ORDER, "true");
+        writeKeyValue(CrudeSettings::Keys::Display::Filter::REVERSE_ORDER, u"true"_s);
     if(filter.listLimit() != 0)
         writeKeyValue(CrudeSettings::Keys::Display::Filter::LIST_LIMIT, QString::number(filter.listLimit()));
 

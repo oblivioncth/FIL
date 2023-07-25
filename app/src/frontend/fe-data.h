@@ -9,8 +9,10 @@
 #include <QFile>
 
 // Qx Includes
-#include <qx/core/qx-genericerror.h>
+#include <qx/core/qx-error.h>
+#include <qx/core/qx-abstracterror.h>
 #include <qx/utility/qx-macros.h>
+#include <qx/utility/qx-concepts.h>
 
 // libfp Includes
 #include <fp/fp-items.h>
@@ -39,14 +41,38 @@
 
 namespace Fe
 {
+//-Concepts------------------------------------------------------------------------------------------------------
+template<typename T>
+concept raw_item = std::derived_from<T, Item>;
+
+template<typename T>
+concept shared_item = Qx::specializes<T, std::shared_ptr> && std::derived_from<typename T::element_type, Item>;
+
+template<typename T>
+concept raw_basic_item = std::derived_from<T, BasicItem>;
+
+template<typename T>
+concept shared_basic_item = Qx::specializes<T, std::shared_ptr> && std::derived_from<typename T::element_type, BasicItem>;
+
+template<typename T>
+concept item = raw_item<T> || shared_item<T>;
+
+template<typename T>
+concept basic_item = raw_basic_item<T> || shared_basic_item<T>;
+
+template<class K>
+concept updateable_item_container = Qx::qassociative<K> && item<typename K::mapped_type>;
+
+template<class K>
+concept updateable_basicitem_container = Qx::qassociative<K> && basic_item<typename K::mapped_type> &&
+                                         std::same_as<typename K::key_type, QUuid>;
+
 //-External Reference--------------------------------------------------------------------------------------------
 class Install;
+class DataDoc;
 
 //-Enums----------------------------------------------------------------------------------------------------------
 enum class ImportMode {OnlyNew, NewAndExisting};
-enum class DocHandlingError {DocAlreadyOpen, DocCantOpen, DocCantSave, NotParentDoc, CantRemoveBackup, CantCreateBackup,
-                             DocInvalidType, DocReadFailed, DocWriteFailed};
-QX_SCOPED_ENUM_HASH_FUNC(DocHandlingError);
 
 //-Structs---------------------------------------------------------------------------------------------------------
 struct UpdateOptions
@@ -56,6 +82,74 @@ struct UpdateOptions
 };
 
 //-Classes-----------------------------------------------------------------------------------------------------------
+class QX_ERROR_TYPE(DocHandlingError, "Fe::DocHandlingError", 1310)
+{
+//-Class Enums-------------------------------------------------------------
+public:
+    enum Type
+    {
+        NoError = 0,
+        DocAlreadyOpen = 1,
+        DocCantOpen = 2,
+        DocCantSave = 3,
+        NotParentDoc = 4,
+        CantRemoveBackup = 5,
+        CantCreateBackup = 6,
+        DocInvalidType = 7,
+        DocReadFailed = 8,
+        DocWriteFailed = 9
+    };
+
+//-Class Variables-------------------------------------------------------------
+private:
+    // Message Macros
+    static inline const QString M_DOC_TYPE = u"<docType>"_s;
+    static inline const QString M_DOC_NAME = u"<docName>"_s;
+    static inline const QString M_DOC_PARENT = u"<docParent>"_s;
+
+    static inline const QHash<Type, QString> ERR_STRINGS{
+        {NoError, u""_s},
+        {DocAlreadyOpen, u"The target document ("_s + M_DOC_TYPE + u" | "_s + M_DOC_NAME + u") is already open."_s},
+        {DocCantOpen, u"The target document ("_s + M_DOC_TYPE + u" | "_s + M_DOC_NAME + u") cannot be opened."_s},
+        {DocCantSave, u"The target document ("_s + M_DOC_TYPE + u" | "_s + M_DOC_NAME + u") cannot be saved."_s},
+        {NotParentDoc, u"The target document ("_s + M_DOC_TYPE + u" | "_s + M_DOC_NAME + u") is not a"_s + M_DOC_PARENT + u"document."_s},
+        {CantRemoveBackup, u"The existing backup of the target document ("_s + M_DOC_TYPE + u" | "_s + M_DOC_NAME + u") could not be removed."_s},
+        {CantCreateBackup, u"Could not create a backup of the target document ("_s + M_DOC_TYPE + u" | "_s + M_DOC_NAME + u")."_s},
+        {DocInvalidType, u"The document ("_s + M_DOC_TYPE + u" | "_s + M_DOC_NAME + u") is invalid or of the wrong type."_s},
+        {DocReadFailed, u"Reading the target document ("_s + M_DOC_TYPE + u" | "_s + M_DOC_NAME + u") failed."_s},
+        {DocWriteFailed, u"Writing to the target document ("_s + M_DOC_TYPE + u" | "_s + M_DOC_NAME + u") failed."_s}
+    };
+
+//-Instance Variables-------------------------------------------------------------
+private:
+    Type mType;
+    QString mErrorStr;
+    QString mSpecific;
+
+//-Constructor-------------------------------------------------------------
+public:
+    DocHandlingError();
+    DocHandlingError(const DataDoc& doc, Type t, const QString& s = {});
+
+//-Class Functions-------------------------------------------------------------
+private:
+    static QString generatePrimaryString(const DataDoc& doc, Type t);
+
+//-Instance Functions-------------------------------------------------------------
+public:
+    bool isValid() const;
+    Type type() const;
+
+    QString errorString() const;
+    QString specific() const;
+
+private:
+    Qx::Severity deriveSeverity() const override;
+    quint32 deriveValue() const override;
+    QString derivePrimary() const override;
+    QString deriveSecondary() const override;
+};
+
 class ImageSources
 {
 //-Instance Members--------------------------------------------------------------------------------------------------
@@ -112,9 +206,9 @@ public:
 //-Class Variables-----------------------------------------------------------------------------------------------------
 private:
     static inline const QHash<Type, QString> TYPE_STRINGS = {
-        {Type::Platform, "Platform"},
-        {Type::Playlist, "Playlist"},
-        {Type::Config, "Config"}
+        {Type::Platform, u"Platform"_s},
+        {Type::Playlist, u"Playlist"_s},
+        {Type::Config, u"Config"_s}
     };
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
@@ -148,7 +242,6 @@ class DataDoc::Reader
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
     DataDoc* mTargetDocument;
-    QString mStdReadErrorStr;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
@@ -160,7 +253,7 @@ public:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 public:
-    virtual Qx::GenericError readInto() = 0;
+    virtual Fe::DocHandlingError readInto() = 0;
 };
 
 class DataDoc::Writer
@@ -168,7 +261,6 @@ class DataDoc::Writer
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
     DataDoc* mSourceDocument;
-    QString mStdWriteErrorStr;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
@@ -180,14 +272,14 @@ public:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 public:
-    virtual Qx::GenericError writeOutOf() = 0;
+    virtual Fe::DocHandlingError writeOutOf() = 0;
 };
 
 class Errorable
 {
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
-    Qx::GenericError mError;
+    Qx::Error mError;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
@@ -200,7 +292,7 @@ public:
 //-Instance Functions--------------------------------------------------------------------------------------------------
 public:
     bool hasError() const;
-    Qx::GenericError error() const;
+    Qx::Error error() const;
 };
 
 class UpdateableDoc : public DataDoc
@@ -211,14 +303,21 @@ protected:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit UpdateableDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions);
+    explicit UpdateableDoc(Install* const parent, const QString& docPath, QString docName, const UpdateOptions& updateOptions);
+
+//-Class Functions-----------------------------------------------------------------------------------------------------
+template<typename T>
+T* itemPtr(T& item) { return &item; }
+
+template<typename T>
+T* itemPtr(std::shared_ptr<T> item) { return item.get(); }
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 protected:
-    template <typename T, typename K>
-        requires std::derived_from<T, Item>
-    void finalizeUpdateableItems(QHash<K, std::shared_ptr<T>>& existingItems,
-                                 QHash<K, std::shared_ptr<T>>& finalItems)
+    template <typename C>
+        requires updateable_item_container<C>
+    void finalizeUpdateableItems(C& existingItems,
+                                 C& finalItems)
     {
         // Copy items to final list if obsolete entries are to be kept
         if(!mUpdateOptions.removeObsolete)
@@ -228,20 +327,20 @@ protected:
         existingItems.clear();
     }
 
-    template <typename T, typename K>
-        requires std::derived_from<T, Item>
-    void addUpdateableItem(QHash<K, std::shared_ptr<T>>& existingItems,
-                           QHash<K, std::shared_ptr<T>>& finalItems,
-                           K key,
-                           std::shared_ptr<T> newItem)
+    template <typename C>
+        requires updateable_item_container<C>
+    void addUpdateableItem(C& existingItems,
+                           C& finalItems,
+                           C::key_type key,
+                           C::mapped_type newItem)
     {
-        // Check if game exists
+        // Check if item exists
         if(existingItems.contains(key))
         {
             // Replace if existing update is on, move existing otherwise
             if(mUpdateOptions.importMode == ImportMode::NewAndExisting)
             {
-                newItem->transferOtherFields(existingItems[key]->otherFields());
+                itemPtr(newItem)->transferOtherFields(itemPtr(existingItems[key])->otherFields());
                 finalItems[key] = newItem;
                 existingItems.remove(key);
             }
@@ -256,11 +355,11 @@ protected:
             finalItems[key] = newItem;
     }
 
-    template <typename T>
-        requires std::derived_from<T, BasicItem>
-    void addUpdateableItem(QHash<QUuid, std::shared_ptr<T>>& existingItems,
-                           QHash<QUuid, std::shared_ptr<T>>& finalItems,
-                           std::shared_ptr<T> newItem)
+    template <typename C>
+        requires updateable_basicitem_container<C>
+    void addUpdateableItem(C& existingItems,
+                           C& finalItems,
+                           C::mapped_type newItem)
     {
         addUpdateableItem(existingItems,
                           finalItems,
@@ -281,7 +380,7 @@ public:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit PlatformDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions);
+    explicit PlatformDoc(Install* const parent, const QString& docPath, QString docName, const UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
@@ -292,7 +391,14 @@ public:
     virtual bool containsAddApp(QUuid addAppId) const = 0;
 
     /* NOTE: The image paths provided here can be null (i.e. images unavailable). Handle accordingly in derived.
-     * Also in most cases, addGame should call parent()->processDirectGameImages()
+     * Also in most cases, addSet should call parent()->processDirectGameImages().
+     *
+     * TODO: The back and forth here between this and derived documents is a little silly. It mostly exists
+     * so that BasicPlatformDoc can call processDirectGameImages() directly; since installs need to always
+     * implement custom image processing logic anyway, this maybe should be changed so that BasicPlatformDoc
+     * has a pure virtual function similar to processDirectGameImages() with derived installs then implementing
+     * that if they need to use BasicPlatform doc. This would free Installs that do not use said class from having
+     * to re-implement that function at all (even if they have a close equivalent anyway).
      */
     virtual void addSet(const Fp::Set& set, const ImageSources& images) = 0;
 };
@@ -327,7 +433,7 @@ protected:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit BasicPlatformDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions);
+    explicit BasicPlatformDoc(Install* const parent, const QString& docPath, QString docName, const UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 protected:
@@ -376,7 +482,7 @@ public:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit PlaylistDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions);
+    explicit PlaylistDoc(Install* const parent, const QString& docPath, QString docName, const UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
@@ -385,8 +491,7 @@ private:
 public:
     virtual bool containsPlaylistGame(QUuid gameId) const = 0; // NOTE: UNUSED
 
-    virtual void setPlaylistHeader(const Fp::Playlist& playlist) = 0;
-    virtual void addPlaylistGame(const Fp::PlaylistGame& playlistGame) = 0;
+    virtual void setPlaylistData(const Fp::Playlist& playlist) = 0;
 };
 
 class PlaylistDoc::Reader : public virtual DataDoc::Reader
@@ -418,7 +523,7 @@ protected:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit BasicPlaylistDoc(Install* const parent, const QString& docPath, QString docName, UpdateOptions updateOptions);
+    explicit BasicPlaylistDoc(Install* const parent, const QString& docPath, QString docName, const UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 protected:
@@ -433,8 +538,7 @@ public:
 
     bool containsPlaylistGame(QUuid gameId) const override;
 
-    void setPlaylistHeader(const Fp::Playlist& playlist) override;
-    void addPlaylistGame(const Fp::PlaylistGame& playlistGame) override;
+    void setPlaylistData(const Fp::Playlist& playlist) override;
 
     void finalize() override;
 };
@@ -464,9 +568,6 @@ class BasicPlaylistDoc::Writer : public PlaylistDoc::Writer
 protected:
     Writer(DataDoc* sourceDoc);
 };
-
-//-Functions-------------------------------------------------------------------------------------------------------
-QString docHandlingErrorString(const DataDoc* doc, DocHandlingError handlingError);
 
 }
 #endif // FE_DATA

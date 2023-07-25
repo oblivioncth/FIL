@@ -23,112 +23,6 @@
 namespace Lb
 {
 
-namespace Xml
-{
-//-Classes-------------------------------------------------------------------------------------------------
-    class Element_Game
-    {
-    public:
-        static inline const QString NAME = "Game";
-
-        static inline const QString ELEMENT_ID = "ID";
-        static inline const QString ELEMENT_TITLE = "Title";
-        static inline const QString ELEMENT_SERIES = "Series";
-        static inline const QString ELEMENT_DEVELOPER = "Developer";
-        static inline const QString ELEMENT_PUBLISHER = "Publisher";
-        static inline const QString ELEMENT_PLATFORM = "Platform";
-        static inline const QString ELEMENT_SORT_TITLE = "SortTitle";
-        static inline const QString ELEMENT_DATE_ADDED = "DateAdded";
-        static inline const QString ELEMENT_DATE_MODIFIED = "DateModified";
-        static inline const QString ELEMENT_BROKEN = "Broken";
-        static inline const QString ELEMENT_PLAYMODE = "PlayMode";
-        static inline const QString ELEMENT_STATUS = "Status";
-        static inline const QString ELEMENT_REGION = "Region";
-        static inline const QString ELEMENT_NOTES = "Notes";
-        static inline const QString ELEMENT_SOURCE = "Source";
-        static inline const QString ELEMENT_APP_PATH = "ApplicationPath";
-        static inline const QString ELEMENT_COMMAND_LINE = "CommandLine";
-        static inline const QString ELEMENT_RELEASE_DATE = "ReleaseDate";
-        static inline const QString ELEMENT_VERSION = "Version";
-        static inline const QString ELEMENT_RELEASE_TYPE = "ReleaseType";
-    };
-
-    class Element_AddApp
-    {
-    public:
-        static inline const QString NAME = "AdditionalApplication";
-
-        static inline const QString ELEMENT_ID = "Id";
-        static inline const QString ELEMENT_GAME_ID = "GameID";
-        static inline const QString ELEMENT_APP_PATH = "ApplicationPath";
-        static inline const QString ELEMENT_COMMAND_LINE = "CommandLine";
-        static inline const QString ELEMENT_AUTORUN_BEFORE = "AutoRunBefore";
-        static inline const QString ELEMENT_NAME = "Name";
-        static inline const QString ELEMENT_WAIT_FOR_EXIT = "WaitForExit";
-    };
-
-    class Element_CustomField
-    {
-    public:
-        static inline const QString NAME = "CustomField";
-
-        static inline const QString ELEMENT_GAME_ID = "GameID";
-        static inline const QString ELEMENT_NAME = "Name";
-        static inline const QString ELEMENT_VALUE = "Value";
-    };
-
-    class Element_PlaylistHeader
-    {
-    public:
-        static inline const QString NAME = "Playlist";
-
-        static inline const QString ELEMENT_ID = "PlaylistId";
-        static inline const QString ELEMENT_NAME = "Name";
-        static inline const QString ELEMENT_NESTED_NAME = "NestedName";
-        static inline const QString ELEMENT_NOTES = "Notes";
-    };
-
-    class Element_PlaylistGame
-    {
-    public:
-        static inline const QString NAME = "PlaylistGame";
-
-        static inline const QString ELEMENT_ID = "GameId";
-        static inline const QString ELEMENT_GAME_TITLE = "GameTitle";
-        static inline const QString ELEMENT_GAME_FILE_NAME = "GameFileName";
-        static inline const QString ELEMENT_GAME_PLATFORM = "GamePlatform";
-        static inline const QString ELEMENT_MANUAL_ORDER = "ManualOrder";
-        static inline const QString ELEMENT_LB_DB_ID = "LaunchBoxDbId";
-    };
-
-    class Element_Platform
-    {
-    public:
-        static inline const QString NAME = "Platform";
-
-        static inline const QString ELEMENT_NAME = "Name";
-    };
-
-    class Element_PlatformFolder
-    {
-    public:
-        static inline const QString NAME = "PlatformFolder";
-
-        static inline const QString ELEMENT_MEDIA_TYPE = "MediaType";
-        static inline const QString ELEMENT_FOLDER_PATH = "FolderPath";
-        static inline const QString ELEMENT_PLATFORM = "Platform";
-    };
-
-    class Element_PlatformCategory
-    {
-    public:
-        static inline const QString NAME = "PlatformCategory";
-    };
-
-//-Variables--------------------------------------------------------------------------------------------------
-    const QString ROOT_ELEMENT = "LaunchBox";
-};
-
 class DocKey
 {
     friend class Install;
@@ -150,10 +44,13 @@ public:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
-    virtual bool readTargetDoc() = 0;
+    virtual Fe::DocHandlingError readTargetDoc() = 0;
+
+protected:
+    Fe::DocHandlingError streamStatus() const;
 
 public:
-    Qx::GenericError readInto() override;
+    Fe::DocHandlingError readInto() override;
 };
 
 class XmlDocWriter : public virtual Fe::DataDoc::Writer
@@ -172,9 +69,10 @@ protected:
     virtual bool writeSourceDoc() = 0;
     void writeCleanTextElement(const QString& qualifiedName, const QString& text);
     void writeOtherFields(const QHash<QString, QString>& otherFields);
+    Fe::DocHandlingError streamStatus() const;
 
 public:
-    Qx::GenericError writeOutOf() override;
+    Fe::DocHandlingError writeOutOf() override;
 };
 
 class PlatformDoc : public Fe::BasicPlatformDoc
@@ -191,7 +89,7 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlatformDoc(Install* const parent, const QString& xmlPath, QString docName, Fe::UpdateOptions updateOptions,
+    explicit PlatformDoc(Install* const parent, const QString& xmlPath, QString docName, const Fe::UpdateOptions& updateOptions,
                          const DocKey&);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -215,7 +113,7 @@ public:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
-    bool readTargetDoc() override;
+    Fe::DocHandlingError readTargetDoc() override;
     void parseGame();
     void parseAddApp();
     void parseCustomField();
@@ -244,11 +142,11 @@ public:
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
-    Qx::FreeIndexTracker<int>* mLaunchBoxDatabaseIdTracker;
+    Qx::FreeIndexTracker* mLaunchBoxDatabaseIdTracker;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlaylistDoc(Install* const parent, const QString& xmlPath, QString docName, Fe::UpdateOptions updateOptions,
+    explicit PlaylistDoc(Install* const parent, const QString& xmlPath, QString docName, const Fe::UpdateOptions& updateOptions,
                          const DocKey&);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -265,7 +163,7 @@ public:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
-    bool readTargetDoc() override;
+    Fe::DocHandlingError readTargetDoc() override;
     void parsePlaylistHeader();
     void parsePlaylistGame();
 };
@@ -283,7 +181,7 @@ private:
     bool writePlaylistGame(const PlaylistGame& playlistGame);
 };
 
-class PlatformsConfigDoc : public Fe::DataDoc
+class PlatformsConfigDoc : public Fe::UpdateableDoc
 {
 //-Inner Classes----------------------------------------------------------------------------------------------------
 public:
@@ -292,17 +190,21 @@ public:
 
 //-Class Variables-----------------------------------------------------------------------------------------------------
 public:
-    static inline const QString STD_NAME = "Platforms";
+    static inline const QString STD_NAME = u"Platforms"_s;
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
-    QHash<QString, Platform> mPlatforms;
-    QMap<QString, QMap<QString, QString>> mPlatformFolders;
-    QList<PlatformCategory> mPlatformCategories;
+    QHash<QString, Platform> mPlatformsFinal;
+    QHash<QString, Platform> mPlatformsExisting;
+    QMap<QString, PlatformFolder> mPlatformFoldersFinal;
+    QMap<QString, PlatformFolder> mPlatformFoldersExisting;
+    QMap<QString, PlatformCategory> mPlatformCategoriesFinal;
+    QMap<QString, PlatformCategory> mPlatformCategoriesExisting;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlatformsConfigDoc(Install* const parent, const QString& xmlPath, const DocKey&);
+    explicit PlatformsConfigDoc(Install* const parent, const QString& xmlPath, const Fe::UpdateOptions& updateOptions,
+                                const DocKey&);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
@@ -311,17 +213,20 @@ private:
 public:
     bool isEmpty() const override;
 
-    const QHash<QString, Platform>& platforms() const;
-    const QMap<QString, QMap<QString, QString>>& platformFolders() const;
-    const QList<PlatformCategory>& platformCategories() const;
+    const QHash<QString, Platform>& finalPlatforms() const;
+    const QMap<QString, PlatformFolder>& finalPlatformFolders() const;
+    const QMap<QString, PlatformCategory>& finalPlatformCategories() const;
 
-    bool containsPlatform(QString name);
+    void addPlatform(const Platform& platform);
+    void removePlatform(const QString& platformName);
 
-    void addPlatform(Platform platform);
-    void removePlatform(QString name);
+    void addPlatformFolder(const PlatformFolder& platformFolder);
+    void removePlatformFolders(const QString& platformName);
 
-    void setMediaFolder(QString platform, QString mediaType, QString folderPath);
+    void addPlatformCategory(const PlatformCategory& platformCategory);
+    void removePlatformCategory(const QString& categoryName);
 
+    void finalize() override;
 };
 
 class PlatformsConfigDoc::Reader : public XmlDocReader
@@ -332,9 +237,9 @@ public:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
-    bool readTargetDoc() override;
+    Fe::DocHandlingError readTargetDoc() override;
     void parsePlatform();
-    void parsePlatformFolder();
+    Fe::DocHandlingError parsePlatformFolder();
     void parsePlatformCategory();
 };
 
@@ -348,8 +253,74 @@ public:
 private:
     bool writeSourceDoc() override;
     bool writePlatform(const Platform& platform);
-    bool writePlatformFolder(const QString& platform, const QString& mediaType, const QString& folderPath);
+    bool writePlatformFolder(const PlatformFolder& platformFoler);
     bool writePlatformCategory(const PlatformCategory& platformCategory);
+};
+
+class ParentsDoc : public Fe::UpdateableDoc
+{
+    //-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Reader;
+    class Writer;
+
+    //-Class Variables-----------------------------------------------------------------------------------------------------
+public:
+    static inline const QString STD_NAME = u"Parents"_s;
+
+    //-Instance Variables--------------------------------------------------------------------------------------------------
+private:
+    QHash<QString, ParentCategory> mCategoriesExisting;
+    QHash<QString, ParentCategory> mCategoriesFinal;
+    QHash<QString, ParentPlatform> mPlatformsExisting;
+    QHash<QString, ParentPlatform> mPlatformsFinal;
+
+    //-Constructor--------------------------------------------------------------------------------------------------------
+public:
+    explicit ParentsDoc(Install* const parent, const QString& xmlPath, const Fe::UpdateOptions& updateOptions,
+                        const DocKey&);
+
+    //-Instance Functions--------------------------------------------------------------------------------------------------
+private:
+    Type type() const override;
+
+public:
+    bool isEmpty() const override;
+
+    const QHash<QString, ParentCategory>& finalParentCategories() const;
+    const QHash<QString, ParentPlatform>& finalParentPlatforms() const;
+
+    void addParentCategory(const ParentCategory& parentCategory);
+    void addParentPlatform(const ParentPlatform& parentPlatform);
+
+    void finalize() override;
+};
+
+class ParentsDoc::Reader : public XmlDocReader
+{
+    //-Constructor--------------------------------------------------------------------------------------------------------
+public:
+    Reader(ParentsDoc* targetDoc);
+
+    //-Instance Functions-------------------------------------------------------------------------------------------------
+private:
+    Fe::DocHandlingError readTargetDoc() override;
+    Fe::DocHandlingError parseParent();
+    void parseParentCategory();
+    void parseParentPlatform();
+};
+
+class ParentsDoc::Writer : public XmlDocWriter
+{
+    //-Constructor--------------------------------------------------------------------------------------------------------
+public:
+    Writer(ParentsDoc* sourceDoc);
+
+    //-Instance Functions-------------------------------------------------------------------------------------------------
+private:
+    bool writeSourceDoc() override;
+    bool writeParentCategory(const ParentCategory& parentCategory);
+    bool writeParentPlatform(const ParentPlatform& parentPlatform);
 };
 
 }

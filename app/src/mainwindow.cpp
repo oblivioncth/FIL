@@ -3,10 +3,10 @@
 #include <filesystem>
 
 // Qt Includes
+#include <QApplication>
 #include <QSet>
 #include <QFile>
 #include <QFileDialog>
-#include <QtXml>
 #include <QFileInfo>
 #include <QPushButton>
 #include <QLineEdit>
@@ -51,7 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
      * See https://forum.qt.io/topic/136627/undocumented-automatic-metatype-registration-in-qt6
      */
     //qRegisterMetaType<ImportWorker::ImportResult>();
-    //qRegisterMetaType<Qx::GenericError>();
+    //qRegisterMetaType<Qx::Error>();
     //qRegisterMetaType<std::shared_ptr<int>>();
 
     // Get built-in CLIFp version
@@ -60,7 +60,7 @@ MainWindow::MainWindow(QWidget *parent) :
     {
         // Create local copy of internal CLIFp.exe since internal path cannot be used with WinAPI
         QString localCopyPath = tempDir.path() + '/' + CLIFp::EXE_NAME;
-        if(QFile::copy(":/file/" + CLIFp::EXE_NAME, localCopyPath))
+        if(QFile::copy(u":/file/"_s + CLIFp::EXE_NAME, localCopyPath))
             mInternalCLIFpVersion = Qx::FileDetails::readFileDetails(localCopyPath).fileVersion();
     }
 
@@ -89,10 +89,7 @@ MainWindow::MainWindow(QWidget *parent) :
 }
 
 //-Destructor----------------------------------------------------------------------------------------------------
-MainWindow::~MainWindow()
-{
-    delete ui;
-}
+MainWindow::~MainWindow() { delete ui; }
 
 //-Instance Functions--------------------------------------------------------------------------------------------
 //Private:
@@ -101,13 +98,13 @@ bool MainWindow::testForLinkPermissions()
     QTemporaryDir testLinkDir;
     if(testLinkDir.isValid())
     {
-        QFile testLinkTarget(testLinkDir.filePath("linktarget.tmp"));
+        QFile testLinkTarget(testLinkDir.filePath(u"linktarget.tmp"_s));
 
         if(testLinkTarget.open(QIODevice::WriteOnly))
         {
             testLinkTarget.close();
             std::error_code symlinkError;
-            std::filesystem::create_symlink(testLinkTarget.fileName().toStdString(), testLinkDir.filePath("testlink.tmp").toStdString(), symlinkError);
+            std::filesystem::create_symlink(testLinkTarget.fileName().toStdString(), testLinkDir.filePath(u"testlink.tmp"_s).toStdString(), symlinkError);
 
             if(!symlinkError)
                 return true;
@@ -124,7 +121,7 @@ void MainWindow::initializeForms()
     mExistingItemColor = ui->label_existingItemColor->palette().color(QPalette::Window);
 
     // Add CLIFp version to deploy option
-    ui->action_deployCLIFp->setText(ui->action_deployCLIFp->text() +  " " + mInternalCLIFpVersion.normalized(2).toString());
+    ui->action_deployCLIFp->setText(ui->action_deployCLIFp->text() + ' ' + mInternalCLIFpVersion.normalized(2).toString());
 
     // Prepare help messages
     mArgedPlaylistGameModeHelp = MSG_PLAYLIST_GAME_MODE_HELP.arg(ui->radioButton_selectedPlatformsOnly->text(),
@@ -206,7 +203,8 @@ void MainWindow::initializeFrontendHelpActions()
 bool MainWindow::installMatchesTargetSeries(const Fp::Install& fpInstall)
 {
     Qx::VersionNumber fpVersion = fpInstall.version();
-    return TARGET_FP_VERSION_PREFIX.isPrefixOf(fpVersion);
+    return TARGET_FP_VERSION_PREFIX.isPrefixOf(fpVersion) ||
+           TARGET_FP_VERSION_PREFIX.normalized() == fpVersion; // Accounts for if FP doesn't use a trailing zero for major releases
 }
 
 void MainWindow::checkManualInstallInput(InstallType install)
@@ -222,7 +220,7 @@ void MainWindow::checkManualInstallInput(InstallType install)
         invalidateInstall(install, false);
 }
 
-void MainWindow::validateInstall(QString installPath, InstallType install)
+void MainWindow::validateInstall(const QString& installPath, InstallType install)
 {
     switch(install)
     {
@@ -230,23 +228,23 @@ void MainWindow::validateInstall(QString installPath, InstallType install)
             mFrontendInstall = Fe::Install::acquireMatch(installPath);
             if(mFrontendInstall)
             {
-                ui->icon_frontend_install_status->setPixmap(QPixmap(":/ui/Valid_Install.png"));
-                ui->label_frontendVersion->setText(mFrontendInstall->name() + " " + mFrontendInstall->versionString());
+                ui->icon_frontend_install_status->setPixmap(QPixmap(u":/ui/Valid_Install.png"_s));
+                ui->label_frontendVersion->setText(mFrontendInstall->name() + ' ' + mFrontendInstall->versionString());
             }
             else
                 invalidateInstall(install, true);
             break;
 
         case InstallType::Flashpoint:
-            mFlashpointInstall = std::make_shared<Fp::Install>(installPath);
+            mFlashpointInstall = std::make_shared<Fp::Install>(installPath, true);
             if(mFlashpointInstall->isValid())
             {
                 ui->label_flashpointVersion->setText(mFlashpointInstall->nameVersionString());
                 if(installMatchesTargetSeries(*mFlashpointInstall))
-                    ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/ui/Valid_Install.png"));
+                    ui->icon_flashpoint_install_status->setPixmap(QPixmap(u":/ui/Valid_Install.png"_s));
                 else
                 {
-                    ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/ui/Mismatch_Install.png"));
+                    ui->icon_flashpoint_install_status->setPixmap(QPixmap(u":/ui/Mismatch_Install.png"_s));
                     QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_VER_NOT_TARGET);
                 }
             }
@@ -286,8 +284,8 @@ void MainWindow::populateImportSelectionBoxes()
 {
     // Populate import selection boxes
     clearListWidgets();
-    ui->listWidget_platformChoices->addItems(mFlashpointInstall->database()->platformList());
-    ui->listWidget_playlistChoices->addItems(mFlashpointInstall->database()->playlistList());
+    ui->listWidget_platformChoices->addItems(mFlashpointInstall->database()->platformNames());
+    ui->listWidget_playlistChoices->addItems(mFlashpointInstall->playlistManager()->playlistTitles());
 
     // Set item attributes
     QListWidgetItem* currentItem;
@@ -361,7 +359,7 @@ void MainWindow::generateTagSelectionOptions()
 bool MainWindow::parseFrontendData()
 {
     // IO Error check instance
-    Qx::GenericError existingCheck;
+    Qx::Error existingCheck;
 
     // Get list of existing platforms and playlists
     existingCheck = mFrontendInstall->refreshExistingDocs();
@@ -399,7 +397,7 @@ void MainWindow::invalidateInstall(InstallType install, bool informUser)
     switch(install)
     {
         case InstallType::Frontend:
-            ui->icon_frontend_install_status->setPixmap(QPixmap(":/ui/Invalid_Install.png"));
+            ui->icon_frontend_install_status->setPixmap(QPixmap(u":/ui/Invalid_Install.png"_s));
             ui->label_frontendVersion->clear();
             if(informUser)
                 QMessageBox::critical(this, QApplication::applicationName(), MSG_FE_INSTALL_INVALID);
@@ -407,7 +405,7 @@ void MainWindow::invalidateInstall(InstallType install, bool informUser)
             break;
 
         case InstallType::Flashpoint:
-            ui->icon_flashpoint_install_status->setPixmap(QPixmap(":/ui/Invalid_Install.png"));
+            ui->icon_flashpoint_install_status->setPixmap(QPixmap(u":/ui/Invalid_Install.png"_s));
             ui->label_flashpointVersion->clear();
             if(informUser)
                 Qx::postBlockingError(mFlashpointInstall->error(), QMessageBox::Ok);
@@ -458,10 +456,10 @@ bool MainWindow::selectionsMayModify()
 {
     return isExistingPlatformSelected() || isExistingPlaylistSelected() ||
                (getSelectedPlaylistGameMode() ==  ImportWorker::ForceAll &&
-                mFrontendInstall->containsAnyPlatform(mFlashpointInstall->database()->platformList()));
+                mFrontendInstall->containsAnyPlatform(mFlashpointInstall->database()->platformNames()));
 }
 
-void MainWindow::postSqlError(QString mainText, QSqlError sqlError)
+void MainWindow::postSqlError(const QString& mainText, const QSqlError& sqlError)
 {
     QMessageBox sqlErrorMsg;
     sqlErrorMsg.setIcon(QMessageBox::Critical);
@@ -472,18 +470,18 @@ void MainWindow::postSqlError(QString mainText, QSqlError sqlError)
     sqlErrorMsg.exec();
 }
 
-void MainWindow::postListError(QString mainText, QStringList detailedItems)
+void MainWindow::postListError(const QString& mainText, const QStringList& detailedItems)
 {
     QMessageBox listError;
     listError.setIcon(QMessageBox::Critical);
     listError.setText(mainText);
-    listError.setDetailedText(detailedItems.join("\n"));
+    listError.setDetailedText(detailedItems.join('\n'));
     listError.setStandardButtons(QMessageBox::Ok);
 
     listError.exec();
 }
 
-void MainWindow::postIOError(QString mainText, Qx::IoOpReport report)
+void MainWindow::postIOError(const QString& mainText, const Qx::IoOpReport& report)
 {
     QMessageBox ioErrorMsg;
     ioErrorMsg.setIcon(QMessageBox::Critical);
@@ -622,7 +620,7 @@ void MainWindow::prepareImport()
     if(!feRunning)
     {
         // Create progress dialog, set initial state and show
-        mImportProgressDialog = std::make_unique<QProgressDialog>(STEP_FP_DB_INITIAL_QUERY, "Cancel", 0, 0, this);
+        mImportProgressDialog = std::make_unique<QProgressDialog>(STEP_FP_DB_INITIAL_QUERY, u"Cancel"_s, 0, 0, this);
         mImportProgressDialog->setWindowTitle(CAPTION_IMPORTING);
         mImportProgressDialog->setWindowModality(Qt::WindowModal);
         mImportProgressDialog->setWindowFlags(mImportProgressDialog->windowFlags() & ~Qt::WindowContextHelpButtonHint);
@@ -667,7 +665,7 @@ void MainWindow::prepareImport()
         connect(mImportProgressDialog.get(), &QProgressDialog::canceled, &importWorker, &ImportWorker::notifyCanceled);
 
         // Import error tracker
-        Qx::GenericError importError;
+        Qx::Error importError;
 
         // Start import and forward result to handler
         ImportWorker::ImportResult importResult = importWorker.doImport(importError);
@@ -680,7 +678,7 @@ void MainWindow::revertAllFrontendChanges()
     // Trackers
     bool tempSkip = false;
     bool alwaysSkip = false;
-    Qx::GenericError currentError;
+    Fe::RevertError currentError;
     int retryChoice;
 
     // Progress
@@ -698,7 +696,6 @@ void MainWindow::revertAllFrontendChanges()
         }
         else
         {
-            currentError.setCaption(CAPTION_REVERT_ERR);
             retryChoice = Qx::postBlockingError(currentError, QMessageBox::Retry | QMessageBox::Ignore | QMessageBox::Abort, QMessageBox::Retry);
 
             if(retryChoice == QMessageBox::Ignore)
@@ -743,7 +740,7 @@ void MainWindow::standaloneCLIFpDeploy()
             {
                 // Deploy exe
                 QString deployError;
-                while(!CLIFp::deployCLIFp(deployError, tempFlashpointInstall, ":/file/CLIFp.exe"))
+                while(!CLIFp::deployCLIFp(deployError, tempFlashpointInstall, u":/file/CLIFp.exe"_s))
                     if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Retry) == QMessageBox::Cancel)
                         break;
             }
@@ -913,7 +910,7 @@ void MainWindow::all_on_lineEdit_editingFinished()
         throw std::runtime_error("Unhandled use of all_on_linedEdit_textEdited() slot");
 }
 
-void MainWindow::all_on_listWidget_itemChanged(QListWidgetItem* item) // Proxy for "onItemChecked"
+void MainWindow::all_on_listWidget_itemChanged(QListWidgetItem* item) // Proxy for u"onItemChecked"_s
 {
     // Get the object that called this slot
     QListWidget* senderListWidget = qobject_cast<QListWidget*>(sender());
@@ -977,7 +974,7 @@ void MainWindow::all_on_menu_triggered(QAction *action)
 
         if(frontendMatch.hasMatch())
         {
-            QString frontendName = frontendMatch.captured("frontend");
+            QString frontendName = frontendMatch.captured(u"frontend"_s);
             if(!frontendName.isNull() && Fe::Install::registry().contains(frontendName))
             {
                 const QUrl* helpUrl = Fe::Install::registry()[frontendName].helpUrl;
@@ -992,7 +989,7 @@ void MainWindow::all_on_menu_triggered(QAction *action)
         throw std::runtime_error("Unhandled use of all_on_menu_triggered() slot");
 }
 
-void MainWindow::handleBlockingError(std::shared_ptr<int> response, Qx::GenericError blockingError, QMessageBox::StandardButtons choices)
+void MainWindow::handleBlockingError(std::shared_ptr<int> response, const Qx::Error& blockingError, QMessageBox::StandardButtons choices)
 {
     // Get taskbar progress and indicate error
     mWindowTaskbarButton->setProgressState(Qx::TaskbarButton::Stopped);
@@ -1008,7 +1005,7 @@ void MainWindow::handleBlockingError(std::shared_ptr<int> response, Qx::GenericE
         *response = userChoice;
 }
 
-void MainWindow::handleAuthRequest(QString prompt, QAuthenticator* authenticator)
+void MainWindow::handleAuthRequest(const QString& prompt, QAuthenticator* authenticator)
 {
     Qx::LoginDialog ld;
     ld.setPrompt(prompt);
@@ -1022,7 +1019,7 @@ void MainWindow::handleAuthRequest(QString prompt, QAuthenticator* authenticator
     }
 }
 
-void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx::GenericError errorReport)
+void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, const Qx::Error& errorReport)
 {
     // Close progress dialog and reset taskbar progress indicator
     mImportProgressDialog->close();
@@ -1049,7 +1046,7 @@ void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, Qx:
         if(willDeploy)
         {
             QString deployError;
-            while(!CLIFp::deployCLIFp(deployError, *mFlashpointInstall, ":/file/CLIFp.exe"))
+            while(!CLIFp::deployCLIFp(deployError, *mFlashpointInstall, u":/file/CLIFp.exe"_s))
                 if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | QMessageBox::Ignore, QMessageBox::Retry) == QMessageBox::Ignore)
                     break;
         }

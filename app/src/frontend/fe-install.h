@@ -21,7 +21,7 @@
             }; \
             Fe::Install::registerInstall(fe_name, entry); \
         } \
-        virtual std::shared_ptr<Fe::Install> produce(QString installPath) const { return std::make_shared<fe_install>(installPath); } \
+        virtual std::shared_ptr<Fe::Install> produce(const QString& installPath) const { return std::make_shared<fe_install>(installPath); } \
     }; \
     static fe_install##Factory _##install##Factory;
 
@@ -32,7 +32,7 @@ class InstallFactory
 {
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    virtual std::shared_ptr<Install> produce(QString installPath) const = 0;
+    virtual std::shared_ptr<Install> produce(const QString& installPath) const = 0;
 };
 
 class Install : public InstallFoundation
@@ -48,20 +48,20 @@ public:
 
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
-    Install(QString installPath);
+    Install(const QString& installPath);
 
 //-Class Functions------------------------------------------------------------------------------------------------------
 public:
     // NOTE: Registry put behind function call to avoid SIOF since otherwise initialization of static registry before calls to registerFrontend would not be guaranteed
     static QMap<QString, Entry>& registry();
-    static void registerInstall(QString name, Entry entry);
+    static void registerInstall(const QString& name, const Entry& entry);
     static std::shared_ptr<Install> acquireMatch(const QString& installPath);
 
 //-Instance Functions---------------------------------------------------------------------------------------------------------
 protected:
     // Install management
     virtual void nullify() override;
-    virtual Qx::GenericError populateExistingDocs() override = 0;
+    virtual Qx::Error populateExistingDocs() override = 0;
     virtual QString translateDocName(const QString& originalName, DataDoc::Type type) const override;
 
     // Doc Handling
@@ -70,36 +70,43 @@ protected:
     virtual std::shared_ptr<PlatformDoc::Writer> preparePlatformDocCommit(const std::unique_ptr<PlatformDoc>& document) = 0;
     virtual std::shared_ptr<PlaylistDoc::Writer> preparePlaylistDocCommit(const std::unique_ptr<PlaylistDoc>& document) = 0;
 
+    // Info
+    virtual QString executableSubPath() const override = 0;
+
 public:
     // Install management
     virtual void softReset() override;
 
     // Info
     virtual QString name() const = 0;
-    virtual QString executableName() const = 0;
     virtual QList<ImageMode> preferredImageModeOrder() const = 0;
     bool supportsImageMode(ImageMode imageMode) const;
     virtual QString versionString() const;
 
     // Import stage notifier hooks
-    virtual Qx::GenericError preImport(const ImportDetails& details);
-    virtual Qx::GenericError postImport();
-    virtual Qx::GenericError prePlatformsImport();
-    virtual Qx::GenericError postPlatformsImport();
-    virtual Qx::GenericError preImageProcessing(QList<ImageMap>& workerTransfers, ImageSources bulkSources);
-    virtual Qx::GenericError postImageProcessing();
-    virtual Qx::GenericError prePlaylistsImport();
-    virtual Qx::GenericError postPlaylistsImport();
+    virtual Qx::Error preImport(const ImportDetails& details);
+    virtual Qx::Error postImport();
+    virtual Qx::Error prePlatformsImport();
+    virtual Qx::Error postPlatformsImport();
+    virtual Qx::Error preImageProcessing(QList<ImageMap>& workerTransfers, const ImageSources& bulkSources);
+    virtual Qx::Error postImageProcessing();
+    virtual Qx::Error prePlaylistsImport();
+    virtual Qx::Error postPlaylistsImport();
 
     // Doc handling
-    Qx::GenericError checkoutPlatformDoc(std::unique_ptr<PlatformDoc>& returnBuffer, QString name);
-    Qx::GenericError checkoutPlaylistDoc(std::unique_ptr<PlaylistDoc>& returnBuffer, QString name);
-    Qx::GenericError commitPlatformDoc(std::unique_ptr<PlatformDoc> platformDoc);
-    Qx::GenericError commitPlaylistDoc(std::unique_ptr<PlaylistDoc> playlistDoc);
+    Fe::DocHandlingError checkoutPlatformDoc(std::unique_ptr<PlatformDoc>& returnBuffer, const QString& name);
+    Fe::DocHandlingError checkoutPlaylistDoc(std::unique_ptr<PlaylistDoc>& returnBuffer, const QString& name);
+    Fe::DocHandlingError commitPlatformDoc(std::unique_ptr<PlatformDoc> platformDoc);
+    Fe::DocHandlingError commitPlaylistDoc(std::unique_ptr<PlaylistDoc> playlistDoc);
 
     // Image handling
     // NOTE: The image paths provided here can be null (i.e. images unavailable). Handle accordingly in derived.
     virtual void processDirectGameImages(const Game* game, const Fe::ImageSources& imageSources) = 0;
+
+    // TODO: These might need to be changed to support launchers where the platform images are tied closely to the platform documents,
+    // but currently none do this so this works.
+    virtual QString platformCategoryIconPath() const; // Unsupported in default implementation, needs to return path with .png extension
+    virtual std::optional<QDir> platformIconsDirectory() const; // Unsupported in default implementation
 };
 
 }

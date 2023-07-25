@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
 
     if(!w.initCompleted())
     {
-        QMessageBox::critical(nullptr, "Cannot Start", "Initialization failed!");
+        QMessageBox::critical(nullptr, u"Cannot Start"_s, u"Initialization failed!"_s);
         return 1;
     }
 

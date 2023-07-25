@@ -11,5 +11,6 @@
         <file>frontend/LaunchBox/icon.svg</file>
         <file>frontend/AttractMode/icon.png</file>
         <file>frontend/AttractMode/marquee.png</file>
+        <file>flashpoint/icon.png</file>
     </qresource>
 </RCC>
