@@ -365,16 +365,18 @@ PlatformCategory::Builder& PlatformCategory::Builder::wName(const QString& name)
 PlatformCategory::Builder& PlatformCategory::Builder::wNestedName(const QString& nestedName) { mItemBlueprint.mNestedName = nestedName; return *this; }
 
 //===============================================================================================================
-// ParentCategory
+// Parent
 //===============================================================================================================
 
 //-Constructor-------------------------------------------------------------------------------------------------
 //Public:
-ParentCategory::ParentCategory() {}
+Parent::Parent() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-QString ParentCategory::platformCategoryName() const { return mPlatformCategoryName;}
+QString Parent::platformCategoryName() const { return mPlatformCategoryName;}
+QString Parent::platformName() const { return mPlatformName;}
+QString Parent::parentPlatformCategoryName() const { return mParentPlatformCategoryName;}
 
 //===============================================================================================================
 // ParentCategory::Builder
@@ -382,35 +384,11 @@ QString ParentCategory::platformCategoryName() const { return mPlatformCategoryN
 
 //-Constructor-------------------------------------------------------------------------------------------------
 //Public:
-ParentCategory::Builder::Builder() {}
+Parent::Builder::Builder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-ParentCategory::Builder& ParentCategory::Builder::wPlatformCategoryName(const QString& platformCategoryName) { mItemBlueprint.mPlatformCategoryName = platformCategoryName; return *this; }
-
-//===============================================================================================================
-// ParentPlatform
-//===============================================================================================================
-
-//-Constructor-------------------------------------------------------------------------------------------------
-//Public:
-ParentPlatform::ParentPlatform() {}
-
-//-Instance Functions------------------------------------------------------------------------------------------
-//Public:
-QString ParentPlatform::platformName() const { return mPlatformName;}
-QString ParentPlatform::parentPlatformCategoryName() const { return mParentPlatformCategoryName;}
-
-//===============================================================================================================
-// ParentPlatform::Builder
-//===============================================================================================================
-
-//-Constructor-------------------------------------------------------------------------------------------------
-//Public:
-ParentPlatform::Builder::Builder() {}
-
-//-Instance Functions------------------------------------------------------------------------------------------
-//Public:
-ParentPlatform::Builder& ParentPlatform::Builder::wPlatformName(const QString& platformName) { mItemBlueprint.mPlatformName = platformName; return *this; }
-ParentPlatform::Builder& ParentPlatform::Builder::wParentPlatformCategoryName(const QString& parentPlatformCategoryName) { mItemBlueprint.mParentPlatformCategoryName = parentPlatformCategoryName; return *this; }
+Parent::Builder& Parent::Builder::wPlatformCategoryName(const QString& platformCategoryName) { mItemBlueprint.mPlatformCategoryName = platformCategoryName; return *this; }
+Parent::Builder& Parent::Builder::wPlatformName(const QString& platformName) { mItemBlueprint.mPlatformName = platformName; return *this; }
+Parent::Builder& Parent::Builder::wParentPlatformCategoryName(const QString& parentPlatformCategoryName) { mItemBlueprint.mParentPlatformCategoryName = parentPlatformCategoryName; return *this; }
 }

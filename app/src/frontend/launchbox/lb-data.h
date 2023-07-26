@@ -257,7 +257,7 @@ private:
     bool writePlatformCategory(const PlatformCategory& platformCategory);
 };
 
-class ParentsDoc : public Fe::UpdateableDoc
+class ParentsDoc : public Fe::DataDoc
 {
     //-Inner Classes----------------------------------------------------------------------------------------------------
 public:
@@ -270,15 +270,11 @@ public:
 
     //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
-    QHash<QString, ParentCategory> mCategoriesExisting;
-    QHash<QString, ParentCategory> mCategoriesFinal;
-    QHash<QString, ParentPlatform> mPlatformsExisting;
-    QHash<QString, ParentPlatform> mPlatformsFinal;
+    QList<Parent> mParents;
 
     //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit ParentsDoc(Install* const parent, const QString& xmlPath, const Fe::UpdateOptions& updateOptions,
-                        const DocKey&);
+    explicit ParentsDoc(Install* const parent, const QString& xmlPath, const DocKey&);
 
     //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
@@ -287,13 +283,12 @@ private:
 public:
     bool isEmpty() const override;
 
-    const QHash<QString, ParentCategory>& finalParentCategories() const;
-    const QHash<QString, ParentPlatform>& finalParentPlatforms() const;
+    bool containsPlatformCategory(QStringView platformCategory);
+    bool containsPlatformUnderCategory(QStringView platform, QStringView platformCategory);
 
-    void addParentCategory(const ParentCategory& parentCategory);
-    void addParentPlatform(const ParentPlatform& parentPlatform);
+    const QList<Parent>& parents() const;
 
-    void finalize() override;
+    void addParent(const Parent& parent);
 };
 
 class ParentsDoc::Reader : public XmlDocReader
@@ -305,9 +300,7 @@ public:
     //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
     Fe::DocHandlingError readTargetDoc() override;
-    Fe::DocHandlingError parseParent();
-    void parseParentCategory();
-    void parseParentPlatform();
+    void parseParent();
 };
 
 class ParentsDoc::Writer : public XmlDocWriter
@@ -319,8 +312,7 @@ public:
     //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
     bool writeSourceDoc() override;
-    bool writeParentCategory(const ParentCategory& parentCategory);
-    bool writeParentPlatform(const ParentPlatform& parentPlatform);
+    bool writeParent(const Parent& parent);
 };
 
 }

@@ -261,8 +261,7 @@ Fe::DocHandlingError Install::checkoutParentsDoc(std::unique_ptr<ParentsDoc>& re
     Fe::DataDoc::Identifier docId(Fe::DataDoc::Type::Config, ParentsDoc::STD_NAME);
 
     // Construct unopened document
-    Fe::UpdateOptions uo{.importMode = Fe::ImportMode::NewAndExisting, .removeObsolete = false};
-    returnBuffer = std::make_unique<ParentsDoc>(this, dataDocPath(docId), uo, DocKey{});
+    returnBuffer = std::make_unique<ParentsDoc>(this, dataDocPath(docId), DocKey{});
 
     // Construct doc reader
     std::shared_ptr<ParentsDoc::Reader> docReader = std::make_shared<ParentsDoc::Reader>(returnBuffer.get());
@@ -334,9 +333,12 @@ Qx::Error Install::postPlatformsImport()
     mPlatformsConfig->addPlatformCategory(pcb.build());
 
     // Add ParentCategory to Parents.xml
-    Lb::ParentCategory::Builder prcb;
-    prcb.wPlatformCategoryName(PLATFORM_CATEGORY);
-    parentsDoc->addParentCategory(prcb.build());
+    if(!parentsDoc->containsPlatformCategory(PLATFORM_CATEGORY))
+    {
+        Lb::Parent::Builder pb;
+        pb.wPlatformCategoryName(PLATFORM_CATEGORY);
+        parentsDoc->addParent(pb.build());
+    }
 
     // Add platforms to Platforms.xml and Parents.xml
     const QList<QString> affectedPlatforms = modifiedPlatforms();
@@ -346,14 +348,16 @@ Qx::Error Install::postPlatformsImport()
         pb.wName(pn);
         mPlatformsConfig->addPlatform(pb.build());
 
-        Lb::ParentPlatform::Builder ppb;
-        ppb.wParentPlatformCategoryName(PLATFORM_CATEGORY);
-        ppb.wPlatformName(pn);
-        parentsDoc->addParentPlatform(ppb.build());
+        if(!parentsDoc->containsPlatformUnderCategory(pn, PLATFORM_CATEGORY))
+        {
+            Lb::Parent::Builder pb;
+            pb.wParentPlatformCategoryName(PLATFORM_CATEGORY);
+            pb.wPlatformName(pn);
+            parentsDoc->addParent(pb.build());
+        }
     }
 
     // Close Parents.xml
-    parentsDoc->finalize();
     return commitParentsDoc(std::move(parentsDoc));
 }
 
