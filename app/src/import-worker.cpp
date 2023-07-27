@@ -4,8 +4,12 @@
 // Standard Library Includes
 #include <filesystem>
 
+// Qt
+#include <QImageWriter>
+
 // Qx Includes
 #include <qx/core/qx-regularexpression.h>
+#include <qx/core/qx-genericerror.h>
 
 // Project Includes
 #include "clifp.h"
@@ -595,11 +599,12 @@ ImportWorker::ImportResult ImportWorker::processImages(Qx::Error& errorReport)
     return Successful;
 }
 
-ImportWorker::ImportResult ImportWorker::processIcons(const QStringList& platforms)
+ImportWorker::ImportResult ImportWorker::processIcons(Qx::Error& errorReport, const QStringList& platforms, const QList<Fp::Playlist>& playlists)
 {
     QList<Fe::Install::ImageMap> jobs;
     QString mainDest = mFrontendInstall->platformCategoryIconPath();
     std::optional<QDir> platformDestDir = mFrontendInstall->platformIconsDirectory();
+    std::optional<QDir> playlistDestDir = mFrontendInstall->playlistIconsDirectory();
 
     // Main Job
     if(!mainDest.isEmpty())
@@ -618,11 +623,48 @@ ImportWorker::ImportResult ImportWorker::processIcons(const QStringList& platfor
         }
     }
 
+    // Create temp directory for playlist jobs
+    QTemporaryDir iconInflateDir; // Needed at this scope
+
+    // Playlist jobs
+    if(playlistDestDir)
+    {
+        // Validate temp dir
+        if(!iconInflateDir.isValid())
+        {
+            errorReport = Qx::GenericError(Qx::Critical, 13501, u"Failed to create directory for playlist icons inflation."_s, iconInflateDir.errorString());
+            return Failed;
+        }
+
+        // Setup playlist image jobs
+        QImageWriter iw;
+        QDir pdd = playlistDestDir.value();
+        for(const Fp::Playlist& p : playlists)
+        {
+            const QImage& icon = p.icon();
+            QString filename = p.title() + ".png";
+            QString source = iconInflateDir.filePath(filename);
+            QString dest = pdd.absoluteFilePath(filename);
+
+            iw.setFileName(source);
+            if(!iw.write(icon))
+            {
+                errorReport = Qx::GenericError(Qx::Critical, 13502, u"Failed to inflate playlist icon"_s, iw.errorString());
+                return Failed;
+            }
+
+            jobs.emplace_back(Fe::Install::ImageMap{.sourcePath = source, .destPath = dest});
+        }
+    }
+
     // Perform
     if(!jobs.isEmpty())
     {
         if(!performImageJobs(jobs, false, mProgressManager.group(Pg::IconTransfer))) // Always copy
+        {
+            errorReport = Qx::Error();
             return Canceled;
+        }
     }
 
     return Successful;
@@ -749,6 +791,8 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::Error& errorReport)
         iconCount++;
     if(mFrontendInstall->platformIconsDirectory())
         iconCount += involvedPlatforms.size();
+    if(mFrontendInstall->playlistIconsDirectory())
+        iconCount += targetPlaylists.size();
 
     if(iconCount > 0)
     {
@@ -808,7 +852,7 @@ ImportWorker::ImportResult ImportWorker::doImport(Qx::Error& errorReport)
         return importStepStatus;
 
     // Process Icons
-    if((importStepStatus = processIcons(involvedPlatforms)) != Successful)
+    if((importStepStatus = processIcons(errorReport, involvedPlatforms, targetPlaylists)) != Successful)
         return importStepStatus;
 
     // Process playlists

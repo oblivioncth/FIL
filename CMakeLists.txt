@@ -64,14 +64,14 @@ set(FIL_QX_COMPONENTS
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "v0.5.1"
+    REF "f9cb25800fa9114bd3348a7a32cf96384d2600bc"
     COMPONENTS
         ${FIL_QX_COMPONENTS}
 )
 
 # Fetch libfp (build and import from source)
 include(OB/Fetchlibfp)
-ob_fetch_libfp("v0.4.1")
+ob_fetch_libfp("cd8c8fb014221a70bc0edd7616c2fa13e1dac2af")
 
 # Fetch CLIFp (build and import from source)
 include(OB/FetchCLIFp)
