@@ -961,6 +961,7 @@
     <addaction name="action_goToFILGitHub"/>
     <addaction name="action_goToCLIFpGitHub"/>
     <addaction name="menu_frontendHelp"/>
+    <addaction name="action_about"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuTools"/>
@@ -1052,6 +1053,15 @@
   <action name="actiondummy">
    <property name="text">
     <string>dummy</string>
+   </property>
+  </action>
+  <action name="action_about">
+   <property name="icon">
+    <iconset resource="../res/resources.qrc">
+     <normaloff>:/ui/About.png</normaloff>:/ui/About.png</iconset>
+   </property>
+   <property name="text">
+    <string>About</string>
    </property>
   </action>
  </widget>
@@ -1397,6 +1407,22 @@
   </connection>
   <connection>
    <sender>action_editTagFilter</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>all_on_action_triggered()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>323</x>
+     <y>479</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>action_about</sender>
    <signal>triggered()</signal>
    <receiver>MainWindow</receiver>
    <slot>all_on_action_triggered()</slot>

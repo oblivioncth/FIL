@@ -45,6 +45,7 @@ private:
                                                                   "\n"
                                                                   "Execution cannot continue."_s;
     // Messages - Help
+    static inline const QString MSG_ABOUT = PROJECT_FULL_NAME + u"\n\nVersion: "_s + PROJECT_VERSION_STR;
     static inline const QString MSG_PLAYLIST_GAME_MODE_HELP = u"<b>%1</b> - Games found in the selected playlists that are not part of any selected platform will be excluded.<br>"
                                                               "<br>"
                                                               "<b>%2</b> - Unselected platforms that contain games from the selected playlists will be partially imported, so that they only contain said games. This guarantees that all games "
