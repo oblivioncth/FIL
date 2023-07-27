@@ -29,6 +29,7 @@ Install::Install(const QString& installPath) :
     // Initialize files and directories;
     mPlatformImagesDirectory = QDir(installPath + '/' + PLATFORM_IMAGES_PATH);
     mPlatformIconsDirectory = QDir(installPath + '/' + PLATFORM_ICONS_PATH);
+    mPlaylistIconsDirectory = QDir(installPath + '/' + PLAYLIST_ICONS_PATH);
     mPlatformCategoryIconsDirectory = QDir(installPath + '/' + PLATFORM_CATEGORY_ICONS_PATH);
     mDataDirectory = QDir(installPath + '/' + DATA_PATH);
     mCoreDirectory = QDir(installPath + '/' + CORE_PATH);
@@ -58,6 +59,7 @@ void Install::nullify()
     mPlaylistsDirectory = QDir();
     mPlatformImagesDirectory = QDir();
     mPlatformIconsDirectory = QDir();
+    mPlaylistIconsDirectory = QDir();
     mPlatformCategoryIconsDirectory = QDir();
 }
 
@@ -442,5 +444,6 @@ void Install::processDirectGameImages(const Fe::Game* game, const Fe::ImageSourc
 
 QString Install::platformCategoryIconPath() const { return mPlatformCategoryIconsDirectory.absoluteFilePath(u"Flashpoint.png"_s); }
 std::optional<QDir> Install::platformIconsDirectory() const { return mPlatformIconsDirectory; };
+std::optional<QDir> Install::playlistIconsDirectory() const { return mPlaylistIconsDirectory; };
 
 }
