@@ -958,9 +958,10 @@
       <string>Frontends</string>
      </property>
     </widget>
-    <addaction name="action_goToOFLIbGitHub"/>
+    <addaction name="action_goToFILGitHub"/>
     <addaction name="action_goToCLIFpGitHub"/>
     <addaction name="menu_frontendHelp"/>
+    <addaction name="action_about"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuTools"/>
@@ -975,13 +976,13 @@
     <string>Exit</string>
    </property>
   </action>
-  <action name="action_goToOFLIbGitHub">
+  <action name="action_goToFILGitHub">
    <property name="icon">
     <iconset resource="../res/resources.qrc">
      <normaloff>:/ui/GitHub.png</normaloff>:/ui/GitHub.png</iconset>
    </property>
    <property name="text">
-    <string>OFLIb (This Import Tool) GitHub</string>
+    <string>FIL (This Import Tool) GitHub</string>
    </property>
   </action>
   <action name="action_goToCLIFpGitHub">
@@ -1052,6 +1053,15 @@
   <action name="actiondummy">
    <property name="text">
     <string>dummy</string>
+   </property>
+  </action>
+  <action name="action_about">
+   <property name="icon">
+    <iconset resource="../res/resources.qrc">
+     <normaloff>:/ui/About.png</normaloff>:/ui/About.png</iconset>
+   </property>
+   <property name="text">
+    <string>About</string>
    </property>
   </action>
  </widget>
@@ -1316,7 +1326,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>action_goToOFLIbGitHub</sender>
+   <sender>action_goToFILGitHub</sender>
    <signal>triggered()</signal>
    <receiver>MainWindow</receiver>
    <slot>all_on_action_triggered()</slot>
@@ -1412,14 +1422,14 @@
    </hints>
   </connection>
   <connection>
-   <sender>menu_frontendHelp</sender>
-   <signal>triggered(QAction*)</signal>
+   <sender>action_about</sender>
+   <signal>triggered()</signal>
    <receiver>MainWindow</receiver>
-   <slot>all_on_menu_triggered(QAction*)</slot>
+   <slot>all_on_action_triggered()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>62</x>
-     <y>23</y>
+     <x>-1</x>
+     <y>-1</y>
     </hint>
     <hint type="destinationlabel">
      <x>323</x>

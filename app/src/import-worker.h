@@ -15,7 +15,7 @@
 // Project Includes
 #include "frontend/fe-install.h"
 
-class QX_ERROR_TYPE(ImageTransferError, "ImageTransferError", 1350)
+class QX_ERROR_TYPE(ImageTransferError, "ImageTransferError", 1351)
 {
 //-Class Enums-------------------------------------------------------------
 public:
@@ -167,7 +167,7 @@ private:
     ImportResult processGames(Qx::Error& errorReport, QList<Fp::Db::QueryBuffer>& primary, QList<Fp::Db::QueryBuffer>& playlistSpecific);
     ImportResult processPlaylists(Qx::Error& errorReport, const QList<Fp::Playlist>& playlists);
     ImportResult processImages(Qx::Error& errorReport);
-    ImportResult processIcons(const QStringList& platforms);
+    ImportResult processIcons(Qx::Error& errorReport, const QStringList& platforms, const QList<Fp::Playlist>& playlists);
 
 public:
     ImportResult doImport(Qx::Error& errorReport);

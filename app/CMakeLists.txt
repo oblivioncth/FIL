@@ -102,6 +102,7 @@ ob_add_cpp_vars(${APP_TARGET_NAME}
     VARS
         FULL_NAME "\"${PROJECT_DESCRIPTION}\""
         SHORT_NAME "\"${PROJECT_NAME}\""
+        VERSION_STR "\"${PROJECT_VERSION}\""
         TARGET_FP_VER_PFX_STR "\"${TARGET_FP_VERSION_PREFIX}\""
 )
 

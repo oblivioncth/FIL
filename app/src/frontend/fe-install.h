@@ -107,6 +107,7 @@ public:
     // but currently none do this so this works.
     virtual QString platformCategoryIconPath() const; // Unsupported in default implementation, needs to return path with .png extension
     virtual std::optional<QDir> platformIconsDirectory() const; // Unsupported in default implementation
+    virtual std::optional<QDir> playlistIconsDirectory() const; // Unsupported in default implementation
 };
 
 }

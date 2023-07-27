@@ -116,6 +116,7 @@ namespace Element_PlatformCategory
     const QString ELEMENT_PLATFORM_CATEGORY_NAME = u"PlatformCategoryName"_s;
     const QString ELEMENT_PLATFORM_NAME = u"PlatformName"_s;
     const QString ELEMENT_PARENT_PLATFORM_CATEGORY_NAME = u"ParentPlatformCategoryName"_s;
+    const QString ELEMENT_PLAYLIST_ID = u"PlaylistId"_s;
  };
 
 const QString ROOT_ELEMENT = u"LaunchBox"_s;
@@ -913,7 +914,7 @@ Fe::DocHandlingError PlatformsConfigDoc::Reader::readTargetDoc()
 
 void PlatformsConfigDoc::Reader::parsePlatform()
 {
-    // Platform Config Doc to Build
+    // Platform to Build
     Platform::Builder pb;
 
     // Cover all children
@@ -1081,9 +1082,8 @@ bool PlatformsConfigDoc::Writer::writePlatformCategory(const PlatformCategory& p
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-ParentsDoc::ParentsDoc(Install* const parent, const QString& xmlPath, const Fe::UpdateOptions& updateOptions,
-                                       const DocKey&) :
-    Fe::UpdateableDoc(parent, xmlPath, STD_NAME, updateOptions)
+ParentsDoc::ParentsDoc(Install* const parent, const QString& xmlPath, const DocKey&) :
+    Fe::DataDoc(parent, xmlPath, STD_NAME)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -1091,35 +1091,38 @@ ParentsDoc::ParentsDoc(Install* const parent, const QString& xmlPath, const Fe::
 Fe::DataDoc::Type ParentsDoc::type() const { return Fe::DataDoc::Type::Config; }
 
 //Public:
-bool ParentsDoc::isEmpty() const
+bool ParentsDoc::isEmpty() const { return mParents.isEmpty(); }
+
+bool ParentsDoc::containsPlatformCategory(QStringView platformCategory)
 {
-    return mCategoriesExisting.isEmpty() && mCategoriesFinal.isEmpty() &&
-           mPlatformsExisting.isEmpty() && mPlatformsFinal.isEmpty();
+    for(const Parent& p : mParents)
+        if(p.platformCategoryName() == platformCategory)
+            return true;
+
+    return false;
 }
 
-const QHash<QString, ParentCategory>& ParentsDoc::finalParentCategories() const { return mCategoriesFinal; }
-const QHash<QString, ParentPlatform>& ParentsDoc::finalParentPlatforms() const { return mPlatformsFinal; }
-
-void ParentsDoc::addParentCategory(const ParentCategory& parentCategory)
+bool ParentsDoc::containsPlatformUnderCategory(QStringView platform, QStringView platformCategory)
 {
-    addUpdateableItem(mCategoriesExisting, mCategoriesFinal, parentCategory.platformCategoryName(), parentCategory);
+    for(const Parent& p : mParents)
+        if(p.parentPlatformCategoryName() == platformCategory && p.platformName() == platform)
+            return true;
+
+    return false;
 }
 
-void ParentsDoc::addParentPlatform(const ParentPlatform& parentPlatform)
+bool ParentsDoc::containsPlaylistUnderCategory(const QUuid& playlistId, QStringView platformCategory)
 {
-    addUpdateableItem(mPlatformsExisting, mPlatformsFinal, parentPlatform.platformName(), parentPlatform);
+    for(const Parent& p : mParents)
+        if(p.parentPlatformCategoryName() == platformCategory && p.playlistId() == playlistId)
+            return true;
+
+    return false;
 }
 
-void ParentsDoc::finalize()
-{
-    // Finalize derived
-    finalizeUpdateableItems(mCategoriesExisting, mCategoriesFinal);
-    finalizeUpdateableItems(mPlatformsExisting, mPlatformsFinal);
+const QList<Parent>& ParentsDoc::parents() const { return mParents; }
 
-
-    // Finalize base
-    Fe::UpdateableDoc::finalize();
-}
+void ParentsDoc::addParent(const Parent& parent) { mParents.append(parent); }
 
 //===============================================================================================================
 // ParentsDoc::Reader
@@ -1139,10 +1142,7 @@ Fe::DocHandlingError ParentsDoc::Reader::readTargetDoc()
     while(mStreamReader.readNextStartElement())
     {
         if(mStreamReader.name() == Xml::Element_Parent::NAME)
-        {
-            if(Fe::DocHandlingError dhe = parseParent(); dhe.isValid())
-                return dhe;
-        }
+            parseParent();
         else
             mStreamReader.skipCurrentElement();
     }
@@ -1151,68 +1151,33 @@ Fe::DocHandlingError ParentsDoc::Reader::readTargetDoc()
     return streamStatus();
 }
 
-Fe::DocHandlingError ParentsDoc::Reader::parseParent()
+void ParentsDoc::Reader::parseParent()
 {
-    // Advance to first element
-    if(!mStreamReader.readNextStartElement())
-        return streamStatus();
-
-    // Branch on parent type
-    if(mStreamReader.name() == Xml::Element_Parent::ELEMENT_PLATFORM_CATEGORY_NAME)
-        parseParentCategory();
-    else if(mStreamReader.name() == Xml::Element_Parent::ELEMENT_PLATFORM_NAME)
-        parseParentPlatform();
-    else
-        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocInvalidType);
-
-    // Return status
-    return streamStatus();
-}
-
-void ParentsDoc::Reader::parseParentCategory()
-{
-    // Platform Config Doc to Build
-    ParentCategory::Builder pc;
+    // Parent to build
+    Parent::Builder pb;
 
     // Cover all children
-    do
+    while(mStreamReader.readNextStartElement())
     {
         if(mStreamReader.name() == Xml::Element_Parent::ELEMENT_PLATFORM_CATEGORY_NAME)
-            pc.wPlatformCategoryName(mStreamReader.readElementText());
-        else
-            pc.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
-    }
-    while(mStreamReader.readNextStartElement());
-
-    // Build Platform and add to document
-    ParentCategory existingParent = pc.build();
-    static_cast<ParentsDoc*>(mTargetDocument)->mCategoriesExisting[existingParent.platformCategoryName()] = existingParent;
-}
-
-void ParentsDoc::Reader::parseParentPlatform()
-{
-    // Platform Config Doc to Build
-    ParentPlatform::Builder pc;
-
-    // Cover all children
-    do
-    {
-        if(mStreamReader.name() == Xml::Element_Parent::ELEMENT_PLATFORM_NAME)
-            pc.wPlatformName(mStreamReader.readElementText());
+            pb.wPlatformCategoryName(mStreamReader.readElementText());
+        else if(mStreamReader.name() == Xml::Element_Parent::ELEMENT_PLATFORM_NAME)
+            pb.wPlatformName(mStreamReader.readElementText());
         else if(mStreamReader.name() == Xml::Element_Parent::ELEMENT_PARENT_PLATFORM_CATEGORY_NAME)
-            pc.wParentPlatformCategoryName(mStreamReader.readElementText());
+            pb.wParentPlatformCategoryName(mStreamReader.readElementText());
+        else if(mStreamReader.name() == Xml::Element_Parent::ELEMENT_PLAYLIST_ID)
+            pb.wPlaylistId(mStreamReader.readElementText());
         else
-            pc.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
+            pb.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
     }
-    while(mStreamReader.readNextStartElement());
 
     // Build Platform and add to document
-    ParentPlatform existingParent = pc.build();
-    static_cast<ParentsDoc*>(mTargetDocument)->mPlatformsExisting[existingParent.platformName()] = existingParent;
+    Parent existingParent = pb.build();
+    static_cast<ParentsDoc*>(mTargetDocument)->mParents.append(existingParent);
 }
 
 //===============================================================================================================
-// PlatformsConfigDoc::Writer
+// ParentsDoc::Writer
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
@@ -1226,17 +1191,10 @@ ParentsDoc::Writer::Writer(ParentsDoc* sourceDoc) :
 //Private:
 bool ParentsDoc::Writer::writeSourceDoc()
 {
-    // Write all categories
-    for(const ParentCategory& parentCategory : static_cast<ParentsDoc*>(mSourceDocument)->finalParentCategories())
+    // Write all parents
+    for(const Parent& parent : static_cast<ParentsDoc*>(mSourceDocument)->parents())
     {
-        if(!writeParentCategory(parentCategory))
-            return false;
-    }
-
-    // Write all platforms
-    for(const ParentPlatform& parentPlatform : static_cast<ParentsDoc*>(mSourceDocument)->finalParentPlatforms())
-    {
-        if(!writeParentPlatform(parentPlatform))
+        if(!writeParent(parent))
             return false;
     }
 
@@ -1244,35 +1202,19 @@ bool ParentsDoc::Writer::writeSourceDoc()
     return true;
 }
 
-bool ParentsDoc::Writer::writeParentCategory(const ParentCategory& parentCategory)
+bool ParentsDoc::Writer::writeParent(const Parent& parent)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Xml::Element_Parent::NAME);
 
     // Write known tags
-    writeCleanTextElement(Xml::Element_Parent::ELEMENT_PLATFORM_CATEGORY_NAME, parentCategory.platformCategoryName());
+    writeCleanTextElement(Xml::Element_Parent::ELEMENT_PLATFORM_CATEGORY_NAME, parent.platformCategoryName());
+    writeCleanTextElement(Xml::Element_Parent::ELEMENT_PLATFORM_NAME, parent.platformName());
+    writeCleanTextElement(Xml::Element_Parent::ELEMENT_PARENT_PLATFORM_CATEGORY_NAME, parent.parentPlatformCategoryName());
+    writeCleanTextElement(Xml::Element_Parent::ELEMENT_PLAYLIST_ID, !parent.playlistId().isNull() ?  parent.playlistId().toString(QUuid::WithoutBraces): u""_s);
 
     // Write other tags
-    writeOtherFields(parentCategory.otherFields());
-
-    // Close tag
-    mStreamWriter.writeEndElement();
-
-    // Return error status
-    return !mStreamWriter.hasError();
-}
-
-bool ParentsDoc::Writer::writeParentPlatform(const ParentPlatform& parentPlatform)
-{
-    // Write opening tag
-    mStreamWriter.writeStartElement(Xml::Element_Parent::NAME);
-
-    // Write known tags
-    writeCleanTextElement(Xml::Element_Parent::ELEMENT_PLATFORM_NAME, parentPlatform.platformName());
-    writeCleanTextElement(Xml::Element_Parent::ELEMENT_PARENT_PLATFORM_CATEGORY_NAME, parentPlatform.parentPlatformCategoryName());
-
-    // Write other tags
-    writeOtherFields(parentPlatform.otherFields());
+    writeOtherFields(parent.otherFields());
 
     // Close tag
     mStreamWriter.writeEndElement();

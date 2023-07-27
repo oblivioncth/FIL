@@ -12,5 +12,6 @@
         <file>frontend/AttractMode/icon.png</file>
         <file>frontend/AttractMode/marquee.png</file>
         <file>flashpoint/icon.png</file>
+        <file>ui/About.png</file>
     </qresource>
 </RCC>

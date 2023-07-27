@@ -818,8 +818,10 @@ void MainWindow::all_on_action_triggered()
         standaloneCLIFpDeploy();
     else if(senderAction == ui->action_goToCLIFpGitHub)
         QDesktopServices::openUrl(URL_CLIFP_GITHUB);
-    else if(senderAction == ui->action_goToOFLIbGitHub)
-        QDesktopServices::openUrl(URL_OFLIB_GITHUB);
+    else if(senderAction == ui->action_goToFILGitHub)
+        QDesktopServices::openUrl(URL_FIL_GITHUB);
+    else if(senderAction == ui->action_about)
+        QMessageBox::information(this, QApplication::applicationName(), MSG_ABOUT);
     else if(senderAction == ui->action_editTagFilter)
         showTagSelectionDialog();
     else

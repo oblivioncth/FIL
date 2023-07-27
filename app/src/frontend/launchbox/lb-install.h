@@ -34,6 +34,7 @@ public:
     static inline const QString MAIN_EXE_PATH = u"Core/LaunchBox.exe"_s;
     static inline const QString PLATFORM_IMAGES_PATH = u"Images"_s;
     static inline const QString PLATFORM_ICONS_PATH = u"Images/Platform Icons/Platforms"_s;
+    static inline const QString PLAYLIST_ICONS_PATH = u"Images/Platform Icons/Playlists"_s;
     static inline const QString PLATFORM_CATEGORY_ICONS_PATH = u"Images/Platform Icons/Platform Categories"_s;
     static inline const QString LOGO_PATH = u"Box - Front"_s;
     static inline const QString SCREENSHOT_PATH = u"Screenshot - Gameplay"_s;
@@ -60,17 +61,20 @@ private:
     QDir mPlatformImagesDirectory;
     QDir mPlatformIconsDirectory;
     QDir mPlatformCategoryIconsDirectory;
+    QDir mPlaylistIconsDirectory;
     QDir mCoreDirectory;
 
     // Image transfers for import worker
     QList<ImageMap> mWorkerImageJobs;
 
-    // Persistent platforms config handle
+    // Persistent config handles
     std::unique_ptr<PlatformsConfigDoc> mPlatformsConfig;
+    std::unique_ptr<ParentsDoc> mParents;
 
     // Other trackers
     Qx::FreeIndexTracker mLbDatabaseIdTracker = Qx::FreeIndexTracker(0, -1, {});
     QHash<QUuid, PlaylistGame::EntryDetails> mPlaylistGameDetailsCache;
+    QHash<QString, QUuid> mModifiedPlaylistIds;
     // TODO: Even though the playlist game IDs don't seem to matter, at some point for for completeness scan all playlists when hooking an install to get the
     // full list of in use IDs
 
@@ -117,11 +121,13 @@ public:
     Qx::Error postPlatformsImport() override;
     Qx::Error preImageProcessing(QList<ImageMap>& workerTransfers, const Fe::ImageSources& bulkSources) override;
     Qx::Error postImageProcessing() override;
+    Qx::Error postPlaylistsImport() override;
 
     // Image handling
     void processDirectGameImages(const Fe::Game* game, const Fe::ImageSources& imageSources) override;
     QString platformCategoryIconPath() const override;
     std::optional<QDir> platformIconsDirectory() const override;
+    std::optional<QDir> playlistIconsDirectory() const override;
 
 };
 REGISTER_FRONTEND(Install::NAME, Install, &Install::ICON_PATH, &Install::HELP_URL);
