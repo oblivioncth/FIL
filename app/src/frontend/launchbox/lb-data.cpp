@@ -1211,7 +1211,7 @@ bool ParentsDoc::Writer::writeParent(const Parent& parent)
     writeCleanTextElement(Xml::Element_Parent::ELEMENT_PLATFORM_CATEGORY_NAME, parent.platformCategoryName());
     writeCleanTextElement(Xml::Element_Parent::ELEMENT_PLATFORM_NAME, parent.platformName());
     writeCleanTextElement(Xml::Element_Parent::ELEMENT_PARENT_PLATFORM_CATEGORY_NAME, parent.parentPlatformCategoryName());
-    writeCleanTextElement(Xml::Element_Parent::ELEMENT_PLAYLIST_ID, parent.playlistId().toString(QUuid::WithoutBraces));
+    writeCleanTextElement(Xml::Element_Parent::ELEMENT_PLAYLIST_ID, !parent.playlistId().isNull() ?  parent.playlistId().toString(QUuid::WithoutBraces): u""_s);
 
     // Write other tags
     writeOtherFields(parent.otherFields());
