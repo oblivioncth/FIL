@@ -116,6 +116,7 @@ namespace Element_PlatformCategory
     const QString ELEMENT_PLATFORM_CATEGORY_NAME = u"PlatformCategoryName"_s;
     const QString ELEMENT_PLATFORM_NAME = u"PlatformName"_s;
     const QString ELEMENT_PARENT_PLATFORM_CATEGORY_NAME = u"ParentPlatformCategoryName"_s;
+    const QString ELEMENT_PLAYLIST_ID = u"PlaylistId"_s;
  };
 
 const QString ROOT_ELEMENT = u"LaunchBox"_s;
@@ -1110,6 +1111,15 @@ bool ParentsDoc::containsPlatformUnderCategory(QStringView platform, QStringView
     return false;
 }
 
+bool ParentsDoc::containsPlaylistUnderCategory(const QUuid& playlistId, QStringView platformCategory)
+{
+    for(const Parent& p : mParents)
+        if(p.parentPlatformCategoryName() == platformCategory && p.playlistId() == playlistId)
+            return true;
+
+    return false;
+}
+
 const QList<Parent>& ParentsDoc::parents() const { return mParents; }
 
 void ParentsDoc::addParent(const Parent& parent) { mParents.append(parent); }
@@ -1155,6 +1165,8 @@ void ParentsDoc::Reader::parseParent()
             pb.wPlatformName(mStreamReader.readElementText());
         else if(mStreamReader.name() == Xml::Element_Parent::ELEMENT_PARENT_PLATFORM_CATEGORY_NAME)
             pb.wParentPlatformCategoryName(mStreamReader.readElementText());
+        else if(mStreamReader.name() == Xml::Element_Parent::ELEMENT_PLAYLIST_ID)
+            pb.wPlaylistId(mStreamReader.readElementText());
         else
             pb.wOtherField({mStreamReader.name().toString(), mStreamReader.readElementText()});
     }
@@ -1199,6 +1211,7 @@ bool ParentsDoc::Writer::writeParent(const Parent& parent)
     writeCleanTextElement(Xml::Element_Parent::ELEMENT_PLATFORM_CATEGORY_NAME, parent.platformCategoryName());
     writeCleanTextElement(Xml::Element_Parent::ELEMENT_PLATFORM_NAME, parent.platformName());
     writeCleanTextElement(Xml::Element_Parent::ELEMENT_PARENT_PLATFORM_CATEGORY_NAME, parent.parentPlatformCategoryName());
+    writeCleanTextElement(Xml::Element_Parent::ELEMENT_PLAYLIST_ID, parent.playlistId().toString(QUuid::WithoutBraces));
 
     // Write other tags
     writeOtherFields(parent.otherFields());

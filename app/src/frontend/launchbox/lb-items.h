@@ -389,6 +389,7 @@ private:
     QString mPlatformCategoryName;
     QString mPlatformName;
     QString mParentPlatformCategoryName;
+    QUuid mPlaylistId;
 
 //-Constructor------------------------------------------------------------------------------------------------------
 public:
@@ -399,6 +400,7 @@ public:
     QString platformCategoryName() const;
     QString platformName() const;
     QString parentPlatformCategoryName() const;
+    QUuid playlistId() const;
 };
 
 class Parent::Builder : public Fe::Item::Builder<Parent::Builder, Parent>
@@ -412,6 +414,8 @@ public:
     Builder& wPlatformCategoryName(const QString& platformCategoryName);
     Builder& wPlatformName(const QString& platformName);
     Builder& wParentPlatformCategoryName(const QString& parentPlatformCategoryName);
+    Builder& wPlaylistId(const QString& rawId);
+    Builder& wPlaylistId(const QUuid& id);
 };
 
 }

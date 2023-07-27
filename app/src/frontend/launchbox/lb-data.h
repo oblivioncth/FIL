@@ -285,6 +285,7 @@ public:
 
     bool containsPlatformCategory(QStringView platformCategory);
     bool containsPlatformUnderCategory(QStringView platform, QStringView platformCategory);
+    bool containsPlaylistUnderCategory(const QUuid& playlistId, QStringView platformCategory);
 
     const QList<Parent>& parents() const;
 

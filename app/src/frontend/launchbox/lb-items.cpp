@@ -374,9 +374,10 @@ Parent::Parent() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-QString Parent::platformCategoryName() const { return mPlatformCategoryName;}
-QString Parent::platformName() const { return mPlatformName;}
-QString Parent::parentPlatformCategoryName() const { return mParentPlatformCategoryName;}
+QString Parent::platformCategoryName() const { return mPlatformCategoryName; }
+QString Parent::platformName() const { return mPlatformName; }
+QString Parent::parentPlatformCategoryName() const { return mParentPlatformCategoryName; }
+QUuid Parent::playlistId() const { return mPlaylistId; }
 
 //===============================================================================================================
 // ParentCategory::Builder
@@ -391,4 +392,7 @@ Parent::Builder::Builder() {}
 Parent::Builder& Parent::Builder::wPlatformCategoryName(const QString& platformCategoryName) { mItemBlueprint.mPlatformCategoryName = platformCategoryName; return *this; }
 Parent::Builder& Parent::Builder::wPlatformName(const QString& platformName) { mItemBlueprint.mPlatformName = platformName; return *this; }
 Parent::Builder& Parent::Builder::wParentPlatformCategoryName(const QString& parentPlatformCategoryName) { mItemBlueprint.mParentPlatformCategoryName = parentPlatformCategoryName; return *this; }
+Parent::Builder& Parent::Builder::wPlaylistId(const QString& rawId) { mItemBlueprint.mPlaylistId = QUuid(rawId); return *this; }
+Parent::Builder& Parent::Builder::wPlaylistId(const QUuid& id) { mItemBlueprint.mPlaylistId = id; return *this; }
+
 }
