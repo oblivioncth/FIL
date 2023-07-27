@@ -149,7 +149,7 @@ private:
 
     // URLs
     static inline const QUrl URL_CLIFP_GITHUB = QUrl(u"https://github.com/oblivioncth/CLIFp"_s);
-    static inline const QUrl URL_OFLIB_GITHUB =  QUrl(u"https://github.com/oblivioncth/FIL"_s);
+    static inline const QUrl URL_FIL_GITHUB =  QUrl(u"https://github.com/oblivioncth/FIL"_s);
 
     // Flashpoint version check
     static inline const Qx::VersionNumber TARGET_FP_VERSION_PREFIX = Qx::VersionNumber::fromString(PROJECT_TARGET_FP_VER_PFX_STR);
