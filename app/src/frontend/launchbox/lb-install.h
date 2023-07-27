@@ -65,12 +65,14 @@ private:
     // Image transfers for import worker
     QList<ImageMap> mWorkerImageJobs;
 
-    // Persistent platforms config handle
+    // Persistent config handles
     std::unique_ptr<PlatformsConfigDoc> mPlatformsConfig;
+    std::unique_ptr<ParentsDoc> mParents;
 
     // Other trackers
     Qx::FreeIndexTracker mLbDatabaseIdTracker = Qx::FreeIndexTracker(0, -1, {});
     QHash<QUuid, PlaylistGame::EntryDetails> mPlaylistGameDetailsCache;
+    QHash<QString, QUuid> mModifiedPlaylistIds;
     // TODO: Even though the playlist game IDs don't seem to matter, at some point for for completeness scan all playlists when hooking an install to get the
     // full list of in use IDs
 
@@ -117,6 +119,7 @@ public:
     Qx::Error postPlatformsImport() override;
     Qx::Error preImageProcessing(QList<ImageMap>& workerTransfers, const Fe::ImageSources& bulkSources) override;
     Qx::Error postImageProcessing() override;
+    Qx::Error postPlaylistsImport() override;
 
     // Image handling
     void processDirectGameImages(const Fe::Game* game, const Fe::ImageSources& imageSources) override;

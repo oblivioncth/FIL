@@ -208,8 +208,14 @@ std::shared_ptr<Fe::PlatformDoc::Writer> Install::preparePlatformDocCommit(const
 
 std::shared_ptr<Fe::PlaylistDoc::Writer> Install::preparePlaylistDocCommit(const std::unique_ptr<Fe::PlaylistDoc>& playlistDoc)
 {
+    // Work with native type
+    auto lbPlaylistDoc = static_cast<PlaylistDoc*>(playlistDoc.get());
+
+    // Store playlist ID
+    mModifiedPlaylistIds[lbPlaylistDoc->playlistHeader()->name()] = lbPlaylistDoc->playlistHeader()->id();
+
     // Construct doc writer
-    std::shared_ptr<Fe::PlaylistDoc::Writer> docWriter = std::make_shared<PlaylistDoc::Writer>(static_cast<PlaylistDoc*>(playlistDoc.get()));
+    std::shared_ptr<Fe::PlaylistDoc::Writer> docWriter = std::make_shared<PlaylistDoc::Writer>(lbPlaylistDoc);
 
     // Return writer
     return docWriter;
@@ -261,8 +267,7 @@ Fe::DocHandlingError Install::checkoutParentsDoc(std::unique_ptr<ParentsDoc>& re
     Fe::DataDoc::Identifier docId(Fe::DataDoc::Type::Config, ParentsDoc::STD_NAME);
 
     // Construct unopened document
-    Fe::UpdateOptions uo{.importMode = Fe::ImportMode::NewAndExisting, .removeObsolete = false};
-    returnBuffer = std::make_unique<ParentsDoc>(this, dataDocPath(docId), uo, DocKey{});
+    returnBuffer = std::make_unique<ParentsDoc>(this, dataDocPath(docId), DocKey{});
 
     // Construct doc reader
     std::shared_ptr<ParentsDoc::Reader> docReader = std::make_shared<ParentsDoc::Reader>(returnBuffer.get());
@@ -323,8 +328,7 @@ Qx::Error Install::postPlatformsImport()
         return superErr;
 
     // Open Parents.xml
-    std::unique_ptr<ParentsDoc> parentsDoc;
-    if(Fe::DocHandlingError dhe = checkoutParentsDoc(parentsDoc); dhe.isValid())
+    if(Fe::DocHandlingError dhe = checkoutParentsDoc(mParents); dhe.isValid())
         return dhe;
 
     // Add PlatformCategory to Platforms.xml
@@ -334,9 +338,12 @@ Qx::Error Install::postPlatformsImport()
     mPlatformsConfig->addPlatformCategory(pcb.build());
 
     // Add ParentCategory to Parents.xml
-    Lb::ParentCategory::Builder prcb;
-    prcb.wPlatformCategoryName(PLATFORM_CATEGORY);
-    parentsDoc->addParentCategory(prcb.build());
+    if(!mParents->containsPlatformCategory(PLATFORM_CATEGORY))
+    {
+        Lb::Parent::Builder pb;
+        pb.wPlatformCategoryName(PLATFORM_CATEGORY);
+        mParents->addParent(pb.build());
+    }
 
     // Add platforms to Platforms.xml and Parents.xml
     const QList<QString> affectedPlatforms = modifiedPlatforms();
@@ -346,15 +353,16 @@ Qx::Error Install::postPlatformsImport()
         pb.wName(pn);
         mPlatformsConfig->addPlatform(pb.build());
 
-        Lb::ParentPlatform::Builder ppb;
-        ppb.wParentPlatformCategoryName(PLATFORM_CATEGORY);
-        ppb.wPlatformName(pn);
-        parentsDoc->addParentPlatform(ppb.build());
+        if(!mParents->containsPlatformUnderCategory(pn, PLATFORM_CATEGORY))
+        {
+            Lb::Parent::Builder pb;
+            pb.wParentPlatformCategoryName(PLATFORM_CATEGORY);
+            pb.wPlatformName(pn);
+            mParents->addParent(pb.build());
+        }
     }
 
-    // Close Parents.xml
-    parentsDoc->finalize();
-    return commitParentsDoc(std::move(parentsDoc));
+    return Qx::Error();
 }
 
 Qx::Error Install::preImageProcessing(QList<ImageMap>& workerTransfers, const Fe::ImageSources& bulkSources)
@@ -389,6 +397,26 @@ Qx::Error Install::postImageProcessing()
     Fe::DocHandlingError saveError = commitPlatformsConfigDoc(std::move(mPlatformsConfig));
 
     return saveError;
+}
+
+Qx::Error Install::postPlaylistsImport()
+{
+    // Add playlists to Parents.xml
+    const QList<QString> affectedPlaylists = modifiedPlaylists();
+    for(const QString& pn :affectedPlaylists)
+    {
+        QUuid playlistId = mModifiedPlaylistIds.value(pn);
+        if(!mParents->containsPlaylistUnderCategory(playlistId, PLATFORM_CATEGORY))
+        {
+            Lb::Parent::Builder pb;
+            pb.wParentPlatformCategoryName(PLATFORM_CATEGORY);
+            pb.wPlaylistId(playlistId);
+            mParents->addParent(pb.build());
+        }
+    }
+
+    // Close Parents.xml
+    return commitParentsDoc(std::move(mParents));
 }
 
 void Install::processDirectGameImages(const Fe::Game* game, const Fe::ImageSources& imageSources)

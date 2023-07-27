@@ -378,7 +378,7 @@ public:
     Builder& wNestedName(const QString& nestedName);
 };
 
-class ParentCategory : public Fe::Item
+class Parent : public Fe::Item
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
@@ -387,17 +387,23 @@ public:
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
     QString mPlatformCategoryName;
+    QString mPlatformName;
+    QString mParentPlatformCategoryName;
+    QUuid mPlaylistId;
 
 //-Constructor------------------------------------------------------------------------------------------------------
 public:
-    ParentCategory();
+    Parent();
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
     QString platformCategoryName() const;
+    QString platformName() const;
+    QString parentPlatformCategoryName() const;
+    QUuid playlistId() const;
 };
 
-class ParentCategory::Builder : public Fe::Item::Builder<ParentCategory::Builder, ParentCategory>
+class Parent::Builder : public Fe::Item::Builder<Parent::Builder, Parent>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -406,42 +412,11 @@ public:
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
     Builder& wPlatformCategoryName(const QString& platformCategoryName);
-};
-
-class ParentPlatform : public Fe::Item
-{
-//-Inner Classes---------------------------------------------------------------------------------------------------
-public:
-    class Builder;
-
-//-Instance Variables-----------------------------------------------------------------------------------------------
-private:
-    QString mPlatformName;
-    QString mParentPlatformCategoryName;
-
-//-Constructor------------------------------------------------------------------------------------------------------
-public:
-    ParentPlatform();
-
-//-Instance Functions------------------------------------------------------------------------------------------------------
-public:
-    QString platformName() const;
-    QString parentPlatformCategoryName() const;
-};
-
-class ParentPlatform::Builder : public Fe::Item::Builder<ParentPlatform::Builder, ParentPlatform>
-{
-//-Constructor-------------------------------------------------------------------------------------------------
-public:
-    Builder();
-
-//-Instance Functions------------------------------------------------------------------------------------------
-public:
     Builder& wPlatformName(const QString& platformName);
     Builder& wParentPlatformCategoryName(const QString& parentPlatformCategoryName);
+    Builder& wPlaylistId(const QString& rawId);
+    Builder& wPlaylistId(const QUuid& id);
 };
-
-
 
 }
 #endif // LAUNCHBOX_ITEMS_H
