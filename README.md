@@ -108,6 +108,8 @@ Given that AttractMode is highly customizable and designed to encourage each use
 
 ## Usage (Primary)
 
+ **Before using FIL, be sure to have ran Flashpoint through its regular launcher at least once**
+
  1. Download and run the latest [release](https://github.com/oblivioncth/FIL/releases) (the static variant is recommended)
  2. Ensure Flashpoint and the launcher are both not running
  3. Manually specify or browse for the path to your launcher install, the utility will let you know if there are any problems. If everything is OK the icon next to the install path will change to a green check
