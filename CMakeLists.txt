@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.24.0...3.26.0)
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
 project(FIL
-    VERSION 0.7.1
+    VERSION 0.7.1.1
     LANGUAGES CXX
     DESCRIPTION "Flashpoint Importer for Launchers"
 )
@@ -64,14 +64,14 @@ set(FIL_QX_COMPONENTS
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "6608e0a92d667846333c2349344771eb3c1a1c60"
+    REF "v0.5.3"
     COMPONENTS
         ${FIL_QX_COMPONENTS}
 )
 
 # Fetch libfp (build and import from source)
 include(OB/Fetchlibfp)
-ob_fetch_libfp("86185eaaeb11a51fabcf787e677593a38f6910c7")
+ob_fetch_libfp("v0.4.2.1")
 
 # Fetch CLIFp (build and import from source)
 include(OB/FetchCLIFp)
