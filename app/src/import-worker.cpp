@@ -642,6 +642,9 @@ ImportWorker::ImportResult ImportWorker::processIcons(Qx::Error& errorReport, co
         for(const Fp::Playlist& p : playlists)
         {
             const QImage& icon = p.icon();
+            if(icon.isNull())
+                continue;
+
             QString filename = p.title() + ".png";
             QString source = iconInflateDir.filePath(filename);
             QString dest = pdd.absoluteFilePath(filename);
