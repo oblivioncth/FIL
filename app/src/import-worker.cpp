@@ -231,6 +231,8 @@ bool ImportWorker::performImageJobs(const QList<Fe::Install::ImageMap>& jobs, bo
 
 ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::Error& errorReport, std::unique_ptr<Fe::PlatformDoc>& platformDoc, Fp::Db::QueryBuffer& gameQueryResult)
 {
+    const Fp::Toolkit* tk = mFlashpointInstall->toolkit();
+
     // Add/Update games
     for(int j = 0; j < gameQueryResult.size; j++)
     {
@@ -272,8 +274,8 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::Error& errorRe
         Fp::Set builtSet = sb.build();
 
         // Get image information
-        QFileInfo logoLocalInfo(mFlashpointInstall->entryImageLocalPath(Fp::ImageType::Logo, builtGame.id()));
-        QFileInfo ssLocalInfo(mFlashpointInstall->entryImageLocalPath(Fp::ImageType::Screenshot, builtGame.id()));
+        QFileInfo logoLocalInfo(tk->entryImageLocalPath(Fp::ImageType::Logo, builtGame.id()));
+        QFileInfo ssLocalInfo(tk->entryImageLocalPath(Fp::ImageType::Screenshot, builtGame.id()));
 
         // Add set to doc
         QString checkedLogoPath = (logoLocalInfo.exists() || mOptionSet.downloadImages) ? logoLocalInfo.absoluteFilePath() : QString();
@@ -288,7 +290,7 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::Error& errorRe
         {
             if(!logoLocalInfo.exists())
             {
-                QUrl logoRemotePath = mFlashpointInstall->entryImageRemoteUrl(Fp::ImageType::Logo, builtGame.id());
+                QUrl logoRemotePath = tk->entryImageRemotePath(Fp::ImageType::Logo, builtGame.id());
                 mImageDownloadManager.appendTask(Qx::DownloadTask{logoRemotePath, logoLocalInfo.absoluteFilePath()});
             }
             else
@@ -296,7 +298,7 @@ ImportWorker::ImportResult ImportWorker::processPlatformGames(Qx::Error& errorRe
 
             if(!ssLocalInfo.exists())
             {
-                QUrl ssRemotePath = mFlashpointInstall->entryImageRemoteUrl(Fp::ImageType::Screenshot, builtGame.id());
+                QUrl ssRemotePath = tk->entryImageRemotePath(Fp::ImageType::Screenshot, builtGame.id());
                 mImageDownloadManager.appendTask(Qx::DownloadTask{ssRemotePath, ssLocalInfo.absoluteFilePath()});
             }
             else
@@ -606,6 +608,8 @@ ImportWorker::ImportResult ImportWorker::processIcons(Qx::Error& errorReport, co
     std::optional<QDir> platformDestDir = mFrontendInstall->platformIconsDirectory();
     std::optional<QDir> playlistDestDir = mFrontendInstall->playlistIconsDirectory();
 
+    const Fp::Toolkit* tk = mFlashpointInstall->toolkit();
+
     // Main Job
     if(!mainDest.isEmpty())
         jobs.emplace_back(Fe::Install::ImageMap{.sourcePath = u":/flashpoint/icon.png"_s, .destPath = mainDest});
@@ -616,7 +620,7 @@ ImportWorker::ImportResult ImportWorker::processIcons(Qx::Error& errorReport, co
         QDir pdd = platformDestDir.value();
         for(const QString& p : platforms)
         {
-            QString src = mFlashpointInstall->platformLogoPath(p);
+            QString src = tk->platformLogoPath(p);
             if(QFile::exists(src))
                 jobs.emplace_back(Fe::Install::ImageMap{.sourcePath = src,
                                                         .destPath = pdd.absoluteFilePath(p + ".png")});

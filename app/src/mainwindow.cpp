@@ -386,7 +386,7 @@ void MainWindow::redoInputChecks()
 {
     // Check existing locations again
     validateInstall(mFrontendInstall->path(), InstallType::Frontend);
-    validateInstall(mFlashpointInstall->fullPath(), InstallType::Flashpoint);
+    validateInstall(mFlashpointInstall->dir().absolutePath(), InstallType::Flashpoint);
 }
 
 void MainWindow::invalidateInstall(InstallType install, bool informUser)

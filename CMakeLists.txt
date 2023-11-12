@@ -64,18 +64,18 @@ set(FIL_QX_COMPONENTS
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "v0.5.5.1"
+    REF "2bbf83e59b0aadc3891440193892be1a2a19c00e"
     COMPONENTS
         ${FIL_QX_COMPONENTS}
 )
 
 # Fetch libfp (build and import from source)
 include(OB/Fetchlibfp)
-ob_fetch_libfp("v0.5.1.1")
+ob_fetch_libfp("c903a9eaca5f8cfeb3abc851f075f660d281f46a")
 
 # Fetch CLIFp (build and import from source)
 include(OB/FetchCLIFp)
-ob_fetch_clifp("v0.9.9")
+ob_fetch_clifp("42a14ec1dc140c5389017db74c4a79fd3831f739")
 
 # TODO: The shared build of this is essentially useless as only the CLIFp executable
 # is deployed, which only works if it's statically linked. There isn't a simple way
