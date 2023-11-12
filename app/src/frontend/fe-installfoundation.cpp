@@ -211,7 +211,7 @@ Fe::DocHandlingError InstallFoundation::commitDataDocument(DataDoc* docToSave, s
 
 QList<QString> InstallFoundation::modifiedPlatforms() const { return modifiedDataDocs(DataDoc::Type::Platform); }
 
-QList<QString> InstallFoundation::modifiedPlaylists() const { return modifiedDataDocs(DataDoc::Type::Platform);}
+QList<QString> InstallFoundation::modifiedPlaylists() const { return modifiedDataDocs(DataDoc::Type::Playlist);}
 
 //Public:
 bool InstallFoundation::isValid() const { return mValid; }
