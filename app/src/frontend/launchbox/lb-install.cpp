@@ -307,7 +307,7 @@ void Install::softReset()
 {
     Fe::Install::softReset();
 
-    mLbDatabaseIdTracker = Qx::FreeIndexTracker(0, -1);
+    mLbDatabaseIdTracker = Qx::FreeIndexTracker(0, LB_DB_ID_TRACKER_MAX);
     mPlaylistGameDetailsCache.clear();
     mWorkerImageJobs.clear();
 }

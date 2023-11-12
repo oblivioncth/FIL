@@ -44,6 +44,7 @@ public:
 
     // Other
     static inline const QString PLATFORM_CATEGORY = u"Flashpoint"_s;
+    static const quint64 LB_DB_ID_TRACKER_MAX = 100000;
 
     // Support
     static inline const QList<Fe::ImageMode> IMAGE_MODE_ORDER {
@@ -72,7 +73,7 @@ private:
     std::unique_ptr<ParentsDoc> mParents;
 
     // Other trackers
-    Qx::FreeIndexTracker mLbDatabaseIdTracker = Qx::FreeIndexTracker(0, -1, {});
+    Qx::FreeIndexTracker mLbDatabaseIdTracker = Qx::FreeIndexTracker(0, LB_DB_ID_TRACKER_MAX, {});
     QHash<QUuid, PlaylistGame::EntryDetails> mPlaylistGameDetailsCache;
     QHash<QString, QUuid> mModifiedPlaylistIds;
     // TODO: Even though the playlist game IDs don't seem to matter, at some point for for completeness scan all playlists when hooking an install to get the
