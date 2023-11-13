@@ -222,7 +222,7 @@ PlaylistGame::EntryDetails::EntryDetails(const Game& refGame) :
 //Public:
 QString PlaylistGame::EntryDetails::title() const { return mTitle; }
 QString PlaylistGame::EntryDetails::filename() const { return mFilename; }
-QString PlaylistGame::EntryDetails::platform() const { return mTitle; }
+QString PlaylistGame::EntryDetails::platform() const { return mPlatform; }
 
 //===============================================================================================================
 // PlaylistGame
