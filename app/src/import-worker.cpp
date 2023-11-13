@@ -657,8 +657,14 @@ ImportWorker::ImportResult ImportWorker::processIcons(Qx::Error& errorReport, co
             if(p.title().trimmed() == u"Favorites"_s)
                 continue;
 
-            QString source = iconInflateDir.filePath(filename);
-            QString dest = pdd.absoluteFilePath(filename);
+            /* NOTE: This may not work for all frontends
+             *
+             * Use translated name for destination since that's what the frontend is expecting
+             */
+            QString sFilename = p.title() + ".png";
+            QString dFilename = mFrontendInstall->translateDocName(p.title(), Fe::DataDoc::Type::Playlist) + ".png";;
+            QString source = iconInflateDir.filePath(sFilename);
+            QString dest = pdd.absoluteFilePath(dFilename);
 
             iw.setFileName(source);
             if(!iw.write(icon))
