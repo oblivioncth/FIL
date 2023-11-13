@@ -279,13 +279,27 @@ public:
     //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
     Type type() const override;
+    bool removeIfPresent(qsizetype idx);
+
+    qsizetype findPlatformCategory(QStringView platformCategory, QStringView parentCategory) const;
+    qsizetype findPlatform(QStringView platform, QStringView parentCategory) const;
+    qsizetype findPlaylist(const QUuid& playlistId, QStringView parentCategory) const;
 
 public:
     bool isEmpty() const override;
 
-    bool containsPlatformCategory(QStringView platformCategory);
-    bool containsPlatformUnderCategory(QStringView platform, QStringView platformCategory);
-    bool containsPlaylistUnderCategory(const QUuid& playlistId, QStringView platformCategory);
+    /* NOTE: The methods here than take an optional parent category won't look for any of their type
+     * if no parent is specified, but rather one that explicitly has no parent. If these is needed for
+     * some reason, consider adding "any" variants of the functions (i.e. containsAnyPlatformCategory(), etc.)
+     */
+    bool containsPlatformCategory(QStringView platformCategory, QStringView parentCategory = {}) const;
+    bool containsPlatform(QStringView platform, QStringView parentCategory = {}) const;
+    bool containsPlaylist(const QUuid& playlistId, QStringView parentCategory = {}) const;
+
+    bool removePlatformCategory(QStringView platformCategory, QStringView parentCategory = {});
+    bool removePlatform(QStringView platform, QStringView parentCategory = {});
+    bool removePlaylist(const QUuid& playlistId, QStringView parentCategory = {});
+
 
     const QList<Parent>& parents() const;
 
