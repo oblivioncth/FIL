@@ -75,7 +75,7 @@ private:
     // Other trackers
     Qx::FreeIndexTracker mLbDatabaseIdTracker = Qx::FreeIndexTracker(0, LB_DB_ID_TRACKER_MAX, {});
     QHash<QUuid, PlaylistGame::EntryDetails> mPlaylistGameDetailsCache;
-    QHash<QString, QUuid> mModifiedPlaylistIds;
+    QSet<QUuid> mModifiedPlaylistIds;
     // TODO: Even though the playlist game IDs don't seem to matter, at some point for for completeness scan all playlists when hooking an install to get the
     // full list of in use IDs
 

@@ -213,8 +213,9 @@ std::shared_ptr<Fe::PlaylistDoc::Writer> Install::preparePlaylistDocCommit(const
     // Work with native type
     auto lbPlaylistDoc = static_cast<PlaylistDoc*>(playlistDoc.get());
 
-    // Store playlist ID
-    mModifiedPlaylistIds[lbPlaylistDoc->playlistHeader()->name()] = lbPlaylistDoc->playlistHeader()->id();
+    // Store playlist ID (if playlist will remain
+    if(!playlistDoc->isEmpty())
+        mModifiedPlaylistIds.insert(lbPlaylistDoc->playlistHeader()->id());
 
     // Construct doc writer
     std::shared_ptr<Fe::PlaylistDoc::Writer> docWriter = std::make_shared<PlaylistDoc::Writer>(lbPlaylistDoc);
@@ -404,15 +405,13 @@ Qx::Error Install::postImageProcessing()
 Qx::Error Install::postPlaylistsImport()
 {
     // Add playlists to Parents.xml
-    const QList<QString> affectedPlaylists = modifiedPlaylists();
-    for(const QString& pn :affectedPlaylists)
+    for(const QUuid& pId : qAsConst(mModifiedPlaylistIds))
     {
-        QUuid playlistId = mModifiedPlaylistIds.value(pn);
-        if(!mParents->containsPlaylistUnderCategory(playlistId, PLATFORM_CATEGORY))
+        if(!mParents->containsPlaylistUnderCategory(pId, PLATFORM_CATEGORY))
         {
             Lb::Parent::Builder pb;
             pb.wParentPlatformCategoryName(PLATFORM_CATEGORY);
-            pb.wPlaylistId(playlistId);
+            pb.wPlaylistId(pId);
             mParents->addParent(pb.build());
         }
     }
