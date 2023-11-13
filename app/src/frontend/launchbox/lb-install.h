@@ -42,8 +42,14 @@ public:
     // Files
     static inline const QString XML_EXT = u"xml"_s;
 
+    // Parents.xml
+    static inline const QString MAIN_PLATFORM_CATEGORY = u"Flashpoint"_s;
+    static inline const QString PLATFORMS_PLATFORM_CATEGORY = u"Flashpoint Platforms"_s;
+    static inline const QString PLATFORMS_PLATFORM_CATEGORY_NESTED = u"Platforms"_s;
+    static inline const QString PLAYLISTS_PLATFORM_CATEGORY = u"Flashpoint Playlists"_s;
+    static inline const QString PLAYLISTS_PLATFORM_CATEGORY_NESTED = u"Playlists"_s;
+
     // Other
-    static inline const QString PLATFORM_CATEGORY = u"Flashpoint"_s;
     static const quint64 LB_DB_ID_TRACKER_MAX = 100000;
 
     // Support
