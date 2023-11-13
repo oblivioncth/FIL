@@ -331,7 +331,7 @@ PlaylistDoc::PlaylistDoc(Install* const parent, const QString& docPath, QString 
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-DataDoc::Type PlaylistDoc::type() const { return Type::Platform; }
+DataDoc::Type PlaylistDoc::type() const { return Type::Playlist; }
 
 //===============================================================================================================
 // PlaylistDoc::Reader

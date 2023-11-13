@@ -720,7 +720,7 @@ void PlaylistDoc::Reader::parsePlaylistGame()
         existingPlaylistGame->setLBDatabaseId(optIdx.value_or(0));
     }
     else
-        static_cast<PlaylistDoc*>(mTargetDocument)->mLaunchBoxDatabaseIdTracker->release(existingPlaylistGame->lbDatabaseId());
+        static_cast<PlaylistDoc*>(mTargetDocument)->mLaunchBoxDatabaseIdTracker->reserve(existingPlaylistGame->lbDatabaseId());
 
     // Add to document
     targetDocExistingPlaylistGames()[existingPlaylistGame->gameId()] = existingPlaylistGame;
