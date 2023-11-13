@@ -126,6 +126,7 @@ void InstallFoundation::softReset()
 {
     mRevertableFilePaths.clear();
     mModifiedDocuments.clear();
+    mDeletedDocuments.clear();
     mLeasedDocuments.clear();
     mImportDetails.reset();
 }
@@ -170,13 +171,16 @@ Fe::DocHandlingError InstallFoundation::checkoutDataDocument(DataDoc* docToOpen,
 
 Fe::DocHandlingError InstallFoundation::commitDataDocument(DataDoc* docToSave, std::shared_ptr<DataDoc::Writer> docWriter)
 {
-    // Create backup and add to modified list if required
-    if(!mModifiedDocuments.contains(docToSave->identifier()))
+    DataDoc::Identifier id = docToSave->identifier();
+    bool wasDeleted = mDeletedDocuments.contains(id);
+    bool wasModified = mDeletedDocuments.contains(id);
+    bool wasUntouched = !wasDeleted && !wasModified;
+
+    // Handle backup/revert prep
+    if(wasUntouched)
     {
-        // Insert
         QString docPath = docToSave->path();
-        mModifiedDocuments.insert(docToSave->identifier());
-        mRevertableFilePaths.append(docPath);
+        mRevertableFilePaths.append(docPath); // Correctly handles if doc ends up deleted
 
         // Backup
         if(QFile::exists(docPath))
@@ -190,23 +194,35 @@ Fe::DocHandlingError InstallFoundation::commitDataDocument(DataDoc* docToSave, s
             }
 
             if(!QFile::copy(docPath, backupPath))
-                return Fe::DocHandlingError(*docToSave, Fe::DocHandlingError::CantRemoveBackup);
+                return Fe::DocHandlingError(*docToSave, Fe::DocHandlingError::CantCreateBackup);
         }
     }
 
-    // Write to file if it contains content
-    Fe::DocHandlingError saveWriteError;
-    if(!docToSave->isEmpty())
-        saveWriteError = docWriter->writeOutOf();
+    // Error State
+    Fe::DocHandlingError commitError;
 
-    // Set document permissions
-    allowUserWriteOnFile(docToSave->path());
+    // Handle modification
+    if(!docToSave->isEmpty())
+    {
+        mModifiedDocuments.insert(id);
+        if(wasDeleted)
+            mDeletedDocuments.remove(id);
+
+        commitError = docWriter->writeOutOf();
+        allowUserWriteOnFile(docToSave->path());
+    }
+    else // Handle deletion
+    {
+        mDeletedDocuments.insert(id);
+        if(wasModified)
+            mModifiedDocuments.remove(id);
+    }
 
     // Remove handle reservation
     mLeasedDocuments.remove(docToSave->identifier());
 
     // Return write status and let document ptr auto delete
-    return saveWriteError;
+    return commitError;
 }
 
 QList<QString> InstallFoundation::modifiedPlatforms() const { return modifiedDataDocs(DataDoc::Type::Platform); }
