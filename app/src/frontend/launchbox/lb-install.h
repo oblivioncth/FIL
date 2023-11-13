@@ -88,7 +88,6 @@ private:
     // Install management
     void nullify() override;
     Qx::Error populateExistingDocs() override;
-    QString translateDocName(const QString& originalName, Fe::DataDoc::Type type) const override;
 
     // Info
     QString executableSubPath() const override;
@@ -116,6 +115,7 @@ public:
     // Info
     QString name() const override;
     QList<Fe::ImageMode> preferredImageModeOrder() const override;
+    QString translateDocName(const QString& originalName, Fe::DataDoc::Type type) const override;
 
     // Import stage notifier hooks
     Qx::Error prePlatformsImport() override;

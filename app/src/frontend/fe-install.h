@@ -62,7 +62,6 @@ protected:
     // Install management
     virtual void nullify() override;
     virtual Qx::Error populateExistingDocs() override = 0;
-    virtual QString translateDocName(const QString& originalName, DataDoc::Type type) const override;
 
     // Doc Handling
     virtual std::shared_ptr<PlatformDoc::Reader> preparePlatformDocCheckout(std::unique_ptr<PlatformDoc>& platformDoc, const QString& translatedName) = 0;
@@ -94,6 +93,7 @@ public:
     virtual Qx::Error postPlaylistsImport();
 
     // Doc handling
+    virtual QString translateDocName(const QString& originalName, DataDoc::Type type) const override;
     Fe::DocHandlingError checkoutPlatformDoc(std::unique_ptr<PlatformDoc>& returnBuffer, const QString& name);
     Fe::DocHandlingError checkoutPlaylistDoc(std::unique_ptr<PlaylistDoc>& returnBuffer, const QString& name);
     Fe::DocHandlingError commitPlatformDoc(std::unique_ptr<PlatformDoc> platformDoc);

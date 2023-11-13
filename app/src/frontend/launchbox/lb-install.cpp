@@ -96,20 +96,6 @@ Qx::Error Install::populateExistingDocs()
     return Qx::Error();
 }
 
-QString Install::translateDocName(const QString& originalName, Fe::DataDoc::Type type) const
-{
-    Q_UNUSED(type);
-
-    // Perform general kosherization
-    QString translatedName = Qx::kosherizeFileName(originalName);
-
-    // LB specific changes
-    translatedName.replace('#','_');
-    translatedName.replace('\'','_');
-
-    return translatedName;
-}
-
 QString Install::executableSubPath() const { return MAIN_EXE_PATH; }
 
 QString Install::imageDestinationPath(Fp::ImageType imageType, const Fe::Game* game) const
@@ -315,6 +301,20 @@ void Install::softReset()
 
 QString Install::name() const { return NAME; }
 QList<Fe::ImageMode> Install::preferredImageModeOrder() const { return IMAGE_MODE_ORDER; }
+
+QString Install::translateDocName(const QString& originalName, Fe::DataDoc::Type type) const
+{
+    Q_UNUSED(type);
+
+    // Perform general kosherization
+    QString translatedName = Qx::kosherizeFileName(originalName);
+
+    // LB specific changes
+    translatedName.replace('#','_');
+    translatedName.replace('\'','_');
+
+    return translatedName;
+}
 
 Qx::Error Install::prePlatformsImport()
 {
