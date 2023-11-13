@@ -649,7 +649,14 @@ ImportWorker::ImportResult ImportWorker::processIcons(Qx::Error& errorReport, co
             if(icon.isNull())
                 continue;
 
-            QString filename = p.title() + ".png";
+            /* NOTE: This is LaunchBox specific since it's currently the only FE to support icons. If this changes a general solution is needed
+             * Like allowing the frontend to filter out specific icons
+             *
+             * Don't copy the favorites icon as LB already has its own.
+             */
+            if(p.title().trimmed() == u"Favorites"_s)
+                continue;
+
             QString source = iconInflateDir.filePath(filename);
             QString dest = pdd.absoluteFilePath(filename);
 
