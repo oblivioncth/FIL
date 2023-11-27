@@ -118,20 +118,6 @@ Qx::Error Install::populateExistingDocs()
     return Qx::Error();
 }
 
-QString Install::translateDocName(const QString& originalName, Fe::DataDoc::Type type) const
-{
-    // Perform general kosherization
-    QString translatedName = Qx::kosherizeFileName(originalName);
-
-    // Prefix platforms/playlists
-    if(type == Fe::DataDoc::Type::Platform)
-        translatedName.prepend(PLATFORM_TAG_PREFIX);
-    else if(type == Fe::DataDoc::Type::Playlist)
-        translatedName.prepend(PLAYLIST_TAG_PREFIX);
-
-    return translatedName;
-}
-
 QString Install::executableSubPath() const { return MAIN_EXE_PATH; }
 
 QString Install::imageDestinationPath(Fp::ImageType imageType, const Fe::Game* game) const
@@ -348,6 +334,20 @@ QString Install::versionString() const
 
     // Can't determine version
     return u"UNKNOWN VERSION"_s;
+}
+
+QString Install::translateDocName(const QString& originalName, Fe::DataDoc::Type type) const
+{
+    // Perform general kosherization
+    QString translatedName = Qx::kosherizeFileName(originalName);
+
+    // Prefix platforms/playlists
+    if(type == Fe::DataDoc::Type::Platform)
+        translatedName.prepend(PLATFORM_TAG_PREFIX);
+    else if(type == Fe::DataDoc::Type::Playlist)
+        translatedName.prepend(PLAYLIST_TAG_PREFIX);
+
+    return translatedName;
 }
 
 Qx::Error Install::preImport(const ImportDetails& details)

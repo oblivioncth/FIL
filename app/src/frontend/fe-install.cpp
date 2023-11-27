@@ -51,11 +51,6 @@ void Install::nullify()
     InstallFoundation::nullify();
 }
 
-QString Install::translateDocName(const QString& originalName, DataDoc::Type type) const
-{
-    // Redundant with base version, but here to make it clear its part of the main Install interface
-    return InstallFoundation::translateDocName(originalName, type);
-}
 
 //Public:
 void Install::softReset()
@@ -105,6 +100,12 @@ Qx::Error Install::preImageProcessing(QList<ImageMap>& workerTransfers, const Im
 Qx::Error Install::postImageProcessing() { return {}; }
 Qx::Error Install::prePlaylistsImport() { return {}; }
 Qx::Error Install::postPlaylistsImport() { return {}; }
+
+QString Install::translateDocName(const QString& originalName, DataDoc::Type type) const
+{
+    // Redundant with base version, but here to make it clear its part of the main Install interface
+    return InstallFoundation::translateDocName(originalName, type);
+}
 
 Fe::DocHandlingError Install::checkoutPlatformDoc(std::unique_ptr<PlatformDoc>& returnBuffer, const QString& name)
 {

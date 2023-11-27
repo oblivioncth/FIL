@@ -720,7 +720,7 @@ void PlaylistDoc::Reader::parsePlaylistGame()
         existingPlaylistGame->setLBDatabaseId(optIdx.value_or(0));
     }
     else
-        static_cast<PlaylistDoc*>(mTargetDocument)->mLaunchBoxDatabaseIdTracker->release(existingPlaylistGame->lbDatabaseId());
+        static_cast<PlaylistDoc*>(mTargetDocument)->mLaunchBoxDatabaseIdTracker->reserve(existingPlaylistGame->lbDatabaseId());
 
     // Add to document
     targetDocExistingPlaylistGames()[existingPlaylistGame->gameId()] = existingPlaylistGame;
@@ -1090,35 +1090,63 @@ ParentsDoc::ParentsDoc(Install* const parent, const QString& xmlPath, const DocK
 //Private:
 Fe::DataDoc::Type ParentsDoc::type() const { return Fe::DataDoc::Type::Config; }
 
+bool ParentsDoc::removeIfPresent(qsizetype idx)
+{
+    if(idx != -1)
+    {
+        mParents.remove(idx);
+        return true;
+    }
+
+    return false;
+}
+
+qsizetype ParentsDoc::findPlatformCategory(QStringView platformCategory, QStringView parentCategory) const
+{
+    for(auto i = 0; i < mParents.size(); i++)
+    {
+        auto p = mParents.at(i);
+        if(p.platformCategoryName() == platformCategory && p.parentPlatformCategoryName() == parentCategory)
+            return i;
+    }
+
+    return -1;
+}
+
+qsizetype ParentsDoc::findPlatform(QStringView platform, QStringView parentCategory) const
+{
+    for(auto i = 0; i < mParents.size(); i++)
+    {
+        auto p = mParents.at(i);
+        if(p.platformName() == platform && p.parentPlatformCategoryName() == parentCategory)
+            return i;
+    }
+
+    return -1;
+}
+
+qsizetype ParentsDoc::findPlaylist(const QUuid& playlistId, QStringView parentCategory) const
+{
+    for(auto i = 0; i < mParents.size(); i++)
+    {
+        auto p = mParents.at(i);
+        if(p.playlistId() == playlistId && p.parentPlatformCategoryName() == parentCategory)
+            return i;
+    }
+
+    return -1;
+}
+
 //Public:
 bool ParentsDoc::isEmpty() const { return mParents.isEmpty(); }
 
-bool ParentsDoc::containsPlatformCategory(QStringView platformCategory)
-{
-    for(const Parent& p : mParents)
-        if(p.platformCategoryName() == platformCategory)
-            return true;
+bool ParentsDoc::containsPlatformCategory(QStringView platformCategory, QStringView parentCategory) const { return findPlatformCategory(platformCategory, parentCategory) != -1; }
+bool ParentsDoc::containsPlatform(QStringView platform, QStringView parentCategory) const { return findPlatform(platform, parentCategory) != -1; }
+bool ParentsDoc::containsPlaylist(const QUuid& playlistId, QStringView parentCategory) const { return findPlaylist(playlistId, parentCategory) != -1; }
 
-    return false;
-}
-
-bool ParentsDoc::containsPlatformUnderCategory(QStringView platform, QStringView platformCategory)
-{
-    for(const Parent& p : mParents)
-        if(p.parentPlatformCategoryName() == platformCategory && p.platformName() == platform)
-            return true;
-
-    return false;
-}
-
-bool ParentsDoc::containsPlaylistUnderCategory(const QUuid& playlistId, QStringView platformCategory)
-{
-    for(const Parent& p : mParents)
-        if(p.parentPlatformCategoryName() == platformCategory && p.playlistId() == playlistId)
-            return true;
-
-    return false;
-}
+bool ParentsDoc::removePlatformCategory(QStringView platformCategory, QStringView parentCategory) { return removeIfPresent(findPlatformCategory(platformCategory, parentCategory)); }
+bool ParentsDoc::removePlatform(QStringView platform, QStringView parentCategory) { return removeIfPresent(findPlatform(platform, parentCategory)); }
+bool ParentsDoc::removePlaylist(const QUuid& playlistId, QStringView parentCategory) { return removeIfPresent(findPlaylist(playlistId, parentCategory)); }
 
 const QList<Parent>& ParentsDoc::parents() const { return mParents; }
 

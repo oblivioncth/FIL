@@ -96,20 +96,6 @@ Qx::Error Install::populateExistingDocs()
     return Qx::Error();
 }
 
-QString Install::translateDocName(const QString& originalName, Fe::DataDoc::Type type) const
-{
-    Q_UNUSED(type);
-
-    // Perform general kosherization
-    QString translatedName = Qx::kosherizeFileName(originalName);
-
-    // LB specific changes
-    translatedName.replace('#','_');
-    translatedName.replace('\'','_');
-
-    return translatedName;
-}
-
 QString Install::executableSubPath() const { return MAIN_EXE_PATH; }
 
 QString Install::imageDestinationPath(Fp::ImageType imageType, const Fe::Game* game) const
@@ -213,8 +199,9 @@ std::shared_ptr<Fe::PlaylistDoc::Writer> Install::preparePlaylistDocCommit(const
     // Work with native type
     auto lbPlaylistDoc = static_cast<PlaylistDoc*>(playlistDoc.get());
 
-    // Store playlist ID
-    mModifiedPlaylistIds[lbPlaylistDoc->playlistHeader()->name()] = lbPlaylistDoc->playlistHeader()->id();
+    // Store playlist ID (if playlist will remain
+    if(!playlistDoc->isEmpty())
+        mModifiedPlaylistIds.insert(lbPlaylistDoc->playlistHeader()->id());
 
     // Construct doc writer
     std::shared_ptr<Fe::PlaylistDoc::Writer> docWriter = std::make_shared<PlaylistDoc::Writer>(lbPlaylistDoc);
@@ -307,13 +294,27 @@ void Install::softReset()
 {
     Fe::Install::softReset();
 
-    mLbDatabaseIdTracker = Qx::FreeIndexTracker(0, -1);
+    mLbDatabaseIdTracker = Qx::FreeIndexTracker(0, LB_DB_ID_TRACKER_MAX);
     mPlaylistGameDetailsCache.clear();
     mWorkerImageJobs.clear();
 }
 
 QString Install::name() const { return NAME; }
 QList<Fe::ImageMode> Install::preferredImageModeOrder() const { return IMAGE_MODE_ORDER; }
+
+QString Install::translateDocName(const QString& originalName, Fe::DataDoc::Type type) const
+{
+    Q_UNUSED(type);
+
+    // Perform general kosherization
+    QString translatedName = Qx::kosherizeFileName(originalName);
+
+    // LB specific changes
+    translatedName.replace('#','_');
+    translatedName.replace('\'','_');
+
+    return translatedName;
+}
 
 Qx::Error Install::prePlatformsImport()
 {
@@ -333,17 +334,39 @@ Qx::Error Install::postPlatformsImport()
     if(Fe::DocHandlingError dhe = checkoutParentsDoc(mParents); dhe.isValid())
         return dhe;
 
-    // Add PlatformCategory to Platforms.xml
+    // Add PlatformCategories to Platforms.xml
     Lb::PlatformCategory::Builder pcb;
-    pcb.wName(PLATFORM_CATEGORY);
-    pcb.wNestedName(PLATFORM_CATEGORY);
+    pcb.wName(MAIN_PLATFORM_CATEGORY);
+    pcb.wNestedName(MAIN_PLATFORM_CATEGORY);
+    mPlatformsConfig->addPlatformCategory(pcb.build());
+    pcb.wName(PLATFORMS_PLATFORM_CATEGORY);
+    pcb.wNestedName(PLATFORMS_PLATFORM_CATEGORY_NESTED);
+    mPlatformsConfig->addPlatformCategory(pcb.build());
+    pcb.wName(PLAYLISTS_PLATFORM_CATEGORY);
+    pcb.wNestedName(PLAYLISTS_PLATFORM_CATEGORY_NESTED);
     mPlatformsConfig->addPlatformCategory(pcb.build());
 
-    // Add ParentCategory to Parents.xml
-    if(!mParents->containsPlatformCategory(PLATFORM_CATEGORY))
+    // Add categories to Parents.xml
+    if(!mParents->containsPlatformCategory(MAIN_PLATFORM_CATEGORY))
     {
         Lb::Parent::Builder pb;
-        pb.wPlatformCategoryName(PLATFORM_CATEGORY);
+        pb.wPlatformCategoryName(MAIN_PLATFORM_CATEGORY);
+        mParents->addParent(pb.build());
+    }
+
+    if(!mParents->containsPlatformCategory(PLATFORMS_PLATFORM_CATEGORY, MAIN_PLATFORM_CATEGORY))
+    {
+        Lb::Parent::Builder pb;
+        pb.wPlatformCategoryName(PLATFORMS_PLATFORM_CATEGORY);
+        pb.wParentPlatformCategoryName(MAIN_PLATFORM_CATEGORY);
+        mParents->addParent(pb.build());
+    }
+
+    if(!mParents->containsPlatformCategory(PLAYLISTS_PLATFORM_CATEGORY, MAIN_PLATFORM_CATEGORY))
+    {
+        Lb::Parent::Builder pb;
+        pb.wPlatformCategoryName(PLAYLISTS_PLATFORM_CATEGORY);
+        pb.wParentPlatformCategoryName(MAIN_PLATFORM_CATEGORY);
         mParents->addParent(pb.build());
     }
 
@@ -355,13 +378,16 @@ Qx::Error Install::postPlatformsImport()
         pb.wName(pn);
         mPlatformsConfig->addPlatform(pb.build());
 
-        if(!mParents->containsPlatformUnderCategory(pn, PLATFORM_CATEGORY))
+        if(!mParents->containsPlatform(pn, PLATFORMS_PLATFORM_CATEGORY))
         {
             Lb::Parent::Builder pb;
-            pb.wParentPlatformCategoryName(PLATFORM_CATEGORY);
+            pb.wParentPlatformCategoryName(PLATFORMS_PLATFORM_CATEGORY);
             pb.wPlatformName(pn);
             mParents->addParent(pb.build());
         }
+
+        // Remove old categorization directly under top level category if present
+        mParents->removePlatform(pn, MAIN_PLATFORM_CATEGORY);
     }
 
     return Qx::Error();
@@ -404,17 +430,18 @@ Qx::Error Install::postImageProcessing()
 Qx::Error Install::postPlaylistsImport()
 {
     // Add playlists to Parents.xml
-    const QList<QString> affectedPlaylists = modifiedPlaylists();
-    for(const QString& pn :affectedPlaylists)
+    for(const QUuid& pId : qAsConst(mModifiedPlaylistIds))
     {
-        QUuid playlistId = mModifiedPlaylistIds.value(pn);
-        if(!mParents->containsPlaylistUnderCategory(playlistId, PLATFORM_CATEGORY))
+        if(!mParents->containsPlaylist(pId, PLAYLISTS_PLATFORM_CATEGORY))
         {
             Lb::Parent::Builder pb;
-            pb.wParentPlatformCategoryName(PLATFORM_CATEGORY);
-            pb.wPlaylistId(playlistId);
+            pb.wParentPlatformCategoryName(PLAYLISTS_PLATFORM_CATEGORY);
+            pb.wPlaylistId(pId);
             mParents->addParent(pb.build());
         }
+
+        // Remove old categorization directly under top level category if present
+        mParents->removePlaylist(pId, MAIN_PLATFORM_CATEGORY);
     }
 
     // Close Parents.xml

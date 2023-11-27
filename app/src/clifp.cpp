@@ -13,7 +13,7 @@
 
 //-Class Functions--------------------------------------------------------------------------------------------
 //Public:
-QString CLIFp::standardCLIFpPath(const Fp::Install& fpInstall) { return fpInstall.fullPath() + '/' + EXE_NAME; }
+QString CLIFp::standardCLIFpPath(const Fp::Install& fpInstall) { return fpInstall.dir().absoluteFilePath(EXE_NAME); }
 
 bool CLIFp::hasCLIFp(const Fp::Install& fpInstall)
 {

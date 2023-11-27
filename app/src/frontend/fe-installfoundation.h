@@ -108,6 +108,7 @@ private:
     // Document tracking
     QSet<DataDoc::Identifier> mExistingDocuments;
     QSet<DataDoc::Identifier> mModifiedDocuments;
+    QSet<DataDoc::Identifier> mDeletedDocuments;
     QSet<DataDoc::Identifier> mLeasedDocuments;
 
     // Backup/Deletion tracking
