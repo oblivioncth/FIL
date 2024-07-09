@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Download built static FIL artifact (Windows)
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         path: ${{ env.artifacts_path }}
     - name: Zip up release artifacts
