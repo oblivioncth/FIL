@@ -17,12 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        lib_linkage: [static] #[static, shared] shared is broken for since CLIFp has to be static
-        include:
-          #- lib_linkage: shared
-          #  cmake_bsl: ON
-          - lib_linkage: static
-            cmake_bsl: OFF
+        linkage: [{type: static, cmake_bsl: OFF}] #shared is broken for since CLIFp has to be static
     runs-on: windows-latest
     env:
       vs_dir: C:/Program Files/Microsoft Visual Studio/2022/Enterprise
@@ -40,7 +35,7 @@ jobs:
         version: 6.5.1
         os: windows
         compiler: msvc2022
-        linkage: ${{ matrix.lib_linkage }}
+        linkage: ${{ matrix.linkage.type }}
         path: ${{ env.qt_install_dir }}
         credentials: ${{ secrets.qt_ffynnon_cred }}
     - name: Checkout FIL
@@ -55,7 +50,7 @@ jobs:
         echo "Setup C++ Build Environment..."
         CALL "${{ env.vs_dir }}\Common7\Tools\VsDevCmd.bat" -arch=amd64
         echo "Configure CMake using Qt wrapper..."
-        CALL "${{ env.qt_cmake }}" -G "${{ env.cmake_gen }}" -S "${{ env.fil_src_dir}}" -B "${{ env.fil_build_dir }}" -D BUILD_SHARED_LIBS=${{ matrix.cmake_bsl }}
+        CALL "${{ env.qt_cmake }}" -G "${{ env.cmake_gen }}" -S "${{ env.fil_src_dir}}" -B "${{ env.fil_build_dir }}" -D BUILD_SHARED_LIBS=${{ matrix.linkage.cmake_bsl }}
         echo "Changing to build directory..."
         cd "%fil_build_dir%"
         echo "Building FIL release..."
