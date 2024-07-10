@@ -40,6 +40,7 @@ enable_language("RC")
 
 set(FIL_QT_COMPONENTS
     Core
+    Core5Compat
     Gui
     Network
     Widgets
