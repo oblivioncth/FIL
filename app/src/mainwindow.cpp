@@ -202,7 +202,7 @@ void MainWindow::initializeFrontendHelpActions()
 
 bool MainWindow::installMatchesTargetSeries(const Fp::Install& fpInstall)
 {
-    Qx::VersionNumber fpVersion = fpInstall.version();
+    Qx::VersionNumber fpVersion = fpInstall.versionInfo()->version();
     return TARGET_FP_VERSION_PREFIX.isPrefixOf(fpVersion) ||
            TARGET_FP_VERSION_PREFIX.normalized() == fpVersion; // Accounts for if FP doesn't use a trailing zero for major releases
 }
@@ -239,7 +239,7 @@ void MainWindow::validateInstall(const QString& installPath, InstallType install
             mFlashpointInstall = std::make_shared<Fp::Install>(installPath, true);
             if(mFlashpointInstall->isValid())
             {
-                ui->label_flashpointVersion->setText(mFlashpointInstall->nameVersionString());
+                ui->label_flashpointVersion->setText(mFlashpointInstall->versionInfo()->fullString());
                 if(installMatchesTargetSeries(*mFlashpointInstall))
                     ui->icon_flashpoint_install_status->setPixmap(QPixmap(u":/ui/Valid_Install.png"_s));
                 else

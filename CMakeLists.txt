@@ -13,14 +13,14 @@ project(FIL
 
 # Get helper scripts
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FetchOBCMake.cmake)
-fetch_ob_cmake("v0.3.4")
+fetch_ob_cmake("2356fb3e6f2d5710045cd9dbe66187856418d8ca")
 
 # Initialize project according to standard rules
 include(OB/Project)
 ob_standard_project_setup()
 
 # Additional Project Variables
-set(TARGET_FP_VERSION_PREFIX 12.1)
+set(TARGET_FP_VERSION_PREFIX 13.0)
 
 # Configuration options
 # Handled by fetched libs, but set this here formally since they aren't part of the main project
@@ -40,6 +40,7 @@ enable_language("RC")
 
 set(FIL_QT_COMPONENTS
     Core
+    Core5Compat
     Gui
     Network
     Widgets
@@ -64,18 +65,18 @@ set(FIL_QX_COMPONENTS
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "v0.5.6"
+    REF "5dc3b3440442408456a867eb901185e5a281d4af"
     COMPONENTS
         ${FIL_QX_COMPONENTS}
 )
 
 # Fetch libfp (build and import from source)
 include(OB/Fetchlibfp)
-ob_fetch_libfp("v0.5.2")
+ob_fetch_libfp("086051bca750adac3178a86fc47b61f1770d8b40")
 
 # Fetch CLIFp (build and import from source)
 include(OB/FetchCLIFp)
-ob_fetch_clifp("v0.9.10")
+ob_fetch_clifp("2718cba5adeb98e65f8d9c5f24ee484e94f9a8b5")
 
 # TODO: The shared build of this is essentially useless as only the CLIFp executable
 # is deployed, which only works if it's statically linked. There isn't a simple way
