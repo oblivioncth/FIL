@@ -312,6 +312,7 @@ QString Install::translateDocName(const QString& originalName, Fe::DataDoc::Type
     // LB specific changes
     translatedName.replace('#','_');
     translatedName.replace('\'','_');
+    translatedName.replace('-','_');
 
     return translatedName;
 }
