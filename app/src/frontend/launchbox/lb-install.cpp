@@ -306,13 +306,26 @@ QString Install::translateDocName(const QString& originalName, Fe::DataDoc::Type
 {
     Q_UNUSED(type);
 
-    // Perform general kosherization
-    QString translatedName = Qx::kosherizeFileName(originalName);
+    /* LB has started doing something strange and annoying...
+     * It appears it might be that it tries to override the filename of playlists with the
+     * internal name (i.e. <Name> within the file), and then applies its own substitution
+     * rules to deal with illegal characters. As such, here we try to do what LB does to avoid
+     * unintended filename changes after an import (since that will lead to mismatches for
+     * icons and futurer imports).
+     *
+     * The replacements needed, and the order of them, will need to be determined on a case-by-case
+     * basis as they come up.
+     */
 
-    // LB specific changes
+    QString translatedName = originalName;
+
+    // LB matched changes (LB might replace all illegal characters with underscores, but these are is known for sure)
+    translatedName.replace(':','_');
     translatedName.replace('#','_');
     translatedName.replace('\'','_');
-    translatedName.replace('-','_');
+
+    // General kosherization
+    translatedName = Qx::kosherizeFileName(translatedName);
 
     return translatedName;
 }
