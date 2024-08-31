@@ -2,7 +2,6 @@
 #include "lb-install.h"
 
 // Standard Library Includes
-#include <filesystem>
 
 // Qt Includes
 #include <QFileInfo>
