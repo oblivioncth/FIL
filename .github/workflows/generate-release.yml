@@ -1,0 +1,50 @@
+name: Generate Release
+on:
+  workflow_run:
+    workflows: Build Project
+    types: completed
+    branches: master
+    
+jobs:
+  create-release-suffix:
+    name: Create Release Name Suffix
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      suffix: ${{ steps.form_suffix.outputs.suffix }}
+    steps:
+    - name: Checkout project
+      uses: actions/checkout@v4
+    - name: Get target FP version
+      id: check_target_fp
+      env:
+        match_start: set\(TARGET_FP_VERSION_PREFIX
+        match_end: \)
+      shell: pwsh
+      run: |
+        $project_lists = Get-Content -Raw CMakeLists.txt
+        if(!($project_lists -match '(?<=${{ env.match_start }})(.*)(?=${{ env.match_end }})')){
+          throw "Could not get target FP version!"
+        }
+        $target_version = "v$($Matches[1].Trim())"
+        echo "fp_version=$target_version" >> $Env:GITHUB_ENV
+    - name: Form suffix
+      id: form_suffix
+      run: |
+        suffix="(Targets FP $fp_version)"
+        echo "suffix=$suffix" >> $GITHUB_OUTPUT
+    
+  generate-release:
+    name: Generate Release
+    needs: create-release-suffix
+    permissions:
+      actions: read
+      contents: write
+      pages: write
+      id-token: write
+    if: github.event.workflow_run.conclusion == 'success'
+    uses: oblivioncth/actions/.github/workflows/generate-cxx-release.yml@v1
+    with:
+        artifacts_run_id: ${{ github.event.workflow_run.id }}
+        name_suffix: ${{ needs.create-release-suffix.outputs.suffix }}
+        
