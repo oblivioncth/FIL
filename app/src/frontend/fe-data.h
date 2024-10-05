@@ -20,12 +20,6 @@
 // Project Includes
 #include "fe-items.h"
 
-/* TODO: Consider making readers/writers child classes of their respective docs (their composition can still be
- * declared outside the doc class by using Doc::Reader{ declarations... }) so that access to the doc's members
- * is the default and the use of "friend" can be significantly reduced. The same can be done for the builders
- * of items (i.e. ::Builder)
- */
-
 /* TODO: Right now all docs that need to be constructed by an install have that install marked as their friend,
  * but they also are using the Passkey Idiom, a key class with a private constructor that they are also friends
  * with, which is is redundant for the purposes of construction. First see if the docs really need to be friends
