@@ -13,7 +13,7 @@ project(FIL
 
 # Get helper scripts
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FetchOBCMake.cmake)
-fetch_ob_cmake("v0.3.5")
+fetch_ob_cmake("v0.3.7.1")
 
 # Initialize project according to standard rules
 include(OB/Project)
@@ -49,8 +49,8 @@ set(FIL_QT_COMPONENTS
 )
 
 # Import Qt
-add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
-find_package(Qt6 REQUIRED COMPONENTS ${FIL_QT_COMPONENTS})
+include(OB/Qt)
+ob_find_package_qt(REQUIRED COMPONENTS ${FIL_QT_COMPONENTS})
 
 # Fetch Qx (build and import from source)
 set(FIL_QX_COMPONENTS
@@ -65,18 +65,18 @@ set(FIL_QX_COMPONENTS
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "v0.5.7"
+    REF "v0.5.8"
     COMPONENTS
         ${FIL_QX_COMPONENTS}
 )
 
 # Fetch libfp (build and import from source)
 include(OB/Fetchlibfp)
-ob_fetch_libfp("v0.5.3")
+ob_fetch_libfp("4d05ae2ea42b08f79431ee81538465ca8a05f8bc")
 
 # Fetch CLIFp (build and import from source)
 include(OB/FetchCLIFp)
-ob_fetch_clifp("v0.9.11")
+ob_fetch_clifp("c7f24555794450251aa090159ff9c936c2027317")
 
 # TODO: The shared build of this is essentially useless as only the CLIFp executable
 # is deployed, which only works if it's statically linked. There isn't a simple way
