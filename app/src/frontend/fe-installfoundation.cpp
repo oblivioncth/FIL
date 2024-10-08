@@ -226,15 +226,11 @@ Fe::DocHandlingError InstallFoundation::commitDataDocument(DataDoc* docToSave, s
 }
 
 QList<QString> InstallFoundation::modifiedPlatforms() const { return modifiedDataDocs(DataDoc::Type::Platform); }
-
 QList<QString> InstallFoundation::modifiedPlaylists() const { return modifiedDataDocs(DataDoc::Type::Playlist);}
 
 //Public:
 bool InstallFoundation::isValid() const { return mValid; }
 QString InstallFoundation::path() const { return mRootDirectory.absolutePath(); }
-
-QString InstallFoundation::executableName() const { return QFileInfo(executableSubPath()).fileName(); }
-QString InstallFoundation::executablePath() const { return mRootDirectory.absoluteFilePath(executableSubPath()); }
 
 Qx::Error InstallFoundation::refreshExistingDocs(bool* changed)
 {

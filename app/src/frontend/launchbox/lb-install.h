@@ -70,6 +70,7 @@ private:
     QDir mPlatformCategoryIconsDirectory;
     QDir mPlaylistIconsDirectory;
     QDir mCoreDirectory;
+    QFileInfo mExeFile;
 
     // Image transfers for import worker
     QList<ImageMap> mWorkerImageJobs;
@@ -95,9 +96,6 @@ private:
     void nullify() override;
     Qx::Error populateExistingDocs() override;
 
-    // Info
-    QString executableSubPath() const override;
-
     // Image Processing
     QString imageDestinationPath(Fp::ImageType imageType, const Fe::Game* game) const;
     void editBulkImageReferences(const Fe::ImageSources& imageSources);
@@ -121,6 +119,8 @@ public:
     // Info
     QString name() const override;
     QList<Fe::ImageMode> preferredImageModeOrder() const override;
+    bool isRunning() const override;
+    QString versionString() const override;
     QString translateDocName(const QString& originalName, Fe::DataDoc::Type type) const override;
 
     // Import stage notifier hooks
