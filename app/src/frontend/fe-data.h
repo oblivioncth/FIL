@@ -7,6 +7,7 @@
 
 // Qt Includes
 #include <QFile>
+#include <QXmlStreamReader>
 
 // Qx Includes
 #include <qx/core/qx-error.h>
@@ -561,6 +562,55 @@ class BasicPlaylistDoc::Writer : public PlaylistDoc::Writer
 //-Constructor-------------------------------------------------------------------------------------------------------
 protected:
     Writer(DataDoc* sourceDoc);
+};
+
+/*
+ * Not used by base implementation, but useful for multiple frontends
+ */
+class XmlDocReader : public virtual Fe::DataDoc::Reader
+{
+//-Instance Variables--------------------------------------------------------------------------------------------------
+protected:
+    QFile mXmlFile;
+    QXmlStreamReader mStreamReader;
+    QString mRootElement;
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+public:
+    XmlDocReader(Fe::DataDoc* targetDoc, const QString& root);
+
+//-Instance Functions-------------------------------------------------------------------------------------------------
+private:
+    virtual Fe::DocHandlingError readTargetDoc() = 0;
+
+protected:
+    Fe::DocHandlingError streamStatus() const;
+
+public:
+    Fe::DocHandlingError readInto() override;
+};
+
+class XmlDocWriter : public virtual Fe::DataDoc::Writer
+{
+//-Instance Variables--------------------------------------------------------------------------------------------------
+protected:
+    QFile mXmlFile;
+    QXmlStreamWriter mStreamWriter;
+    QString mRootElement;
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+public:
+    XmlDocWriter(Fe::DataDoc* sourceDoc, const QString& root);
+
+//-Instance Functions-------------------------------------------------------------------------------------------------
+protected:
+    virtual bool writeSourceDoc() = 0;
+    void writeCleanTextElement(const QString& qualifiedName, const QString& text);
+    void writeOtherFields(const QHash<QString, QString>& otherFields);
+    Fe::DocHandlingError streamStatus() const;
+
+public:
+    Fe::DocHandlingError writeOutOf() override;
 };
 
 }

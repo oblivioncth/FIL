@@ -4,10 +4,6 @@
 // Standard Library Includes
 #include <memory>
 
-// Qx Includes
-#include <qx/xml/qx-xmlstreamreadererror.h>
-#include <qx/xml/qx-common-xml.h>
-
 // Project Includes
 #include "lb-install.h"
 
@@ -125,119 +121,6 @@ const QString ROOT_ELEMENT = u"LaunchBox"_s;
 namespace Lb
 {
 //===============================================================================================================
-// XmlDocReader
-//===============================================================================================================
-
-//-Constructor--------------------------------------------------------------------------------------------------------
-//Public:
-XmlDocReader::XmlDocReader(Fe::DataDoc* targetDoc) :
-    Fe::DataDoc::Reader(targetDoc),
-    mXmlFile(targetDoc->path()),
-    mStreamReader(&mXmlFile)
-{}
-
-//-Instance Functions-------------------------------------------------------------------------------------------------
-//Protected:
-Fe::DocHandlingError XmlDocReader::streamStatus() const
-{
-    if(mStreamReader.hasError())
-    {
-        Qx::XmlStreamReaderError xmlError(mStreamReader);
-        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocReadFailed, xmlError.text());
-    }
-
-    return Fe::DocHandlingError();
-}
-
-//Public:
-Fe::DocHandlingError XmlDocReader::readInto()
-{
-    // Open File
-    if(!mXmlFile.open(QFile::ReadOnly))
-        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocCantOpen, mXmlFile.errorString());
-
-    if(!mStreamReader.readNextStartElement())
-    {
-        Qx::XmlStreamReaderError xmlError(mStreamReader);
-        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocReadFailed, xmlError.text());
-    }
-
-    if(mStreamReader.name() != Xml::ROOT_ELEMENT)
-        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::NotParentDoc);
-
-    return readTargetDoc();
-
-    // File is automatically closed when reader is destroyed...
-}
-
-//===============================================================================================================
-// XmlDocWriter
-//===============================================================================================================
-
-//-Constructor--------------------------------------------------------------------------------------------------------
-//Public:
-XmlDocWriter::XmlDocWriter(Fe::DataDoc* sourceDoc) :
-    Fe::DataDoc::Writer(sourceDoc),
-    mXmlFile(sourceDoc->path()),
-    mStreamWriter(&mXmlFile)
-{}
-
-//-Instance Functions-------------------------------------------------------------------------------------------------
-//Protected:
-void XmlDocWriter::writeCleanTextElement(const QString& qualifiedName, const QString& text)
-{
-    if(text.isEmpty())
-        mStreamWriter.writeEmptyElement(qualifiedName);
-    else
-        mStreamWriter.writeTextElement(qualifiedName, Qx::xmlSanitized(text));
-}
-
-void XmlDocWriter::writeOtherFields(const QHash<QString, QString>& otherFields)
-{
-    for(QHash<QString, QString>::const_iterator i = otherFields.constBegin(); i != otherFields.constEnd(); ++i)
-        writeCleanTextElement(i.key(), i.value());
-}
-
-Fe::DocHandlingError XmlDocWriter::streamStatus() const
-{
-    return mStreamWriter.hasError() ? Fe::DocHandlingError(*mSourceDocument, Fe::DocHandlingError::DocWriteFailed, mStreamWriter.device()->errorString()) :
-                                      Fe::DocHandlingError();
-}
-
-//Public:
-Fe::DocHandlingError XmlDocWriter::writeOutOf()
-{
-    // Open File
-    if(!mXmlFile.open(QFile::WriteOnly | QFile::Truncate)) // Discard previous contents
-        return Fe::DocHandlingError(*mSourceDocument, Fe::DocHandlingError::DocCantSave, mXmlFile.errorString());
-
-    // Enable auto formatting
-    mStreamWriter.setAutoFormatting(true);
-    mStreamWriter.setAutoFormattingIndent(2);
-
-    // Write standard XML header
-    mStreamWriter.writeStartDocument(u"1.0"_s, true);
-
-    // Write main LaunchBox tag
-    mStreamWriter.writeStartElement(Xml::ROOT_ELEMENT);
-
-    // Write main body
-    if(!writeSourceDoc())
-        return streamStatus();
-
-    // Close main LaunchBox tag
-    mStreamWriter.writeEndElement();
-
-    // Finish document
-    mStreamWriter.writeEndDocument();
-
-    // Return null string on success
-    return streamStatus();
-
-    // File is automatically closed when writer is destroyed...
-}
-
-//===============================================================================================================
 // PlatformDoc
 //===============================================================================================================
 
@@ -321,7 +204,7 @@ void PlatformDoc::finalize()
 PlatformDoc::Reader::Reader(PlatformDoc* targetDoc) :
     Fe::DataDoc::Reader(targetDoc),
     Fe::BasicPlatformDoc::Reader(targetDoc),
-    XmlDocReader(targetDoc)
+    Fe::XmlDocReader(targetDoc, Xml::ROOT_ELEMENT)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
@@ -465,7 +348,7 @@ void PlatformDoc::Reader::parseCustomField()
 PlatformDoc::Writer::Writer(PlatformDoc* sourceDoc) :
     Fe::DataDoc::Writer(sourceDoc),
     Fe::BasicPlatformDoc::Writer(sourceDoc),
-    XmlDocWriter(sourceDoc)
+    Fe::XmlDocWriter(sourceDoc, Xml::ROOT_ELEMENT)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
@@ -641,7 +524,7 @@ std::shared_ptr<Fe::PlaylistGame> PlaylistDoc::preparePlaylistGame(const Fp::Pla
 PlaylistDoc::Reader::Reader(PlaylistDoc* targetDoc) :
     Fe::DataDoc::Reader(targetDoc),
     Fe::BasicPlaylistDoc::Reader(targetDoc),
-    XmlDocReader(targetDoc)
+    Fe::XmlDocReader(targetDoc, Xml::ROOT_ELEMENT)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
@@ -735,7 +618,7 @@ void PlaylistDoc::Reader::parsePlaylistGame()
 PlaylistDoc::Writer::Writer(PlaylistDoc* sourceDoc) :
     Fe::DataDoc::Writer(sourceDoc),
     Fe::BasicPlaylistDoc::Writer(sourceDoc),
-    XmlDocWriter(sourceDoc)
+    Fe::XmlDocWriter(sourceDoc, Xml::ROOT_ELEMENT)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
@@ -886,7 +769,7 @@ void PlatformsConfigDoc::finalize()
 //Public:
 PlatformsConfigDoc::Reader::Reader(PlatformsConfigDoc* targetDoc) :
     Fe::DataDoc::Reader(targetDoc),
-    XmlDocReader(targetDoc)
+    Fe::XmlDocReader(targetDoc, Xml::ROOT_ELEMENT)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
@@ -989,7 +872,7 @@ void PlatformsConfigDoc::Reader::parsePlatformCategory()
 //Public:
 PlatformsConfigDoc::Writer::Writer(PlatformsConfigDoc* sourceDoc) :
     Fe::DataDoc::Writer(sourceDoc),
-    XmlDocWriter(sourceDoc)
+    Fe::XmlDocWriter(sourceDoc, Xml::ROOT_ELEMENT)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
@@ -1160,7 +1043,7 @@ void ParentsDoc::addParent(const Parent& parent) { mParents.append(parent); }
 //Public:
 ParentsDoc::Reader::Reader(ParentsDoc* targetDoc) :
     Fe::DataDoc::Reader(targetDoc),
-    XmlDocReader(targetDoc)
+    Fe::XmlDocReader(targetDoc, Xml::ROOT_ELEMENT)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
@@ -1212,7 +1095,7 @@ void ParentsDoc::Reader::parseParent()
 //Public:
 ParentsDoc::Writer::Writer(ParentsDoc* sourceDoc) :
     Fe::DataDoc::Writer(sourceDoc),
-    XmlDocWriter(sourceDoc)
+    Fe::XmlDocWriter(sourceDoc, Xml::ROOT_ELEMENT)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
