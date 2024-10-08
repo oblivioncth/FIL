@@ -1,6 +1,10 @@
 // Unit Include
 #include "fe-data.h"
 
+// Qx Includes
+#include <qx/xml/qx-xmlstreamreadererror.h>
+#include <qx/xml/qx-common-xml.h>
+
 // Project Includes
 #include "fe-install.h"
 
@@ -451,6 +455,121 @@ std::shared_ptr<PlaylistHeader>& BasicPlaylistDoc::Reader::targetDocPlaylistHead
 BasicPlaylistDoc::Writer::Writer(DataDoc* sourceDoc) :
     PlaylistDoc::Writer(sourceDoc)
 {}
+
+//===============================================================================================================
+// XmlDocReader
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Public:
+XmlDocReader::XmlDocReader(Fe::DataDoc* targetDoc, const QString& root) :
+    Fe::DataDoc::Reader(targetDoc),
+    mXmlFile(targetDoc->path()),
+    mStreamReader(&mXmlFile),
+    mRootElement(root)
+{}
+
+//-Instance Functions-------------------------------------------------------------------------------------------------
+//Protected:
+Fe::DocHandlingError XmlDocReader::streamStatus() const
+{
+    if(mStreamReader.hasError())
+    {
+        Qx::XmlStreamReaderError xmlError(mStreamReader);
+        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocReadFailed, xmlError.text());
+    }
+
+    return Fe::DocHandlingError();
+}
+
+//Public:
+Fe::DocHandlingError XmlDocReader::readInto()
+{
+    // Open File
+    if(!mXmlFile.open(QFile::ReadOnly))
+        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocCantOpen, mXmlFile.errorString());
+
+    if(!mStreamReader.readNextStartElement())
+    {
+        Qx::XmlStreamReaderError xmlError(mStreamReader);
+        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::DocReadFailed, xmlError.text());
+    }
+
+    if(mStreamReader.name() != mRootElement)
+        return Fe::DocHandlingError(*mTargetDocument, Fe::DocHandlingError::NotParentDoc);
+
+    return readTargetDoc();
+
+    // File is automatically closed when reader is destroyed...
+}
+
+//===============================================================================================================
+// XmlDocWriter
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Public:
+XmlDocWriter::XmlDocWriter(Fe::DataDoc* sourceDoc, const QString& root) :
+    Fe::DataDoc::Writer(sourceDoc),
+    mXmlFile(sourceDoc->path()),
+    mStreamWriter(&mXmlFile),
+    mRootElement(root)
+{}
+
+//-Instance Functions-------------------------------------------------------------------------------------------------
+//Protected:
+void XmlDocWriter::writeCleanTextElement(const QString& qualifiedName, const QString& text)
+{
+    if(text.isEmpty())
+        mStreamWriter.writeEmptyElement(qualifiedName);
+    else
+        mStreamWriter.writeTextElement(qualifiedName, Qx::xmlSanitized(text));
+}
+
+void XmlDocWriter::writeOtherFields(const QHash<QString, QString>& otherFields)
+{
+    for(QHash<QString, QString>::const_iterator i = otherFields.constBegin(); i != otherFields.constEnd(); ++i)
+        writeCleanTextElement(i.key(), i.value());
+}
+
+Fe::DocHandlingError XmlDocWriter::streamStatus() const
+{
+    return mStreamWriter.hasError() ? Fe::DocHandlingError(*mSourceDocument, Fe::DocHandlingError::DocWriteFailed, mStreamWriter.device()->errorString()) :
+               Fe::DocHandlingError();
+}
+
+//Public:
+Fe::DocHandlingError XmlDocWriter::writeOutOf()
+{
+    // Open File
+    if(!mXmlFile.open(QFile::WriteOnly | QFile::Truncate)) // Discard previous contents
+        return Fe::DocHandlingError(*mSourceDocument, Fe::DocHandlingError::DocCantSave, mXmlFile.errorString());
+
+    // Enable auto formatting
+    mStreamWriter.setAutoFormatting(true);
+    mStreamWriter.setAutoFormattingIndent(2);
+
+    // Write standard XML header
+    mStreamWriter.writeStartDocument(u"1.0"_s, true);
+
+    // Write main LaunchBox tag
+    mStreamWriter.writeStartElement(mRootElement);
+
+    // Write main body
+    if(!writeSourceDoc())
+        return streamStatus();
+
+    // Close main LaunchBox tag
+    mStreamWriter.writeEndElement();
+
+    // Finish document
+    mStreamWriter.writeEndDocument();
+
+    // Return null string on success
+    return streamStatus();
+
+    // File is automatically closed when writer is destroyed...
+}
 
 }
 
