@@ -19,10 +19,6 @@ namespace Am
  *
  * In the end this approach is similar to how AM itself reads attract.cfg and so it is for the best despite the slight consistency
  * break with the Fe defaults. It's probably a good thing that different frontend implementations can be this flexible anyway.
- *
- * TODO: This also acts as an experiment for having an item's "creator" (in this case its a builder/parser combo, but in the rest of
- * FIL it would just be the builder) exist as a inner class of the item (see other todos). So, if this goes well then we should move
- * on changing the rest of the codebase to do the same where possible.
  */
 
 class ISettingParser
