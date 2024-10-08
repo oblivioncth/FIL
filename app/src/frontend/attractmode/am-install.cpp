@@ -7,9 +7,10 @@
 // Qx Includes
 #include <qx/windows/qx-filedetails.h>
 #include <qx/core/qx-regularexpression.h>
+#include <qx/core/qx-system.h>
 
 // Project Includes
-#include "../../clifp.h"
+#include "clifp.h"
 
 namespace Am
 {
@@ -117,8 +118,6 @@ Qx::Error Install::populateExistingDocs()
     // Return success
     return Qx::Error();
 }
-
-QString Install::executableSubPath() const { return MAIN_EXE_PATH; }
 
 QString Install::imageDestinationPath(Fp::ImageType imageType, const Fe::Game* game) const
 {
@@ -294,6 +293,11 @@ void Install::softReset()
 
 QString Install::name() const { return NAME; }
 QList<Fe::ImageMode> Install::preferredImageModeOrder() const { return IMAGE_MODE_ORDER; }
+
+bool Install::isRunning() const
+{
+    return Qx::processIsRunning(mMainExe.fileName()) || Qx::processIsRunning(mConsoleExe.fileName());
+}
 
 QString Install::versionString() const
 {

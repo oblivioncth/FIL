@@ -12,6 +12,7 @@
 #include <qx/io/qx-common-io.h>
 #include <qx/core/qx-json.h>
 #include <qx/core/qx-versionnumber.h>
+#include <qx/core/qx-system.h>
 #include <qx/windows/qx-filedetails.h>
 
 namespace Lb
@@ -23,18 +24,17 @@ namespace Lb
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 Install::Install(const QString& installPath) :
-    Fe::Install(installPath)
-{
-    // Initialize files and directories;
-    mPlatformImagesDirectory = QDir(installPath + '/' + PLATFORM_IMAGES_PATH);
-    mPlatformIconsDirectory = QDir(installPath + '/' + PLATFORM_ICONS_PATH);
-    mPlaylistIconsDirectory = QDir(installPath + '/' + PLAYLIST_ICONS_PATH);
-    mPlatformCategoryIconsDirectory = QDir(installPath + '/' + PLATFORM_CATEGORY_ICONS_PATH);
-    mDataDirectory = QDir(installPath + '/' + DATA_PATH);
-    mCoreDirectory = QDir(installPath + '/' + CORE_PATH);
-    mPlatformsDirectory = QDir(installPath + '/' + PLATFORMS_PATH);
-    mPlaylistsDirectory = QDir(installPath + '/' + PLAYLISTS_PATH);
-
+    Fe::Install(installPath),
+    mDataDirectory(installPath + '/' + DATA_PATH),
+    mPlatformsDirectory(installPath + '/' + PLATFORMS_PATH),
+    mPlaylistsDirectory(installPath + '/' + PLAYLISTS_PATH),
+    mPlatformImagesDirectory(installPath + '/' + PLATFORM_IMAGES_PATH),
+    mPlatformIconsDirectory(installPath + '/' + PLATFORM_ICONS_PATH),
+    mPlatformCategoryIconsDirectory(installPath + '/' + PLATFORM_CATEGORY_ICONS_PATH),
+    mPlaylistIconsDirectory(installPath + '/' + PLAYLIST_ICONS_PATH),
+    mCoreDirectory(installPath + '/' + CORE_PATH),
+    mExeFile(installPath + '/' + MAIN_EXE_PATH)
+{    
     // Check validity
     QFileInfo mainExe(installPath + '/' + MAIN_EXE_PATH);
     if(!mainExe.exists() || !mainExe.isFile() || !mPlatformsDirectory.exists() || !mPlaylistsDirectory.exists())
@@ -94,8 +94,6 @@ Qx::Error Install::populateExistingDocs()
     // Return success
     return Qx::Error();
 }
-
-QString Install::executableSubPath() const { return MAIN_EXE_PATH; }
 
 QString Install::imageDestinationPath(Fp::ImageType imageType, const Fe::Game* game) const
 {
@@ -300,6 +298,22 @@ void Install::softReset()
 
 QString Install::name() const { return NAME; }
 QList<Fe::ImageMode> Install::preferredImageModeOrder() const { return IMAGE_MODE_ORDER; }
+bool Install::isRunning() const { return Qx::processIsRunning(mExeFile.fileName()); }
+
+QString Install::versionString() const
+{
+    Qx::FileDetails exeDetails = Qx::FileDetails::readFileDetails(mExeFile.fileName());
+
+    QString fileVersionStr = exeDetails.stringTable().fileVersion;
+    QString productVersionStr = exeDetails.stringTable().productVersion;
+
+    if(!fileVersionStr.isEmpty())
+        return fileVersionStr;
+    else if(!productVersionStr.isEmpty())
+        return productVersionStr;
+    else
+        return Install::versionString();
+}
 
 QString Install::translateDocName(const QString& originalName, Fe::DataDoc::Type type) const
 {

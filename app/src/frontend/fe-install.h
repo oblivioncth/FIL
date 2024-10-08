@@ -69,9 +69,6 @@ protected:
     virtual std::shared_ptr<PlatformDoc::Writer> preparePlatformDocCommit(const std::unique_ptr<PlatformDoc>& document) = 0;
     virtual std::shared_ptr<PlaylistDoc::Writer> preparePlaylistDocCommit(const std::unique_ptr<PlaylistDoc>& document) = 0;
 
-    // Info
-    virtual QString executableSubPath() const override = 0;
-
 public:
     // Install management
     virtual void softReset() override;
@@ -81,6 +78,7 @@ public:
     virtual QList<ImageMode> preferredImageModeOrder() const = 0;
     bool supportsImageMode(ImageMode imageMode) const;
     virtual QString versionString() const;
+    virtual bool isRunning() const = 0;
 
     // Import stage notifier hooks
     virtual Qx::Error preImport(const ImportDetails& details);
