@@ -2,7 +2,6 @@
 #include "fe-installfoundation.h"
 
 // Windows Includes (Specifically for changing file permissions)
-#include <atlstr.h>
 #include "Aclapi.h"
 #include "sddl.h"
 
@@ -61,10 +60,18 @@ void InstallFoundation::allowUserWriteOnFile(const QString& filePath)
     PSECURITY_DESCRIPTOR ppSecurityDescriptor;
     PSID psid;
 
-    CString filePathC = filePath.toStdWString().c_str();
-    LPTSTR lpStr = filePathC.GetBuffer();
+    /* NOTE: We do two things here that are technically risky, but should be ok:
+     *
+     * 1) We get a pointer to the underlying data of the QString and cast it to const wchar_t*.
+     *    on other platforms the size of wchar_t can vary, but on Windows it's clear that it's
+     *    2-bytes, as it even caused a defect in the C++ standard for being so.
+     * 2) For some reason SetNamedSecurityInfo() takes the path string as non-const, which I'm
+     *    almost certain is an oversight, as the docs make it clear its just an input to be
+     *    read; therefore, we cast away the constness.
+     */
+    LPCWSTR cPath = reinterpret_cast<const wchar_t*>(filePath.data());
 
-    GetNamedSecurityInfo(lpStr, SE_FILE_OBJECT,DACL_SECURITY_INFORMATION, NULL, NULL, &pDacl, NULL, &ppSecurityDescriptor);
+    GetNamedSecurityInfo(cPath, SE_FILE_OBJECT,DACL_SECURITY_INFORMATION, NULL, NULL, &pDacl, NULL, &ppSecurityDescriptor);
     ConvertStringSidToSid(L"S-1-1-0", &psid);
 
     ExplicitAccess.grfAccessMode = SET_ACCESS;
@@ -77,12 +84,11 @@ void InstallFoundation::allowUserWriteOnFile(const QString& filePath)
     ExplicitAccess.Trustee.TrusteeType = TRUSTEE_IS_UNKNOWN;
 
     SetEntriesInAcl(1, &ExplicitAccess, pDacl, &pNewDACL);
-    SetNamedSecurityInfo(lpStr,SE_FILE_OBJECT,DACL_SECURITY_INFORMATION,NULL,NULL,pNewDACL,NULL);
+    // This function should not modify the string,
+    SetNamedSecurityInfo(const_cast<wchar_t*>(cPath), SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, NULL, NULL, pNewDACL, NULL);
 
     LocalFree(pNewDACL);
     LocalFree(psid);
-
-    filePathC.ReleaseBuffer();
 }
 
 //Public:
