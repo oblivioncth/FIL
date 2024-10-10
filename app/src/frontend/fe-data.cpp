@@ -68,7 +68,7 @@ ImageSources::ImageSources(const QString& logoPath, const QString& screenshotPat
 //Public:
 bool ImageSources::isNull() const { return mLogoPath.isEmpty() && mScreenshotPath.isEmpty(); }
 QString ImageSources::logoPath() const { return mLogoPath; }
-QString ImageSources::screenshotPath() const { return mScreenshotPath; };
+QString ImageSources::screenshotPath() const { return mScreenshotPath; }
 void ImageSources::setLogoPath(const QString& path) { mLogoPath = path; }
 void ImageSources::setScreenshotPath(const QString& path) { mScreenshotPath = path; }
 

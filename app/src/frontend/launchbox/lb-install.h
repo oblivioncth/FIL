@@ -9,7 +9,7 @@
 #include <QtXml>
 
 // Project Includes
-#include "../fe-install.h"
+#include "frontend/fe-install.h"
 #include "lb-items.h"
 #include "lb-data.h"
 

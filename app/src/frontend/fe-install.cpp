@@ -166,7 +166,7 @@ Fe::DocHandlingError Install::commitPlaylistDoc(std::unique_ptr<PlaylistDoc> doc
 }
 
 QString Install::platformCategoryIconPath() const { return QString(); } // Unsupported in default implementation
-std::optional<QDir> Install::platformIconsDirectory() const { return std::nullopt; }; // Unsupported in default implementation
-std::optional<QDir> Install::playlistIconsDirectory() const { return std::nullopt; }; // Unsupported in default implementation
+std::optional<QDir> Install::platformIconsDirectory() const { return std::nullopt; } // Unsupported in default implementation
+std::optional<QDir> Install::playlistIconsDirectory() const { return std::nullopt; } // Unsupported in default implementation
 
 }

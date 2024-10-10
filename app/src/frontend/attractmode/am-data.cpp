@@ -151,7 +151,7 @@ bool ConfigDoc::Reader::splitKeyValue(const QString& line, QString& key, QString
     }
     else
     {
-        qWarning() << Q_FUNC_INFO << "Invalid key value string";
+        qWarning("Invalid key value string");
         return false;
     }
 }
@@ -293,7 +293,7 @@ bool Romlist::isEmpty() const
 const QHash<QUuid, std::shared_ptr<RomEntry>>& Romlist::finalEntries() const { return mEntriesFinal; }
 
 bool Romlist::containsGame(QUuid gameId) const { return mEntriesExisting.contains(gameId) || mEntriesFinal.contains(gameId); }
-bool Romlist::containsAddApp(QUuid addAppId) const { return mEntriesExisting.contains(addAppId) || mEntriesFinal.contains(addAppId); };
+bool Romlist::containsAddApp(QUuid addAppId) const { return mEntriesExisting.contains(addAppId) || mEntriesFinal.contains(addAppId); }
 
 void Romlist::addSet(const Fp::Set& set, const Fe::ImageSources& images)
 {
@@ -404,7 +404,7 @@ void Romlist::Reader::parseRomEntry(const QString& rawEntry)
 
     // Ensure parsing ended out of quotes
     if(inQuotes)
-        qWarning() << Q_FUNC_INFO << "Missing terminating '\"' character for ROM entry" << rawEntry;
+        qWarning("Missing terminating '\"' character for ROM entry %s", qPrintable(rawEntry));
 
     // Build Entry and add to document
     std::shared_ptr<RomEntry> existingEntry = reb.buildShared();
@@ -479,7 +479,7 @@ void Romlist::Reader::addFieldToBuilder(RomEntry::Builder& builder, QString fiel
             builder.wRating(field);
             break;
         default:
-            qWarning() << Q_FUNC_INFO << "Unhandled RomEntry field";
+            qWarning("Unhandled RomEntry field");
     }
 }
 
@@ -593,7 +593,7 @@ PlatformInterface::PlatformInterface(Install* const parent, const QString& platf
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-bool PlatformInterface::isEmpty() const { return mPlatformTaglist.isEmpty(); };
+bool PlatformInterface::isEmpty() const { return mPlatformTaglist.isEmpty(); }
 
 bool PlatformInterface::containsGame(QUuid gameId) const
 {
@@ -685,7 +685,7 @@ PlaylistInterface::PlaylistInterface(Install* const parent, const QString& playl
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-bool PlaylistInterface::isEmpty() const { return mPlaylistTaglist.isEmpty(); };
+bool PlaylistInterface::isEmpty() const { return mPlaylistTaglist.isEmpty(); }
 
 bool PlaylistInterface::containsPlaylistGame(QUuid gameId) const
 {
@@ -726,8 +726,8 @@ Emulator::Emulator(Install* const parent, const QString& filePath, const DocKey&
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-bool Emulator::isEmpty() const { return false; }; // Can have blank fields, but always has field keys
-Fe::DataDoc::Type Emulator::type() const { return Fe::DataDoc::Type::Config; };
+bool Emulator::isEmpty() const { return false; } // Can have blank fields, but always has field keys
+Fe::DataDoc::Type Emulator::type() const { return Fe::DataDoc::Type::Config; }
 
 QString Emulator::executable() const { return mExecutable; }
 QString Emulator::args() const { return mArgs; }

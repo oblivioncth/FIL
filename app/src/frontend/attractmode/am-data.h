@@ -10,16 +10,18 @@
 
 // Project Includes
 #include "am-items.h"
-#include "../fe-data.h"
+#include "frontend/fe-data.h"
 
 namespace Am
 {
+
+class Install;
 
 class DocKey
 {
     friend class Install;
 private:
-    DocKey() {};
+    DocKey() {}
     DocKey(const DocKey&) = default;
 };
 
@@ -398,7 +400,7 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit Emulator(Install* const parent, const QString& filePath, const DocKey&);
+    explicit Emulator(Install * const parent, const QString& filePath, const DocKey&);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 public:

@@ -13,7 +13,7 @@
 
 // Project Includes
 #include "lb-items.h"
-#include "../fe-data.h"
+#include "frontend/fe-data.h"
 
 // Reminder for virtual inheritance constructor mechanics if needed,
 // since some classes here use multiple virtual inheritance:
@@ -22,11 +22,13 @@
 namespace Lb
 {
 
+class Install;
+
 class DocKey
 {
     friend class Install;
 private:
-    DocKey() {};
+    DocKey() {}
     DocKey(const DocKey&) = default;
 };
 

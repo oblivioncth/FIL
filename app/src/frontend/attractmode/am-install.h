@@ -5,7 +5,7 @@
 #include <qx/core/qx-versionnumber.h>
 
 // Project Includes
-#include "../fe-install.h"
+#include "frontend/fe-install.h"
 #include "am-data.h"
 #include "am-settings-data.h"
 

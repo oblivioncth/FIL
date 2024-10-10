@@ -2,7 +2,7 @@
 #include "lb-items.h"
 
 // Project Includes
-#include "../../clifp.h"
+#include "clifp.h"
 
 namespace Lb
 {

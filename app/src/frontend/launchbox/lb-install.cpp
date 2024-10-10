@@ -324,7 +324,7 @@ QString Install::translateDocName(const QString& originalName, Fe::DataDoc::Type
      * internal name (i.e. <Name> within the file), and then applies its own substitution
      * rules to deal with illegal characters. As such, here we try to do what LB does to avoid
      * unintended filename changes after an import (since that will lead to mismatches for
-     * icons and futurer imports).
+     * icons and future imports).
      *
      * The replacements needed, and the order of them, will need to be determined on a case-by-case
      * basis as they come up.
@@ -436,7 +436,7 @@ Qx::Error Install::preImageProcessing(QList<ImageMap>& workerTransfers, const Fe
             editBulkImageReferences(bulkSources);
             break;
         default:
-            qWarning() << Q_FUNC_INFO << u"unhandled image mode"_s;
+            qWarning("unhandled image mode");
     }
 
     return Qx::Error();
@@ -497,7 +497,7 @@ void Install::processDirectGameImages(const Fe::Game* game, const Fe::ImageSourc
 }
 
 QString Install::platformCategoryIconPath() const { return mPlatformCategoryIconsDirectory.absoluteFilePath(u"Flashpoint.png"_s); }
-std::optional<QDir> Install::platformIconsDirectory() const { return mPlatformIconsDirectory; };
-std::optional<QDir> Install::playlistIconsDirectory() const { return mPlaylistIconsDirectory; };
+std::optional<QDir> Install::platformIconsDirectory() const { return mPlatformIconsDirectory; }
+std::optional<QDir> Install::playlistIconsDirectory() const { return mPlaylistIconsDirectory; }
 
 }
