@@ -2,7 +2,7 @@
 #define AM_SETTINGS_ITEMS_H
 
 // Project Includes
-#include "../fe-items.h"
+#include "frontend/fe-items.h"
 
 using namespace Qt::Literals::StringLiterals;
 

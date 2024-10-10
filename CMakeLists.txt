@@ -13,7 +13,7 @@ project(FIL
 
 # Get helper scripts
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FetchOBCMake.cmake)
-fetch_ob_cmake("8a14f467a8b25e4480b1e802b53a77f6bcd0fbd2")
+fetch_ob_cmake("9f45dec8dc1cd09d99862b7b7ea335b361cf7ff7")
 
 # Initialize project according to standard rules
 include(OB/Project)
@@ -65,7 +65,7 @@ set(FIL_QX_COMPONENTS
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "b29e03cf42dfed65a5ecaf18ce192f3051f0e25f"
+    REF "0572d288936afd63ff6f5b6ce4b1fbfc0f03b0eb"
     COMPONENTS
         ${FIL_QX_COMPONENTS}
 )

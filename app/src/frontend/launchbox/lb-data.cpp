@@ -34,7 +34,7 @@ namespace Element_Game
     const QString ELEMENT_RELEASE_DATE = u"ReleaseDate"_s;
     const QString ELEMENT_VERSION = u"Version"_s;
     const QString ELEMENT_RELEASE_TYPE = u"ReleaseType"_s;
-};
+}
 
 namespace Element_AddApp
 {
@@ -47,7 +47,7 @@ namespace Element_AddApp
     const QString ELEMENT_AUTORUN_BEFORE = u"AutoRunBefore"_s;
     const QString ELEMENT_NAME = u"Name"_s;
     const QString ELEMENT_WAIT_FOR_EXIT = u"WaitForExit"_s;
-};
+}
 
 namespace Element_CustomField
 {
@@ -56,7 +56,7 @@ namespace Element_CustomField
     const QString ELEMENT_GAME_ID = u"GameID"_s;
     const QString ELEMENT_NAME = u"Name"_s;
     const QString ELEMENT_VALUE = u"Value"_s;
-};
+}
 
 namespace Element_PlaylistHeader
 {
@@ -66,7 +66,7 @@ namespace Element_PlaylistHeader
     const QString ELEMENT_NAME = u"Name"_s;
     const QString ELEMENT_NESTED_NAME = u"NestedName"_s;
     const QString ELEMENT_NOTES = u"Notes"_s;
-};
+}
 
 namespace Element_PlaylistGame
 {
@@ -78,7 +78,7 @@ namespace Element_PlaylistGame
     const QString ELEMENT_GAME_PLATFORM = u"GamePlatform"_s;
     const QString ELEMENT_MANUAL_ORDER = u"ManualOrder"_s;
     const QString ELEMENT_LB_DB_ID = u"LaunchBoxDbId"_s;
-};
+}
 
 namespace Element_Platform
 {
@@ -86,7 +86,7 @@ namespace Element_Platform
 
     const QString ELEMENT_NAME = u"Name"_s;
     const QString ELEMENT_CATEGORY = u"Category"_s;
-};
+}
 
 namespace Element_PlatformFolder
 {
@@ -95,7 +95,7 @@ namespace Element_PlatformFolder
     const QString ELEMENT_MEDIA_TYPE = u"MediaType"_s;
     const QString ELEMENT_FOLDER_PATH = u"FolderPath"_s;
     const QString ELEMENT_PLATFORM = u"Platform"_s;
-};
+}
 
 namespace Element_PlatformCategory
 {
@@ -103,7 +103,7 @@ namespace Element_PlatformCategory
 
     const QString ELEMENT_NAME = u"Name"_s;
     const QString ELEMENT_NESTED_NAME = u"NestedName"_s;
-};
+}
 
  namespace Element_Parent
  {
@@ -113,10 +113,10 @@ namespace Element_PlatformCategory
     const QString ELEMENT_PLATFORM_NAME = u"PlatformName"_s;
     const QString ELEMENT_PARENT_PLATFORM_CATEGORY_NAME = u"ParentPlatformCategoryName"_s;
     const QString ELEMENT_PLAYLIST_ID = u"PlaylistId"_s;
- };
+ }
 
 const QString ROOT_ELEMENT = u"LaunchBox"_s;
-};
+}
 
 namespace Lb
 {

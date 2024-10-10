@@ -413,10 +413,10 @@ Qx::Error Install::preImageProcessing(QList<ImageMap>& workerTransfers, const Fe
             workerTransfers.swap(mWorkerImageJobs);
             return Qx::Error();
         case Fe::ImageMode::Reference:
-            qWarning() << Q_FUNC_INFO << u"unsupported image mode"_s;
+            qWarning("unsupported image mode");
             return Qx::Error();
         default:
-            qWarning() << Q_FUNC_INFO << u"unhandled image mode"_s;
+            qWarning("unhandled image mode");
             return Qx::Error();
     }
 }

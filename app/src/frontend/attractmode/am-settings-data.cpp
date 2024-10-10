@@ -167,7 +167,7 @@ CrudeSettings::CrudeSettings(Install* const parent, const QString& filePath, con
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-bool CrudeSettings::isEmpty() const { return mDisplays.isEmpty() && mOtherSettings.isEmpty(); };
+bool CrudeSettings::isEmpty() const { return mDisplays.isEmpty() && mOtherSettings.isEmpty(); }
 Fe::DataDoc::Type CrudeSettings::type() const { return Type::Config; }
 
 bool CrudeSettings::containsDisplay(const QString& name) { return mDisplays.contains(name); }
