@@ -613,7 +613,7 @@ void MainWindow::prepareImport()
 
     // Only allow proceeding if frontend isn't running
     bool feRunning;
-    while((feRunning = Qx::processIsRunning(mFrontendInstall->executableName())))
+    while((feRunning = mFrontendInstall->isRunning()))
         if(QMessageBox::critical(this, QApplication::applicationName(), MSG_FRONTEND_CLOSE_PROMPT, QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Retry) == QMessageBox::Cancel)
             break;
 
@@ -985,7 +985,7 @@ void MainWindow::all_on_menu_triggered(QAction *action)
             }
         }
 
-        qWarning() << Q_FUNC_INFO << "Frontend help action name could not be determined.";
+        qWarning("Frontend help action name could not be determined.");
     }
     else
         throw std::runtime_error("Unhandled use of all_on_menu_triggered() slot");
@@ -1075,5 +1075,5 @@ void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, con
         revertAllFrontendChanges();
     }
     else
-        throw std::runtime_error(Q_FUNC_INFO " unhandled import worker result type.");
+        qCritical("unhandled import worker result type.");
 }

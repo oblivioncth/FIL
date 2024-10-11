@@ -50,9 +50,9 @@ QString ImageTransferError::deriveDetails() const
     }
 
     return det;
-};
+}
 
-QString ImageTransferError::deriveCaption() const { return CAPTION_IMAGE_ERR; };
+QString ImageTransferError::deriveCaption() const { return CAPTION_IMAGE_ERR; }
 
 //===============================================================================================================
 // IMPORT WORKER
@@ -591,7 +591,7 @@ ImportWorker::ImportResult ImportWorker::processImages(Qx::Error& errorReport)
             return Canceled;
     }
     else if(!imageTransferJobs.isEmpty())
-        qWarning() << Q_FUNC_INFO << "the frontend provided image transfers when the mode wasn't link/copy";
+        qWarning("the frontend provided image transfers when the mode wasn't link/copy");
 
     // Handle frontend specific actions
     mFrontendInstall->postImageProcessing();

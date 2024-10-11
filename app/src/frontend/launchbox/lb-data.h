@@ -7,14 +7,13 @@
 #include <QString>
 #include <QFile>
 #include <memory>
-#include <QXmlStreamReader>
 
 // Qx Includes
 #include <qx/core/qx-freeindextracker.h>
 
 // Project Includes
 #include "lb-items.h"
-#include "../fe-data.h"
+#include "frontend/fe-data.h"
 
 // Reminder for virtual inheritance constructor mechanics if needed,
 // since some classes here use multiple virtual inheritance:
@@ -23,56 +22,14 @@
 namespace Lb
 {
 
+class Install;
+
 class DocKey
 {
     friend class Install;
 private:
-    DocKey() {};
+    DocKey() {}
     DocKey(const DocKey&) = default;
-};
-
-class XmlDocReader : public virtual Fe::DataDoc::Reader
-{
-//-Instance Variables--------------------------------------------------------------------------------------------------
-protected:
-    QFile mXmlFile;
-    QXmlStreamReader mStreamReader;
-
-//-Constructor--------------------------------------------------------------------------------------------------------
-public:
-    XmlDocReader(Fe::DataDoc* targetDoc);
-
-//-Instance Functions-------------------------------------------------------------------------------------------------
-private:
-    virtual Fe::DocHandlingError readTargetDoc() = 0;
-
-protected:
-    Fe::DocHandlingError streamStatus() const;
-
-public:
-    Fe::DocHandlingError readInto() override;
-};
-
-class XmlDocWriter : public virtual Fe::DataDoc::Writer
-{
-//-Instance Variables--------------------------------------------------------------------------------------------------
-protected:
-    QFile mXmlFile;
-    QXmlStreamWriter mStreamWriter;
-
-//-Constructor--------------------------------------------------------------------------------------------------------
-public:
-    XmlDocWriter(Fe::DataDoc* sourceDoc);
-
-//-Instance Functions-------------------------------------------------------------------------------------------------
-protected:
-    virtual bool writeSourceDoc() = 0;
-    void writeCleanTextElement(const QString& qualifiedName, const QString& text);
-    void writeOtherFields(const QHash<QString, QString>& otherFields);
-    Fe::DocHandlingError streamStatus() const;
-
-public:
-    Fe::DocHandlingError writeOutOf() override;
 };
 
 class PlatformDoc : public Fe::BasicPlatformDoc
@@ -105,7 +62,7 @@ public:
     void finalize() override;
 };
 
-class PlatformDoc::Reader : public Fe::BasicPlatformDoc::Reader, public XmlDocReader
+class PlatformDoc::Reader : public Fe::BasicPlatformDoc::Reader, public Fe::XmlDocReader
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -119,7 +76,7 @@ private:
     void parseCustomField();
 };
 
-class PlatformDoc::Writer : public Fe::BasicPlatformDoc::Writer, public XmlDocWriter
+class PlatformDoc::Writer : public Fe::BasicPlatformDoc::Writer, public Fe::XmlDocWriter
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -155,7 +112,7 @@ private:
     std::shared_ptr<Fe::PlaylistGame> preparePlaylistGame(const Fp::PlaylistGame& game) override;
 };
 
-class PlaylistDoc::Reader : public Fe::BasicPlaylistDoc::Reader, public XmlDocReader
+class PlaylistDoc::Reader : public Fe::BasicPlaylistDoc::Reader, public Fe::XmlDocReader
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -168,7 +125,7 @@ private:
     void parsePlaylistGame();
 };
 
-class PlaylistDoc::Writer : public Fe::BasicPlaylistDoc::Writer, XmlDocWriter
+class PlaylistDoc::Writer : public Fe::BasicPlaylistDoc::Writer, Fe::XmlDocWriter
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -229,7 +186,7 @@ public:
     void finalize() override;
 };
 
-class PlatformsConfigDoc::Reader : public XmlDocReader
+class PlatformsConfigDoc::Reader : public Fe::XmlDocReader
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -243,7 +200,7 @@ private:
     void parsePlatformCategory();
 };
 
-class PlatformsConfigDoc::Writer : public XmlDocWriter
+class PlatformsConfigDoc::Writer : public Fe::XmlDocWriter
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -306,7 +263,7 @@ public:
     void addParent(const Parent& parent);
 };
 
-class ParentsDoc::Reader : public XmlDocReader
+class ParentsDoc::Reader : public Fe::XmlDocReader
 {
     //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -318,7 +275,7 @@ private:
     void parseParent();
 };
 
-class ParentsDoc::Writer : public XmlDocWriter
+class ParentsDoc::Writer : public Fe::XmlDocWriter
 {
     //-Constructor--------------------------------------------------------------------------------------------------------
 public:

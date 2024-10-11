@@ -1,19 +1,19 @@
 #================= Project Setup ==========================
 
 # CMake
-cmake_minimum_required(VERSION 3.24.0...3.26.0)
+cmake_minimum_required(VERSION 3.24.0...3.30.0)
 
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
 project(FIL
-    VERSION 0.7.5.2
+    VERSION 0.7.5.3
     LANGUAGES CXX
     DESCRIPTION "Flashpoint Importer for Launchers"
 )
 
 # Get helper scripts
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FetchOBCMake.cmake)
-fetch_ob_cmake("v0.3.5")
+fetch_ob_cmake("9f45dec8dc1cd09d99862b7b7ea335b361cf7ff7")
 
 # Initialize project according to standard rules
 include(OB/Project)
@@ -49,8 +49,8 @@ set(FIL_QT_COMPONENTS
 )
 
 # Import Qt
-add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
-find_package(Qt6 REQUIRED COMPONENTS ${FIL_QT_COMPONENTS})
+include(OB/Qt)
+ob_find_package_qt(REQUIRED COMPONENTS ${FIL_QT_COMPONENTS})
 
 # Fetch Qx (build and import from source)
 set(FIL_QX_COMPONENTS
@@ -65,18 +65,18 @@ set(FIL_QX_COMPONENTS
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "v0.5.7"
+    REF "0572d288936afd63ff6f5b6ce4b1fbfc0f03b0eb"
     COMPONENTS
         ${FIL_QX_COMPONENTS}
 )
 
 # Fetch libfp (build and import from source)
 include(OB/Fetchlibfp)
-ob_fetch_libfp("v0.5.3")
+ob_fetch_libfp("183a479d00235d332aa1046a9b5ba98f62699752")
 
 # Fetch CLIFp (build and import from source)
 include(OB/FetchCLIFp)
-ob_fetch_clifp("v0.9.11")
+ob_fetch_clifp("7139ae998b292eb595e751ba4cb8599230435358")
 
 # TODO: The shared build of this is essentially useless as only the CLIFp executable
 # is deployed, which only works if it's statically linked. There isn't a simple way

@@ -7,6 +7,7 @@
 
 // Qt Includes
 #include <QFile>
+#include <QXmlStreamReader>
 
 // Qx Includes
 #include <qx/core/qx-error.h>
@@ -19,12 +20,6 @@
 
 // Project Includes
 #include "fe-items.h"
-
-/* TODO: Consider making readers/writers child classes of their respective docs (their composition can still be
- * declared outside the doc class by using Doc::Reader{ declarations... }) so that access to the doc's members
- * is the default and the use of "friend" can be significantly reduced. The same can be done for the builders
- * of items (i.e. ::Builder)
- */
 
 /* TODO: Right now all docs that need to be constructed by an install have that install marked as their friend,
  * but they also are using the Passkey Idiom, a key class with a private constructor that they are also friends
@@ -567,6 +562,55 @@ class BasicPlaylistDoc::Writer : public PlaylistDoc::Writer
 //-Constructor-------------------------------------------------------------------------------------------------------
 protected:
     Writer(DataDoc* sourceDoc);
+};
+
+/*
+ * Not used by base implementation, but useful for multiple frontends
+ */
+class XmlDocReader : public virtual Fe::DataDoc::Reader
+{
+//-Instance Variables--------------------------------------------------------------------------------------------------
+protected:
+    QFile mXmlFile;
+    QXmlStreamReader mStreamReader;
+    QString mRootElement;
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+public:
+    XmlDocReader(Fe::DataDoc* targetDoc, const QString& root);
+
+//-Instance Functions-------------------------------------------------------------------------------------------------
+private:
+    virtual Fe::DocHandlingError readTargetDoc() = 0;
+
+protected:
+    Fe::DocHandlingError streamStatus() const;
+
+public:
+    Fe::DocHandlingError readInto() override;
+};
+
+class XmlDocWriter : public virtual Fe::DataDoc::Writer
+{
+//-Instance Variables--------------------------------------------------------------------------------------------------
+protected:
+    QFile mXmlFile;
+    QXmlStreamWriter mStreamWriter;
+    QString mRootElement;
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+public:
+    XmlDocWriter(Fe::DataDoc* sourceDoc, const QString& root);
+
+//-Instance Functions-------------------------------------------------------------------------------------------------
+protected:
+    virtual bool writeSourceDoc() = 0;
+    void writeCleanTextElement(const QString& qualifiedName, const QString& text);
+    void writeOtherFields(const QHash<QString, QString>& otherFields);
+    Fe::DocHandlingError streamStatus() const;
+
+public:
+    Fe::DocHandlingError writeOutOf() override;
 };
 
 }

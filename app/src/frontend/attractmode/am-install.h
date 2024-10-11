@@ -5,7 +5,7 @@
 #include <qx/core/qx-versionnumber.h>
 
 // Project Includes
-#include "../fe-install.h"
+#include "frontend/fe-install.h"
 #include "am-data.h"
 #include "am-settings-data.h"
 
@@ -91,9 +91,6 @@ private:
     void nullify() override;
     Qx::Error populateExistingDocs() override;
 
-    // Info
-    QString executableSubPath() const override;
-
     // Image Processing
     QString imageDestinationPath(Fp::ImageType imageType, const Fe::Game* game) const;
 
@@ -117,6 +114,7 @@ public:
     // Info
     QString name() const override;
     QList<Fe::ImageMode> preferredImageModeOrder() const override;
+    bool isRunning() const override;
     QString versionString() const override;
     QString translateDocName(const QString& originalName, Fe::DataDoc::Type type) const override;
 

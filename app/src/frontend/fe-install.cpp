@@ -4,9 +4,6 @@
 // Qt Includes
 #include <QFileInfo>
 
-// Qx Includes
-#include <qx/windows/qx-filedetails.h>
-
 namespace Fe
 {
 
@@ -61,20 +58,7 @@ void Install::softReset()
 
 bool Install::supportsImageMode(ImageMode imageMode) const { return preferredImageModeOrder().contains(imageMode); }
 
-QString Install::versionString() const
-{
-    Qx::FileDetails exeDetails = Qx::FileDetails::readFileDetails(executablePath());
-
-    QString fileVersionStr = exeDetails.stringTable().fileVersion;
-    QString productVersionStr = exeDetails.stringTable().productVersion;
-
-    if(!fileVersionStr.isEmpty())
-        return fileVersionStr;
-    else if(!productVersionStr.isEmpty())
-        return productVersionStr;
-    else
-        return u"Unknown Version"_s;
-}
+QString Install::versionString() const { return u"Unknown Version"_s; }
 
 /* These functions can be overridden by children as needed.
  * Work within them should be kept as minimal as possible since they are not accounted
@@ -182,7 +166,7 @@ Fe::DocHandlingError Install::commitPlaylistDoc(std::unique_ptr<PlaylistDoc> doc
 }
 
 QString Install::platformCategoryIconPath() const { return QString(); } // Unsupported in default implementation
-std::optional<QDir> Install::platformIconsDirectory() const { return std::nullopt; }; // Unsupported in default implementation
-std::optional<QDir> Install::playlistIconsDirectory() const { return std::nullopt; }; // Unsupported in default implementation
+std::optional<QDir> Install::platformIconsDirectory() const { return std::nullopt; } // Unsupported in default implementation
+std::optional<QDir> Install::playlistIconsDirectory() const { return std::nullopt; } // Unsupported in default implementation
 
 }
