@@ -326,8 +326,8 @@ protected:
         requires updateable_item_container<C>
     void addUpdateableItem(C& existingItems,
                            C& finalItems,
-                           C::key_type key,
-                           C::mapped_type newItem)
+                           typename C::key_type key,
+                           typename C::mapped_type newItem)
     {
         // Check if item exists
         if(existingItems.contains(key))
@@ -354,7 +354,7 @@ protected:
         requires updateable_basicitem_container<C>
     void addUpdateableItem(C& existingItems,
                            C& finalItems,
-                           C::mapped_type newItem)
+                           typename C::mapped_type newItem)
     {
         addUpdateableItem(existingItems,
                           finalItems,

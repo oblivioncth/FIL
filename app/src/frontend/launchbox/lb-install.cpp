@@ -312,7 +312,7 @@ QString Install::versionString() const
     else if(!productVersionStr.isEmpty())
         return productVersionStr;
     else
-        return Install::versionString();
+        return Fe::Install::versionString();
 }
 
 QString Install::translateDocName(const QString& originalName, Fe::DataDoc::Type type) const

@@ -20,7 +20,6 @@
 #include <qx/widgets/qx-common-widgets.h>
 #include <qx/widgets/qx-treeinputdialog.h>
 #include <qx/widgets/qx-logindialog.h>
-#include <qx/windows/qx-filedetails.h>
 #include <qx/core/qx-system.h>
 
 // Project Includes
@@ -34,7 +33,7 @@
  * used for the import, so that they can be loaded again when that install is targeted by future versions
  * of the tool. Would have to account for an initial import vs update (likely just leaving the update settings
  * blank). Wouldn't be a huge difference but could be a nice little time saver.
- */
+ */ 
 
 //===============================================================================================================
 // MAIN WINDOW
@@ -43,7 +42,8 @@
 //-Constructor---------------------------------------------------------------------------------------------------
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    mProgressPresenter(this)
 {
     /*Register metatypes
      * NOTE: Qt docs note these should be needed, as always, but since Qt6 signals/slots with these types seem to
@@ -54,18 +54,8 @@ MainWindow::MainWindow(QWidget *parent) :
     //qRegisterMetaType<Qx::Error>();
     //qRegisterMetaType<std::shared_ptr<int>>();
 
-    // Get built-in CLIFp version
-    QTemporaryDir tempDir;
-    if(tempDir.isValid())
-    {
-        // Create local copy of internal CLIFp.exe since internal path cannot be used with WinAPI
-        QString localCopyPath = tempDir.path() + '/' + CLIFp::EXE_NAME;
-        if(QFile::copy(u":/file/"_s + CLIFp::EXE_NAME, localCopyPath))
-            mInternalCLIFpVersion = Qx::FileDetails::readFileDetails(localCopyPath).fileVersion();
-    }
-
-    // Abort if no version could be determined
-    if(mInternalCLIFpVersion.isNull())
+    // Ensure built-in CLIFp version is valid
+    if(CLIFp::internalVersion().isNull())
     {
         QMessageBox::critical(this, CAPTION_GENERAL_FATAL_ERROR, MSG_FATAL_NO_INTERNAL_CLIFP_VER);
         mInitCompleted = false;
@@ -121,7 +111,7 @@ void MainWindow::initializeForms()
     mExistingItemColor = ui->label_existingItemColor->palette().color(QPalette::Window);
 
     // Add CLIFp version to deploy option
-    ui->action_deployCLIFp->setText(ui->action_deployCLIFp->text() + ' ' + mInternalCLIFpVersion.normalized(2).toString());
+    ui->action_deployCLIFp->setText(ui->action_deployCLIFp->text() + ' ' + CLIFp::internalVersion().normalized(2).toString());
 
     // Prepare help messages
     mArgedPlaylistGameModeHelp = MSG_PLAYLIST_GAME_MODE_HELP.arg(ui->radioButton_selectedPlatformsOnly->text(),
@@ -619,24 +609,13 @@ void MainWindow::prepareImport()
 
     if(!feRunning)
     {
-        // Create progress dialog, set initial state and show
-        mImportProgressDialog = std::make_unique<QProgressDialog>(STEP_FP_DB_INITIAL_QUERY, u"Cancel"_s, 0, 0, this);
-        mImportProgressDialog->setWindowTitle(CAPTION_IMPORTING);
-        mImportProgressDialog->setWindowModality(Qt::WindowModal);
-        mImportProgressDialog->setWindowFlags(mImportProgressDialog->windowFlags() & ~Qt::WindowContextHelpButtonHint);
-        mImportProgressDialog->setAutoReset(false);
-        mImportProgressDialog->setAutoClose(false);
-        mImportProgressDialog->setMinimumDuration(0); // Always show pd
-        mImportProgressDialog->setValue(0); // Get pd to show
-
-        // Setup taskbar button progress indicator
-        mWindowTaskbarButton->setProgressMinimum(0);
-        mWindowTaskbarButton->setProgressMaximum(0);
-        mWindowTaskbarButton->setProgressValue(0);
-        mWindowTaskbarButton->setProgressState(Qx::TaskbarButton::Busy);
-
-        // Force show progress immediately
-        QApplication::processEvents();
+        // Start progress presentation
+        mProgressPresenter.setMinimum(0);
+        mProgressPresenter.setMaximum(0);
+        mProgressPresenter.setValue(0);
+        mProgressPresenter.setBusyState();
+        mProgressPresenter.setLabelText(STEP_FP_DB_INITIAL_QUERY);
+        QApplication::processEvents(); // Force show progress immediately
 
         // Setup import worker
         ImportWorker::ImportSelections impSel{.platforms = getSelectedPlatforms(),
@@ -657,12 +636,10 @@ void MainWindow::prepareImport()
         connect(&importWorker, &ImportWorker::authenticationRequired, this, &MainWindow::handleAuthRequest);
 
         // Create process update connections
-        connect(&importWorker, &ImportWorker::progressStepChanged, mImportProgressDialog.get(), &QProgressDialog::setLabelText);
-        connect(&importWorker, &ImportWorker::progressMaximumChanged, mImportProgressDialog.get(), &QProgressDialog::setMaximum);
-        connect(&importWorker, &ImportWorker::progressMaximumChanged, mWindowTaskbarButton, &Qx::TaskbarButton::setProgressMaximum);
-        connect(&importWorker, &ImportWorker::progressValueChanged, mImportProgressDialog.get(), &QProgressDialog::setValue);
-        connect(&importWorker, &ImportWorker::progressValueChanged, mWindowTaskbarButton, &Qx::TaskbarButton::setProgressValue);
-        connect(mImportProgressDialog.get(), &QProgressDialog::canceled, &importWorker, &ImportWorker::notifyCanceled);
+        connect(&importWorker, &ImportWorker::progressStepChanged, &mProgressPresenter, &ProgressPresenter::setLabelText);
+        connect(&importWorker, &ImportWorker::progressValueChanged, &mProgressPresenter, &ProgressPresenter::setValue);
+        connect(&importWorker, &ImportWorker::progressMaximumChanged, &mProgressPresenter, &ProgressPresenter::setMaximum);
+        connect(&mProgressPresenter, &ProgressPresenter::canceled, &importWorker, &ImportWorker::notifyCanceled);
 
         // Import error tracker
         Qx::Error importError;
@@ -712,6 +689,29 @@ void MainWindow::revertAllFrontendChanges()
     mFrontendInstall->softReset();
 }
 
+void MainWindow::deployCLIFp(const Fp::Install& fp, QMessageBox::Button abandonButton)
+{
+    bool willDeploy = true;
+
+    // Check for existing CLIFp
+    if(CLIFp::hasCLIFp(fp))
+    {
+        // Notify user if this will be a downgrade
+        if(CLIFp::internalVersion() < CLIFp::installedVersion(fp))
+            willDeploy = (QMessageBox::warning(this, CAPTION_CLIFP_DOWNGRADE, MSG_FP_CLFIP_WILL_DOWNGRADE, QMessageBox::Yes | QMessageBox::No, QMessageBox::No) ==  QMessageBox::Yes);
+    }
+
+    // Deploy CLIFp if applicable
+    if(willDeploy)
+    {
+        // Deploy exe
+        QString deployError;
+        while(!CLIFp::deployCLIFp(deployError, fp))
+            if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | abandonButton, QMessageBox::Retry) == abandonButton)
+                break;
+    }
+}
+
 void MainWindow::standaloneCLIFpDeploy()
 {
     // Browse for install
@@ -725,25 +725,7 @@ void MainWindow::standaloneCLIFpDeploy()
             if(!installMatchesTargetSeries(tempFlashpointInstall))
                 QMessageBox::warning(this, QApplication::applicationName(), MSG_FP_VER_NOT_TARGET);
 
-            bool willDeploy = true;
-
-            // Check for existing CLIFp
-            if(CLIFp::hasCLIFp(tempFlashpointInstall))
-            {
-                // Notify user if this will be a downgrade
-                if(mInternalCLIFpVersion < CLIFp::currentCLIFpVersion(tempFlashpointInstall))
-                    willDeploy = (QMessageBox::warning(this, CAPTION_CLIFP_DOWNGRADE, MSG_FP_CLFIP_WILL_DOWNGRADE, QMessageBox::Yes | QMessageBox::No, QMessageBox::No) ==  QMessageBox::Yes);
-            }
-
-            // Deploy CLIFp if applicable
-            if(willDeploy)
-            {
-                // Deploy exe
-                QString deployError;
-                while(!CLIFp::deployCLIFp(deployError, tempFlashpointInstall, u":/file/CLIFp.exe"_s))
-                    if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Retry) == QMessageBox::Cancel)
-                        break;
-            }
+            deployCLIFp(tempFlashpointInstall, QMessageBox::Cancel);
         }
         else
             Qx::postBlockingError(tempFlashpointInstall.error(), QMessageBox::Ok);
@@ -789,12 +771,8 @@ QSet<int> MainWindow::generateTagExlusionSet() const
 //Protected:
 void MainWindow::showEvent(QShowEvent* event)
 {
-    // Call standard function
+    mProgressPresenter.attachWindow(windowHandle());
     QMainWindow::showEvent(event);
-
-    // Configure taskbar button
-    mWindowTaskbarButton = new Qx::TaskbarButton(this);
-    mWindowTaskbarButton->setWindow(this->windowHandle());
 }
 
 //Public:
@@ -993,18 +971,16 @@ void MainWindow::all_on_menu_triggered(QAction *action)
 
 void MainWindow::handleBlockingError(std::shared_ptr<int> response, const Qx::Error& blockingError, QMessageBox::StandardButtons choices)
 {
-    // Get taskbar progress and indicate error
-    mWindowTaskbarButton->setProgressState(Qx::TaskbarButton::Stopped);
+    mProgressPresenter.setErrorState();
 
     // Post error and get response
     int userChoice = Qx::postBlockingError(blockingError, choices);
 
-    // Clear taskbar error
-    mWindowTaskbarButton->setProgressState(Qx::TaskbarButton::Normal);
-
     // If applicable return selection
     if(response)
         *response = userChoice;
+
+    mProgressPresenter.resetState();
 }
 
 void MainWindow::handleAuthRequest(const QString& prompt, QAuthenticator* authenticator)
@@ -1023,10 +999,8 @@ void MainWindow::handleAuthRequest(const QString& prompt, QAuthenticator* authen
 
 void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, const Qx::Error& errorReport)
 {
-    // Close progress dialog and reset taskbar progress indicator
-    mImportProgressDialog->close();
-    mWindowTaskbarButton->resetProgress();
-    mWindowTaskbarButton->setProgressState(Qx::TaskbarButton::Hidden);
+    // Reset progress presenter
+    mProgressPresenter.reset();
 
     // Post error report if present
     if(errorReport.isValid())
@@ -1034,24 +1008,7 @@ void MainWindow::handleImportResult(ImportWorker::ImportResult importResult, con
 
     if(importResult == ImportWorker::Successful)
     {
-        bool willDeploy = true;
-
-        // Check for existing CLIFp
-        if(CLIFp::hasCLIFp(*mFlashpointInstall))
-        {
-            // Notify user if this will be a downgrade
-            if(mInternalCLIFpVersion < CLIFp::currentCLIFpVersion(*mFlashpointInstall))
-                willDeploy = (QMessageBox::warning(this, CAPTION_CLIFP_DOWNGRADE, MSG_FP_CLFIP_WILL_DOWNGRADE, QMessageBox::Yes | QMessageBox::No, QMessageBox::No) ==  QMessageBox::Yes);
-        }
-
-        // Deploy CLIFp if applicable
-        if(willDeploy)
-        {
-            QString deployError;
-            while(!CLIFp::deployCLIFp(deployError, *mFlashpointInstall, u":/file/CLIFp.exe"_s))
-                if(QMessageBox::critical(this, CAPTION_CLIFP_ERR, MSG_FP_CANT_DEPLOY_CLIFP.arg(deployError), QMessageBox::Retry | QMessageBox::Ignore, QMessageBox::Retry) == QMessageBox::Ignore)
-                    break;
-        }
+        deployCLIFp(*mFlashpointInstall, QMessageBox::Ignore);
 
         // Post-import message
         QMessageBox::information(this, QApplication::applicationName(), MSG_POST_IMPORT);

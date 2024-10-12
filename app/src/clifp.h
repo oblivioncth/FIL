@@ -15,7 +15,11 @@ class CLIFp
 // Class members
 public:
     static inline const QString NAME = u"CLIFp"_s;
+#ifdef _WIN32
     static inline const QString EXE_NAME = NAME + u".exe"_s;
+#else
+    static inline const QString EXE_NAME = u"clifp"_s;
+#endif
     static inline const QString PLAY_COMMAND = u"play"_s;
     static inline const QString RUN_COMMAND = u"run"_s;
     static inline const QString SHOW_COMMAND = u"show"_s;
@@ -33,10 +37,11 @@ public:
 
 // Class functions
 public:
+    static Qx::VersionNumber internalVersion();
+    static Qx::VersionNumber installedVersion(const Fp::Install& fpInstall);
     static QString standardCLIFpPath(const Fp::Install& fpInstall);
     static bool hasCLIFp(const Fp::Install& fpInstall);
-    static Qx::VersionNumber currentCLIFpVersion(const Fp::Install& fpInstall);
-    static bool deployCLIFp(QString& errorMsg, const Fp::Install& fpInstall, const QString& sourcePath);
+    static bool deployCLIFp(QString& errorMsg, const Fp::Install& fpInstall);
 
     static QString parametersFromStandard(QStringView originalAppPath, QStringView originalAppParams);
     static QString parametersFromStandard(QUuid titleId);

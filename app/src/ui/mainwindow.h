@@ -4,20 +4,19 @@
 // Qt Includes
 #include <QMainWindow>
 #include <QListWidgetItem>
-#include <QProgressDialog>
 #include <QMessageBox>
 
 // Qx Includes
 #include <qx/core/qx-versionnumber.h>
 #include <qx/io/qx-common-io.h>
 #include <qx/widgets/qx-standarditemmodel.h>
-#include <qx/windows-gui/qx-taskbarbutton.h>
 
 // libfp Includes
 #include <fp/fp-install.h>
 
 // Project Includes
 #include "project_vars.h"
+#include "ui/progresspresenter.h"
 #include "frontend/fe-install.h"
 #include "import-worker.h"
 #include "clifp.h"
@@ -110,7 +109,7 @@ private:
     // Messages - FP CLIFp
     static inline const QString MSG_FP_CLFIP_WILL_DOWNGRADE = u"The existing version of "_s + CLIFp::EXE_NAME +  u" in your Flashpoint install is newer than the version package with this tool.\n"
                                                               "\n"
-                                                              "Replacing it with the packaged Version (downgrade) will likely cause compatibility issues unless you are specifically re-importing are downgrading your Flashpoint install to a previous version.\n"
+                                                              "Replacing it with the packaged Version (downgrade) will likely cause compatibility issues unless you are specifically re-importing after downgrading your Flashpoint install to a previous version.\n"
                                                               "\n"
                                                               "Do you wish to downgrade "_s + CLIFp::EXE_NAME + u"?"_s;
 
@@ -141,7 +140,6 @@ private:
     static inline const QString CAPTION_REVERT = u"Reverting changes..."_s;
     static inline const QString CAPTION_CLIFP_ERR = u"Error deploying CLIFp"_s;
     static inline const QString CAPTION_CLIFP_DOWNGRADE = u"Downgrade CLIFp?"_s;
-    static inline const QString CAPTION_IMPORTING = u"FP Import"_s;
     static inline const QString CAPTION_TAG_FILTER = u"Tag Filter"_s;
 
     // Menus
@@ -176,7 +174,6 @@ private:
 
     std::shared_ptr<Fe::Install> mFrontendInstall;
     std::shared_ptr<Fp::Install> mFlashpointInstall;
-    Qx::VersionNumber mInternalCLIFpVersion;
 
     QHash<QListWidgetItem*,Qt::CheckState> mPlatformItemCheckStates;
     QHash<QListWidgetItem*,Qt::CheckState> mPlaylistItemCheckStates;
@@ -189,8 +186,7 @@ private:
     QString mArgedImageModeHelp;
 
     // Process monitoring
-    std::unique_ptr<QProgressDialog> mImportProgressDialog;
-    Qx::TaskbarButton* mWindowTaskbarButton;
+    ProgressPresenter mProgressPresenter;
 
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
@@ -239,6 +235,7 @@ private:
 
     void prepareImport();
     void revertAllFrontendChanges();
+    void deployCLIFp(const Fp::Install& fp, QMessageBox::Button abandonButton);
     void standaloneCLIFpDeploy();
     void showTagSelectionDialog();
     QSet<int> generateTagExlusionSet() const;

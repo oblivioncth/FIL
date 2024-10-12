@@ -128,7 +128,7 @@ public:
 
 //-Class Functions------------------------------------------------------------------------------------------------------
 private:
-    static void allowUserWriteOnFile(const QString& filePath);
+    static void ensureModifiable(const QString& filePath);
 
 public:
     static QString filePathToBackupPath(const QString& filePath);

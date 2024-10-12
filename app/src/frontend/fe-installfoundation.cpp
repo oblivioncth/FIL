@@ -1,10 +1,6 @@
 // Unit Include
 #include "fe-installfoundation.h"
 
-// Windows Includes (Specifically for changing file permissions)
-#include "Aclapi.h"
-#include "sddl.h"
-
 namespace Fe
 {
 
@@ -50,46 +46,6 @@ InstallFoundation::InstallFoundation(const QString& installPath) :
 //-Destructor------------------------------------------------------------------------------------------------
 //Public:
 InstallFoundation::~InstallFoundation() {}
-
-//-Class Functions--------------------------------------------------------------------------------------------
-//Private:
-void InstallFoundation::allowUserWriteOnFile(const QString& filePath)
-{
-    PACL pDacl,pNewDACL;
-    EXPLICIT_ACCESS ExplicitAccess;
-    PSECURITY_DESCRIPTOR ppSecurityDescriptor;
-    PSID psid;
-
-    /* NOTE: We do two things here that are technically risky, but should be ok:
-     *
-     * 1) We get a pointer to the underlying data of the QString and cast it to const wchar_t*.
-     *    on other platforms the size of wchar_t can vary, but on Windows it's clear that it's
-     *    2-bytes, as it even caused a defect in the C++ standard for being so.
-     * 2) For some reason SetNamedSecurityInfo() takes the path string as non-const, which I'm
-     *    almost certain is an oversight, as the docs make it clear its just an input to be
-     *    read; therefore, we cast away the constness.
-     */
-    LPCWSTR cPath = reinterpret_cast<const wchar_t*>(filePath.data());
-
-    GetNamedSecurityInfo(cPath, SE_FILE_OBJECT,DACL_SECURITY_INFORMATION, NULL, NULL, &pDacl, NULL, &ppSecurityDescriptor);
-    ConvertStringSidToSid(L"S-1-1-0", &psid);
-
-    ExplicitAccess.grfAccessMode = SET_ACCESS;
-    ExplicitAccess.grfAccessPermissions = GENERIC_ALL;
-    ExplicitAccess.grfInheritance = CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE;
-    ExplicitAccess.Trustee.MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
-    ExplicitAccess.Trustee.pMultipleTrustee = NULL;
-    ExplicitAccess.Trustee.ptstrName = (LPTSTR) psid;
-    ExplicitAccess.Trustee.TrusteeForm = TRUSTEE_IS_SID;
-    ExplicitAccess.Trustee.TrusteeType = TRUSTEE_IS_UNKNOWN;
-
-    SetEntriesInAcl(1, &ExplicitAccess, pDacl, &pNewDACL);
-    // This function should not modify the string,
-    SetNamedSecurityInfo(const_cast<wchar_t*>(cPath), SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, NULL, NULL, pNewDACL, NULL);
-
-    LocalFree(pNewDACL);
-    LocalFree(psid);
-}
 
 //Public:
 QString InstallFoundation::filePathToBackupPath(const QString& filePath)
@@ -215,7 +171,7 @@ Fe::DocHandlingError InstallFoundation::commitDataDocument(DataDoc* docToSave, s
             mDeletedDocuments.remove(id);
 
         commitError = docWriter->writeOutOf();
-        allowUserWriteOnFile(docToSave->path());
+        ensureModifiable(docToSave->path());
     }
     else // Handle deletion
     {
