@@ -33,8 +33,12 @@ public:
     static inline const QString ROMLISTS_PATH = u"romlists"_s;
     static inline const QString SCRAPER_PATH = u"scraper"_s;
     static inline const QString MAIN_CFG_PATH = u"attract.cfg"_s;
+#ifdef _WIN32
     static inline const QString MAIN_EXE_PATH = u"attract.exe"_s;
-    static inline const QString CONSOLE_EXE_PATH = u"attract-console.exe"_s;
+#else
+    static inline const QString MAIN_EXE_PATH = u"attract"_s;
+#endif
+    static inline const QString CONSOLE_EXE_PATH = u"attract-console.exe"_s; // Removed in newer versions
 
     // Sub paths
     static inline const QString LOGO_FOLDER_NAME = u"flyer"_s;
@@ -71,7 +75,7 @@ private:
     QDir mFpTagDirectory;
     QDir mFpScraperDirectory;
     QFile mMainExe;
-    QFile mConsoleExe;
+    QFile mConsoleExe; // Removed in newer versions
     QFile mFpRomlist;
     QFile mEmulatorConfigFile;
 
@@ -90,6 +94,7 @@ private:
     // Install management
     void nullify() override;
     Qx::Error populateExistingDocs() override;
+    QString versionFromExecutable() const;
 
     // Image Processing
     QString imageDestinationPath(Fp::ImageType imageType, const Fe::Game* game) const;

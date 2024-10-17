@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.24.0...3.30.0)
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
 project(FIL
-    VERSION 0.7.5.3
+    VERSION 0.7.5.4
     LANGUAGES CXX
     DESCRIPTION "Flashpoint Importer for Launchers"
 )
@@ -34,7 +34,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-enable_language("RC")
+if(CMAKE_SYSTEM_NAME STREQUAL Windows)
+    enable_language("RC")
+endif()
 
 #================= Build =========================
 
@@ -59,9 +61,16 @@ set(FIL_QX_COMPONENTS
     Gui
     Network
     Widgets
-    Windows-gui
     Xml
 )
+
+if(CMAKE_SYSTEM_NAME STREQUAL Windows)
+    list(APPEND FIL_QX_COMPONENTS Windows-gui)
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL Linux)
+    list(APPEND FIL_QX_COMPONENTS Linux)
+endif()
 
 include(OB/FetchQx)
 ob_fetch_qx(
@@ -75,6 +84,8 @@ include(OB/Fetchlibfp)
 ob_fetch_libfp("183a479d00235d332aa1046a9b5ba98f62699752")
 
 # Fetch CLIFp (build and import from source)
+include(OB/Utility)
+ob_cache_project_version(CLIFp)
 include(OB/FetchCLIFp)
 ob_fetch_clifp("7139ae998b292eb595e751ba4cb8599230435358")
 

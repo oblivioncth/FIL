@@ -7,7 +7,7 @@ For Platforms, the importer is capable of importing each game/animation along wi
 
 Checkout **[Usage (Primary)](#usage-primary)** to get started.
 
-[![Dev Builds](https://github.com/oblivioncth/FIL/actions/workflows/push-reaction.yml/badge.svg?branch=dev)](https://github.com/oblivioncth/FIL/actions/workflows/push-reaction.yml)
+[![Dev Builds](https://github.com/oblivioncth/FIL/actions/workflows/build-project.yml/badge.svg?branch=dev)](https://github.com/oblivioncth/FIL/actions/workflows/build-project.yml)
 
 ## Function
 This utility makes use of its sister project [CLIFp (Command-line Interface for Flashpoint)](https://github.com/oblivioncth/CLIFp) to allow launchers to actually start and exit the games correctly. It is automatically deployed into your Flashpoint installation (updated if necessary) at the end of a successful import and the latest version of CLIFp will be included in each release of this utility so it is not generally something the end-user needs to concern themselves with.
@@ -139,11 +139,11 @@ The symbolic link related options for handling images require the importer to be
 ## Usage (Tools)
 
 ### Tag Filter
-The tag filter editor allows you to customize which titles will be imported based on their tags. 
+The tag filter editor allows you to customize which titles will be imported based on their tags.
 
 ![Tag Filter](https://i.imgur.com/EzEd0H1.png)
 
-Tags are listed alphabetically, nested under their categories names so that you can select or unselect an entire category easily. Exclusions take precedence, so if a title features a single tag that you have unselected it will not be included in the import. 
+Tags are listed alphabetically, nested under their categories names so that you can select or unselect an entire category easily. Exclusions take precedence, so if a title features a single tag that you have unselected it will not be included in the import.
 
 All tags are included by default.
 
@@ -160,7 +160,7 @@ This tool automatically handles installing/updating the command-line interface F
 
 ## Other Features
  - The playlist import feature is "smart" in the sense that it won't include games that you aren't importing. So if you only want to import the Flash platform for example and a couple playlists, you wont have to worry about useless entries in the playlist that point to games from other platforms you didn't import. This of course does not apply if you are using the "Force All" playlist game mode.
- 
+
 ## Limitations
  - Although general compatibility is quite high, compatibility with every single title cannot be assured. Issues with a title or group of titles will be fixed as they are discovered.
  - The "smart" feature of the Playlist import portion of the tool has the drawback that only games that were included in the same import will be considered for that playlist. If you previously imported a Platform and now want to import a Playlist that contains games from that Platform you must make sure you select it again for it to be updated/re-imported in order for those games to be added to that Playlist. Alternatively, you can use the "Force All" playlist game mode, but this will also possibly add new platforms you did not previously import.
@@ -171,7 +171,7 @@ This tool automatically handles installing/updating the command-line interface F
 ### Summary
 
  - C++20
- - CMake 3.24.0
+ - CMake >= 3.24.0
  - Targets Windows 10 and above
 
 ### Dependencies
@@ -182,8 +182,30 @@ This tool automatically handles installing/updating the command-line interface F
 - [Neargye's Magic Enum](https://github.com/Neargye/magic_enum)
 - [OBCMake](https://github.com/oblivioncth/OBCmake)
 
-### Builds
-Tested with MSVC2022.
-
 ### Details
 The source for this project is managed by a sensible CMake configuration that allows for straightforward compilation and consumption of its target(s), either as a sub-project or as an imported package. All required dependencies except for Qt6 are automatically acquired via CMake's FetchContent mechanism.
+
+### Building
+Ensure Qt6 is installed and locatable by CMake (or alternatively use the `qt-cmake` script that comes with Qt in-place of the`cmake` command).
+
+Right now, a static build is required in order for CLIFp to work correctly.
+
+Should work with MSVC, MINGW64, clang, and gcc.
+
+```
+# Acquire source
+git clone https://github.com/oblivioncth/FIL
+
+# Configure (ninja optional, but recommended)
+cmake -S FIL -B build-FIL -G "Ninja Multi-config"
+
+# Build
+cmake --build build-FIL
+
+# Install
+cmake --install build-FIL
+
+# Run
+cd "build-FIL/out/install/bin"
+fil
+```

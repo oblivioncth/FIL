@@ -2,10 +2,15 @@
 #include "clifp.h"
 
 // Qx Includes
+#ifdef _WIN32
 #include <qx/windows/qx-filedetails.h>
+#endif
 
 // libfp Includes
 #include <fp/fp-install.h>
+
+// Project Includes
+#include "project_vars.h"
 
 //===============================================================================================================
 // CLIFp
@@ -13,6 +18,31 @@
 
 //-Class Functions--------------------------------------------------------------------------------------------
 //Public:
+Qx::VersionNumber CLIFp::internalVersion()
+{
+    static Qx::VersionNumber v = Qx::VersionNumber::fromString(PROJECT_BUNDLED_CLIFP_VERSION);
+    return v;
+}
+
+Qx::VersionNumber CLIFp::installedVersion(const Fp::Install& fpInstall)
+{
+    if(!hasCLIFp(fpInstall))
+        return Qx::VersionNumber();
+    else
+    {
+#ifdef _WIN32
+        return Qx::FileDetails::readFileDetails(standardCLIFpPath(fpInstall)).fileVersion();
+#endif
+        /* TODO: For now on Linux we just return a null version so that deployment always
+         * occurs. Eventually, find a good way to grab version info from the installed ELF.
+         *
+         * Currently, we can't run it since it doesn't output to console, and there is no
+         * standardized way to embed the info as part of the ELF structure.
+         */
+        return Qx::VersionNumber();
+    }
+}
+
 QString CLIFp::standardCLIFpPath(const Fp::Install& fpInstall) { return fpInstall.dir().absoluteFilePath(EXE_NAME); }
 
 bool CLIFp::hasCLIFp(const Fp::Install& fpInstall)
@@ -21,15 +51,7 @@ bool CLIFp::hasCLIFp(const Fp::Install& fpInstall)
     return presentInfo.exists() && presentInfo.isFile();
 }
 
-Qx::VersionNumber CLIFp::currentCLIFpVersion(const Fp::Install& fpInstall)
-{
-    if(!hasCLIFp(fpInstall))
-        return Qx::VersionNumber();
-    else
-        return Qx::FileDetails::readFileDetails(standardCLIFpPath(fpInstall)).fileVersion();
-}
-
-bool CLIFp::deployCLIFp(QString& errorMsg, const Fp::Install& fpInstall, const QString& sourcePath)
+bool CLIFp::deployCLIFp(QString& errorMsg, const Fp::Install& fpInstall)
 {
     // Delete existing if present
     QFile clifp(standardCLIFpPath(fpInstall));
@@ -44,7 +66,7 @@ bool CLIFp::deployCLIFp(QString& errorMsg, const Fp::Install& fpInstall, const Q
     }
 
     // Deploy new
-    QFile internalCLIFp(sourcePath);
+    QFile internalCLIFp(u":/file/clifp"_s);
     if(!internalCLIFp.copy(clifp.fileName()))
     {
         errorMsg = internalCLIFp.errorString();
