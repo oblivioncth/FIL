@@ -22,7 +22,6 @@ void InstallFoundation::ensureModifiable(const QString& filePath)
     QScopeGuard cleanup([&]{
         LocalFree(pSecurityDescriptor);
         LocalFree(pNewDACL);
-        LocalFree(pOwnerId);
     });
 
     /* NOTE: We do two things here that are technically risky, but should be ok:
