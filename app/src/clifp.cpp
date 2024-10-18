@@ -20,7 +20,7 @@
 //Public:
 Qx::VersionNumber CLIFp::internalVersion()
 {
-    static Qx::VersionNumber v = Qx::VersionNumber::fromString(PROJECT_BUNDLED_CLIFP_VERSION);
+    static Qx::VersionNumber v = Qx::VersionNumber::fromString(PROJECT_BUNDLED_CLIFP_VERSION).normalized();
     return v;
 }
 
@@ -31,7 +31,7 @@ Qx::VersionNumber CLIFp::installedVersion(const Fp::Install& fpInstall)
     else
     {
 #ifdef _WIN32
-        return Qx::FileDetails::readFileDetails(standardCLIFpPath(fpInstall)).fileVersion();
+        return Qx::FileDetails::readFileDetails(standardCLIFpPath(fpInstall)).fileVersion().normalized();
 #endif
         /* TODO: For now on Linux we just return a null version so that deployment always
          * occurs. Eventually, find a good way to grab version info from the installed ELF.
