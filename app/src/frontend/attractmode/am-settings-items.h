@@ -50,7 +50,7 @@ public:
     QStringList exceptions() const;
 };
 
-class DisplayGlobalFilter::Builder : public Fe::Item::Builder<DisplayGlobalFilter::Builder, DisplayGlobalFilter>
+class DisplayGlobalFilter::Builder : public Fe::Item::Builder<DisplayGlobalFilter>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -129,7 +129,7 @@ public:
     int listLimit() const;
 };
 
-class DisplayFilter::Builder : public Fe::Item::Builder<DisplayFilter::Builder, DisplayFilter>
+class DisplayFilter::Builder : public Fe::Item::Builder<DisplayFilter>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -183,7 +183,7 @@ public:
     const QList<DisplayFilter>& filters() const;
 };
 
-class Display::Builder : public Fe::Item::Builder<Display::Builder, Display>
+class Display::Builder : public Fe::Item::Builder<Display>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -243,7 +243,7 @@ public:
     QList<ContentLine> contents() const;
 };
 
-class OtherSetting::Builder : public Fe::Item::Builder<OtherSetting::Builder, OtherSetting>
+class OtherSetting::Builder : public Fe::Item::Builder<OtherSetting>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:

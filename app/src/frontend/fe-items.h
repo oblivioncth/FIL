@@ -31,7 +31,7 @@ class Item
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
-    template <typename B, typename T>
+    template <typename T>
         requires std::derived_from<T, Item>
     class Builder;
 
@@ -54,7 +54,7 @@ public:
     void transferOtherFields(QHash<QString, QString>& otherFields);
 };
 
-template <typename B, typename T>
+template <typename T>
     requires std::derived_from<T, Item>
 class Item::Builder
 {
@@ -72,10 +72,11 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    B& wOtherField(QPair<QString, QString> otherField)
+    template<class Self>
+    auto wOtherField(this Self&& self, QPair<QString, QString> otherField)
     {
-        mItemBlueprint.mOtherFields[otherField.first] = otherField.second;
-        return static_cast<B&>(*this);
+        self.mItemBlueprint.mOtherFields[otherField.first] = otherField.second;
+        return self;
     }
     T build() { return mItemBlueprint; }
     std::shared_ptr<T> buildShared() { return std::make_shared<T>(mItemBlueprint); }
@@ -85,7 +86,7 @@ class BasicItem : public Item
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
-    template <typename B, typename T>
+    template<typename T>
         requires std::derived_from<T, BasicItem>
     class Builder;
 
@@ -105,22 +106,27 @@ public:
     QString name() const;
 };
 
-template <typename B, typename T>
+template<typename T>
     requires std::derived_from<T, BasicItem>
-class BasicItem::Builder : public Item::Builder<B, T>
+class BasicItem::Builder : public Item::Builder<T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    B& wId(const QString& rawId) { Item::Builder<B,T>::mItemBlueprint.mId = QUuid(rawId); return static_cast<B&>(*this); }
-    B& wId(const QUuid& id) { Item::Builder<B,T>::mItemBlueprint.mId = id; return static_cast<B&>(*this); }
-    B& wName(const QString& name) { Item::Builder<B,T>::mItemBlueprint.mName = name; return static_cast<B&>(*this);}
+    template<class Self>
+    auto wId(this Self&& self, const QString& rawId) { self.mItemBlueprint.mId = QUuid(rawId); return self; }
+
+    template<class Self>
+    auto wId(this Self&& self, const QUuid& id) { self.mItemBlueprint.mId = id; return self; }
+
+    template<class Self>
+    auto wName(this Self&& self, const QString& name) { self.mItemBlueprint.mName = name; return self;}
 };
 
 class Game : public BasicItem
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
-    template <typename B, typename T>
+    template<typename T>
         requires std::derived_from<T, Game>
     class Builder;
 
@@ -143,20 +149,21 @@ public:
     QString platform() const;
 };
 
-template <typename B, typename T>
+template<typename T>
     requires std::derived_from<T, Game>
-class Game::Builder : public BasicItem::Builder<B, T>
+class Game::Builder : public BasicItem::Builder<T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    B& wPlatform(const QString& platform) { Item::Builder<B,T>::mItemBlueprint.mPlatform = platform; return static_cast<B&>(*this); }
+    template<class Self>
+    auto wPlatform(this Self&& self, const QString& platform) { self.mItemBlueprint.mPlatform = platform; return self; }
 };
 
 class AddApp : public BasicItem
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
-    template <typename B, typename T>
+    template<typename T>
         requires std::derived_from<T, AddApp>
     class Builder;
 
@@ -174,21 +181,24 @@ public:
     QUuid gameId() const;
 };
 
-template <typename B, typename T>
+template<typename T>
     requires std::derived_from<T, AddApp>
-class AddApp::Builder : public BasicItem::Builder<B, T>
+class AddApp::Builder : public BasicItem::Builder<T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    B& wGameId(const QString& rawGameId) { Item::Builder<B,T>::mItemBlueprint.mGameId = QUuid(rawGameId); return static_cast<B&>(*this); }
-    B& wGameId(const QUuid& gameId) { Item::Builder<B,T>::mItemBlueprint.mGameId = gameId; return *this; }
+    template<class Self>
+    auto wGameId(this Self&& self, const QString& rawGameId) { self.mItemBlueprint.mGameId = QUuid(rawGameId); return self; }
+
+    template<class Self>
+    auto wGameId(this Self&& self, const QUuid& gameId) { self.mItemBlueprint.mGameId = gameId; return self; }
 };
 
 class PlaylistHeader : public BasicItem
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
-    template <typename B, typename T>
+    template<typename T>
         requires std::derived_from<T, PlaylistHeader>
     class Builder;
 
@@ -198,16 +208,16 @@ protected:
     PlaylistHeader(QUuid id, QString name);
 };
 
-template <typename B, typename T>
+template<typename T>
     requires std::derived_from<T, PlaylistHeader>
-class PlaylistHeader::Builder : public BasicItem::Builder<B, T>
+class PlaylistHeader::Builder : public BasicItem::Builder<T>
 {};
 
 class PlaylistGame : public BasicItem
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
-    template <typename B, typename T>
+    template<typename T>
         requires std::derived_from<T, PlaylistGame>
     class Builder;
 
@@ -224,15 +234,18 @@ public:
     QUuid gameId() const;
 };
 
-template <typename B, typename T>
+template<typename T>
     requires std::derived_from<T, PlaylistGame>
-class PlaylistGame::Builder : public BasicItem::Builder<B, T>
+class PlaylistGame::Builder : public BasicItem::Builder<T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
     // These reuse the main ID on purpose, in this case gameId is a proxy for Id
-    B& wGameId(QString rawGameId) { Item::Builder<B,T>::mItemBlueprint.mId = QUuid(rawGameId); return static_cast<B&>(*this); }
-    B& wGameId(QUuid gameId) { Item::Builder<B,T>::mItemBlueprint.mId = gameId; return static_cast<B&>(*this); }
+    template<class Self>
+    auto wGameId(this Self&& self, QString rawGameId) { self.mItemBlueprint.mId = QUuid(rawGameId); return self; }
+
+    template<class Self>
+    auto wGameId(this Self&& self, QUuid gameId) { self.mItemBlueprint.mId = gameId; return self; }
 };
 
 }

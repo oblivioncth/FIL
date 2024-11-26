@@ -27,7 +27,7 @@ set(TARGET_FP_VERSION_PREFIX 13.0)
 option(BUILD_SHARED_LIBS "Build FIL with shared libraries" OFF)
 
 # C++
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Build augmentation
