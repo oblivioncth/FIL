@@ -80,7 +80,7 @@ public:
      QString rating() const;
 };
 
-class RomEntry::Builder : public Fe::Game::Builder<RomEntry::Builder, RomEntry>
+class RomEntry::Builder : public Fe::Game::Builder<RomEntry>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -132,7 +132,7 @@ public:
     QStringList paths() const;
 };
 
-class EmulatorArtworkEntry::Builder : public Fe::Item::Builder<EmulatorArtworkEntry::Builder, EmulatorArtworkEntry>
+class EmulatorArtworkEntry::Builder : public Fe::Item::Builder<EmulatorArtworkEntry>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:

@@ -68,7 +68,7 @@ public:
     QString releaseType() const;
 };
 
-class Game::Builder : public Fe::Game::Builder<Game::Builder, Game>
+class Game::Builder : public Fe::Game::Builder<Game>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -122,7 +122,7 @@ public:
     bool isWaitForExit() const;
 };
 
-class AddApp::Builder : public Fe::AddApp::Builder<AddApp::Builder, AddApp>
+class AddApp::Builder : public Fe::AddApp::Builder<AddApp>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -163,7 +163,7 @@ public:
     QString value() const;
 };
 
-class CustomField::Builder : public Fe::Item::Builder<CustomField::Builder, CustomField>
+class CustomField::Builder : public Fe::Item::Builder<CustomField>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -200,7 +200,7 @@ public:
     QString notes() const;
 };
 
-class PlaylistHeader::Builder : public Fe::PlaylistHeader::Builder<PlaylistHeader::Builder, PlaylistHeader>
+class PlaylistHeader::Builder : public Fe::PlaylistHeader::Builder<PlaylistHeader>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -260,7 +260,7 @@ public:
     void setLBDatabaseId(int lbDbId);
 };
 
-class PlaylistGame::Builder : public Fe::PlaylistGame::Builder<PlaylistGame::Builder, PlaylistGame>
+class PlaylistGame::Builder : public Fe::PlaylistGame::Builder<PlaylistGame>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -296,7 +296,7 @@ public:
 //    QString category() const;
 };
 
-class Platform::Builder : public Fe::Item::Builder<Platform::Builder, Platform>
+class Platform::Builder : public Fe::Item::Builder<Platform>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -332,7 +332,7 @@ public:
     QString identifier() const;
 };
 
-class PlatformFolder::Builder : public Fe::Item::Builder<PlatformFolder::Builder, PlatformFolder>
+class PlatformFolder::Builder : public Fe::Item::Builder<PlatformFolder>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -366,7 +366,7 @@ public:
     QString nestedName() const;
 };
 
-class PlatformCategory::Builder : public Fe::Item::Builder<PlatformCategory::Builder, PlatformCategory>
+class PlatformCategory::Builder : public Fe::Item::Builder<PlatformCategory>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -403,7 +403,7 @@ public:
     QUuid playlistId() const;
 };
 
-class Parent::Builder : public Fe::Item::Builder<Parent::Builder, Parent>
+class Parent::Builder : public Fe::Item::Builder<Parent>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
