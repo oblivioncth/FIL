@@ -23,48 +23,53 @@ add_custom_target(fil_copy_clifp
 
 # ------------------ Setup FIL --------------------------
 set(FIL_SOURCE
-    frontend/fe-data.h
-    frontend/fe-data.cpp
-    frontend/fe-installfoundation.h
-    frontend/fe-installfoundation.cpp
-    frontend/fe-installfoundation_win.cpp
-    frontend/fe-installfoundation_linux.cpp
-    frontend/fe-install.h
-    frontend/fe-install.cpp
-    frontend/fe-items.h
-    frontend/fe-items.cpp
-    frontend/attractmode/am-data.h
-    frontend/attractmode/am-data.cpp
-    frontend/attractmode/am-install.h
-    frontend/attractmode/am-install.cpp
-    frontend/attractmode/am-install_win.cpp
-    frontend/attractmode/am-install_linux.cpp
-    frontend/attractmode/am-items.h
-    frontend/attractmode/am-items.cpp
-    frontend/attractmode/am-settings-data.h
-    frontend/attractmode/am-settings-data.cpp
-    frontend/attractmode/am-settings-items.h
-    frontend/attractmode/am-settings-items.cpp
+    import/properties.h
+    import/properties.cpp
+    import/settings.h
+    import/worker.h
+    import/worker.cpp
+    launcher/lr-data.h
+    launcher/lr-data.cpp
+    launcher/lr-installfoundation.h
+    launcher/lr-installfoundation.cpp
+    launcher/lr-installfoundation_win.cpp
+    launcher/lr-installfoundation_linux.cpp
+    launcher/lr-install.h
+    launcher/lr-install.cpp
+    launcher/lr-items.h
+    launcher/lr-items.cpp
+    launcher/attractmode/am-data.h
+    launcher/attractmode/am-data.cpp
+    launcher/attractmode/am-install.h
+    launcher/attractmode/am-install.cpp
+    launcher/attractmode/am-install_win.cpp
+    launcher/attractmode/am-install_linux.cpp
+    launcher/attractmode/am-items.h
+    launcher/attractmode/am-items.cpp
+    launcher/attractmode/am-settings-data.h
+    launcher/attractmode/am-settings-data.cpp
+    launcher/attractmode/am-settings-items.h
+    launcher/attractmode/am-settings-items.cpp
     ui/mainwindow.h
     ui/mainwindow.cpp
     ui/mainwindow.ui
     ui/progresspresenter.h
     ui/progresspresenter.cpp
-    clifp.h
-    clifp.cpp
-    import-worker.h
-    import-worker.cpp
+    kernel/controller.h
+    kernel/controller.cpp
+    kernel/clifp.h
+    kernel/clifp.cpp
     main.cpp
 )
 
 if(CMAKE_SYSTEM_NAME STREQUAL Windows)
     list(APPEND FIL_SOURCE
-        frontend/launchbox/lb-data.h
-        frontend/launchbox/lb-data.cpp
-        frontend/launchbox/lb-install.h
-        frontend/launchbox/lb-install.cpp
-        frontend/launchbox/lb-items.h
-        frontend/launchbox/lb-items.cpp
+        launcher/launchbox/lb-data.h
+        launcher/launchbox/lb-data.cpp
+        launcher/launchbox/lb-install.h
+        launcher/launchbox/lb-install.cpp
+        launcher/launchbox/lb-items.h
+        launcher/launchbox/lb-items.cpp
     )
 endif()
 
@@ -102,6 +107,11 @@ ob_add_standard_executable(${APP_TARGET_NAME}
     LINKS ${FIL_LINKS}
     CONFIG STANDARD
     WIN32
+)
+
+target_sources(fil_fil
+  PRIVATE
+
 )
 
 # Note that the executable depends on CLIFp being copied into its build dir

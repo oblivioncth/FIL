@@ -24,7 +24,6 @@ void ProgressPresenter::setupProgressDialog()
     // Initialize dialog
     mDialog.setCancelButtonText(u"Cancel"_s);
     mDialog.setWindowModality(Qt::WindowModal);
-    mDialog.setWindowTitle(CAPTION_IMPORTING);
     mDialog.setWindowFlags(mDialog.windowFlags() & ~Qt::WindowContextHelpButtonHint);
     mDialog.setAutoReset(false);
     mDialog.setAutoClose(false);
@@ -59,6 +58,8 @@ void ProgressPresenter::setBusyState()
 #endif
 }
 
+void ProgressPresenter::setCaption(const QString& caption) { mDialog.setWindowTitle(caption); }
+
 void ProgressPresenter::resetState()
 {
 #ifdef _WIN32
@@ -75,6 +76,8 @@ void ProgressPresenter::reset()
     mButton.setProgressState(Qx::TaskbarButton::Hidden);
 #endif
 }
+
+int ProgressPresenter::value() const { return mDialog.value(); }
 
 //-Slots---------------------------------------------------------------------------------------------------------
 //Public:

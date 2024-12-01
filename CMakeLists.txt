@@ -13,7 +13,7 @@ project(FIL
 
 # Get helper scripts
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FetchOBCMake.cmake)
-fetch_ob_cmake("9f45dec8dc1cd09d99862b7b7ea335b361cf7ff7")
+fetch_ob_cmake("e88d54a044319c0cd12a9e68c5538bf1194e6285")
 
 # Initialize project according to standard rules
 include(OB/Project)
@@ -74,7 +74,7 @@ endif()
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "0572d288936afd63ff6f5b6ce4b1fbfc0f03b0eb"
+    REF "6db968d73e681eac7b687b0f9105cde934e4a6b2"
     COMPONENTS
         ${FIL_QX_COMPONENTS}
 )
@@ -104,7 +104,7 @@ ob_fetch_clifp("7139ae998b292eb595e751ba4cb8599230435358")
 
 # Fetch Neargye's Magic Enum
 include(OB/FetchMagicEnum)
-ob_fetch_magicenum("v0.9.3")
+ob_fetch_magicenum("v0.9.7")
 
 # Process Targets
 set(APP_TARGET_NAME ${PROJECT_NAMESPACE_LC}_${PROJECT_NAMESPACE_LC})
