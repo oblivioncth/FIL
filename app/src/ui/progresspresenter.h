@@ -14,10 +14,6 @@ using namespace Qt::StringLiterals;
 class ProgressPresenter : public QObject
 {
     Q_OBJECT
-//-Class Variables--------------------------------------------------------------------------------------------
-private:
-        static inline const QString CAPTION_IMPORTING = u"FP Import"_s;
-
 //-Instance Variables--------------------------------------------------------------------------------------------
 private:
 #ifdef _WIN32
@@ -37,8 +33,10 @@ public:
     void attachWindow(QWindow* window);
     void setErrorState();
     void setBusyState();
+    void setCaption(const QString& caption);
     void resetState();
     void reset();
+    int value() const;
 
 //-Slots---------------------------------------------------------------------------------------------------------
 public slots:

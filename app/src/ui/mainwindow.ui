@@ -31,7 +31,7 @@
         <number>9</number>
        </property>
        <item row="2" column="1">
-        <widget class="QLineEdit" name="lineEdit_frontendPath">
+        <widget class="QLineEdit" name="lineEdit_launcherPath">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
            <horstretch>20</horstretch>
@@ -52,7 +52,7 @@
         </widget>
        </item>
        <item row="2" column="0">
-        <widget class="QLabel" name="icon_frontend_install_status">
+        <widget class="QLabel" name="icon_launcher_install_status">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -87,16 +87,16 @@
           <string/>
          </property>
          <property name="textFormat">
-          <enum>Qt::PlainText</enum>
+          <enum>Qt::TextFormat::PlainText</enum>
          </property>
          <property name="pixmap">
-          <pixmap resource="../res/resources.qrc">:/ui/No_Install.png</pixmap>
+          <pixmap resource="../../res/resources.qrc">:/ui/No_Install.png</pixmap>
          </property>
          <property name="scaledContents">
           <bool>true</bool>
          </property>
          <property name="alignment">
-          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+          <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -124,7 +124,7 @@
           <string/>
          </property>
          <property name="pixmap">
-          <pixmap resource="../res/resources.qrc">:/ui/No_Install.png</pixmap>
+          <pixmap resource="../../res/resources.qrc">:/ui/No_Install.png</pixmap>
          </property>
          <property name="scaledContents">
           <bool>true</bool>
@@ -153,7 +153,7 @@
         </widget>
        </item>
        <item row="2" column="2">
-        <widget class="QPushButton" name="pushButton_frontendBrowse">
+        <widget class="QPushButton" name="pushButton_launcherBrowse">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
            <horstretch>1</horstretch>
@@ -228,9 +228,9 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QLabel" name="label_frontendPath">
+          <widget class="QLabel" name="label_launcherPath">
            <property name="text">
-            <string>Frontend Install:</string>
+            <string>Launcher Install:</string>
            </property>
            <property name="indent">
             <number>0</number>
@@ -238,7 +238,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="label_frontendVersion">
+          <widget class="QLabel" name="label_launcherVersion">
            <property name="font">
             <font>
              <italic>true</italic>
@@ -277,7 +277,7 @@
             <string>Platforms</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignCenter</set>
+            <set>Qt::AlignmentFlag::AlignCenter</set>
            </property>
           </widget>
          </item>
@@ -296,7 +296,7 @@
             </size>
            </property>
            <property name="selectionMode">
-            <enum>QAbstractItemView::NoSelection</enum>
+            <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
            </property>
           </widget>
          </item>
@@ -347,10 +347,10 @@
        <item>
         <spacer name="horizontalSpacer">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeType">
-          <enum>QSizePolicy::Preferred</enum>
+          <enum>QSizePolicy::Policy::Preferred</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -368,7 +368,7 @@
             <string>Playlists</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignCenter</set>
+            <set>Qt::AlignmentFlag::AlignCenter</set>
            </property>
           </widget>
          </item>
@@ -381,14 +381,14 @@
             </size>
            </property>
            <property name="selectionMode">
-            <enum>QAbstractItemView::NoSelection</enum>
+            <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
            </property>
           </widget>
          </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_3">
            <property name="sizeConstraint">
-            <enum>QLayout::SetDefaultConstraint</enum>
+            <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
            </property>
            <item>
             <widget class="QPushButton" name="pushButton_selectAll_playlists">
@@ -450,7 +450,7 @@
        <item row="0" column="1">
         <spacer name="horizontalSpacer_4">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -484,12 +484,9 @@
           <string>Help</string>
          </property>
          <property name="icon">
-          <iconset resource="../res/resources.qrc">
+          <iconset resource="../../res/resources.qrc">
            <normaloff>:/ui/Update_Mode_Info.png</normaloff>:/ui/Update_Mode_Info.png</iconset>
          </property>
-         <attribute name="buttonGroup">
-          <string notr="true">buttonGroup_imageMode</string>
-         </attribute>
         </widget>
        </item>
        <item row="1" column="0">
@@ -506,6 +503,9 @@
          <property name="checked">
           <bool>false</bool>
          </property>
+         <attribute name="buttonGroup">
+          <string notr="true">buttonGroup_playlistGameMode</string>
+         </attribute>
         </widget>
        </item>
        <item row="0" column="0">
@@ -522,6 +522,9 @@
          <property name="checked">
           <bool>true</bool>
          </property>
+         <attribute name="buttonGroup">
+          <string notr="true">buttonGroup_playlistGameMode</string>
+         </attribute>
         </widget>
        </item>
       </layout>
@@ -542,10 +545,10 @@
        <item row="0" column="1">
         <spacer name="horizontalSpacer_2">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeType">
-          <enum>QSizePolicy::Expanding</enum>
+          <enum>QSizePolicy::Policy::Expanding</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -579,7 +582,7 @@
           <string>Help</string>
          </property>
          <property name="icon">
-          <iconset resource="../res/resources.qrc">
+          <iconset resource="../../res/resources.qrc">
            <normaloff>:/ui/Update_Mode_Info.png</normaloff>:/ui/Update_Mode_Info.png</iconset>
          </property>
         </widget>
@@ -604,6 +607,9 @@
          <property name="checked">
           <bool>true</bool>
          </property>
+         <attribute name="buttonGroup">
+          <string notr="true">buttonGroup_updateMode</string>
+         </attribute>
         </widget>
        </item>
        <item row="2" column="0">
@@ -648,6 +654,9 @@
          <property name="checked">
           <bool>false</bool>
          </property>
+         <attribute name="buttonGroup">
+          <string notr="true">buttonGroup_updateMode</string>
+         </attribute>
         </widget>
        </item>
        <item row="1" column="2">
@@ -777,7 +786,7 @@
           <string>Existing Item</string>
          </property>
          <property name="alignment">
-          <set>Qt::AlignCenter</set>
+          <set>Qt::AlignmentFlag::AlignCenter</set>
          </property>
         </widget>
        </item>
@@ -836,7 +845,7 @@
           <string>Help</string>
          </property>
          <property name="icon">
-          <iconset resource="../res/resources.qrc">
+          <iconset resource="../../res/resources.qrc">
            <normaloff>:/ui/Update_Mode_Info.png</normaloff>:/ui/Update_Mode_Info.png</iconset>
          </property>
         </widget>
@@ -844,7 +853,7 @@
        <item row="0" column="1">
         <spacer name="horizontalSpacer_3">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -953,14 +962,14 @@
     <property name="title">
      <string>Help</string>
     </property>
-    <widget class="QMenu" name="menu_frontendHelp">
+    <widget class="QMenu" name="menu_launcherHelp">
      <property name="title">
-      <string>Frontends</string>
+      <string>Launchers</string>
      </property>
     </widget>
     <addaction name="action_goToFILGitHub"/>
     <addaction name="action_goToCLIFpGitHub"/>
-    <addaction name="menu_frontendHelp"/>
+    <addaction name="menu_launcherHelp"/>
     <addaction name="action_about"/>
    </widget>
    <addaction name="menuFile"/>
@@ -969,7 +978,7 @@
   </widget>
   <action name="action_exit">
    <property name="icon">
-    <iconset resource="../res/resources.qrc">
+    <iconset resource="../../res/resources.qrc">
      <normaloff>:/ui/Exit.png</normaloff>:/ui/Exit.png</iconset>
    </property>
    <property name="text">
@@ -978,7 +987,7 @@
   </action>
   <action name="action_goToFILGitHub">
    <property name="icon">
-    <iconset resource="../res/resources.qrc">
+    <iconset resource="../../res/resources.qrc">
      <normaloff>:/ui/GitHub.png</normaloff>:/ui/GitHub.png</iconset>
    </property>
    <property name="text">
@@ -987,7 +996,7 @@
   </action>
   <action name="action_goToCLIFpGitHub">
    <property name="icon">
-    <iconset resource="../res/resources.qrc">
+    <iconset resource="../../res/resources.qrc">
      <normaloff>:/ui/GitHub.png</normaloff>:/ui/GitHub.png</iconset>
    </property>
    <property name="text">
@@ -1005,7 +1014,7 @@
   </action>
   <action name="action_deployCLIFp">
    <property name="icon">
-    <iconset resource="../res/resources.qrc">
+    <iconset resource="../../res/resources.qrc">
      <normaloff>:/ui/CLIFp.png</normaloff>:/ui/CLIFp.png</iconset>
    </property>
    <property name="text">
@@ -1057,7 +1066,7 @@
   </action>
   <action name="action_about">
    <property name="icon">
-    <iconset resource="../res/resources.qrc">
+    <iconset resource="../../res/resources.qrc">
      <normaloff>:/ui/About.png</normaloff>:/ui/About.png</iconset>
    </property>
    <property name="text">
@@ -1066,7 +1075,7 @@
   </action>
  </widget>
  <resources>
-  <include location="../res/resources.qrc"/>
+  <include location="../../res/resources.qrc"/>
  </resources>
  <connections>
   <connection>
@@ -1086,7 +1095,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>pushButton_frontendBrowse</sender>
+   <sender>pushButton_launcherBrowse</sender>
    <signal>clicked()</signal>
    <receiver>MainWindow</receiver>
    <slot>all_on_pushButton_clicked()</slot>
@@ -1094,38 +1103,6 @@
     <hint type="sourcelabel">
      <x>355</x>
      <y>95</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>399</x>
-     <y>299</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>lineEdit_frontendPath</sender>
-   <signal>editingFinished()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>all_on_lineEdit_editingFinished()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>170</x>
-     <y>94</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>399</x>
-     <y>299</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>lineEdit_flashpointPath</sender>
-   <signal>editingFinished()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>all_on_lineEdit_editingFinished()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>170</x>
-     <y>144</y>
     </hint>
     <hint type="destinationlabel">
      <x>399</x>
@@ -1190,22 +1167,6 @@
     <hint type="sourcelabel">
      <x>427</x>
      <y>462</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>244</x>
-     <y>333</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>listWidget_platformChoices</sender>
-   <signal>itemChanged(QListWidgetItem*)</signal>
-   <receiver>MainWindow</receiver>
-   <slot>all_on_listWidget_itemChanged(QListWidgetItem*)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>125</x>
-     <y>336</y>
     </hint>
     <hint type="destinationlabel">
      <x>244</x>
@@ -1358,54 +1319,6 @@
    </hints>
   </connection>
   <connection>
-   <sender>listWidget_playlistChoices</sender>
-   <signal>itemChanged(QListWidgetItem*)</signal>
-   <receiver>MainWindow</receiver>
-   <slot>all_on_listWidget_itemChanged(QListWidgetItem*)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>486</x>
-     <y>354</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>323</x>
-     <y>479</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>radioButton_selectedPlatformsOnly</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>all_on_radioButton_clicked()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>219</x>
-     <y>568</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>323</x>
-     <y>479</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>radioButton_forceAll</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>all_on_radioButton_clicked()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>219</x>
-     <y>596</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>323</x>
-     <y>479</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>action_editTagFilter</sender>
    <signal>triggered()</signal>
    <receiver>MainWindow</receiver>
@@ -1437,6 +1350,38 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>lineEdit_launcherPath</sender>
+   <signal>editingFinished()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>all_on_lineEdit_editingFinished()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>307</x>
+     <y>98</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>323</x>
+     <y>479</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEdit_flashpointPath</sender>
+   <signal>editingFinished()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>all_on_lineEdit_editingFinished()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>307</x>
+     <y>155</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>323</x>
+     <y>479</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>all_on_pushButton_clicked()</slot>
@@ -1449,6 +1394,8 @@
   <slot>all_on_menu_triggered(QAction*)</slot>
  </slots>
  <buttongroups>
+  <buttongroup name="buttonGroup_playlistGameMode"/>
+  <buttongroup name="buttonGroup_updateMode"/>
   <buttongroup name="buttonGroup_imageMode"/>
  </buttongroups>
 </ui>

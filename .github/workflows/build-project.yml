@@ -12,6 +12,7 @@ on:
     # the "pull_request" trigger works (it works off master correctly for a merged PR but is triggered
     # by dev
 
+# No GCC because it's not packaged for 20.04 or 22.04 yet
 jobs:
   trigger-build:
     name: Build Project
@@ -23,5 +24,24 @@ jobs:
       runs_exclude: >
         [
             { "linkage": "shared" },
-            { "compiler": "g++-10" }
+            { "compiler": "g++-10" },
+            { "compiler": "g++-12" },
+            { "compiler": "clang++-12" },
+            { "compiler": "clang++-14" }
         ]
+      runs_include: >
+        [
+            { "os": "ubuntu-20.04", "compiler": "clang++-18", "linkage": "static" }, 
+            { "os": "ubuntu-22.04", "compiler": "clang++-18", "linkage": "static" }
+        ]
+      pre_build_steps: |
+        - name: Install Clang 18 [Linux]
+          if: env.run_is_linux == 'true' && env.run_compiler == 'clang++-18'
+          shell: bash
+          run: |
+            wget https://apt.llvm.org/llvm.sh
+            chmod u+x llvm.sh
+            sudo ./llvm.sh 18
+
+            
+        

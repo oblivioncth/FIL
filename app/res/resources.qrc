@@ -8,9 +8,9 @@
         <file>ui/CLIFp.png</file>
         <file>ui/Exit.png</file>
         <file>ui/GitHub.png</file>
-        <file>frontend/LaunchBox/icon.svg</file>
-        <file>frontend/AttractMode/icon.png</file>
-        <file>frontend/AttractMode/marquee.png</file>
+        <file>launcher/LaunchBox/icon.svg</file>
+        <file>launcher/AttractMode/icon.png</file>
+        <file>launcher/AttractMode/marquee.png</file>
         <file>flashpoint/icon.png</file>
         <file>ui/About.png</file>
     </qresource>
