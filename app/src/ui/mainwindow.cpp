@@ -24,7 +24,7 @@
 
 // Project Includes
 #include "import/properties.h"
-#include "launcher/lr-install.h"
+#include "launcher/abstract/lr-registration.h"
 #include "kernel/clifp.h"
 
 //===============================================================================================================
@@ -307,15 +307,13 @@ void MainWindow::initializeBindings()
 void MainWindow::initializeLauncherHelpActions()
 {
     // Add install help link for each registered install
-    auto i = Lr::Install::registry().cbegin();
-    auto end = Lr::Install::registry().cend();
-
-    for(; i != end; i++)
+    for(auto eItr = Lr::Registry::entries(); eItr.hasNext();)
     {
+        auto e = eItr.next();
         QAction* lrHelpAction = new QAction(ui->menu_launcherHelp);
-        lrHelpAction->setObjectName(MENU_LR_HELP_OBJ_NAME_TEMPLATE.arg(i.key()));
-        lrHelpAction->setText(i.key());
-        lrHelpAction->setIcon(QIcon(*(i->iconPath)));
+        lrHelpAction->setObjectName(MENU_LR_HELP_OBJ_NAME_TEMPLATE.arg(e.key()));
+        lrHelpAction->setText(e.key().toString());
+        lrHelpAction->setIcon(QIcon(e.value().iconPath.toString()));
         ui->menu_launcherHelp->addAction(lrHelpAction);
     }
 }
@@ -581,10 +579,10 @@ void MainWindow::all_on_menu_triggered(QAction *action)
         if(launcherMatch.hasMatch())
         {
             QString launcherName = launcherMatch.captured(u"launcher"_s);
-            if(!launcherName.isNull() && Lr::Install::registry().contains(launcherName))
+            QUrl helpUrl = Lr::Registry::helpUrl(launcherName);
+            if(helpUrl.isValid())
             {
-                const QUrl* helpUrl = Lr::Install::registry()[launcherName].helpUrl;
-                QDesktopServices::openUrl(*helpUrl);
+                QDesktopServices::openUrl(helpUrl);
                 return;
             }
         }

@@ -161,14 +161,14 @@ bool OtherSetting::Parser::parse(QStringView key, const QString& value, int dept
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-CrudeSettings::CrudeSettings(Install* const parent, const QString& filePath, const DocKey&) :
-    ConfigDoc(parent, filePath, STD_NAME)
+CrudeSettings::CrudeSettings(Install* install, const QString& filePath) :
+    ConfigDoc(install, filePath, STD_NAME)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
 bool CrudeSettings::isEmpty() const { return mDisplays.isEmpty() && mOtherSettings.isEmpty(); }
-Lr::DataDoc::Type CrudeSettings::type() const { return Type::Config; }
+Lr::IDataDoc::Type CrudeSettings::type() const { return Type::Config; }
 
 bool CrudeSettings::containsDisplay(const QString& name) { return mDisplays.contains(name); }
 void CrudeSettings::addDisplay(const Display& display) { mDisplays.insert(display.name(), display); }
@@ -192,7 +192,7 @@ void CrudeSettings::addOtherSetting(const OtherSetting& setting)
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
 CrudeSettingsReader::CrudeSettingsReader(CrudeSettings* targetDoc) :
-    ConfigDoc::Reader(targetDoc)
+    ConfigDoc::Reader<CrudeSettings>(targetDoc)
 {}
 
 //-Class Functions--------------------------------------------------------------------------------------------------
@@ -212,11 +212,6 @@ int CrudeSettingsReader::checkTabDepth(const QString& line)
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-CrudeSettings* CrudeSettingsReader::targetCrudeSettings() const
-{
-    return static_cast<CrudeSettings*>(mTargetDocument);
-}
-
 Lr::DocHandlingError CrudeSettingsReader::readTargetDoc()
 {
     Lr::DocHandlingError errorStatus;
@@ -242,8 +237,8 @@ Lr::DocHandlingError CrudeSettingsReader::readTargetDoc()
             if(key == CrudeSettings::Keys::DISPLAY)
             {
                 // Add empty display to doc
-                targetCrudeSettings()->mDisplays[value] = Display(value);
-                Display* addedDisplay = &targetCrudeSettings()->mDisplays[value];
+                target()->mDisplays[value] = Display(value);
+                Display* addedDisplay = &target()->mDisplays[value];
 
                 // Create parser and set to current
                 mCurrentSubSettingParser = std::make_unique<Display::Parser>(addedDisplay);
@@ -253,7 +248,7 @@ Lr::DocHandlingError CrudeSettingsReader::readTargetDoc()
                 if(!mCurrentSubSettingParser->parse(key, value, depth))
                 {
                     QString setting = mCurrentSubSettingParser->settingName();
-                    errorStatus = Lr::DocHandlingError(*mTargetDocument, Lr::DocHandlingError::DocReadFailed, UNKNOWN_KEY_ERROR.arg(key, setting));
+                    errorStatus = Lr::DocHandlingError(*target(), Lr::DocHandlingError::DocReadFailed, UNKNOWN_KEY_ERROR.arg(key, setting));
                     break;
                 }
             }
@@ -273,8 +268,8 @@ void CrudeSettingsReader::initializeGenericSubSetting(const QString& key, const 
 {
     // Add empty generic
     QUuid id = OtherSetting::equivalentId(key, value);
-    targetCrudeSettings()->mOtherSettings[id] = OtherSetting(key, value);
-    OtherSetting* addedSetting = &targetCrudeSettings()->mOtherSettings[id];
+    target()->mOtherSettings[id] = OtherSetting(key, value);
+    OtherSetting* addedSetting = &target()->mOtherSettings[id];
 
     // Create parser and set to current
     mCurrentSubSettingParser = std::make_unique<OtherSetting::Parser>(addedSetting);
@@ -287,7 +282,7 @@ void CrudeSettingsReader::initializeGenericSubSetting(const QString& key, const 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
 CrudeSettingsWriter::CrudeSettingsWriter(CrudeSettings* sourceDoc) :
-    ConfigDoc::Writer(sourceDoc),
+    ConfigDoc::Writer<CrudeSettings>(sourceDoc),
     mTabDepth(0)
 {
     // Global alignment
@@ -296,11 +291,6 @@ CrudeSettingsWriter::CrudeSettingsWriter(CrudeSettings* sourceDoc) :
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-CrudeSettings* CrudeSettingsWriter::sourceCrudeSettings() const
-{
-    return static_cast<CrudeSettings*>(mSourceDocument);
-}
-
 void CrudeSettingsWriter::writeKeyValue(const QString& key, const QString& value)
 {
     mStreamWriter << QString(mTabDepth, '\t');
@@ -313,14 +303,14 @@ void CrudeSettingsWriter::writeKeyValue(const QString& key, const QString& value
 bool CrudeSettingsWriter::writeConfigDoc()
 {
     // Write all display entries
-    for(const Display& display : qAsConst(sourceCrudeSettings()->mDisplays))
+    for(const Display& display : qAsConst(source()->mDisplays))
     {
         if(!writeDisplay(display))
             return false;
     }
 
     // Write all other settings
-    for(const OtherSetting& setting : qAsConst(sourceCrudeSettings()->mOtherSettings))
+    for(const OtherSetting& setting : qAsConst(source()->mOtherSettings))
     {
         if(!writeOtherSetting(setting))
             return false;

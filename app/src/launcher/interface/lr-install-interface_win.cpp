@@ -1,5 +1,5 @@
 // Unit Include
-#include "lr-installfoundation.h"
+#include "lr-install-interface.h"
 
 // Windows Includes (Specifically for changing file permissions)
 #include "Aclapi.h"
@@ -7,12 +7,12 @@
 namespace Lr
 {
 //===============================================================================================================
-// InstallFoundation
+// IInstall
 //===============================================================================================================
 
 //-Class Functions--------------------------------------------------------------------------------------------
 //Private:
-void InstallFoundation::ensureModifiable(const QString& filePath)
+void IInstall::ensureModifiable(const QString& filePath)
 {
     Q_ASSERT(!filePath.isEmpty());
     PACL pCurrentDacl = nullptr, pNewDACL = nullptr;

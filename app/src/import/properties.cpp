@@ -8,7 +8,7 @@
 #include <fp/fp-install.h>
 
 // Project Includes
-#include "launcher/lr-install.h"
+#include "launcher/interface/lr-install-interface.h"
 
 namespace Import
 {
@@ -141,11 +141,11 @@ QList<Importee> Properties::platforms() const { return mPlatforms; }
 const Qx::Bindable<QList<Importee>> Properties::bindablePlaylists() const { return mPlaylists; }
 QList<Importee> Properties::playlists() const { return mPlaylists; }
 
-void Properties::setLauncher(std::unique_ptr<Lr::Install>&& launcher) { mLauncher = std::move(launcher); }
+void Properties::setLauncher(std::unique_ptr<Lr::IInstall>&& launcher) { mLauncher = std::move(launcher); }
 void Properties::setFlashpoint(std::unique_ptr<Fp::Install>&& flashpoint) { mFlashpoint = std::move(flashpoint); }
 void Properties::refreshInstallData() { gatherTargetData(); }
 
-Lr::Install* Properties::launcher() { Q_ASSERT(*mLauncher); return (*mLauncher).get(); }
+Lr::IInstall* Properties::launcher() { Q_ASSERT(*mLauncher); return (*mLauncher).get(); }
 Fp::Install* Properties::flashpoint() { Q_ASSERT(*mFlashpoint); return (*mFlashpoint).get(); };
 
 }

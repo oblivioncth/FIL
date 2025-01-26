@@ -1,5 +1,5 @@
-#ifndef LR_ITEMS_H
-#define LR_ITEMS_H
+#ifndef LR_ITEMS_INTERFACE_H
+#define LR_ITEMS_INTERFACE_H
 
 // Standard Library Includes
 #include <concepts>
@@ -7,6 +7,9 @@
 // Qt Includes
 #include <QHash>
 #include <QUuid>
+
+// Qx Includes
+#include <qx/utility/qx-concepts.h>
 
 using namespace Qt::Literals::StringLiterals;
 
@@ -26,13 +29,49 @@ namespace Lr
  * be able to work with it
  */
 
+class Item;
+class BasicItem;
+class Game;
+class AddApp;
+class PlaylistHeader;
+class PlaylistGame;
+
+template<typename T>
+concept raw_item = std::derived_from<T, Item>;
+
+template<typename T>
+concept shared_item = Qx::specializes<T, std::shared_ptr> && std::derived_from<typename T::element_type, Item>;
+
+template<typename T>
+concept raw_basic_item = std::derived_from<T, BasicItem>;
+
+template<typename T>
+concept shared_basic_item = Qx::specializes<T, std::shared_ptr> && std::derived_from<typename T::element_type, BasicItem>;
+
+template<typename T>
+concept item = raw_item<T> || shared_item<T>;
+
+template<typename T>
+concept basic_item = raw_basic_item<T> || shared_basic_item<T>;
+
+template<typename T>
+concept raw_game = std::derived_from<T, Game>;
+
+template<typename T>
+concept raw_addapp = std::derived_from<T, AddApp>;
+
+template<typename T>
+concept raw_playlistheader = std::derived_from<T, PlaylistHeader>;
+
+template<typename T>
+concept raw_playlistgame = std::derived_from<T, PlaylistGame>;
+
 //-Namespace Global Classes-----------------------------------------------------------------------------------------
 class Item
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
-    template <typename T>
-        requires std::derived_from<T, Item>
+    template <raw_item T>
     class Builder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
@@ -54,8 +93,7 @@ public:
     void transferOtherFields(QHash<QString, QString>& otherFields);
 };
 
-template <typename T>
-    requires std::derived_from<T, Item>
+template<raw_item T>
 class Item::Builder
 {
 //-Instance Variables------------------------------------------------------------------------------------------
@@ -86,8 +124,7 @@ class BasicItem : public Item
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
-    template<typename T>
-        requires std::derived_from<T, BasicItem>
+    template<raw_basic_item T>
     class Builder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
@@ -106,8 +143,7 @@ public:
     QString name() const;
 };
 
-template<typename T>
-    requires std::derived_from<T, BasicItem>
+template<raw_basic_item T>
 class BasicItem::Builder : public Item::Builder<T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
@@ -126,8 +162,7 @@ class Game : public BasicItem
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
-    template<typename T>
-        requires std::derived_from<T, Game>
+    template<raw_game T>
     class Builder;
 
 //-Class Variables--------------------------------------------------------------------------------------------------
@@ -149,8 +184,7 @@ public:
     QString platform() const;
 };
 
-template<typename T>
-    requires std::derived_from<T, Game>
+template<raw_game T>
 class Game::Builder : public BasicItem::Builder<T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
@@ -163,8 +197,7 @@ class AddApp : public BasicItem
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
-    template<typename T>
-        requires std::derived_from<T, AddApp>
+    template<raw_addapp T>
     class Builder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
@@ -181,8 +214,7 @@ public:
     QUuid gameId() const;
 };
 
-template<typename T>
-    requires std::derived_from<T, AddApp>
+template<raw_addapp T>
 class AddApp::Builder : public BasicItem::Builder<T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
@@ -198,8 +230,7 @@ class PlaylistHeader : public BasicItem
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
-    template<typename T>
-        requires std::derived_from<T, PlaylistHeader>
+    template<raw_playlistheader T>
     class Builder;
 
 //-Constructor-------------------------------------------------------------------------------------------------
@@ -208,8 +239,7 @@ protected:
     PlaylistHeader(QUuid id, QString name);
 };
 
-template<typename T>
-    requires std::derived_from<T, PlaylistHeader>
+template<raw_playlistheader T>
 class PlaylistHeader::Builder : public BasicItem::Builder<T>
 {};
 
@@ -217,8 +247,7 @@ class PlaylistGame : public BasicItem
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
-    template<typename T>
-        requires std::derived_from<T, PlaylistGame>
+    template<raw_playlistgame T>
     class Builder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
@@ -234,8 +263,7 @@ public:
     QUuid gameId() const;
 };
 
-template<typename T>
-    requires std::derived_from<T, PlaylistGame>
+template<raw_playlistgame T>
 class PlaylistGame::Builder : public BasicItem::Builder<T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
@@ -250,4 +278,4 @@ public:
 
 }
 
-#endif // LR_ITEMS_H
+#endif // LR_ITEMS_INTERFACE_H

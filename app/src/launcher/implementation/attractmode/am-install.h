@@ -5,25 +5,20 @@
 #include <qx/core/qx-versionnumber.h>
 
 // Project Includes
-#include "launcher/lr-install.h"
-#include "launcher/attractmode/am-data.h"
-#include "launcher/attractmode/am-settings-data.h"
+#include "launcher/abstract/lr-install.h"
+#include "launcher/implementation/attractmode/am-data.h"
+#include "launcher/implementation/attractmode/am-settings-data.h"
 
 namespace Am
 {
 
-class Install : public Lr::Install
+class Install : public Lr::Install<LauncherId>
 {
     friend class PlatformInterface;
     friend class PlaylistInterface;
 
 //-Class Variables--------------------------------------------------------------------------------------------------
-public:
-    // Identity
-    static inline const QString NAME = u"AttractMode"_s;
-    static inline const QString ICON_PATH = u":/launcher/AttractMode/icon.png"_s;
-    static inline const QUrl HELP_URL = QUrl(u""_s);
-
+private:
     // Naming
     static inline const QString PLATFORM_TAG_PREFIX = u"[Platform] "_s;
     static inline const QString PLAYLIST_TAG_PREFIX = u"[Playlist] "_s;
@@ -79,9 +74,6 @@ private:
     QFile mFpRomlist;
     QFile mEmulatorConfigFile;
 
-    // Image transfers for import worker
-    QList<ImageMap> mWorkerImageJobs;
-
     // Main romlist
     std::unique_ptr<Romlist> mRomlist;
 
@@ -97,13 +89,11 @@ private:
     QString versionFromExecutable() const;
 
     // Image Processing
-    QString imageDestinationPath(Fp::ImageType imageType, const Lr::Game* game) const;
+    QString imageDestinationPath(Fp::ImageType imageType, const Lr::Game& game) const;
 
     // Doc handling
-    std::shared_ptr<Lr::PlatformDoc::Reader> preparePlatformDocCheckout(std::unique_ptr<Lr::PlatformDoc>& platformDoc, const QString& translatedName) override;
-    std::shared_ptr<Lr::PlaylistDoc::Reader> preparePlaylistDocCheckout(std::unique_ptr<Lr::PlaylistDoc>& playlistDoc, const QString& translatedName) override;
-    std::shared_ptr<Lr::PlatformDoc::Writer> preparePlatformDocCommit(const std::unique_ptr<Lr::PlatformDoc>& platformDoc) override;
-    std::shared_ptr<Lr::PlaylistDoc::Writer> preparePlaylistDocCommit(const std::unique_ptr<Lr::PlaylistDoc>& playlistDoc) override;
+    std::unique_ptr<PlatformInterface> preparePlatformDocCheckout(const QString& translatedName) override;
+    std::unique_ptr<PlaylistInterface> preparePlaylistDocCheckout(const QString& translatedName) override;
 
     Lr::DocHandlingError checkoutMainConfig(std::unique_ptr<CrudeSettings>& returnBuffer);
     Lr::DocHandlingError checkoutFlashpointRomlist(std::unique_ptr<Romlist>& returnBuffer);
@@ -117,23 +107,21 @@ public:
     void softReset() override;
 
     // Info
-    QString name() const override;
     QList<Import::ImageMode> preferredImageModeOrder() const override;
     bool isRunning() const override;
     QString versionString() const override;
-    QString translateDocName(const QString& originalName, Lr::DataDoc::Type type) const override;
+    QString translateDocName(const QString& originalName, Lr::IDataDoc::Type type) const override;
 
     // Import stage notifier hooks
     Qx::Error preImport(const ImportDetails& details) override;
     Qx::Error prePlatformsImport() override;
     Qx::Error postPlatformsImport() override;
-    Qx::Error preImageProcessing(QList<ImageMap>& workerTransfers, const Lr::ImageSources& bulkSources) override;
+    Qx::Error preImageProcessing(const Lr::ImagePaths& bulkSources) override;
     Qx::Error postImport() override;
 
     // Image handling
-    void processDirectGameImages(const Lr::Game* game, const Lr::ImageSources& imageSources) override;
+    void convertToDestinationImages(const RomEntry& game, Lr::ImagePaths& images) override;
 };
-REGISTER_LAUNCHER(Install::NAME, Install, &Install::ICON_PATH, &Install::HELP_URL);
 
 }
 #endif // ATTRACTMODE_INSTALL_H

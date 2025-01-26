@@ -22,7 +22,7 @@
  * have control of the instances.
  */
 
-namespace Lr { class Install; }
+namespace Lr { class IInstall; }
 namespace Fp { class Install; }
 
 namespace Import
@@ -38,7 +38,7 @@ private:
 //-Instance Variables-------------------------------------------------------------
 private:
     bool mHasLinkPerms;
-    Qx::Property<std::unique_ptr<Lr::Install>> mLauncher;
+    Qx::Property<std::unique_ptr<Lr::IInstall>> mLauncher;
     Qx::Property<std::unique_ptr<Fp::Install>> mFlashpoint;
     Qx::Property<bool> mLauncherReady;
     Qx::Property<bool> mFlashpointReady;
@@ -85,11 +85,11 @@ public:
     const Qx::Bindable<QList<Importee>> bindablePlaylists() const;
     QList<Importee> playlists() const;
 
-    void setLauncher(std::unique_ptr<Lr::Install>&& launcher);
+    void setLauncher(std::unique_ptr<Lr::IInstall>&& launcher);
     void setFlashpoint(std::unique_ptr<Fp::Install>&& flashpoint);
     void refreshInstallData();
 
-    Lr::Install* launcher();
+    Lr::IInstall* launcher();
     Fp::Install* flashpoint();
 };
 

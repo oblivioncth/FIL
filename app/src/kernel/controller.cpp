@@ -10,6 +10,9 @@
 #include <qx/widgets/qx-common-widgets.h>
 #include <qx/widgets/qx-logindialog.h>
 
+// Project Includes
+#include "launcher/abstract/lr-registration.h"
+
 /* TODO: Consider having this tool deploy a .ini file (or the like) into the target launcher install
  * (with the exact location probably being guided by the specific Install child) that saves the settings
  * used for the import, so that they can be loaded again when that install is targeted by future versions
@@ -213,8 +216,8 @@ void Controller::updateInstallPath(const QString& installPath, Import::Install t
                 mImportProperties.setLauncher(nullptr);
             else
             {
-                std::unique_ptr<Lr::Install> launcher;
-                launcher = Lr::Install::acquireMatch(checkedPath);
+                std::unique_ptr<Lr::IInstall> launcher;
+                launcher = Lr::Registry::acquireMatch(checkedPath);
                 if(!launcher->isValid())
                 {
                     QMessageBox::critical(&mMainWindow, QApplication::applicationName(), MSG_LR_INSTALL_INVALID);

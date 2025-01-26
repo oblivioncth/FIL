@@ -8,96 +8,11 @@
 #include <qx/core/qx-string.h>
 
 // Project Includes
-#include "launcher/attractmode/am-install.h"
+#include "launcher/implementation/attractmode/am-install.h"
 
 namespace Am
 {
-//===============================================================================================================
-// CommonDocReader
-//===============================================================================================================
 
-//-Constructor--------------------------------------------------------------------------------------------------------
-//Protected:
-CommonDocReader::CommonDocReader(Lr::DataDoc* targetDoc) :
-    Lr::DataDoc::Reader(targetDoc),
-    mStreamReader(targetDoc->path())
-{}
-
-//-Instance Functions-------------------------------------------------------------------------------------------------
-//Protected:
-bool CommonDocReader::lineIsComment(const QString& line) { return line.front() == '#'; }
-
-QString CommonDocReader::readLineIgnoringComments(qint64 maxlen)
-{
-    QString line;
-
-    do
-        line = mStreamReader.readLine(maxlen);
-    while(!line.isEmpty() && line.front() == '#'); // Must check for empty string due to QString::front() constraints
-
-    return line;
-}
-
-//Public:
-Lr::DocHandlingError CommonDocReader::readInto()
-{
-    // Open file
-    Qx::IoOpReport openError =  mStreamReader.openFile();
-    if(openError.isFailure())
-        return Lr::DocHandlingError(*mTargetDocument, Lr::DocHandlingError::DocCantOpen, openError.outcomeInfo());
-
-    // Check that doc is valid
-    bool isValid = false;
-    if(!checkDocValidity(isValid))
-        return Lr::DocHandlingError(*mTargetDocument, Lr::DocHandlingError::DocWriteFailed, mStreamReader.status().outcomeInfo());
-    else if(!isValid)
-        return Lr::DocHandlingError(*mTargetDocument, Lr::DocHandlingError::DocInvalidType);
-
-    // Read doc
-    Lr::DocHandlingError parseError = readTargetDoc();
-
-    // Close file
-    mStreamReader.closeFile();
-
-    // Return outcome
-    if(parseError.isValid())
-        return parseError;
-    else if(mStreamReader.hasError())
-        return Lr::DocHandlingError(*mTargetDocument, Lr::DocHandlingError::DocWriteFailed, mStreamReader.status().outcomeInfo());
-    else
-        return Lr::DocHandlingError();
-}
-
-//===============================================================================================================
-// CommonDocWriter
-//===============================================================================================================
-
-//-Constructor--------------------------------------------------------------------------------------------------------
-//Protected:
-CommonDocWriter::CommonDocWriter(Lr::DataDoc* sourceDoc) :
-    Lr::DataDoc::Writer(sourceDoc),
-    mStreamWriter(sourceDoc->path(), Qx::WriteMode::Truncate)
-{}
-
-//-Instance Functions-------------------------------------------------------------------------------------------------
-//Public:
-Lr::DocHandlingError CommonDocWriter::writeOutOf()
-{
-    // Open file
-    Qx::IoOpReport openError =  mStreamWriter.openFile();
-    if(openError.isFailure())
-        return Lr::DocHandlingError(*mSourceDocument, Lr::DocHandlingError::DocCantOpen, openError.outcomeInfo());
-
-    // Write doc
-    bool writeSuccess = writeSourceDoc();
-
-    // Close file
-    mStreamWriter.closeFile();
-
-    // Return outcome
-    return writeSuccess ? Lr::DocHandlingError() :
-                          Lr::DocHandlingError(*mSourceDocument, Lr::DocHandlingError::DocWriteFailed, mStreamWriter.status().outcomeInfo());
-}
 
 //===============================================================================================================
 // ConfigDoc
@@ -105,97 +20,18 @@ Lr::DocHandlingError CommonDocWriter::writeOutOf()
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-ConfigDoc::ConfigDoc(Install* const parent, const QString& filePath, QString docName) :
-    Lr::DataDoc(parent, filePath, docName)
+ConfigDoc::ConfigDoc(Install* install, const QString& filePath, QString docName) :
+    Lr::DataDoc<LauncherId>(install, filePath, docName)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Protected:
 QString ConfigDoc::versionedTagline()
 {
-    QString verString = static_cast<Install*>(parent())->versionString();
-    return TAGLINE + verString;
+    return TAGLINE + install()->versionString();
 }
 
-//===============================================================================================================
-// ConfigDoc::Reader
-//===============================================================================================================
 
-//-Constructor--------------------------------------------------------------------------------------------------------
-//Protected:
-ConfigDoc::Reader::Reader(ConfigDoc* targetDoc) :
-    CommonDocReader(targetDoc)
-{}
-
-//-Class Functions-------------------------------------------------------------------------------------------------
-//Protected:
-bool ConfigDoc::Reader::splitKeyValue(const QString& line, QString& key, QString& value)
-{
-    /* TODO: The result from this function is currently unused due to no easy way to raise a custom
-     * error with the stream reader in this class (and how the current paradigm is to return bools
-     * for each step and then use the reader status if one is found). If used properly this should
-     * never error, but ideally it should be checked for anyway. Might need to have all read functions
-     * return Qx::GenericError to allow non stream related errors to be returned.
-     */
-
-    // Null out return buffers
-    key = QString();
-    value = QString();
-
-    QRegularExpressionMatch keyValueCheck = KEY_VALUE_REGEX.match(line);
-    if(keyValueCheck.hasMatch())
-    {
-        key = keyValueCheck.captured(u"key"_s);
-        value = keyValueCheck.captured(u"value"_s);
-        return true;
-    }
-    else
-    {
-        qWarning("Invalid key value string");
-        return false;
-    }
-}
-
-//-Instance Functions-------------------------------------------------------------------------------------------------
-//Protected:
-bool ConfigDoc::Reader::checkDocValidity(bool& isValid)
-{
-    // Check for config "header"
-    QString firstLine = mStreamReader.readLine();
-    QString secondLine = mStreamReader.readLine();
-
-    bool hasTagline = firstLine.left(ConfigDoc::TAGLINE.length()) == ConfigDoc::TAGLINE;
-
-    isValid = hasTagline && lineIsComment(secondLine);
-
-    // Return status
-    return !mStreamReader.hasError();
-}
-
-//===============================================================================================================
-// ConfigDoc::Writer
-//===============================================================================================================
-
-//-Constructor--------------------------------------------------------------------------------------------------------
-//Public:
-ConfigDoc::Writer::Writer(ConfigDoc* sourceDoc) :
-    CommonDocWriter(sourceDoc)
-{}
-
-//-Instance Functions--------------------------------------------------------------------------------------------------
-//Public:
-bool ConfigDoc::Writer::writeSourceDoc()
-{
-    // Write config doc "header"
-    mStreamWriter.writeLine(static_cast<ConfigDoc*>(mSourceDocument)->versionedTagline());
-    mStreamWriter.writeLine(u"#"_s);
-
-    if(mStreamWriter.hasError())
-        return false;
-
-    // Perform custom writing
-    return writeConfigDoc();
-}
 
 //===============================================================================================================
 // Taglist
@@ -203,8 +39,8 @@ bool ConfigDoc::Writer::writeSourceDoc()
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-Taglist::Taglist(Install* const parent, const QString& listPath, QString docName) :
-    Lr::DataDoc(parent, listPath, docName)
+Taglist::Taglist(Install* install, const QString& listPath, QString docName) :
+    Lr::DataDoc<LauncherId>(install, listPath, docName)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -231,11 +67,8 @@ Taglist::Writer::Writer(Taglist* sourceDoc) :
 //Public:
 bool Taglist::Writer::writeSourceDoc()
 {
-    // Get actual tag list
-    Taglist* sourceList =  static_cast<Taglist*>(mSourceDocument);
-
     // Write tags
-    for(const QString& tag : qAsConst(sourceList->mTags))
+    for(const QString& tag : qAsConst(source()->mTags))
         mStreamWriter << tag << '\n';
 
     // Return error status
@@ -248,13 +81,13 @@ bool Taglist::Writer::writeSourceDoc()
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Private:
-PlatformTaglist::PlatformTaglist(Install* const parent, const QString& listPath, QString docName) :
-    Am::Taglist(parent, listPath, docName)
+PlatformTaglist::PlatformTaglist(Install* install, const QString& listPath, QString docName) :
+    Am::Taglist(install, listPath, docName)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-Lr::DataDoc::Type PlatformTaglist::type() const { return Lr::DataDoc::Type::Platform; }
+Lr::IDataDoc::Type PlatformTaglist::type() const { return Lr::IDataDoc::Type::Platform; }
 
 //===============================================================================================================
 // PlaylistTaglist
@@ -262,13 +95,13 @@ Lr::DataDoc::Type PlatformTaglist::type() const { return Lr::DataDoc::Type::Plat
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Private:
-PlaylistTaglist::PlaylistTaglist(Install* const parent, const QString& listPath, QString docName) :
-    Am::Taglist(parent, listPath, docName)
+PlaylistTaglist::PlaylistTaglist(Install* install, const QString& listPath, QString docName) :
+    Am::Taglist(install, listPath, docName)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-Lr::DataDoc::Type PlaylistTaglist::type() const { return Lr::DataDoc::Type::Playlist; }
+Lr::IDataDoc::Type PlaylistTaglist::type() const { return Lr::IDataDoc::Type::Playlist; }
 
 //===============================================================================================================
 // Romlist
@@ -276,14 +109,13 @@ Lr::DataDoc::Type PlaylistTaglist::type() const { return Lr::DataDoc::Type::Play
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-Romlist::Romlist(Install* const parent, const QString& listPath, QString docName, const Import::UpdateOptions& updateOptions,
-                         const DocKey&) :
-    Lr::UpdateableDoc(parent, listPath, docName, updateOptions)
+Romlist::Romlist(Install* install, const QString& listPath, QString docName, const Import::UpdateOptions& updateOptions) :
+    Lr::UpdateableDoc<LauncherId>(install, listPath, docName, updateOptions)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-Lr::DataDoc::Type Romlist::type() const { return Lr::DataDoc::Type::Config; }
+Lr::IDataDoc::Type Romlist::type() const { return Lr::IDataDoc::Type::Config; }
 
 bool Romlist::isEmpty() const
 {
@@ -295,7 +127,7 @@ const QHash<QUuid, std::shared_ptr<RomEntry>>& Romlist::finalEntries() const { r
 bool Romlist::containsGame(QUuid gameId) const { return mEntriesExisting.contains(gameId) || mEntriesFinal.contains(gameId); }
 bool Romlist::containsAddApp(QUuid addAppId) const { return mEntriesExisting.contains(addAppId) || mEntriesFinal.contains(addAppId); }
 
-void Romlist::addSet(const Fp::Set& set, const Lr::ImageSources& images)
+std::shared_ptr<RomEntry> Romlist::processSet(const Fp::Set& set)
 {
     // Convert to romlist entry
     std::shared_ptr<RomEntry> mainRomEntry = std::make_shared<RomEntry>(set.game());
@@ -317,15 +149,14 @@ void Romlist::addSet(const Fp::Set& set, const Lr::ImageSources& images)
         }
     }
 
-    // Allow install to process images as necessary
-    parent()->processDirectGameImages(mainRomEntry.get(), images);
+    return mainRomEntry;
 }
 
 
 void Romlist::finalize()
 {
     finalizeUpdateableItems(mEntriesExisting, mEntriesFinal);
-    Lr::UpdateableDoc::finalize();
+    Lr::IUpdateableDoc::finalize();
 }
 
 //===============================================================================================================
@@ -335,16 +166,11 @@ void Romlist::finalize()
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
 Romlist::Reader::Reader(Romlist* targetDoc) :
-    CommonDocReader(targetDoc)
+    CommonDocReader<Romlist>(targetDoc)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-QHash<QUuid, std::shared_ptr<RomEntry>>& Romlist::Reader::targetDocExistingRomEntries()
-{
-    return static_cast<Romlist*>(mTargetDocument)->mEntriesExisting;
-}
-
 bool Romlist::Reader::checkDocValidity(bool& isValid)
 {
     // See if first line is the romlist header
@@ -408,7 +234,7 @@ void Romlist::Reader::parseRomEntry(const QString& rawEntry)
 
     // Build Entry and add to document
     std::shared_ptr<RomEntry> existingEntry = reb.buildShared();
-    targetDocExistingRomEntries()[existingEntry->id()] = existingEntry;
+    target()->mEntriesExisting[existingEntry->id()] = existingEntry;
 }
 
 void Romlist::Reader::addFieldToBuilder(RomEntry::Builder& builder, QString field, quint8 index)
@@ -501,7 +327,7 @@ bool Romlist::Writer::writeSourceDoc()
     mStreamWriter.writeLine(Romlist::HEADER);
 
     // Write all rom entries
-    for(const std::shared_ptr<RomEntry>& entry : qAsConst(static_cast<Romlist*>(mSourceDocument)->finalEntries()))
+    for(const std::shared_ptr<RomEntry>& entry : qAsConst(source()->finalEntries()))
     {
         if(!writeRomEntry(*entry))
             return false;
@@ -584,37 +410,19 @@ bool BulkOverviewWriter::writeOverview(const QUuid& gameId, const QString& overv
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlatformInterface::PlatformInterface(Install* const parent, const QString& platformTaglistPath, QString platformName,
-                                     const QDir& overviewDir,const DocKey&) :
-    Lr::PlatformDoc(parent, {}, platformName, {}),
-    mPlatformTaglist(parent, platformTaglistPath, platformName),
+PlatformInterface::PlatformInterface(Install* install, const QString& platformTaglistPath, QString platformName,
+                                     const QDir& overviewDir) :
+    Lr::PlatformDoc<LauncherId>(install, {}, platformName, {}),
+    mPlatformTaglist(install, platformTaglistPath, platformName),
     mOverviewWriter(overviewDir)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
-//Public:
-bool PlatformInterface::isEmpty() const { return mPlatformTaglist.isEmpty(); }
-
-bool PlatformInterface::containsGame(QUuid gameId) const
+//Private:
+std::shared_ptr<RomEntry> PlatformInterface::processSet(const Fp::Set& set)
 {
-    /* Check main romlist for ID. Could check the taglist instead, which would be more "correct" since only the current
-     * platform should contain the ID, but this doesn't matter given correct design and the lookup is performed via
-     * the romlist's internal hash, which is faster than checking a list for the presence of the ID.
-     */
-    return static_cast<Install*>(parent())->mRomlist->containsGame(gameId);
-}
+    std::shared_ptr<RomEntry> romEntry;
 
-bool PlatformInterface::containsAddApp(QUuid addAppId) const
-{
-    /* Check main romlist for ID. Could check the taglist instead, which would be more "correct" since only the current
-     * platform should contain the ID, but this doesn't matter given correct design and the lookup is performed via
-     * the romlist's internal hash, which is faster than checking a list for the presence of the ID.
-     */
-    return static_cast<Install*>(parent())->mRomlist->containsAddApp(addAppId);
-};
-
-void PlatformInterface::addSet(const Fp::Set& set, const Lr::ImageSources& images)
-{
     if(!hasError())
     {
         //-Handle game----------------------------------------------------------
@@ -631,7 +439,7 @@ void PlatformInterface::addSet(const Fp::Set& set, const Lr::ImageSources& image
             bool written = mOverviewWriter.writeOverview(game.id(), overview);
 
             if(written)
-                parent()->addRevertableFile(mOverviewWriter.currentFilePath());
+                install()->addRevertableFile(mOverviewWriter.currentFilePath());
             else
                 mError = Lr::DocHandlingError(*this, Lr::DocHandlingError::DocWriteFailed, mOverviewWriter.fileErrorString());
         }
@@ -651,25 +459,47 @@ void PlatformInterface::addSet(const Fp::Set& set, const Lr::ImageSources& image
         }
 
         //-Forward game insertion to main Romlist--------------------------------
-        static_cast<Install*>(parent())->mRomlist->addSet(set, images);
+        romEntry = install()->mRomlist->processSet(set);
     }
+
+    return romEntry;
 }
 
+//Public:
+bool PlatformInterface::isEmpty() const { return mPlatformTaglist.isEmpty(); }
+
+bool PlatformInterface::containsGame(QUuid gameId) const
+{
+    /* Check main romlist for ID. Could check the taglist instead, which would be more "correct" since only the current
+     * platform should contain the ID, but this doesn't matter given correct design and the lookup is performed via
+     * the romlist's internal hash, which is faster than checking a list for the presence of the ID.
+     */
+    return install()->mRomlist->containsGame(gameId);
+}
+
+bool PlatformInterface::containsAddApp(QUuid addAppId) const
+{
+    /* Check main romlist for ID. Could check the taglist instead, which would be more "correct" since only the current
+     * platform should contain the ID, but this doesn't matter given correct design and the lookup is performed via
+     * the romlist's internal hash, which is faster than checking a list for the presence of the ID.
+     */
+    return install()->mRomlist->containsAddApp(addAppId);
+};
+
 //===============================================================================================================
-// PlatformInterface::Writer
+// PlatformInterfaceWriter
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlatformInterface::Writer::Writer(PlatformInterface* sourceDoc) :
-    Lr::DataDoc::Writer(sourceDoc),
-    Lr::PlatformDoc::Writer(sourceDoc),
+PlatformInterfaceWriter::PlatformInterfaceWriter(PlatformInterface* sourceDoc) :
+    Lr::DataDocWriter<PlatformInterface>(sourceDoc),
     mTaglistWriter(&sourceDoc->mPlatformTaglist)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-Lr::DocHandlingError PlatformInterface::Writer::writeOutOf() { return mTaglistWriter.writeOutOf(); }
+Lr::DocHandlingError PlatformInterfaceWriter::writeOutOf() { return mTaglistWriter.writeOutOf(); }
 
 //===============================================================================================================
 // PlaylistInterface
@@ -677,10 +507,9 @@ Lr::DocHandlingError PlatformInterface::Writer::writeOutOf() { return mTaglistWr
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlaylistInterface::PlaylistInterface(Install* const parent, const QString& playlistTaglistPath, QString playlistName,
-                                     const DocKey&) :
-    Lr::PlaylistDoc(parent, {}, playlistName, {}),
-    mPlaylistTaglist(parent, playlistTaglistPath, playlistName)
+PlaylistInterface::PlaylistInterface(Install* install, const QString& playlistTaglistPath, QString playlistName) :
+    Lr::PlaylistDoc<LauncherId>(install, {}, playlistName, {}),
+    mPlaylistTaglist(install, playlistTaglistPath, playlistName)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -699,20 +528,19 @@ void PlaylistInterface::setPlaylistData(const Fp::Playlist& playlist)
 }
 
 //===============================================================================================================
-// PlaylistInterface::Writer
+// PlaylistInterfaceWriter
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlaylistInterface::Writer::Writer(PlaylistInterface* sourceDoc) :
-    Lr::DataDoc::Writer(sourceDoc),
-    Lr::PlaylistDoc::Writer(sourceDoc),
+PlaylistInterfaceWriter::PlaylistInterfaceWriter(PlaylistInterface* sourceDoc) :
+    Lr::DataDocWriter<PlaylistInterface>(sourceDoc),
     mTaglistWriter(&sourceDoc->mPlaylistTaglist)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-Lr::DocHandlingError PlaylistInterface::Writer::writeOutOf() { return mTaglistWriter.writeOutOf(); }
+Lr::DocHandlingError PlaylistInterfaceWriter::writeOutOf() { return mTaglistWriter.writeOutOf(); }
 
 //===============================================================================================================
 // Emulator
@@ -720,14 +548,14 @@ Lr::DocHandlingError PlaylistInterface::Writer::writeOutOf() { return mTaglistWr
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-Emulator::Emulator(Install* const parent, const QString& filePath, const DocKey&) :
-    ConfigDoc(parent, filePath, STD_NAME)
+Emulator::Emulator(Install* install, const QString& filePath) :
+    ConfigDoc(install, filePath, STD_NAME)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
 bool Emulator::isEmpty() const { return false; } // Can have blank fields, but always has field keys
-Lr::DataDoc::Type Emulator::type() const { return Lr::DataDoc::Type::Config; }
+Lr::IDataDoc::Type Emulator::type() const { return Lr::IDataDoc::Type::Config; }
 
 QString Emulator::executable() const { return mExecutable; }
 QString Emulator::args() const { return mArgs; }
@@ -757,7 +585,7 @@ void Emulator::setArtworkEntry(const EmulatorArtworkEntry& entry) { mArtworkEntr
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
 EmulatorReader::EmulatorReader(Emulator* targetDoc) :
-    ConfigDoc::Reader(targetDoc)
+    ConfigDoc::Reader<Emulator>(targetDoc)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -799,20 +627,20 @@ void EmulatorReader::parseKeyValue(const QString& key, const QString& value)
         parseArtwork(value);
 }
 
-void EmulatorReader::parseExecutable(const QString& value) { targetEmulator()->setExecutable(value); }
-void EmulatorReader::parseArgs(const QString& value) { targetEmulator()->setArgs(value); }
-void EmulatorReader::parseWorkDir(const QString& value) { targetEmulator()->setWorkDir(value); }
+void EmulatorReader::parseExecutable(const QString& value) { target()->setExecutable(value); }
+void EmulatorReader::parseArgs(const QString& value) { target()->setArgs(value); }
+void EmulatorReader::parseWorkDir(const QString& value) { target()->setWorkDir(value); }
 void EmulatorReader::parseRomPath(const QString& value)
 {
-    targetEmulator()->setRomPath(value == uR"("")"_s ? u""_s : value);
+    target()->setRomPath(value == uR"("")"_s ? u""_s : value);
 }
 void EmulatorReader::parseRomExt(const QString& value)
 {
-    targetEmulator()->setRomPath(value == uR"("")"_s ? u""_s : value);
+    target()->setRomPath(value == uR"("")"_s ? u""_s : value);
 }
-void EmulatorReader::parseSystem(const QString& value) { targetEmulator()->setSystem(value); }
-void EmulatorReader::parseInfoSource(const QString& value) { targetEmulator()->setInfoSource(value); }
-void EmulatorReader::parseExitHotkey(const QString& value) { targetEmulator()->setExitHotkey(value); }
+void EmulatorReader::parseSystem(const QString& value) { target()->setSystem(value); }
+void EmulatorReader::parseInfoSource(const QString& value) { target()->setInfoSource(value); }
+void EmulatorReader::parseExitHotkey(const QString& value) { target()->setExitHotkey(value); }
 void EmulatorReader::parseArtwork(const QString& value)
 {
     QString type;
@@ -823,10 +651,8 @@ void EmulatorReader::parseArtwork(const QString& value)
     eaeb.wType(type);
     eaeb.wPaths(!rawPaths.isEmpty() ? rawPaths.split(';') : QStringList());
 
-    targetEmulator()->setArtworkEntry(eaeb.build());
+    target()->setArtworkEntry(eaeb.build());
 }
-
-Emulator* EmulatorReader::targetEmulator() { return static_cast<Emulator*>(mTargetDocument); }
 
 //===============================================================================================================
 // Emulator::Writer
@@ -835,7 +661,7 @@ Emulator* EmulatorReader::targetEmulator() { return static_cast<Emulator*>(mTarg
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
 Emulator::Writer::Writer(Emulator* sourceDoc) :
-    ConfigDoc::Writer(sourceDoc)
+    ConfigDoc::Writer<Emulator>(sourceDoc)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -846,17 +672,17 @@ bool Emulator::Writer::writeConfigDoc()
     mStreamWriter.setFieldAlignment(QTextStream::AlignLeft);
 
     // Write main key/values
-    writeStandardKeyValue(Emulator::Keys::EXECUTABLE, sourceEmulator()->executable());
-    writeStandardKeyValue(Emulator::Keys::ARGS, sourceEmulator()->args());
-    writeStandardKeyValue(Emulator::Keys::WORK_DIR, sourceEmulator()->workDir());
-    writeStandardKeyValue(Emulator::Keys::ROM_PATH, sourceEmulator()->romPath());
-    writeStandardKeyValue(Emulator::Keys::ROM_EXT, sourceEmulator()->romExt());
-    writeStandardKeyValue(Emulator::Keys::SYSTEM, sourceEmulator()->system());
-    writeStandardKeyValue(Emulator::Keys::INFO_SOURCE, sourceEmulator()->infoSource());
-    writeStandardKeyValue(Emulator::Keys::EXIT_HOTKEY, sourceEmulator()->exitHotkey());
+    writeStandardKeyValue(Emulator::Keys::EXECUTABLE, source()->executable());
+    writeStandardKeyValue(Emulator::Keys::ARGS, source()->args());
+    writeStandardKeyValue(Emulator::Keys::WORK_DIR, source()->workDir());
+    writeStandardKeyValue(Emulator::Keys::ROM_PATH, source()->romPath());
+    writeStandardKeyValue(Emulator::Keys::ROM_EXT, source()->romExt());
+    writeStandardKeyValue(Emulator::Keys::SYSTEM, source()->system());
+    writeStandardKeyValue(Emulator::Keys::INFO_SOURCE, source()->infoSource());
+    writeStandardKeyValue(Emulator::Keys::EXIT_HOTKEY, source()->exitHotkey());
 
     // Write artwork entries
-    const QList<EmulatorArtworkEntry> artworkEntries = sourceEmulator()->artworkEntries();
+    const QList<EmulatorArtworkEntry> artworkEntries = source()->artworkEntries();
     for(const EmulatorArtworkEntry& entry : artworkEntries)
         writeArtworkEntry(entry);
 
@@ -882,7 +708,5 @@ void Emulator::Writer::writeArtworkEntry(const EmulatorArtworkEntry& entry)
     mStreamWriter << entry.paths().join(';');
     mStreamWriter << '\n';
 }
-
-Emulator* Emulator::Writer::sourceEmulator() { return static_cast<Emulator*>(mSourceDocument); }
 
 }

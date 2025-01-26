@@ -9,23 +9,17 @@
 #include <QtXml>
 
 // Project Includes
-#include "launcher/lr-install.h"
-#include "launcher/launchbox/lb-items.h"
-#include "launcher/launchbox/lb-data.h"
+#include "launcher/abstract/lr-install.h"
+#include "launcher/implementation/launchbox/lb-data.h"
 
 namespace Lb {
 
-class Install : public Lr::Install
+class Install : public Lr::Install<LauncherId>
 {
     friend class PlatformDoc; // TODO: See about removing the need for these (CLIfp path would need public accessor here)
     friend class PlaylistDoc;
 //-Class Variables--------------------------------------------------------------------------------------------------
-public:
-    // Identity
-    static inline const QString NAME = u"LaunchBox"_s;
-    static inline const QString ICON_PATH = u":/launcher/LaunchBox/icon.svg"_s;
-    static inline const QUrl HELP_URL = QUrl(u"https://forums.launchbox-app.com/files/file/2652-obbys-flashpoint-importer-for-launchbox"_s);
-
+private:
     // Paths
     static inline const QString PLATFORMS_PATH = u"Data/Platforms"_s;
     static inline const QString PLAYLISTS_PATH = u"Data/Playlists"_s;
@@ -72,9 +66,6 @@ private:
     QDir mCoreDirectory;
     QFileInfo mExeFile;
 
-    // Image transfers for import worker
-    QList<ImageMap> mWorkerImageJobs;
-
     // Persistent config handles
     std::unique_ptr<PlatformsConfigDoc> mPlatformsConfig;
     std::unique_ptr<ParentsDoc> mParents;
@@ -97,15 +88,13 @@ private:
     Qx::Error populateExistingDocs() override;
 
     // Image Processing
-    QString imageDestinationPath(Fp::ImageType imageType, const Lr::Game* game) const;
-    void editBulkImageReferences(const Lr::ImageSources& imageSources);
+    QString imageDestinationPath(Fp::ImageType imageType, const Lr::Game& game) const;
+    void editBulkImageReferences(const Lr::ImagePaths& imageSources);
 
     // Doc handling
-    QString dataDocPath(Lr::DataDoc::Identifier identifier) const;
-    std::shared_ptr<Lr::PlatformDoc::Reader> preparePlatformDocCheckout(std::unique_ptr<Lr::PlatformDoc>& platformDoc, const QString& translatedName) override;
-    std::shared_ptr<Lr::PlaylistDoc::Reader> preparePlaylistDocCheckout(std::unique_ptr<Lr::PlaylistDoc>& playlistDoc, const QString& translatedName) override;
-    std::shared_ptr<Lr::PlatformDoc::Writer> preparePlatformDocCommit(const std::unique_ptr<Lr::PlatformDoc>& platformDoc) override;
-    std::shared_ptr<Lr::PlaylistDoc::Writer> preparePlaylistDocCommit(const std::unique_ptr<Lr::PlaylistDoc>& playlistDoc) override;
+    QString dataDocPath(Lr::IDataDoc::Identifier identifier) const;
+    std::unique_ptr<PlatformDoc> preparePlatformDocCheckout(const QString& translatedName) override;
+    std::unique_ptr<PlaylistDoc> preparePlaylistDocCheckout(const QString& translatedName) override;
 
     Lr::DocHandlingError checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc>& returnBuffer);
     Lr::DocHandlingError commitPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc> document);
@@ -117,27 +106,25 @@ public:
     void softReset() override;
 
     // Info
-    QString name() const override;
     QList<Import::ImageMode> preferredImageModeOrder() const override;
     bool isRunning() const override;
     QString versionString() const override;
-    QString translateDocName(const QString& originalName, Lr::DataDoc::Type type) const override;
+    QString translateDocName(const QString& originalName, Lr::IDataDoc::Type type) const override;
 
     // Import stage notifier hooks
     Qx::Error prePlatformsImport() override;
     Qx::Error postPlatformsImport() override;
-    Qx::Error preImageProcessing(QList<ImageMap>& workerTransfers, const Lr::ImageSources& bulkSources) override;
+    Qx::Error preImageProcessing(const Lr::ImagePaths& bulkSources) override;
     Qx::Error postImageProcessing() override;
     Qx::Error postPlaylistsImport() override;
 
     // Image handling
-    void processDirectGameImages(const Lr::Game* game, const Lr::ImageSources& imageSources) override;
+    void convertToDestinationImages(const Game& game, Lr::ImagePaths& images) override;
     QString platformCategoryIconPath() const override;
     std::optional<QDir> platformIconsDirectory() const override;
     std::optional<QDir> playlistIconsDirectory() const override;
-
 };
-REGISTER_LAUNCHER(Install::NAME, Install, &Install::ICON_PATH, &Install::HELP_URL);
+
 
 }
 

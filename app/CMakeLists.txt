@@ -28,28 +28,35 @@ set(FIL_SOURCE
     import/settings.h
     import/worker.h
     import/worker.cpp
-    launcher/lr-data.h
-    launcher/lr-data.cpp
-    launcher/lr-installfoundation.h
-    launcher/lr-installfoundation.cpp
-    launcher/lr-installfoundation_win.cpp
-    launcher/lr-installfoundation_linux.cpp
-    launcher/lr-install.h
-    launcher/lr-install.cpp
-    launcher/lr-items.h
-    launcher/lr-items.cpp
-    launcher/attractmode/am-data.h
-    launcher/attractmode/am-data.cpp
-    launcher/attractmode/am-install.h
-    launcher/attractmode/am-install.cpp
-    launcher/attractmode/am-install_win.cpp
-    launcher/attractmode/am-install_linux.cpp
-    launcher/attractmode/am-items.h
-    launcher/attractmode/am-items.cpp
-    launcher/attractmode/am-settings-data.h
-    launcher/attractmode/am-settings-data.cpp
-    launcher/attractmode/am-settings-items.h
-    launcher/attractmode/am-settings-items.cpp
+    launcher/abstract/lr-data.h
+    launcher/abstract/lr-data.tpp
+    launcher/abstract/lr-install.h
+    launcher/abstract/lr-install.tpp
+    launcher/abstract/lr-registration.h
+    launcher/abstract/lr-registration.cpp
+    launcher/implementation/attractmode/am-data.h
+    launcher/implementation/attractmode/am-data.tpp
+    launcher/implementation/attractmode/am-data.cpp
+    launcher/implementation/attractmode/am-install.h
+    launcher/implementation/attractmode/am-install.cpp
+    launcher/implementation/attractmode/am-install_win.cpp
+    launcher/implementation/attractmode/am-install_linux.cpp
+    launcher/implementation/attractmode/am-items.h
+    launcher/implementation/attractmode/am-items.cpp
+    launcher/implementation/attractmode/am-settings-data.h
+    launcher/implementation/attractmode/am-settings-data.cpp
+    launcher/implementation/attractmode/am-settings-items.h
+    launcher/implementation/attractmode/am-settings-items.cpp
+    launcher/implementation/attractmode/am-registration.h
+    launcher/implementation/attractmode/am-registration.cpp
+    launcher/interface/lr-data-interface.h
+    launcher/interface/lr-data-interface.cpp
+    launcher/interface/lr-install-interface.h
+    launcher/interface/lr-install-interface.cpp
+    launcher/interface/lr-install-interface_win.cpp
+    launcher/interface/lr-install-interface_linux.cpp
+    launcher/interface/lr-items-interface.h
+    launcher/interface/lr-items-interface.cpp
     ui/mainwindow.h
     ui/mainwindow.cpp
     ui/mainwindow.ui
@@ -64,12 +71,14 @@ set(FIL_SOURCE
 
 if(CMAKE_SYSTEM_NAME STREQUAL Windows)
     list(APPEND FIL_SOURCE
-        launcher/launchbox/lb-data.h
-        launcher/launchbox/lb-data.cpp
-        launcher/launchbox/lb-install.h
-        launcher/launchbox/lb-install.cpp
-        launcher/launchbox/lb-items.h
-        launcher/launchbox/lb-items.cpp
+        launcher/implementation/launchbox/lb-data.h
+        launcher/implementation/launchbox/lb-data.cpp
+        launcher/implementation/launchbox/lb-install.h
+        launcher/implementation/launchbox/lb-install.cpp
+        launcher/implementation/launchbox/lb-items.h
+        launcher/implementation/launchbox/lb-items.cpp
+        launcher/implementation/launchbox/lb-registration.h
+        launcher/implementation/launchbox/lb-registration.cpp
     )
 endif()
 
