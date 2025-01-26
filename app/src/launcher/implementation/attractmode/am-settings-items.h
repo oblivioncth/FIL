@@ -2,7 +2,7 @@
 #define AM_SETTINGS_ITEMS_H
 
 // Project Includes
-#include "launcher/lr-items.h"
+#include "launcher/interface/lr-items-interface.h"
 
 using namespace Qt::Literals::StringLiterals;
 

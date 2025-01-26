@@ -9,31 +9,26 @@
 #include <fp/fp-install.h>
 
 // Project Includes
-#include "launcher/lr-data.h"
-#include "launcher/attractmode/am-items.h"
+
+#include "launcher/abstract/lr-data.h"
+#include "launcher/implementation/attractmode/am-registration.h"
+#include "launcher/implementation/attractmode/am-items.h"
 
 namespace Am
 {
 
-class Install;
-
-class DocKey
+template<class DocT>
+class CommonDocReader : public Lr::DataDocReader<DocT>
 {
-    friend class Install;
-private:
-    DocKey() {}
-    DocKey(const DocKey&) = default;
-};
-
-class CommonDocReader : public Lr::DataDoc::Reader
-{
+protected:
+    using Lr::DataDocReader<DocT>::target;
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
     Qx::TextStreamReader mStreamReader;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    CommonDocReader(Lr::DataDoc* targetDoc);
+    CommonDocReader(DocT* targetDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 protected:
@@ -46,15 +41,18 @@ public:
     Lr::DocHandlingError readInto() override;
 };
 
-class CommonDocWriter : public Lr::DataDoc::Writer
+template<class DocT>
+class CommonDocWriter : public Lr::DataDocWriter<DocT>
 {
+protected:
+    using Lr::DataDocWriter<DocT>::source;
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
     Qx::TextStreamWriter mStreamWriter;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    CommonDocWriter(Lr::DataDoc* sourceDoc);
+    CommonDocWriter(DocT* sourceDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 protected:
@@ -64,11 +62,14 @@ public:
     Lr::DocHandlingError writeOutOf() override;
 };
 
-class ConfigDoc : public Lr::DataDoc
+class ConfigDoc : public Lr::DataDoc<LauncherId>
 {
 //-Inner Classes----------------------------------------------------------------------------------------------------
 public:
+    template<class DocT>
     class Reader;
+
+    template<class DocT>
     class Writer;
 
 //-Class Variables--------------------------------------------------------------------------------------------------
@@ -77,7 +78,7 @@ public:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    ConfigDoc(Install* const parent, const QString& filePath, QString docName);
+    ConfigDoc(Install* install, const QString& filePath, QString docName);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 protected:
@@ -85,8 +86,13 @@ protected:
 };
 
 
-class ConfigDoc::Reader : public CommonDocReader
+template<class DocT>
+class ConfigDoc::Reader : public CommonDocReader<DocT>
 {
+protected:
+    using CommonDocReader<DocT>::mStreamReader;
+    using CommonDocReader<DocT>::lineIsComment;
+    using Lr::DataDocReader<DocT>::target;
 //-Class Variables----------------------------------------------------------------------------------------------------
 protected:
     static inline const QRegularExpression KEY_VALUE_REGEX =
@@ -94,7 +100,7 @@ protected:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    Reader(ConfigDoc* targetDoc);
+    Reader(DocT* targetDoc);
 
 //-Class Functions-------------------------------------------------------------------------------------------------
 protected:
@@ -105,11 +111,15 @@ protected:
     bool checkDocValidity(bool& isValid) override;
 };
 
-class ConfigDoc::Writer : public CommonDocWriter
+template<class DocT>
+class ConfigDoc::Writer : public CommonDocWriter<DocT>
 {
+protected:
+    using CommonDocWriter<DocT>::mStreamWriter;
+    using Lr::DataDocWriter<DocT>::source;
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    Writer(ConfigDoc* targetDoc);
+    Writer(DocT* targetDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 protected:
@@ -117,7 +127,7 @@ protected:
     bool writeSourceDoc() override;
 };
 
-class Taglist : public Lr::DataDoc
+class Taglist : public Lr::DataDoc<LauncherId>
 {
 //-Inner Classes----------------------------------------------------------------------------------------------------
 public:
@@ -129,7 +139,7 @@ protected:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    Taglist(Install* const parent, const QString& listPath, QString docName);
+    Taglist(Install* install, const QString& listPath, QString docName);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 public:
@@ -139,7 +149,7 @@ public:
     void appendTag(const QString& tag);
 };
 
-class Taglist::Writer : public CommonDocWriter
+class Taglist::Writer : public CommonDocWriter<Taglist>
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -155,7 +165,7 @@ class PlatformTaglist : public Taglist
     friend class PlatformInterface;
 //-Constructor--------------------------------------------------------------------------------------------------------
 private:
-    PlatformTaglist(Install* const parent, const QString& listPath, QString docName);
+    PlatformTaglist(Install* install, const QString& listPath, QString docName);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 public:
@@ -167,14 +177,14 @@ class PlaylistTaglist : public Taglist
     friend class PlaylistInterface;
 //-Constructor--------------------------------------------------------------------------------------------------------
 private:
-    PlaylistTaglist(Install* const parent, const QString& listPath, QString docName);
+    PlaylistTaglist(Install* install, const QString& listPath, QString docName);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 public:
     Type type() const override;
 };
 
-class Romlist : public Lr::UpdateableDoc
+class Romlist : public Lr::UpdateableDoc<LauncherId>
 {
     /* This class looks like it should inherit PlatformDoc, but it isn't truly one in the context of an Am install
      * since those are represented by tag lists, and if it did there would be the issue that once modified it would
@@ -199,12 +209,11 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit Romlist(Install* const parent, const QString& listPath, QString docName, const Import::UpdateOptions& updateOptions,
-                     const DocKey&);
+    explicit Romlist(Install* install, const QString& listPath, QString docName, const Import::UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 public:
-    DataDoc::Type type() const override;
+    IDataDoc::Type type() const override;
     bool isEmpty() const override;
 
     const QHash<QUuid, std::shared_ptr<RomEntry>>& finalEntries() const;
@@ -212,12 +221,12 @@ public:
     bool containsGame(QUuid gameId) const;
     bool containsAddApp(QUuid addAppId) const;
 
-    void addSet(const Fp::Set& set, const Lr::ImageSources& images);
+    std::shared_ptr<RomEntry> processSet(const Fp::Set& set);
 
     void finalize() override;
 };
 
-class Romlist::Reader : public CommonDocReader
+class Romlist::Reader : public CommonDocReader<Romlist>
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -225,14 +234,13 @@ public:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
-    QHash<QUuid, std::shared_ptr<RomEntry>>& targetDocExistingRomEntries();
     bool checkDocValidity(bool& isValid) override;
     Lr::DocHandlingError readTargetDoc() override;
     void parseRomEntry(const QString& rawEntry);
     void addFieldToBuilder(RomEntry::Builder& builder, QString field, quint8 index);
 };
 
-class Romlist::Writer : public CommonDocWriter
+class Romlist::Writer : public CommonDocWriter<Romlist>
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -263,12 +271,9 @@ public:
     bool writeOverview(const QUuid& gameId, const QString& overview);
 };
 
-class PlatformInterface : public Lr::PlatformDoc
+class PlatformInterface : public Lr::PlatformDoc<LauncherId>
 {
-//-Inner Classes----------------------------------------------------------------------------------------------------
-public:
-    class Writer;
-
+    friend class PlatformInterfaceWriter;
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
     PlatformTaglist mPlatformTaglist;
@@ -279,20 +284,21 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlatformInterface(Install* const parent, const QString& platformTaglistPath, QString platformName,
-                               const QDir& overviewDir, const DocKey&);
+    explicit PlatformInterface(Install* install, const QString& platformTaglistPath, QString platformName,
+                               const QDir& overviewDir);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
+private:
+    std::shared_ptr<RomEntry> processSet(const Fp::Set& set) override;
+
 public:
     bool isEmpty() const override;
 
     bool containsGame(QUuid gameId) const override;
     bool containsAddApp(QUuid addAppId) const override;
-
-    void addSet(const Fp::Set& set, const Lr::ImageSources& images) override;
 };
 
-class PlatformInterface::Writer : public Lr::PlatformDoc::Writer
+class PlatformInterfaceWriter : public Lr::DataDocWriter<PlatformInterface>
 {
     // Shell for writing the taglist of the interface
 
@@ -302,27 +308,23 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    Writer(PlatformInterface* sourceDoc);
+    PlatformInterfaceWriter(PlatformInterface* sourceDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 public:
     Lr::DocHandlingError writeOutOf() override;
 };
 
-class PlaylistInterface : public Lr::PlaylistDoc
+class PlaylistInterface : public Lr::PlaylistDoc<LauncherId>
 {
-//-Inner Classes----------------------------------------------------------------------------------------------------
-public:
-    class Writer;
-
+    friend class PlaylistInterfaceWriter;
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
     PlaylistTaglist mPlaylistTaglist;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlaylistInterface(Install* const parent, const QString& playlistTaglistPath, QString playlistName,
-                               const DocKey&);
+    explicit PlaylistInterface(Install* install, const QString& playlistTaglistPath, QString playlistName);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 public:
@@ -333,7 +335,7 @@ public:
     void setPlaylistData(const Fp::Playlist& playlist) override;
 };
 
-class PlaylistInterface::Writer : public Lr::PlaylistDoc::Writer
+class PlaylistInterfaceWriter : public Lr::DataDocWriter<PlaylistInterface>
 {
     // Shell for writing the taglist of the interface
 
@@ -343,7 +345,7 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    Writer(PlaylistInterface* sourceDoc);
+    PlaylistInterfaceWriter(PlaylistInterface* sourceDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
@@ -400,7 +402,7 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit Emulator(Install * const parent, const QString& filePath, const DocKey&);
+    explicit Emulator(Install * const install, const QString& filePath);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 public:
@@ -429,7 +431,7 @@ public:
     void setArtworkEntry(const EmulatorArtworkEntry& entry);
 };
 
-class EmulatorReader : public ConfigDoc::Reader
+class EmulatorReader : public ConfigDoc::Reader<Emulator>
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -448,11 +450,9 @@ private:
     void parseInfoSource(const QString& value);
     void parseExitHotkey(const QString& value);
     void parseArtwork(const QString& value);
-
-    Emulator* targetEmulator(); // TODO: Example of what isn't needed if readers/writers are made into templates
 };
 
-class Emulator::Writer : public ConfigDoc::Writer
+class Emulator::Writer : public ConfigDoc::Writer<Emulator>
 {
 //-Class Values-------------------------------------------------------------------------------------------------------
 private:
@@ -469,10 +469,9 @@ private:
     bool writeConfigDoc() override;
     void writeStandardKeyValue(const QString& key, const QString& value);
     void writeArtworkEntry(const EmulatorArtworkEntry& entry);
-
-    Emulator* sourceEmulator(); // TODO: Example of what isn't needed if readers/writers are made into templates
 };
 
 }
 
+#include "am-data.tpp"
 #endif // ATTRACTMODE_DATA_H

@@ -24,7 +24,7 @@ namespace Lb
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 Install::Install(const QString& installPath) :
-    Lr::Install(installPath),
+    Lr::Install<LauncherId>(installPath),
     mDataDirectory(installPath + '/' + DATA_PATH),
     mPlatformsDirectory(installPath + '/' + PLATFORMS_PATH),
     mPlaylistsDirectory(installPath + '/' + PLAYLISTS_PATH),
@@ -51,7 +51,7 @@ Install::Install(const QString& installPath) :
 //Private:
 void Install::nullify()
 {
-    Lr::Install::nullify();
+    Lr::IInstall::nullify();
 
     mDataDirectory = QDir();
     mPlatformsDirectory = QDir();
@@ -73,7 +73,7 @@ Qx::Error Install::populateExistingDocs()
         return existingCheck;
 
     for(const QFileInfo& platformFile : qAsConst(existingList))
-         catalogueExistingDoc(Lr::DataDoc::Identifier(Lr::DataDoc::Type::Platform, platformFile.baseName()));
+         catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Platform, platformFile.baseName()));
 
     // Check for playlists
     existingCheck = Qx::dirContentInfoList(existingList, mPlaylistsDirectory, {u"*."_s + XML_EXT}, QDir::NoFilter, QDirIterator::Subdirectories);
@@ -81,7 +81,7 @@ Qx::Error Install::populateExistingDocs()
         return existingCheck;
 
     for(const QFileInfo& playlistFile : qAsConst(existingList))
-        catalogueExistingDoc(Lr::DataDoc::Identifier(Lr::DataDoc::Type::Playlist, playlistFile.baseName()));
+        catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Playlist, playlistFile.baseName()));
 
     // Check for config docs
     existingCheck = Qx::dirContentInfoList(existingList, mDataDirectory, {u"*."_s + XML_EXT});
@@ -89,22 +89,22 @@ Qx::Error Install::populateExistingDocs()
         return existingCheck;
 
     for(const QFileInfo& configDocFile : qAsConst(existingList))
-        catalogueExistingDoc(Lr::DataDoc::Identifier(Lr::DataDoc::Type::Config, configDocFile.baseName()));
+        catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Config, configDocFile.baseName()));
 
     // Return success
     return Qx::Error();
 }
 
-QString Install::imageDestinationPath(Fp::ImageType imageType, const Lr::Game* game) const
+QString Install::imageDestinationPath(Fp::ImageType imageType, const Lr::Game& game) const
 {
     return mPlatformImagesDirectory.absolutePath() + '/' +
-           game->platform() + '/' +
+           game.platform() + '/' +
            (imageType == Fp::ImageType::Logo ? LOGO_PATH : SCREENSHOT_PATH) + '/' +
-           game->id().toString(QUuid::WithoutBraces) +
+           game.id().toString(QUuid::WithoutBraces) +
            '.' + IMAGE_EXT;
 }
 
-void Install::editBulkImageReferences(const Lr::ImageSources& imageSources)
+void Install::editBulkImageReferences(const Lr::ImagePaths& imageSources)
 {
     // Set media folder paths
     const QList<QString> affectedPlatforms = modifiedPlatforms();
@@ -130,91 +130,54 @@ void Install::editBulkImageReferences(const Lr::ImageSources& imageSources)
     }
 }
 
-QString Install::dataDocPath(Lr::DataDoc::Identifier identifier) const
+QString Install::dataDocPath(Lr::IDataDoc::Identifier identifier) const
 {
     QString fileName = identifier.docName() + u"."_s + XML_EXT;
 
     switch(identifier.docType())
     {
-        case Lr::DataDoc::Type::Platform:
+        case Lr::IDataDoc::Type::Platform:
             return mPlatformsDirectory.absoluteFilePath(fileName);
             break;
 
-        case Lr::DataDoc::Type::Playlist:
+        case Lr::IDataDoc::Type::Playlist:
             return mPlaylistsDirectory.absoluteFilePath(fileName);
             break;
 
-        case Lr::DataDoc::Type::Config:
+        case Lr::IDataDoc::Type::Config:
             return mDataDirectory.absoluteFilePath(fileName);
             break;
         default:
-                throw new std::invalid_argument("Function argument was not of type Lr::DataDoc::Identifier");
+                throw new std::invalid_argument("Function argument was not of type Lr::IDataDoc::Identifier");
     }
 }
 
-std::shared_ptr<Lr::PlatformDoc::Reader> Install::preparePlatformDocCheckout(std::unique_ptr<Lr::PlatformDoc>& platformDoc, const QString& translatedName)
+std::unique_ptr<PlatformDoc> Install::preparePlatformDocCheckout(const QString& translatedName)
 {
     // Create doc file reference
-    Lr::DataDoc::Identifier docId(Lr::DataDoc::Type::Platform, translatedName);
+    Lr::IDataDoc::Identifier docId(Lr::IDataDoc::Type::Platform, translatedName);
 
-    // Construct unopened document
-    platformDoc = std::make_unique<PlatformDoc>(this, dataDocPath(docId), translatedName, mImportDetails->updateOptions, DocKey{});
-
-    // Construct doc reader (need to downcast pointer since doc pointer is upcasted after construction above)
-    std::shared_ptr<Lr::PlatformDoc::Reader> docReader = std::make_shared<PlatformDoc::Reader>(static_cast<PlatformDoc*>(platformDoc.get()));
-
-    // Return reader and doc
-    return docReader;
+    // Construct unopened document and return
+    return std::make_unique<PlatformDoc>(this, dataDocPath(docId), translatedName, importDetails().updateOptions);
 }
 
-std::shared_ptr<Lr::PlaylistDoc::Reader> Install::preparePlaylistDocCheckout(std::unique_ptr<Lr::PlaylistDoc>& playlistDoc, const QString& translatedName)
+std::unique_ptr<PlaylistDoc> Install::preparePlaylistDocCheckout(const QString& translatedName)
 {
      // Create doc file reference
-    Lr::DataDoc::Identifier docId(Lr::DataDoc::Type::Playlist, translatedName);
+    Lr::IDataDoc::Identifier docId(Lr::IDataDoc::Type::Playlist, translatedName);
 
     // Construct unopened document
-    playlistDoc = std::make_unique<PlaylistDoc>(this, dataDocPath(docId), translatedName, mImportDetails->updateOptions, DocKey{});
-
-    // Construct doc reader (need to downcast pointer since doc pointer is upcasted after construction above)
-    std::shared_ptr<Lr::PlaylistDoc::Reader> docReader = std::make_shared<PlaylistDoc::Reader>(static_cast<PlaylistDoc*>(playlistDoc.get()));
-
-    // Return reader and doc
-    return docReader;
-}
-
-std::shared_ptr<Lr::PlatformDoc::Writer> Install::preparePlatformDocCommit(const std::unique_ptr<Lr::PlatformDoc>& platformDoc)
-{
-    // Construct doc writer
-    std::shared_ptr<Lr::PlatformDoc::Writer> docWriter = std::make_shared<PlatformDoc::Writer>(static_cast<PlatformDoc*>(platformDoc.get()));
-
-    // Return writer
-    return docWriter;
-}
-
-std::shared_ptr<Lr::PlaylistDoc::Writer> Install::preparePlaylistDocCommit(const std::unique_ptr<Lr::PlaylistDoc>& playlistDoc)
-{
-    // Work with native type
-    auto lbPlaylistDoc = static_cast<PlaylistDoc*>(playlistDoc.get());
-
-    // Store playlist ID (if playlist will remain
-    if(!playlistDoc->isEmpty())
-        mModifiedPlaylistIds.insert(lbPlaylistDoc->playlistHeader()->id());
-
-    // Construct doc writer
-    std::shared_ptr<Lr::PlaylistDoc::Writer> docWriter = std::make_shared<PlaylistDoc::Writer>(lbPlaylistDoc);
-
-    // Return writer
-    return docWriter;
+    return std::make_unique<PlaylistDoc>(this, dataDocPath(docId), translatedName, importDetails().updateOptions);
 }
 
 Lr::DocHandlingError Install::checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc>& returnBuffer)
 {
     // Create doc file reference
-    Lr::DataDoc::Identifier docId(Lr::DataDoc::Type::Config, PlatformsConfigDoc::STD_NAME);
+    Lr::IDataDoc::Identifier docId(Lr::IDataDoc::Type::Config, PlatformsConfigDoc::STD_NAME);
 
     // Construct unopened document
     Import::UpdateOptions uo{.importMode = Import::UpdateMode::NewAndExisting, .removeObsolete = false};
-    returnBuffer = std::make_unique<PlatformsConfigDoc>(this, dataDocPath(docId), uo, DocKey{});
+    returnBuffer = std::make_unique<PlatformsConfigDoc>(this, dataDocPath(docId), uo);
 
     // Construct doc reader
     std::shared_ptr<PlatformsConfigDoc::Reader> docReader = std::make_shared<PlatformsConfigDoc::Reader>(returnBuffer.get());
@@ -232,7 +195,7 @@ Lr::DocHandlingError Install::checkoutPlatformsConfigDoc(std::unique_ptr<Platfor
 
 Lr::DocHandlingError Install::commitPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc> document)
 {
-    assert(document->parent() == this);
+    Q_ASSERT(document->install() == this);
 
     // Prepare writer
     std::shared_ptr<PlatformsConfigDoc::Writer> docWriter = std::make_shared<PlatformsConfigDoc::Writer>(document.get());
@@ -250,10 +213,10 @@ Lr::DocHandlingError Install::commitPlatformsConfigDoc(std::unique_ptr<Platforms
 Lr::DocHandlingError Install::checkoutParentsDoc(std::unique_ptr<ParentsDoc>& returnBuffer)
 {
     // Create doc file reference
-    Lr::DataDoc::Identifier docId(Lr::DataDoc::Type::Config, ParentsDoc::STD_NAME);
+    Lr::IDataDoc::Identifier docId(Lr::IDataDoc::Type::Config, ParentsDoc::STD_NAME);
 
     // Construct unopened document
-    returnBuffer = std::make_unique<ParentsDoc>(this, dataDocPath(docId), DocKey{});
+    returnBuffer = std::make_unique<ParentsDoc>(this, dataDocPath(docId));
 
     // Construct doc reader
     std::shared_ptr<ParentsDoc::Reader> docReader = std::make_shared<ParentsDoc::Reader>(returnBuffer.get());
@@ -271,7 +234,7 @@ Lr::DocHandlingError Install::checkoutParentsDoc(std::unique_ptr<ParentsDoc>& re
 
 Lr::DocHandlingError Install::commitParentsDoc(std::unique_ptr<ParentsDoc> document)
 {
-    assert(document->parent() == this);
+    Q_ASSERT(document->install() == this);
 
     // Prepare writer
     std::shared_ptr<ParentsDoc::Writer> docWriter = std::make_shared<ParentsDoc::Writer>(document.get());
@@ -289,14 +252,12 @@ Lr::DocHandlingError Install::commitParentsDoc(std::unique_ptr<ParentsDoc> docum
 //Public:
 void Install::softReset()
 {
-    Lr::Install::softReset();
+    Lr::IInstall::softReset();
 
     mLbDatabaseIdTracker = Qx::FreeIndexTracker(0, LB_DB_ID_TRACKER_MAX);
     mPlaylistGameDetailsCache.clear();
-    mWorkerImageJobs.clear();
 }
 
-QString Install::name() const { return NAME; }
 QList<Import::ImageMode> Install::preferredImageModeOrder() const { return IMAGE_MODE_ORDER; }
 bool Install::isRunning() const { return Qx::processIsRunning(mExeFile.fileName()); }
 
@@ -312,10 +273,10 @@ QString Install::versionString() const
     else if(!productVersionStr.isEmpty())
         return productVersionStr;
     else
-        return Lr::Install::versionString();
+        return Lr::IInstall::versionString();
 }
 
-QString Install::translateDocName(const QString& originalName, Lr::DataDoc::Type type) const
+QString Install::translateDocName(const QString& originalName, Lr::IDataDoc::Type type) const
 {
     Q_UNUSED(type);
 
@@ -346,7 +307,7 @@ QString Install::translateDocName(const QString& originalName, Lr::DataDoc::Type
 
 Qx::Error Install::prePlatformsImport()
 {
-    if(Qx::Error superErr = Lr::Install::prePlatformsImport(); superErr.isValid())
+    if(Qx::Error superErr = Lr::IInstall::prePlatformsImport(); superErr.isValid())
         return superErr;
 
     // Open platforms document
@@ -355,7 +316,7 @@ Qx::Error Install::prePlatformsImport()
 
 Qx::Error Install::postPlatformsImport()
 {
-    if(Qx::Error superErr = Lr::Install::postPlatformsImport(); superErr.isValid())
+    if(Qx::Error superErr = Lr::IInstall::postPlatformsImport(); superErr.isValid())
         return superErr;
 
     // Open Parents.xml
@@ -421,16 +382,17 @@ Qx::Error Install::postPlatformsImport()
     return Qx::Error();
 }
 
-Qx::Error Install::preImageProcessing(QList<ImageMap>& workerTransfers, const Lr::ImageSources& bulkSources)
+Qx::Error Install::preImageProcessing(const Lr::ImagePaths& bulkSources)
 {
-    if(Qx::Error superErr = Lr::Install::preImageProcessing(workerTransfers, bulkSources); superErr.isValid())
+    if(Qx::Error superErr = Lr::IInstall::preImageProcessing(bulkSources); superErr.isValid())
         return superErr;
 
-    switch(mImportDetails->imageMode)
+    //TODO Deal with the fact that when we drop bulk sources we need to still have the part of editBulkImageRefernces happen that purges old references
+
+    switch(importDetails().imageMode)
     {
         case Import::ImageMode::Link:
         case Import::ImageMode::Copy:
-            workerTransfers.swap(mWorkerImageJobs);
             editBulkImageReferences(bulkSources);
             break;
         case Import::ImageMode::Reference:
@@ -445,7 +407,7 @@ Qx::Error Install::preImageProcessing(QList<ImageMap>& workerTransfers, const Lr
 
 Qx::Error Install::postImageProcessing()
 {
-    if(Qx::Error superErr = Lr::Install::postImageProcessing(); superErr.isValid())
+    if(Qx::Error superErr = Lr::IInstall::postImageProcessing(); superErr.isValid())
             return superErr;
 
     // Save platforms document since it's no longer needed at this point
@@ -476,25 +438,13 @@ Qx::Error Install::postPlaylistsImport()
     return commitParentsDoc(std::move(mParents));
 }
 
-void Install::processDirectGameImages(const Lr::Game* game, const Lr::ImageSources& imageSources)
+void Install::convertToDestinationImages(const Game& game, Lr::ImagePaths& images)
 {
-    Import::ImageMode mode = mImportDetails->imageMode;
-    if(mode == Import::ImageMode::Link || mode == Import::ImageMode::Copy)
-    {
-        if(!imageSources.logoPath().isEmpty())
-        {
-            ImageMap logoMap{.sourcePath = imageSources.logoPath(),
-                             .destPath = imageDestinationPath(Fp::ImageType::Logo, game)};
-            mWorkerImageJobs.append(logoMap);
-        }
+    if(!images.logoPath().isEmpty())
+        images.setLogoPath(imageDestinationPath(Fp::ImageType::Logo, game));
 
-        if(!imageSources.screenshotPath().isEmpty())
-        {
-            ImageMap ssMap{.sourcePath = imageSources.screenshotPath(),
-                           .destPath = imageDestinationPath(Fp::ImageType::Screenshot, game)};
-            mWorkerImageJobs.append(ssMap);
-        }
-    }
+    if(!images.screenshotPath().isEmpty())
+        images.setScreenshotPath(imageDestinationPath(Fp::ImageType::Screenshot, game));
 }
 
 QString Install::platformCategoryIconPath() const { return mPlatformCategoryIconsDirectory.absoluteFilePath(u"Flashpoint.png"_s); }

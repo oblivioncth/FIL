@@ -2,8 +2,8 @@
 #define AM_SETTINGS_DATA_H
 
 // Project Includes
-#include "launcher/attractmode/am-data.h"
-#include "launcher/attractmode/am-settings-items.h"
+#include "launcher/implementation/attractmode/am-data.h"
+#include "launcher/implementation/attractmode/am-settings-items.h"
 
 namespace Am
 {
@@ -162,7 +162,7 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit CrudeSettings(Install* const parent, const QString& filePath, const DocKey&);
+    explicit CrudeSettings(Install* install, const QString& filePath);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 public:
@@ -177,7 +177,7 @@ public:
     void addOtherSetting(const OtherSetting& setting);
 };
 
-class CrudeSettingsReader : public ConfigDoc::Reader
+class CrudeSettingsReader : public ConfigDoc::Reader<CrudeSettings>
 {
 //-Class Variables--------------------------------------------------------------------------------------------------
 private:
@@ -197,12 +197,11 @@ private:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
-    CrudeSettings* targetCrudeSettings() const;
     Lr::DocHandlingError readTargetDoc() override;
     void initializeGenericSubSetting(const QString& key, const QString& value);
 };
 
-class CrudeSettingsWriter : public ConfigDoc::Writer
+class CrudeSettingsWriter : public ConfigDoc::Writer<CrudeSettings>
 {
 //-Class Variables-------------------------------------------------------------------------------------------------
 private:
@@ -218,7 +217,6 @@ public:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
-    CrudeSettings* sourceCrudeSettings() const;
     void writeKeyValue(const QString& key, const QString& value = QString());
 
     bool writeConfigDoc() override;

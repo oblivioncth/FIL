@@ -1,5 +1,5 @@
 // Unit Include
-#include "lr-installfoundation.h"
+#include "lr-install-interface.h"
 
 namespace Lr
 {
@@ -34,43 +34,45 @@ QString RevertError::deriveSecondary() const { return mSpecific; }
 QString RevertError::deriveCaption() const { return CAPTION_REVERT_ERR; }
 
 //===============================================================================================================
-// InstallFoundation
+// IInstall
 //===============================================================================================================
 
 //-Constructor---------------------------------------------------------------------------------------------------
-InstallFoundation::InstallFoundation(const QString& installPath) :
+IInstall::IInstall(const QString& installPath) :
     mValid(false), // Path is invalid until proven otherwise
     mRootDirectory(installPath)
 {}
 
 //-Destructor------------------------------------------------------------------------------------------------
 //Public:
-InstallFoundation::~InstallFoundation() {}
+IInstall::~IInstall() {}
 
 //Public:
-QString InstallFoundation::filePathToBackupPath(const QString& filePath)
+QString IInstall::filePathToBackupPath(const QString& filePath)
 {
     return filePath + '.' + BACKUP_FILE_EXT;
 }
 
 //-Instance Functions--------------------------------------------------------------------------------------------
 //Private:
-bool InstallFoundation::containsAnyDataDoc(DataDoc::Type type, const QList<QString>& names) const
+bool IInstall::containsAnyDataDoc(IDataDoc::Type type, const QList<QString>& names) const
 {
     // Create identifier set of names
-    QSet<DataDoc::Identifier> searchSet;
+    QSet<IDataDoc::Identifier> searchSet;
     for(const QString& docName : names)
-        searchSet << DataDoc::Identifier(type, translateDocName(docName, type));
+        searchSet << IDataDoc::Identifier(type, translateDocName(docName, type));
 
     // Cross reference with existing documents
     return mExistingDocuments.intersects(searchSet);
 }
 
-QList<QString> InstallFoundation::modifiedDataDocs(DataDoc::Type type) const
+bool IInstall::supportsImageMode(Import::ImageMode imageMode) const { return preferredImageModeOrder().contains(imageMode); }
+
+QList<QString> IInstall::modifiedDataDocs(IDataDoc::Type type) const
 {
     QList<QString> modList;
 
-    for(const DataDoc::Identifier& dataDocId : mModifiedDocuments)
+    for(const IDataDoc::Identifier& dataDocId : mModifiedDocuments)
         if(dataDocId.docType() == type)
             modList.append(dataDocId.docName());
 
@@ -78,37 +80,22 @@ QList<QString> InstallFoundation::modifiedDataDocs(DataDoc::Type type) const
 }
 
 //Protected:
-void InstallFoundation::nullify()
+void IInstall::nullify()
 {
     mValid = false;
     mRootDirectory = QDir();
 }
 
-void InstallFoundation::softReset()
-{
-    mRevertableFilePaths.clear();
-    mModifiedDocuments.clear();
-    mDeletedDocuments.clear();
-    mLeasedDocuments.clear();
-    mImportDetails.reset();
-}
-
-void InstallFoundation::declareValid(bool valid)
+void IInstall::declareValid(bool valid)
 {
     mValid = valid;
     if(!valid)
         nullify();
 }
 
-QString InstallFoundation::translateDocName(const QString& originalName, DataDoc::Type type) const
-{
-    Q_UNUSED(type);
-    return originalName;
-}
+void IInstall::catalogueExistingDoc(IDataDoc::Identifier existingDoc) { mExistingDocuments.insert(existingDoc); }
 
-void InstallFoundation::catalogueExistingDoc(DataDoc::Identifier existingDoc) { mExistingDocuments.insert(existingDoc); }
-
-DocHandlingError InstallFoundation::checkoutDataDocument(DataDoc* docToOpen, std::shared_ptr<DataDoc::Reader> docReader)
+DocHandlingError IInstall::checkoutDataDocument(IDataDoc* docToOpen, std::shared_ptr<IDataDoc::Reader> docReader)
 {
     // Error report to return
     DocHandlingError openReadError; // Defaults to no error
@@ -131,9 +118,9 @@ DocHandlingError InstallFoundation::checkoutDataDocument(DataDoc* docToOpen, std
     return openReadError;
 }
 
-DocHandlingError InstallFoundation::commitDataDocument(DataDoc* docToSave, std::shared_ptr<DataDoc::Writer> docWriter)
+DocHandlingError IInstall::commitDataDocument(IDataDoc* docToSave, std::shared_ptr<IDataDoc::Writer> docWriter)
 {
-    DataDoc::Identifier id = docToSave->identifier();
+    IDataDoc::Identifier id = docToSave->identifier();
 
     // Check if the doc was saved previously to prevent double-backups
     bool wasDeleted = mDeletedDocuments.contains(id);
@@ -189,16 +176,39 @@ DocHandlingError InstallFoundation::commitDataDocument(DataDoc* docToSave, std::
     return commitError;
 }
 
-QList<QString> InstallFoundation::modifiedPlatforms() const { return modifiedDataDocs(DataDoc::Type::Platform); }
-QList<QString> InstallFoundation::modifiedPlaylists() const { return modifiedDataDocs(DataDoc::Type::Playlist); }
+QList<QString> IInstall::modifiedPlatforms() const { return modifiedDataDocs(IDataDoc::Type::Platform); }
+QList<QString> IInstall::modifiedPlaylists() const { return modifiedDataDocs(IDataDoc::Type::Playlist); }
 
 //Public:
-bool InstallFoundation::isValid() const { return mValid; }
-QString InstallFoundation::path() const { return mRootDirectory.absolutePath(); }
+QString IInstall::versionString() const { return u"Unknown Version"_s; }
+bool IInstall::isValid() const { return mValid; }
+QString IInstall::path() const { return mRootDirectory.absolutePath(); }
 
-Qx::Error InstallFoundation::refreshExistingDocs(bool* changed)
+void IInstall::softReset()
 {
-    QSet<DataDoc::Identifier> oldDocSet;
+    mRevertableFilePaths.clear();
+    mModifiedDocuments.clear();
+    mDeletedDocuments.clear();
+    mLeasedDocuments.clear();
+    mImportDetails.reset();
+}
+
+IInstall::ImportDetails IInstall::importDetails() const
+{
+    // We just assert here because no install should ever use this before it's available
+    Q_ASSERT(mImportDetails);
+    return mImportDetails.value();
+}
+
+QString IInstall::translateDocName(const QString& originalName, IDataDoc::Type type) const
+{
+    Q_UNUSED(type);
+    return originalName;
+}
+
+Qx::Error IInstall::refreshExistingDocs(bool* changed)
+{
+    QSet<IDataDoc::Identifier> oldDocSet;
     oldDocSet.swap(mExistingDocuments);
     Qx::Error error = populateExistingDocs();
     if(changed)
@@ -206,30 +216,30 @@ Qx::Error InstallFoundation::refreshExistingDocs(bool* changed)
     return error;
 }
 
-bool InstallFoundation::containsPlatform(const QString& name) const
+bool IInstall::containsPlatform(const QString& name) const
 {
-    return containsAnyDataDoc(DataDoc::Type::Platform, {name});
+    return containsAnyDataDoc(IDataDoc::Type::Platform, {name});
 }
 
-bool InstallFoundation::containsPlaylist(const QString& name) const
+bool IInstall::containsPlaylist(const QString& name) const
 {
-    return containsAnyDataDoc(DataDoc::Type::Playlist, {name});
+    return containsAnyDataDoc(IDataDoc::Type::Playlist, {name});
 }
 
-bool InstallFoundation::containsAnyPlatform(const QList<QString>& names) const
+bool IInstall::containsAnyPlatform(const QList<QString>& names) const
 {
-    return containsAnyDataDoc(DataDoc::Type::Platform, names);
+    return containsAnyDataDoc(IDataDoc::Type::Platform, names);
 }
 
-bool InstallFoundation::containsAnyPlaylist(const QList<QString>& names) const
+bool IInstall::containsAnyPlaylist(const QList<QString>& names) const
 {
-    return containsAnyDataDoc(DataDoc::Type::Playlist, names);
+    return containsAnyDataDoc(IDataDoc::Type::Playlist, names);
 }
 
-void InstallFoundation::addRevertableFile(const QString& filePath) { mRevertableFilePaths.append(filePath); }
-int InstallFoundation::revertQueueCount() const { return mRevertableFilePaths.size(); }
+void IInstall::addRevertableFile(const QString& filePath) { mRevertableFilePaths.append(filePath); }
+int IInstall::revertQueueCount() const { return mRevertableFilePaths.size(); }
 
-int InstallFoundation::revertNextChange(RevertError& error, bool skipOnFail)
+int IInstall::revertNextChange(RevertError& error, bool skipOnFail)
 {
     // Ensure error message is null
     error = RevertError();
@@ -262,5 +272,33 @@ int InstallFoundation::revertNextChange(RevertError& error, bool skipOnFail)
     // Return 0 if all empty (shouldn't be reached if function is used correctly)
     return 0;
 }
+
+/* These functions can be overridden by children as needed.
+ * Work within them should be kept as minimal as possible since they are not accounted
+ * for by the import progress indicator.
+ */
+Qx::Error IInstall::preImport(const ImportDetails& details)
+{
+    mImportDetails = details;
+    return Qx::Error();
+}
+
+Qx::Error IInstall::postImport() { return {}; }
+Qx::Error IInstall::prePlatformsImport() { return {}; }
+Qx::Error IInstall::postPlatformsImport() { return {}; }
+
+Qx::Error IInstall::preImageProcessing(const ImagePaths& bulkSources)
+{
+    Q_UNUSED(bulkSources);
+    return {};
+}
+
+Qx::Error IInstall::postImageProcessing() { return {}; }
+Qx::Error IInstall::prePlaylistsImport() { return {}; }
+Qx::Error IInstall::postPlaylistsImport() { return {}; }
+
+QString IInstall::platformCategoryIconPath() const { return QString(); } // Unsupported in default implementation
+std::optional<QDir> IInstall::platformIconsDirectory() const { return std::nullopt; } // Unsupported in default implementation
+std::optional<QDir> IInstall::playlistIconsDirectory() const { return std::nullopt; } // Unsupported in default implementation
 
 }

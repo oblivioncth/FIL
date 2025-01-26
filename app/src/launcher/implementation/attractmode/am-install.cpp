@@ -20,7 +20,7 @@ namespace Am
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 Install::Install(const QString& installPath) :
-    Lr::Install(installPath),
+    Lr::Install<LauncherId>(installPath),
     mEmulatorsDirectory(installPath + '/' + EMULATORS_PATH),
     mRomlistsDirectory(installPath + '/' + ROMLISTS_PATH),
     mMainConfigFile(installPath + '/' + MAIN_CFG_PATH),
@@ -55,7 +55,7 @@ Install::Install(const QString& installPath) :
 //Private:
 void Install::nullify()
 {
-    Lr::Install::nullify();
+    Lr::IInstall::nullify();
 
     mEmulatorsDirectory = QDir();
     mRomlistsDirectory = QDir();
@@ -89,7 +89,7 @@ Qx::Error Install::populateExistingDocs()
             return existingCheck;
 
         for(const QFileInfo& platformFile : qAsConst(existingList))
-             catalogueExistingDoc(Lr::DataDoc::Identifier(Lr::DataDoc::Type::Platform, platformFile.baseName()));
+             catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Platform, platformFile.baseName()));
 
         // Check for playlists
         existingCheck = Qx::dirContentInfoList(existingList, mFpTagDirectory, {u"[[]Playlist[]] *."_s + TAG_EXT},
@@ -98,35 +98,35 @@ Qx::Error Install::populateExistingDocs()
             return existingCheck;
 
         for(const QFileInfo& playlistFile : qAsConst(existingList))
-            catalogueExistingDoc(Lr::DataDoc::Identifier(Lr::DataDoc::Type::Playlist, playlistFile.baseName()));
+            catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Playlist, playlistFile.baseName()));
 
         // Check for special "Flashpoint" platform (more like a config doc but OK for now)
         QFileInfo mainRomlistInfo(mFpRomlist);
         if(mainRomlistInfo.exists())
-            catalogueExistingDoc(Lr::DataDoc::Identifier(Lr::DataDoc::Type::Platform, mainRomlistInfo.baseName()));
+            catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Platform, mainRomlistInfo.baseName()));
     }
 
     // Check for config docs
     QFileInfo mainCfgInfo(mMainConfigFile);
-    catalogueExistingDoc(Lr::DataDoc::Identifier(Lr::DataDoc::Type::Config, mainCfgInfo.baseName())); // Must exist
+    catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Config, mainCfgInfo.baseName())); // Must exist
 
     QFileInfo emulatorCfgInfo(mEmulatorConfigFile);
     if(emulatorCfgInfo.exists())
-        catalogueExistingDoc(Lr::DataDoc::Identifier(Lr::DataDoc::Type::Config, emulatorCfgInfo.baseName()));
+        catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Config, emulatorCfgInfo.baseName()));
 
     // Return success
     return Qx::Error();
 }
 
-QString Install::imageDestinationPath(Fp::ImageType imageType, const Lr::Game* game) const
+QString Install::imageDestinationPath(Fp::ImageType imageType, const Lr::Game& game) const
 {
     return mFpScraperDirectory.absolutePath() + '/' +
            (imageType == Fp::ImageType::Logo ? LOGO_FOLDER_NAME : SCREENSHOT_FOLDER_NAME) + '/' +
-           game->id().toString(QUuid::WithoutBraces) +
+           game.id().toString(QUuid::WithoutBraces) +
            '.' + IMAGE_EXT;
 }
 
-std::shared_ptr<Lr::PlatformDoc::Reader> Install::preparePlatformDocCheckout(std::unique_ptr<Lr::PlatformDoc>& platformDoc, const QString& translatedName)
+std::unique_ptr<PlatformInterface> Install::preparePlatformDocCheckout(const QString& translatedName)
 {
     // Determine path to the taglist that corresponds with the interface
     QString taglistPath = mFpTagDirectory.absoluteFilePath(translatedName + u"."_s + TAG_EXT) ;
@@ -135,46 +135,22 @@ std::shared_ptr<Lr::PlatformDoc::Reader> Install::preparePlatformDocCheckout(std
     QDir overviewDir(mFpScraperDirectory.absoluteFilePath(OVERVIEW_FOLDER_NAME)); // Not a file, but works
 
     // Construct unopened document
-    platformDoc = std::make_unique<PlatformInterface>(this, taglistPath, translatedName, overviewDir, DocKey{});
-
-    // No reading to be done for this interface (tag lists are always overwritten)
-    return std::shared_ptr<Lr::PlatformDoc::Reader>();
+    return std::make_unique<PlatformInterface>(this, taglistPath, translatedName, overviewDir);
 }
 
-std::shared_ptr<Lr::PlaylistDoc::Reader> Install::preparePlaylistDocCheckout(std::unique_ptr<Lr::PlaylistDoc>& playlistDoc, const QString& translatedName)
+std::unique_ptr<PlaylistInterface> Install::preparePlaylistDocCheckout(const QString& translatedName)
 {
     // Determine path to the taglist that corresponds with the interface
     QString taglistPath = mFpTagDirectory.absoluteFilePath(translatedName + u"."_s + TAG_EXT) ;
 
     // Construct unopened document
-    playlistDoc = std::make_unique<PlaylistInterface>(this, taglistPath, translatedName, DocKey{});
-
-    // No reading to be done for this interface (tag lists are always overwritten)
-    return std::shared_ptr<Lr::PlaylistDoc::Reader>();
-}
-
-std::shared_ptr<Lr::PlatformDoc::Writer> Install::preparePlatformDocCommit(const std::unique_ptr<Lr::PlatformDoc>& platformDoc)
-{
-    // Construct doc writer
-    std::shared_ptr<Lr::PlatformDoc::Writer> docWriter = std::make_shared<PlatformInterface::Writer>(static_cast<PlatformInterface*>(platformDoc.get()));
-
-    // Return writer
-    return docWriter;
-}
-
-std::shared_ptr<Lr::PlaylistDoc::Writer> Install::preparePlaylistDocCommit(const std::unique_ptr<Lr::PlaylistDoc>& playlistDoc)
-{
-    // Construct doc writer
-    std::shared_ptr<Lr::PlaylistDoc::Writer> docWriter = std::make_shared<PlaylistInterface::Writer>(static_cast<PlaylistInterface*>(playlistDoc.get()));
-
-    // Return writer
-    return docWriter;
+    return std::make_unique<PlaylistInterface>(this, taglistPath, translatedName);
 }
 
 Lr::DocHandlingError Install::checkoutMainConfig(std::unique_ptr<CrudeSettings>& returnBuffer)
 {
     // Construct unopened document
-    returnBuffer = std::make_unique<CrudeSettings>(this, mMainConfigFile.fileName(), DocKey{});
+    returnBuffer = std::make_unique<CrudeSettings>(this, mMainConfigFile.fileName());
 
     // Construct doc reader
     std::shared_ptr<CrudeSettingsReader> docReader = std::make_shared<CrudeSettingsReader>(returnBuffer.get());
@@ -193,7 +169,7 @@ Lr::DocHandlingError Install::checkoutMainConfig(std::unique_ptr<CrudeSettings>&
 Lr::DocHandlingError Install::checkoutFlashpointRomlist(std::unique_ptr<Romlist>& returnBuffer)
 {
     // Construct unopened document
-    returnBuffer = std::make_unique<Romlist>(this, mFpRomlist.fileName(), Fp::NAME, mImportDetails->updateOptions, DocKey{});
+    returnBuffer = std::make_unique<Romlist>(this, mFpRomlist.fileName(), Fp::NAME, importDetails().updateOptions);
 
     // Construct doc reader
     std::shared_ptr<Romlist::Reader> docReader = std::make_shared<Romlist::Reader>(returnBuffer.get());
@@ -212,7 +188,7 @@ Lr::DocHandlingError Install::checkoutFlashpointRomlist(std::unique_ptr<Romlist>
 Lr::DocHandlingError Install::checkoutClifpEmulatorConfig(std::unique_ptr<Emulator>& returnBuffer)
 {
     // Construct unopened document
-    returnBuffer = std::make_unique<Emulator>(this, mEmulatorConfigFile.fileName(), DocKey{});
+    returnBuffer = std::make_unique<Emulator>(this, mEmulatorConfigFile.fileName());
 
     // Construct doc reader
     std::shared_ptr<EmulatorReader> docReader = std::make_shared<EmulatorReader>(returnBuffer.get());
@@ -230,7 +206,7 @@ Lr::DocHandlingError Install::checkoutClifpEmulatorConfig(std::unique_ptr<Emulat
 
 Lr::DocHandlingError Install::commitMainConfig(std::unique_ptr<CrudeSettings> document)
 {
-    assert(document->parent() == this);
+    Q_ASSERT(document->install() == this);
 
     // Prepare writer
     std::shared_ptr<CrudeSettingsWriter> docWriter = std::make_shared<CrudeSettingsWriter>(document.get());
@@ -247,7 +223,7 @@ Lr::DocHandlingError Install::commitMainConfig(std::unique_ptr<CrudeSettings> do
 
 Lr::DocHandlingError Install::commitFlashpointRomlist(std::unique_ptr<Romlist> document)
 {
-    assert(document->parent() == this);
+    Q_ASSERT(document->install() == this);
 
     // Prepare writer
     std::shared_ptr<Romlist::Writer> docWriter = std::make_shared<Romlist::Writer>(document.get());
@@ -265,7 +241,7 @@ Lr::DocHandlingError Install::commitFlashpointRomlist(std::unique_ptr<Romlist> d
 
 Lr::DocHandlingError Install::commitClifpEmulatorConfig(std::unique_ptr<Emulator> document)
 {
-    assert(document->parent() == this);
+    Q_ASSERT(document->install() == this);
 
     // Prepare writer
     std::shared_ptr<Emulator::Writer> docWriter = std::make_shared<Emulator::Writer>(document.get());
@@ -283,14 +259,12 @@ Lr::DocHandlingError Install::commitClifpEmulatorConfig(std::unique_ptr<Emulator
 //Public:
 void Install::softReset()
 {
-    Lr::Install::softReset();
+    Lr::IInstall::softReset();
 
     if(mRomlist)
         mRomlist.reset();
-    mWorkerImageJobs.clear();
 }
 
-QString Install::name() const { return NAME; }
 QList<Import::ImageMode> Install::preferredImageModeOrder() const { return IMAGE_MODE_ORDER; }
 
 bool Install::isRunning() const
@@ -324,18 +298,18 @@ QString Install::versionString() const
     }
 
     // Can't determine version
-    return Lr::Install::versionString();
+    return Lr::IInstall::versionString();
 }
 
-QString Install::translateDocName(const QString& originalName, Lr::DataDoc::Type type) const
+QString Install::translateDocName(const QString& originalName, Lr::IDataDoc::Type type) const
 {
     // Perform general kosherization
     QString translatedName = Qx::kosherizeFileName(originalName);
 
     // Prefix platforms/playlists
-    if(type == Lr::DataDoc::Type::Platform)
+    if(type == Lr::IDataDoc::Type::Platform)
         translatedName.prepend(PLATFORM_TAG_PREFIX);
-    else if(type == Lr::DataDoc::Type::Playlist)
+    else if(type == Lr::IDataDoc::Type::Playlist)
         translatedName.prepend(PLAYLIST_TAG_PREFIX);
 
     return translatedName;
@@ -371,7 +345,7 @@ Qx::Error Install::preImport(const ImportDetails& details)
     }
 
     // Perform base tasks
-    return Lr::Install::preImport(details);
+    return Lr::IInstall::preImport(details);
 }
 
 Qx::Error Install::prePlatformsImport()
@@ -389,23 +363,10 @@ Qx::Error Install::postPlatformsImport()
     return commitFlashpointRomlist(std::move(mRomlist));
 }
 
-Qx::Error Install::preImageProcessing(QList<ImageMap>& workerTransfers, const Lr::ImageSources& bulkSources)
+Qx::Error Install::preImageProcessing(const Lr::ImagePaths& bulkSources)
 {
     Q_UNUSED(bulkSources);
-
-    switch(mImportDetails->imageMode)
-    {
-        case Import::ImageMode::Link:
-        case Import::ImageMode::Copy:
-            workerTransfers.swap(mWorkerImageJobs);
-            return Qx::Error();
-        case Import::ImageMode::Reference:
-            qWarning("unsupported image mode");
-            return Qx::Error();
-        default:
-            qWarning("unhandled image mode");
-            return Qx::Error();
-    }
+    return {};
 }
 
 Qx::Error Install::postImport()
@@ -421,7 +382,7 @@ Qx::Error Install::postImport()
         return emulatorConfigReadError;
 
     // General emulator setup
-    QString workingDir = QDir::toNativeSeparators(QFileInfo(mImportDetails->clifpPath).absolutePath());
+    QString workingDir = QDir::toNativeSeparators(QFileInfo(importDetails().clifpPath).absolutePath());
     emulatorConfig->setExecutable(CLIFp::EXE_NAME);
     emulatorConfig->setArgs(uR"(play -i u"[romfilename]"_s)"_s);
     emulatorConfig->setWorkDir(workingDir);
@@ -541,25 +502,13 @@ Qx::Error Install::postImport()
     return Qx::Error();
 }
 
-void Install::processDirectGameImages(const Lr::Game* game, const Lr::ImageSources& imageSources)
+void Install::convertToDestinationImages(const RomEntry& game, Lr::ImagePaths& images)
 {
-    Import::ImageMode mode = mImportDetails->imageMode;
-    if(mode == Import::ImageMode::Link || mode == Import::ImageMode::Copy)
-    {
-        if(!imageSources.logoPath().isEmpty())
-        {
-            ImageMap logoMap{.sourcePath = imageSources.logoPath(),
-                             .destPath = imageDestinationPath(Fp::ImageType::Logo, game)};
-            mWorkerImageJobs.append(logoMap);
-        }
+    if(!images.logoPath().isEmpty())
+        images.setLogoPath(imageDestinationPath(Fp::ImageType::Logo, game));
 
-        if(!imageSources.screenshotPath().isEmpty())
-        {
-            ImageMap ssMap{.sourcePath = imageSources.screenshotPath(),
-                           .destPath = imageDestinationPath(Fp::ImageType::Screenshot, game)};
-            mWorkerImageJobs.append(ssMap);
-        }
-    }
+    if(!images.screenshotPath().isEmpty())
+        images.setScreenshotPath(imageDestinationPath(Fp::ImageType::Screenshot, game));
 }
 
 }

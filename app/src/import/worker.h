@@ -13,7 +13,7 @@
 #include <fp/fp-install.h>
 
 // Project Includes
-#include "launcher/lr-install.h"
+#include "launcher/interface/lr-install-interface.h"
 
 namespace Import
 {
@@ -108,10 +108,11 @@ public:
 private:
     // Install links
     Fp::Install* mFlashpointInstall;
-    Lr::Install* mLauncherInstall;
+    Lr::IInstall* mLauncherInstall;
 
     // Image processing
     Qx::SyncDownloadManager mImageDownloadManager;
+    QList<Lr::IInstall::ImageMap> mImageTransferJobs;
 
     // Job details
     Selections mImportSelections;
@@ -133,7 +134,7 @@ private:
 
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
-    Worker(Fp::Install* flashpoint, Lr::Install* launcher, Selections importSelections, OptionSet optionSet);
+    Worker(Fp::Install* flashpoint, Lr::IInstall* launcher, Selections importSelections, OptionSet optionSet);
 
 //-Instance Functions---------------------------------------------------------------------------------------------------------
 private:
@@ -141,8 +142,8 @@ private:
     Qx::Error preloadPlaylists(QList<Fp::Playlist>& targetPlaylists);
     QList<QUuid> getPlaylistSpecificGameIds(const QList<Fp::Playlist>& playlists);
     ImageTransferError transferImage(bool symlink, QString sourcePath, QString destPath);
-    bool performImageJobs(const QList<Lr::Install::ImageMap>& jobs, bool symlink, Qx::ProgressGroup* pg = nullptr);
-    Result processPlatformGames(Qx::Error& errorReport, std::unique_ptr<Lr::PlatformDoc>& platformDoc, Fp::Db::QueryBuffer& gameQueryResult);
+    bool performImageJobs(const QList<Lr::IInstall::ImageMap>& jobs, bool symlink, Qx::ProgressGroup* pg = nullptr);
+    Result processPlatformGames(Qx::Error& errorReport, std::unique_ptr<Lr::IPlatformDoc>& platformDoc, Fp::Db::QueryBuffer& gameQueryResult);
     void cullUnimportedPlaylistGames(QList<Fp::Playlist>& playlists);
 
     Result preloadAddApps(Qx::Error& errorReport, Fp::Db::QueryBuffer& addAppQuery);

@@ -1,5 +1,5 @@
 // Unit Include
-#include "lr-installfoundation.h"
+#include "lr-install-interface.h"
 
 // Qt Includes
 #include <QFile>
@@ -7,12 +7,12 @@
 namespace Lr
 {
 //===============================================================================================================
-// InstallFoundation
+// IInstall
 //===============================================================================================================
 
 //-Class Functions--------------------------------------------------------------------------------------------
 //Private:
-void InstallFoundation::ensureModifiable(const QString& filePath)
+void IInstall::ensureModifiable(const QString& filePath)
 {
     QFile f(filePath);;
     f.setPermissions(f.permissions() | QFile::WriteOwner | QFile::WriteGroup);

@@ -5,7 +5,7 @@
 #include <memory>
 
 // Project Includes
-#include "launcher/launchbox/lb-install.h"
+#include "launcher/implementation/launchbox/lb-install.h"
 
 namespace Xml
 {
@@ -126,23 +126,20 @@ namespace Lb
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlatformDoc::PlatformDoc(Install* const parent, const QString& xmlPath, QString docName, const Import::UpdateOptions& updateOptions,
-                         const DocKey&) :
-    Lr::BasicPlatformDoc(parent, xmlPath, docName, updateOptions)
+PlatformDoc::PlatformDoc(Install* install, const QString& xmlPath, QString docName, const Import::UpdateOptions& updateOptions) :
+    Lr::BasicPlatformDoc<LauncherId>(install, xmlPath, docName, updateOptions)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-std::shared_ptr<Lr::Game> PlatformDoc::prepareGame(const Fp::Game& game, const Lr::ImageSources& images)
+std::shared_ptr<Game> PlatformDoc::prepareGame(const Fp::Game& game)
 {
-    Q_UNUSED(images); // LaunchBox doesn't store image info in its platform doc directly
-
     // Convert to LaunchBox game
-    const QString& clifpPath = static_cast<Install*>(parent())->mImportDetails->clifpPath;
+    const QString& clifpPath = install()->importDetails().clifpPath;
     std::shared_ptr<Game> lbGame = std::make_shared<Game>(game, clifpPath);
 
     // Add details to cache
-    static_cast<Install*>(parent())->mPlaylistGameDetailsCache.insert(game.id(), PlaylistGame::EntryDetails(*lbGame));
+    install()->mPlaylistGameDetailsCache.insert(game.id(), PlaylistGame::EntryDetails(*lbGame));
 
     // Add language as custom field
     CustomField::Builder cfb;
@@ -155,10 +152,10 @@ std::shared_ptr<Lr::Game> PlatformDoc::prepareGame(const Fp::Game& game, const L
     return lbGame;
 }
 
-std::shared_ptr<Lr::AddApp> PlatformDoc::prepareAddApp(const Fp::AddApp& addApp)
+std::shared_ptr<AddApp> PlatformDoc::prepareAddApp(const Fp::AddApp& addApp)
 {
     // Convert to LaunchBox add app
-    const QString& clifpPath = static_cast<Install*>(parent())->mImportDetails->clifpPath;
+    const QString& clifpPath = install()->importDetails().clifpPath;
     std::shared_ptr<AddApp> lbAddApp = std::make_shared<AddApp>(addApp, clifpPath);
 
     // Return converted game
@@ -174,7 +171,7 @@ void PlatformDoc::addCustomField(std::shared_ptr<CustomField> customField)
 //Public:
 bool PlatformDoc::isEmpty() const
 {
-    return mCustomFieldsFinal.isEmpty() && mCustomFieldsExisting.isEmpty() && Lr::BasicPlatformDoc::isEmpty();
+    return mCustomFieldsFinal.isEmpty() && mCustomFieldsExisting.isEmpty() && Lr::BasicPlatformDoc<LauncherId>::isEmpty();
 }
 
 void PlatformDoc::finalize()
@@ -192,24 +189,22 @@ void PlatformDoc::finalize()
             ++i;
     }
 
-    Lr::BasicPlatformDoc::finalize();
+    Lr::BasicPlatformDoc<LauncherId>::finalize();
 }
 
 //===============================================================================================================
-// PlatformDoc::Reader
+// PlatformDocReader
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlatformDoc::Reader::Reader(PlatformDoc* targetDoc) :
-    Lr::DataDoc::Reader(targetDoc),
-    Lr::BasicPlatformDoc::Reader(targetDoc),
-    Lr::XmlDocReader(targetDoc, Xml::ROOT_ELEMENT)
+PlatformDocReader::PlatformDocReader(PlatformDoc* targetDoc) :
+    Lr::XmlDocReader<PlatformDoc>(targetDoc, Xml::ROOT_ELEMENT)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-Lr::DocHandlingError PlatformDoc::Reader::readTargetDoc()
+Lr::DocHandlingError PlatformDocReader::readTargetDoc()
 {
     while(mStreamReader.readNextStartElement())
     {
@@ -227,7 +222,7 @@ Lr::DocHandlingError PlatformDoc::Reader::readTargetDoc()
     return streamStatus();
 }
 
-void PlatformDoc::Reader::parseGame()
+void PlatformDocReader::parseGame()
 {
     // Game to build
     Game::Builder gb;
@@ -281,10 +276,10 @@ void PlatformDoc::Reader::parseGame()
 
     // Build Game and add to document
     std::shared_ptr<Game> existingGame = gb.buildShared();
-    targetDocExistingGames()[existingGame->id()] = existingGame;
+    target()->mGamesExisting[existingGame->id()] = existingGame;
 }
 
-void PlatformDoc::Reader::parseAddApp()
+void PlatformDocReader::parseAddApp()
 {
     // Additional App to Build
     AddApp::Builder aab;
@@ -312,10 +307,10 @@ void PlatformDoc::Reader::parseAddApp()
 
     // Build Additional App and add to document
     std::shared_ptr<AddApp> existingAddApp = aab.buildShared();
-    targetDocExistingAddApps()[existingAddApp->id()] = existingAddApp;
+    target()->mAddAppsExisting[existingAddApp->id()] = existingAddApp;
 }
 
-void PlatformDoc::Reader::parseCustomField()
+void PlatformDocReader::parseCustomField()
 {
     // Custom Field to Build
     CustomField::Builder cfb;
@@ -336,41 +331,39 @@ void PlatformDoc::Reader::parseCustomField()
     // Build Custom Field and add to document
     std::shared_ptr<CustomField> existingCustomField = cfb.buildShared();
     QString key = existingCustomField->gameId().toString() + existingCustomField->name();
-    static_cast<PlatformDoc*>(mTargetDocument)->mCustomFieldsExisting[key] = existingCustomField;
+    target()->mCustomFieldsExisting[key] = existingCustomField;
 }
 
 //===============================================================================================================
-// PlatformDoc::Writer
+// PlatformDocWriter
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlatformDoc::Writer::Writer(PlatformDoc* sourceDoc) :
-    Lr::DataDoc::Writer(sourceDoc),
-    Lr::BasicPlatformDoc::Writer(sourceDoc),
-    Lr::XmlDocWriter(sourceDoc, Xml::ROOT_ELEMENT)
+PlatformDocWriter::PlatformDocWriter(PlatformDoc* sourceDoc) :
+    Lr::XmlDocWriter<PlatformDoc>(sourceDoc, Xml::ROOT_ELEMENT)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-bool PlatformDoc::Writer::writeSourceDoc()
+bool PlatformDocWriter::writeSourceDoc()
 {
     // Write all games
-    for(const std::shared_ptr<Lr::Game>& game : static_cast<PlatformDoc*>(mSourceDocument)->finalGames())
+    for(const std::shared_ptr<Game>& game : source()->finalGames())
     {
         if(!writeGame(*std::static_pointer_cast<Game>(game)))
             return false;
     }
 
     // Write all additional apps
-    for(const std::shared_ptr<Lr::AddApp>& addApp : static_cast<PlatformDoc*>(mSourceDocument)->finalAddApps())
+    for(const std::shared_ptr<AddApp>& addApp : source()->finalAddApps())
     {
         if(!writeAddApp(*std::static_pointer_cast<AddApp>(addApp)))
             return false;
     }
 
     // Write all custom fields
-    for(const std::shared_ptr<CustomField>& customField : qAsConst(static_cast<PlatformDoc*>(mSourceDocument)->mCustomFieldsFinal))
+    for(const std::shared_ptr<CustomField>& customField : qAsConst(source()->mCustomFieldsFinal))
     {
         if(!writeCustomField(*customField))
             return false;
@@ -380,7 +373,7 @@ bool PlatformDoc::Writer::writeSourceDoc()
     return true;
 }
 
-bool PlatformDoc::Writer::writeGame(const Game& game)
+bool PlatformDocWriter::writeGame(const Game& game)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Xml::Element_Game::NAME);
@@ -425,7 +418,7 @@ bool PlatformDoc::Writer::writeGame(const Game& game)
     return !mStreamWriter.hasError();
 }
 
-bool PlatformDoc::Writer::writeAddApp(const AddApp& addApp)
+bool PlatformDocWriter::writeAddApp(const AddApp& addApp)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Xml::Element_AddApp::NAME);
@@ -449,7 +442,7 @@ bool PlatformDoc::Writer::writeAddApp(const AddApp& addApp)
     return !mStreamWriter.hasError();
 }
 
-bool PlatformDoc::Writer::writeCustomField(const CustomField& customField)
+bool PlatformDocWriter::writeCustomField(const CustomField& customField)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Xml::Element_CustomField::NAME);
@@ -475,15 +468,14 @@ bool PlatformDoc::Writer::writeCustomField(const CustomField& customField)
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlaylistDoc::PlaylistDoc(Install* const parent, const QString& xmlPath, QString docName, const Import::UpdateOptions& updateOptions,
-                         const DocKey&) :
-    Lr::BasicPlaylistDoc(parent, xmlPath, docName, updateOptions),
-    mLaunchBoxDatabaseIdTracker(&parent->mLbDatabaseIdTracker)
+PlaylistDoc::PlaylistDoc(Install* install, const QString& xmlPath, QString docName, const Import::UpdateOptions& updateOptions) :
+    Lr::BasicPlaylistDoc<LauncherId>(install, xmlPath, docName, updateOptions),
+    mLaunchBoxDatabaseIdTracker(&install->mLbDatabaseIdTracker)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-std::shared_ptr<Lr::PlaylistHeader> PlaylistDoc::preparePlaylistHeader(const Fp::Playlist& playlist)
+std::shared_ptr<PlaylistHeader> PlaylistDoc::preparePlaylistHeader(const Fp::Playlist& playlist)
 {
     // Convert to LaunchBox playlist header
     std::shared_ptr<PlaylistHeader> lbPlaylist = std::make_shared<PlaylistHeader>(playlist);
@@ -492,10 +484,10 @@ std::shared_ptr<Lr::PlaylistHeader> PlaylistDoc::preparePlaylistHeader(const Fp:
     return lbPlaylist;
 }
 
-std::shared_ptr<Lr::PlaylistGame> PlaylistDoc::preparePlaylistGame(const Fp::PlaylistGame& game)
+std::shared_ptr<PlaylistGame> PlaylistDoc::preparePlaylistGame(const Fp::PlaylistGame& game)
 {
     // Convert to LaunchBox playlist game
-    std::shared_ptr<PlaylistGame> lbPlaylistGame = std::make_shared<PlaylistGame>(game, static_cast<Install*>(parent())->mPlaylistGameDetailsCache);
+    std::shared_ptr<PlaylistGame> lbPlaylistGame = std::make_shared<PlaylistGame>(game, install()->mPlaylistGameDetailsCache);
 
     // Set LB Database ID appropriately before hand-off
     QUuid key = lbPlaylistGame->id();
@@ -516,20 +508,18 @@ std::shared_ptr<Lr::PlaylistGame> PlaylistDoc::preparePlaylistGame(const Fp::Pla
 }
 
 //===============================================================================================================
-// PlaylistDoc::Reader
+// PlaylistDocReader
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlaylistDoc::Reader::Reader(PlaylistDoc* targetDoc) :
-    Lr::DataDoc::Reader(targetDoc),
-    Lr::BasicPlaylistDoc::Reader(targetDoc),
-    Lr::XmlDocReader(targetDoc, Xml::ROOT_ELEMENT)
+PlaylistDocReader::PlaylistDocReader(PlaylistDoc* targetDoc) :
+    Lr::XmlDocReader<PlaylistDoc>(targetDoc, Xml::ROOT_ELEMENT)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-Lr::DocHandlingError PlaylistDoc::Reader::readTargetDoc()
+Lr::DocHandlingError PlaylistDocReader::readTargetDoc()
 {
     while(mStreamReader.readNextStartElement())
     {
@@ -545,7 +535,7 @@ Lr::DocHandlingError PlaylistDoc::Reader::readTargetDoc()
     return streamStatus();
 }
 
-void PlaylistDoc::Reader::parsePlaylistHeader()
+void PlaylistDocReader::parsePlaylistHeader()
 {
     // Playlist Header to Build
     PlaylistHeader::Builder phb;
@@ -566,10 +556,10 @@ void PlaylistDoc::Reader::parsePlaylistHeader()
     }
 
     // Build Playlist Header and add to document
-    targetDocPlaylistHeader() = phb.buildShared();
+    target()->mPlaylistHeader = phb.buildShared();
 }
 
-void PlaylistDoc::Reader::parsePlaylistGame()
+void PlaylistDocReader::parsePlaylistGame()
 {
     // Playlist Game to Build
     PlaylistGame::Builder pgb;
@@ -599,39 +589,37 @@ void PlaylistDoc::Reader::parsePlaylistGame()
     // Correct LB ID if it is invalid and then add it to tracker
     if(existingPlaylistGame->lbDatabaseId() < 0)
     {
-        auto optIdx = static_cast<PlaylistDoc*>(mTargetDocument)->mLaunchBoxDatabaseIdTracker->reserveFirstFree();
+        auto optIdx = target()->mLaunchBoxDatabaseIdTracker->reserveFirstFree();
         existingPlaylistGame->setLBDatabaseId(optIdx.value_or(0));
     }
     else
-        static_cast<PlaylistDoc*>(mTargetDocument)->mLaunchBoxDatabaseIdTracker->reserve(existingPlaylistGame->lbDatabaseId());
+        target()->mLaunchBoxDatabaseIdTracker->reserve(existingPlaylistGame->lbDatabaseId());
 
     // Add to document
-    targetDocExistingPlaylistGames()[existingPlaylistGame->gameId()] = existingPlaylistGame;
+    target()->mPlaylistGamesExisting[existingPlaylistGame->gameId()] = existingPlaylistGame;
 }
 
 //===============================================================================================================
-// PlaylistDoc::Writer
+// PlaylistDocWriter
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlaylistDoc::Writer::Writer(PlaylistDoc* sourceDoc) :
-    Lr::DataDoc::Writer(sourceDoc),
-    Lr::BasicPlaylistDoc::Writer(sourceDoc),
-    Lr::XmlDocWriter(sourceDoc, Xml::ROOT_ELEMENT)
+PlaylistDocWriter::PlaylistDocWriter(PlaylistDoc* sourceDoc) :
+    Lr::XmlDocWriter<PlaylistDoc>(sourceDoc, Xml::ROOT_ELEMENT)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-bool PlaylistDoc::Writer::writeSourceDoc()
+bool PlaylistDocWriter::writeSourceDoc()
 {
     // Write playlist header
-    std::shared_ptr<Lr::PlaylistHeader> playlistHeader = static_cast<PlaylistDoc*>(mSourceDocument)->playlistHeader();
+    std::shared_ptr<Lr::PlaylistHeader> playlistHeader = source()->playlistHeader();
     if(!writePlaylistHeader(*std::static_pointer_cast<PlaylistHeader>(playlistHeader)))
         return false;
 
     // Write all playlist games
-    for(const std::shared_ptr<Lr::PlaylistGame>& playlistGame : static_cast<PlaylistDoc*>(mSourceDocument)->finalPlaylistGames())
+    for(const std::shared_ptr<PlaylistGame>& playlistGame : source()->finalPlaylistGames())
     {
         if(!writePlaylistGame(*std::static_pointer_cast<PlaylistGame>(playlistGame)))
             return false;
@@ -641,7 +629,7 @@ bool PlaylistDoc::Writer::writeSourceDoc()
     return true;
 }
 
-bool PlaylistDoc::Writer::writePlaylistHeader(const PlaylistHeader& playlistHeader)
+bool PlaylistDocWriter::writePlaylistHeader(const PlaylistHeader& playlistHeader)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Xml::Element_PlaylistHeader::NAME);
@@ -662,7 +650,7 @@ bool PlaylistDoc::Writer::writePlaylistHeader(const PlaylistHeader& playlistHead
     return !mStreamWriter.hasError();
 }
 
-bool PlaylistDoc::Writer::writePlaylistGame(const PlaylistGame& playlistGame)
+bool PlaylistDocWriter::writePlaylistGame(const PlaylistGame& playlistGame)
 {
     // Write opening tag
     mStreamWriter.writeStartElement(Xml::Element_PlaylistGame::NAME);
@@ -690,14 +678,13 @@ bool PlaylistDoc::Writer::writePlaylistGame(const PlaylistGame& playlistGame)
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-PlatformsConfigDoc::PlatformsConfigDoc(Install* const parent, const QString& xmlPath, const Import::UpdateOptions& updateOptions,
-                                       const DocKey&) :
-    Lr::UpdateableDoc(parent, xmlPath, STD_NAME, updateOptions)
+PlatformsConfigDoc::PlatformsConfigDoc(Install* install, const QString& xmlPath, const Import::UpdateOptions& updateOptions) :
+    Lr::UpdateableDoc<LauncherId>(install, xmlPath, STD_NAME, updateOptions)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-Lr::DataDoc::Type PlatformsConfigDoc::type() const { return Lr::DataDoc::Type::Config; }
+Lr::IDataDoc::Type PlatformsConfigDoc::type() const { return Lr::IDataDoc::Type::Config; }
 
 //Public:
 bool PlatformsConfigDoc::isEmpty() const
@@ -758,7 +745,7 @@ void PlatformsConfigDoc::finalize()
     finalizeUpdateableItems(mPlatformCategoriesExisting, mPlatformCategoriesFinal);
 
     // Finalize base
-    Lr::UpdateableDoc::finalize();
+    Lr::IUpdateableDoc::finalize();
 }
 
 //===============================================================================================================
@@ -768,8 +755,7 @@ void PlatformsConfigDoc::finalize()
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
 PlatformsConfigDoc::Reader::Reader(PlatformsConfigDoc* targetDoc) :
-    Lr::DataDoc::Reader(targetDoc),
-    Lr::XmlDocReader(targetDoc, Xml::ROOT_ELEMENT)
+    Lr::XmlDocReader<PlatformsConfigDoc>(targetDoc, Xml::ROOT_ELEMENT)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
@@ -813,7 +799,7 @@ void PlatformsConfigDoc::Reader::parsePlatform()
 
     // Build Platform and add to document
     Platform existingPlatform = pb.build();
-    static_cast<PlatformsConfigDoc*>(mTargetDocument)->mPlatformsExisting[existingPlatform.name()] = existingPlatform;
+    target()->mPlatformsExisting[existingPlatform.name()] = existingPlatform;
 }
 
 Lr::DocHandlingError PlatformsConfigDoc::Reader::parsePlatformFolder()
@@ -831,12 +817,12 @@ Lr::DocHandlingError PlatformsConfigDoc::Reader::parsePlatformFolder()
         else if(mStreamReader.name() == Xml::Element_PlatformFolder::ELEMENT_PLATFORM)
             pfb.wPlatform(mStreamReader.readElementText());
         else
-            return Lr::DocHandlingError(*mTargetDocument, Lr::DocHandlingError::DocInvalidType);
+            return Lr::DocHandlingError(*target(), Lr::DocHandlingError::DocInvalidType);
     }
 
     // Build PlatformFolder and add to document
     PlatformFolder existingPlatformFolder = pfb.build();
-    static_cast<PlatformsConfigDoc*>(mTargetDocument)->mPlatformFoldersExisting[existingPlatformFolder.identifier()] = existingPlatformFolder;
+    target()->mPlatformFoldersExisting[existingPlatformFolder.identifier()] = existingPlatformFolder;
 
     return Lr::DocHandlingError();
 }
@@ -861,7 +847,7 @@ void PlatformsConfigDoc::Reader::parsePlatformCategory()
     PlatformCategory pc = pcb.build();
 
     // Build Playlist Header and add to document
-   static_cast<PlatformsConfigDoc*>(mTargetDocument)->mPlatformCategoriesExisting[pc.name()] = pc;
+   target()->mPlatformCategoriesExisting[pc.name()] = pc;
 }
 
 //===============================================================================================================
@@ -871,8 +857,7 @@ void PlatformsConfigDoc::Reader::parsePlatformCategory()
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
 PlatformsConfigDoc::Writer::Writer(PlatformsConfigDoc* sourceDoc) :
-    Lr::DataDoc::Writer(sourceDoc),
-    Lr::XmlDocWriter(sourceDoc, Xml::ROOT_ELEMENT)
+    Lr::XmlDocWriter<PlatformsConfigDoc>(sourceDoc, Xml::ROOT_ELEMENT)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
@@ -880,21 +865,21 @@ PlatformsConfigDoc::Writer::Writer(PlatformsConfigDoc* sourceDoc) :
 bool PlatformsConfigDoc::Writer::writeSourceDoc()
 {
     // Write all platforms
-    for(const Platform& platform : static_cast<PlatformsConfigDoc*>(mSourceDocument)->finalPlatforms())
+    for(const Platform& platform : source()->finalPlatforms())
     {
         if(!writePlatform(platform))
             return false;
     }
 
     // Write all platform folders
-    for(const PlatformFolder& platformFolder : static_cast<PlatformsConfigDoc*>(mSourceDocument)->finalPlatformFolders())
+    for(const PlatformFolder& platformFolder : source()->finalPlatformFolders())
     {
         if(!writePlatformFolder(platformFolder))
             return false;
     }
 
     // Write all platform categories
-    for(const PlatformCategory& platformCategory : static_cast<PlatformsConfigDoc*>(mSourceDocument)->finalPlatformCategories())
+    for(const PlatformCategory& platformCategory : source()->finalPlatformCategories())
     {
         if(!writePlatformCategory(platformCategory))
             return false;
@@ -965,13 +950,13 @@ bool PlatformsConfigDoc::Writer::writePlatformCategory(const PlatformCategory& p
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-ParentsDoc::ParentsDoc(Install* const parent, const QString& xmlPath, const DocKey&) :
-    Lr::DataDoc(parent, xmlPath, STD_NAME)
+ParentsDoc::ParentsDoc(Install* install, const QString& xmlPath) :
+    Lr::DataDoc<LauncherId>(install, xmlPath, STD_NAME)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-Lr::DataDoc::Type ParentsDoc::type() const { return Lr::DataDoc::Type::Config; }
+Lr::IDataDoc::Type ParentsDoc::type() const { return Lr::IDataDoc::Type::Config; }
 
 bool ParentsDoc::removeIfPresent(qsizetype idx)
 {
@@ -1042,8 +1027,7 @@ void ParentsDoc::addParent(const Parent& parent) { mParents.append(parent); }
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
 ParentsDoc::Reader::Reader(ParentsDoc* targetDoc) :
-    Lr::DataDoc::Reader(targetDoc),
-    Lr::XmlDocReader(targetDoc, Xml::ROOT_ELEMENT)
+    Lr::XmlDocReader<ParentsDoc>(targetDoc, Xml::ROOT_ELEMENT)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
@@ -1084,7 +1068,7 @@ void ParentsDoc::Reader::parseParent()
 
     // Build Platform and add to document
     Parent existingParent = pb.build();
-    static_cast<ParentsDoc*>(mTargetDocument)->mParents.append(existingParent);
+    target()->mParents.append(existingParent);
 }
 
 //===============================================================================================================
@@ -1094,8 +1078,7 @@ void ParentsDoc::Reader::parseParent()
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
 ParentsDoc::Writer::Writer(ParentsDoc* sourceDoc) :
-    Lr::DataDoc::Writer(sourceDoc),
-    Lr::XmlDocWriter(sourceDoc, Xml::ROOT_ELEMENT)
+    Lr::XmlDocWriter<ParentsDoc>(sourceDoc, Xml::ROOT_ELEMENT)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
@@ -1103,7 +1086,7 @@ ParentsDoc::Writer::Writer(ParentsDoc* sourceDoc) :
 bool ParentsDoc::Writer::writeSourceDoc()
 {
     // Write all parents
-    for(const Parent& parent : static_cast<ParentsDoc*>(mSourceDocument)->parents())
+    for(const Parent& parent : source()->parents())
     {
         if(!writeParent(parent))
             return false;

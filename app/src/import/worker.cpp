@@ -62,7 +62,7 @@ QString ImageTransferError::deriveCaption() const { return CAPTION_IMAGE_ERR; }
 //===============================================================================================================
 
 //-Constructor---------------------------------------------------------------------------------------------------
-Worker::Worker(Fp::Install* flashpoint, Lr::Install* launcher, Selections importSelections, OptionSet optionSet) :
+Worker::Worker(Fp::Install* flashpoint, Lr::IInstall* launcher, Selections importSelections, OptionSet optionSet) :
       mFlashpointInstall(flashpoint),
       mLauncherInstall(launcher),
       mImportSelections(importSelections),
@@ -156,7 +156,7 @@ ImageTransferError Worker::transferImage(bool symlink, QString sourcePath, QStri
         return ImageTransferError(ImageTransferError::CantCreateDirectory, QString(), destinationDir.absolutePath());
 
     // Determine backup path
-    QString backupPath = Lr::Install::filePathToBackupPath(destinationInfo.absoluteFilePath());
+    QString backupPath = Lr::IInstall::filePathToBackupPath(destinationInfo.absoluteFilePath());
 
     // Temporarily backup image if it already exists (also acts as deletion marking in case images for the title were removed in an update)
     if(destinationOccupied)
@@ -197,14 +197,14 @@ ImageTransferError Worker::transferImage(bool symlink, QString sourcePath, QStri
     return ImageTransferError();
 }
 
-bool Worker::performImageJobs(const QList<Lr::Install::ImageMap>& jobs, bool symlink, Qx::ProgressGroup* pg)
+bool Worker::performImageJobs(const QList<Lr::IInstall::ImageMap>& jobs, bool symlink, Qx::ProgressGroup* pg)
 {
     // Setup for image transfers
     ImageTransferError imageTransferError; // Error return reference
     *mBlockingErrorResponse = QMessageBox::NoToAll; // Default to choice "NoToAll" in case the signal is not correctly connected using Qt::BlockingQueuedConnection
     bool ignoreAllTransferErrors = false; // NoToAll response tracker
 
-    for(const Lr::Install::ImageMap& imageJob : jobs)
+    for(const Lr::IInstall::ImageMap& imageJob : jobs)
     {
         while((imageTransferError = transferImage(symlink, imageJob.sourcePath, imageJob.destPath)).isValid() && !ignoreAllTransferErrors)
         {
@@ -229,7 +229,7 @@ bool Worker::performImageJobs(const QList<Lr::Install::ImageMap>& jobs, bool sym
     return true;
 }
 
-Worker::Result Worker::processPlatformGames(Qx::Error& errorReport, std::unique_ptr<Lr::PlatformDoc>& platformDoc, Fp::Db::QueryBuffer& gameQueryResult)
+Worker::Result Worker::processPlatformGames(Qx::Error& errorReport, std::unique_ptr<Lr::IPlatformDoc>& platformDoc, Fp::Db::QueryBuffer& gameQueryResult)
 {
     const Fp::Toolkit* tk = mFlashpointInstall->toolkit();
 
@@ -276,11 +276,14 @@ Worker::Result Worker::processPlatformGames(Qx::Error& errorReport, std::unique_
         // Get image information
         QFileInfo logoLocalInfo(tk->entryImageLocalPath(Fp::ImageType::Logo, builtGame.id()));
         QFileInfo ssLocalInfo(tk->entryImageLocalPath(Fp::ImageType::Screenshot, builtGame.id()));
-
-        // Add set to doc
         QString checkedLogoPath = (logoLocalInfo.exists() || mOptionSet.downloadImages) ? logoLocalInfo.absoluteFilePath() : QString();
         QString checkedScreenshotPath = (ssLocalInfo.exists() || mOptionSet.downloadImages) ? ssLocalInfo.absoluteFilePath() : QString();
-        platformDoc->addSet(builtSet, Lr::ImageSources(checkedLogoPath, checkedScreenshotPath));
+        Lr::ImagePaths imagePaths(checkedLogoPath, checkedScreenshotPath);
+        Lr::IInstall::ImageMap logoMap{.sourcePath = imagePaths.logoPath(), .destPath = ""};
+        Lr::IInstall::ImageMap screenshotMap{.sourcePath = imagePaths.screenshotPath(), .destPath = ""};
+
+        // Add set to doc
+        platformDoc->addSet(builtSet, imagePaths);
 
         // Add ID to imported game cache
         mImportedGameIdsCache.insert(builtGame.id());
@@ -305,13 +308,20 @@ Worker::Result Worker::processPlatformGames(Qx::Error& errorReport, std::unique_
                 mProgressManager.group(Pg::ImageDownload)->decrementMaximum(); // Already exists, remove download step from progress bar
         }
 
-        // Handle image transfer progress
+        // Handle image transfer
         if(mOptionSet.imageMode == ImageMode::Copy || mOptionSet.imageMode == ImageMode::Link)
         {
-            // Adjust progress if images aren't available
-            if(checkedLogoPath.isEmpty())
+            logoMap.destPath = imagePaths.logoPath();
+            screenshotMap.destPath = imagePaths.screenshotPath();
+
+            if(!logoMap.destPath.isEmpty())
+                mImageTransferJobs.append(logoMap);
+            else
                 mProgressManager.group(Pg::ImageTransfer)->decrementMaximum(); // Can't transfer image that doesn't/won't exist
-            if(checkedScreenshotPath.isEmpty())
+
+            if(!screenshotMap.destPath.isEmpty())
+                mImageTransferJobs.append(screenshotMap);
+            else
                 mProgressManager.group(Pg::ImageTransfer)->decrementMaximum(); // Can't transfer image that doesn't/won't exist
         }
 
@@ -397,7 +407,7 @@ Worker::Result Worker::processGames(Qx::Error& errorReport, QList<Fp::Db::QueryB
             Fp::Db::QueryBuffer& currentQueryResult = platformQueryResults[i];
 
             // Open launcher platform doc
-            std::unique_ptr<Lr::PlatformDoc> currentPlatformDoc;
+            std::unique_ptr<Lr::IPlatformDoc> currentPlatformDoc;
             Lr::DocHandlingError platformReadError = mLauncherInstall->checkoutPlatformDoc(currentPlatformDoc, currentQueryResult.source);
 
             // Stop import if error occurred
@@ -461,7 +471,7 @@ Worker::Result Worker::processPlaylists(Qx::Error& errorReport, const QList<Fp::
         emit progressStepChanged(STEP_IMPORTING_PLAYLISTS.arg(currentPlaylist.title()));
 
         // Open launcher playlist doc
-        std::unique_ptr<Lr::PlaylistDoc> currentPlaylistDoc;
+        std::unique_ptr<Lr::IPlaylistDoc> currentPlaylistDoc;
         Lr::DocHandlingError playlistReadError = mLauncherInstall->checkoutPlaylistDoc(currentPlaylistDoc, currentPlaylist.title());
 
         // Stop import if error occurred
@@ -559,15 +569,14 @@ Worker::Result Worker::processImages(Qx::Error& errorReport)
     emit progressStepChanged(STEP_IMPORTING_IMAGES);
 
     // Provide launcher with bulk reference locations and acquire any transfer tasks
-    QList<Lr::Install::ImageMap> imageTransferJobs;
-    Lr::ImageSources bulkSources;
+    Lr::ImagePaths bulkSources;
     if(mOptionSet.imageMode == ImageMode::Reference)
     {
         bulkSources.setLogoPath(QDir::toNativeSeparators(mFlashpointInstall->entryLogosDirectory().absolutePath()));
         bulkSources.setScreenshotPath(QDir::toNativeSeparators(mFlashpointInstall->entryScreenshotsDirectory().absolutePath()));
     }
 
-    Qx::Error imageExchangeError = mLauncherInstall->preImageProcessing(imageTransferJobs, bulkSources);
+    Qx::Error imageExchangeError = mLauncherInstall->preImageProcessing(bulkSources);
 
     if(imageExchangeError.isValid())
     {
@@ -584,14 +593,16 @@ Worker::Result Worker::processImages(Qx::Error& errorReport)
          * For example, this may happen with infinity if a game hasn't been clicked on, as the logo
          * will have been downloaded but not the screenshot
          */
-        if(static_cast<quint64>(imageTransferJobs.size()) != mProgressManager.group(Pg::ImageTransfer)->maximum())
-            mProgressManager.group(Pg::ImageTransfer)->setMaximum(imageTransferJobs.size());
+        if(static_cast<quint64>(mImageTransferJobs.size()) != mProgressManager.group(Pg::ImageTransfer)->maximum())
+            mProgressManager.group(Pg::ImageTransfer)->setMaximum(mImageTransferJobs.size());
 
-        if(!performImageJobs(imageTransferJobs, mOptionSet.imageMode == ImageMode::Link, mProgressManager.group(Pg::ImageTransfer)))
+        if(!performImageJobs(mImageTransferJobs, mOptionSet.imageMode == ImageMode::Link, mProgressManager.group(Pg::ImageTransfer)))
             return Canceled;
+
+        mImageTransferJobs.clear();
     }
-    else if(!imageTransferJobs.isEmpty())
-        qWarning("the launcher provided image transfers when the mode wasn't link/copy");
+    else if(!mImageTransferJobs.isEmpty())
+        qFatal("the launcher provided image transfers when the mode wasn't link/copy");
 
     // Handle launcher specific actions
     mLauncherInstall->postImageProcessing();
@@ -603,7 +614,7 @@ Worker::Result Worker::processImages(Qx::Error& errorReport)
 
 Worker::Result Worker::processIcons(Qx::Error& errorReport, const QStringList& platforms, const QList<Fp::Playlist>& playlists)
 {
-    QList<Lr::Install::ImageMap> jobs;
+    QList<Lr::IInstall::ImageMap> jobs;
     QString mainDest = mLauncherInstall->platformCategoryIconPath();
     std::optional<QDir> platformDestDir = mLauncherInstall->platformIconsDirectory();
     std::optional<QDir> playlistDestDir = mLauncherInstall->playlistIconsDirectory();
@@ -612,7 +623,7 @@ Worker::Result Worker::processIcons(Qx::Error& errorReport, const QStringList& p
 
     // Main Job
     if(!mainDest.isEmpty())
-        jobs.emplace_back(Lr::Install::ImageMap{.sourcePath = u":/flashpoint/icon.png"_s, .destPath = mainDest});
+        jobs.emplace_back(Lr::IInstall::ImageMap{.sourcePath = u":/flashpoint/icon.png"_s, .destPath = mainDest});
 
     // Platform jobs
     if(platformDestDir)
@@ -622,7 +633,7 @@ Worker::Result Worker::processIcons(Qx::Error& errorReport, const QStringList& p
         {
             QString src = tk->platformLogoPath(p);
             if(QFile::exists(src))
-                jobs.emplace_back(Lr::Install::ImageMap{.sourcePath = src,
+                jobs.emplace_back(Lr::IInstall::ImageMap{.sourcePath = src,
                                                         .destPath = pdd.absoluteFilePath(p + ".png")});
         }
     }
@@ -662,7 +673,7 @@ Worker::Result Worker::processIcons(Qx::Error& errorReport, const QStringList& p
              * Use translated name for destination since that's what the launcher is expecting
              */
             QString sFilename = p.title() + ".png";
-            QString dFilename = mLauncherInstall->translateDocName(p.title(), Lr::DataDoc::Type::Playlist) + ".png";;
+            QString dFilename = mLauncherInstall->translateDocName(p.title(), Lr::IDataDoc::Type::Playlist) + ".png";;
             QString source = iconInflateDir.filePath(sFilename);
             QString dest = pdd.absoluteFilePath(dFilename);
 
@@ -673,7 +684,7 @@ Worker::Result Worker::processIcons(Qx::Error& errorReport, const QStringList& p
                 return Failed;
             }
 
-            jobs.emplace_back(Lr::Install::ImageMap{.sourcePath = source, .destPath = dest});
+            jobs.emplace_back(Lr::IInstall::ImageMap{.sourcePath = source, .destPath = dest});
         }
     }
 
@@ -831,7 +842,7 @@ Worker::Result Worker::doImport(Qx::Error& errorReport)
     connect(&mProgressManager, &Qx::GroupedProgressManager::progressUpdated, this, &Worker::pmProgressUpdated);
 
     //-Handle Launcher Specific Import Setup------------------------------
-    Lr::Install::ImportDetails details{
+    Lr::IInstall::ImportDetails details{
         .updateOptions = mOptionSet.updateOptions,
         .imageMode = mOptionSet.imageMode,
         .clifpPath = CLIFp::standardCLIFpPath(*mFlashpointInstall),

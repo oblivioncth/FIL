@@ -12,33 +12,17 @@
 #include <qx/core/qx-freeindextracker.h>
 
 // Project Includes
-#include "launcher/lr-data.h"
-#include "launcher/launchbox/lb-items.h"
-
-// Reminder for virtual inheritance constructor mechanics if needed,
-// since some classes here use multiple virtual inheritance:
-// https://stackoverflow.com/questions/70746451/
+#include "launcher/abstract/lr-data.h"
+#include "launcher/implementation/launchbox/lb-registration.h"
+#include "launcher/implementation/launchbox/lb-items.h"
 
 namespace Lb
 {
 
-class Install;
-
-class DocKey
+class PlatformDoc : public Lr::BasicPlatformDoc<LauncherId>
 {
-    friend class Install;
-private:
-    DocKey() {}
-    DocKey(const DocKey&) = default;
-};
-
-class PlatformDoc : public Lr::BasicPlatformDoc
-{
-//-Inner Classes----------------------------------------------------------------------------------------------------
-public:
-    class Reader;
-    class Writer;
-
+    friend PlatformDocReader;
+    friend PlatformDocWriter;
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
     QHash<QString, std::shared_ptr<CustomField>> mCustomFieldsFinal;
@@ -46,13 +30,12 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlatformDoc(Install* const parent, const QString& xmlPath, QString docName, const Import::UpdateOptions& updateOptions,
-                         const DocKey&);
+    explicit PlatformDoc(Install* install, const QString& xmlPath, QString docName, const Import::UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
-private:    
-    std::shared_ptr<Lr::Game> prepareGame(const Fp::Game& game, const Lr::ImageSources& images) override;
-    std::shared_ptr<Lr::AddApp> prepareAddApp(const Fp::AddApp& addApp) override;
+private:
+    std::shared_ptr<Game> prepareGame(const Fp::Game& game) override;
+    std::shared_ptr<AddApp> prepareAddApp(const Fp::AddApp& addApp) override;
 
     void addCustomField(std::shared_ptr<CustomField> customField);
 
@@ -62,11 +45,11 @@ public:
     void finalize() override;
 };
 
-class PlatformDoc::Reader : public Lr::BasicPlatformDoc::Reader, public Lr::XmlDocReader
+class PlatformDocReader : public Lr::XmlDocReader<PlatformDoc>
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    Reader(PlatformDoc* targetDoc);
+    PlatformDocReader(PlatformDoc* targetDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
@@ -76,11 +59,11 @@ private:
     void parseCustomField();
 };
 
-class PlatformDoc::Writer : public Lr::BasicPlatformDoc::Writer, public Lr::XmlDocWriter
+class PlatformDocWriter : public Lr::XmlDocWriter<PlatformDoc>
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    Writer(PlatformDoc* sourceDoc);
+    PlatformDocWriter(PlatformDoc* sourceDoc);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
@@ -90,33 +73,29 @@ private:
     bool writeCustomField(const CustomField& customField);
 };
 
-class PlaylistDoc : public Lr::BasicPlaylistDoc
+class PlaylistDoc : public Lr::BasicPlaylistDoc<LauncherId>
 {
-//-Inner Classes----------------------------------------------------------------------------------------------------
-public:
-    class Reader;
-    class Writer;
-
+    friend class PlaylistDocReader;
+    friend class PlaylistDocWriter;
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
     Qx::FreeIndexTracker* mLaunchBoxDatabaseIdTracker;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlaylistDoc(Install* const parent, const QString& xmlPath, QString docName, const Import::UpdateOptions& updateOptions,
-                         const DocKey&);
+    explicit PlaylistDoc(Install* install, const QString& xmlPath, QString docName, const Import::UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
-    std::shared_ptr<Lr::PlaylistHeader> preparePlaylistHeader(const Fp::Playlist& playlist) override;
-    std::shared_ptr<Lr::PlaylistGame> preparePlaylistGame(const Fp::PlaylistGame& game) override;
+    std::shared_ptr<PlaylistHeader> preparePlaylistHeader(const Fp::Playlist& playlist) override;
+    std::shared_ptr<PlaylistGame> preparePlaylistGame(const Fp::PlaylistGame& game) override;
 };
 
-class PlaylistDoc::Reader : public Lr::BasicPlaylistDoc::Reader, public Lr::XmlDocReader
+class PlaylistDocReader : public Lr::XmlDocReader<PlaylistDoc>
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    Reader(PlaylistDoc* targetDoc);
+    PlaylistDocReader(PlaylistDoc* targetDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
@@ -125,11 +104,11 @@ private:
     void parsePlaylistGame();
 };
 
-class PlaylistDoc::Writer : public Lr::BasicPlaylistDoc::Writer, Lr::XmlDocWriter
+class PlaylistDocWriter : public Lr::XmlDocWriter<PlaylistDoc>
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    Writer(PlaylistDoc* sourceDoc);
+    PlaylistDocWriter(PlaylistDoc* sourceDoc);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
@@ -138,7 +117,7 @@ private:
     bool writePlaylistGame(const PlaylistGame& playlistGame);
 };
 
-class PlatformsConfigDoc : public Lr::UpdateableDoc
+class PlatformsConfigDoc : public Lr::UpdateableDoc<LauncherId>
 {
 //-Inner Classes----------------------------------------------------------------------------------------------------
 public:
@@ -160,8 +139,7 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlatformsConfigDoc(Install* const parent, const QString& xmlPath, const Import::UpdateOptions& updateOptions,
-                                const DocKey&);
+    explicit PlatformsConfigDoc(Install* install, const QString& xmlPath, const Import::UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
@@ -186,7 +164,7 @@ public:
     void finalize() override;
 };
 
-class PlatformsConfigDoc::Reader : public Lr::XmlDocReader
+class PlatformsConfigDoc::Reader : public Lr::XmlDocReader<PlatformsConfigDoc>
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -200,7 +178,7 @@ private:
     void parsePlatformCategory();
 };
 
-class PlatformsConfigDoc::Writer : public Lr::XmlDocWriter
+class PlatformsConfigDoc::Writer : public Lr::XmlDocWriter<PlatformsConfigDoc>
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -214,26 +192,26 @@ private:
     bool writePlatformCategory(const PlatformCategory& platformCategory);
 };
 
-class ParentsDoc : public Lr::DataDoc
+class ParentsDoc : public Lr::DataDoc<LauncherId>
 {
-    //-Inner Classes----------------------------------------------------------------------------------------------------
+//-Inner Classes----------------------------------------------------------------------------------------------------
 public:
     class Reader;
     class Writer;
 
-    //-Class Variables-----------------------------------------------------------------------------------------------------
+//-Class Variables-----------------------------------------------------------------------------------------------------
 public:
     static inline const QString STD_NAME = u"Parents"_s;
 
-    //-Instance Variables--------------------------------------------------------------------------------------------------
+//-Instance Variables--------------------------------------------------------------------------------------------------
 private:
     QList<Parent> mParents;
 
-    //-Constructor--------------------------------------------------------------------------------------------------------
+//-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit ParentsDoc(Install* const parent, const QString& xmlPath, const DocKey&);
+    explicit ParentsDoc(Install* install, const QString& xmlPath);
 
-    //-Instance Functions--------------------------------------------------------------------------------------------------
+//-Instance Functions--------------------------------------------------------------------------------------------------
 private:
     Type type() const override;
     bool removeIfPresent(qsizetype idx);
@@ -263,25 +241,25 @@ public:
     void addParent(const Parent& parent);
 };
 
-class ParentsDoc::Reader : public Lr::XmlDocReader
+class ParentsDoc::Reader : public Lr::XmlDocReader<ParentsDoc>
 {
-    //-Constructor--------------------------------------------------------------------------------------------------------
+//-Constructor--------------------------------------------------------------------------------------------------------
 public:
     Reader(ParentsDoc* targetDoc);
 
-    //-Instance Functions-------------------------------------------------------------------------------------------------
+//-Instance Functions-------------------------------------------------------------------------------------------------
 private:
     Lr::DocHandlingError readTargetDoc() override;
     void parseParent();
 };
 
-class ParentsDoc::Writer : public Lr::XmlDocWriter
+class ParentsDoc::Writer : public Lr::XmlDocWriter<ParentsDoc>
 {
-    //-Constructor--------------------------------------------------------------------------------------------------------
+//-Constructor--------------------------------------------------------------------------------------------------------
 public:
     Writer(ParentsDoc* sourceDoc);
 
-    //-Instance Functions-------------------------------------------------------------------------------------------------
+//-Instance Functions-------------------------------------------------------------------------------------------------
 private:
     bool writeSourceDoc() override;
     bool writeParent(const Parent& parent);

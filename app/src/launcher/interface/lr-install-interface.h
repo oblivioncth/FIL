@@ -1,11 +1,11 @@
-#ifndef LR_INSTALLFOUNDATION_H
-#define LR_INSTALLFOUNDATION_H
+#ifndef LR_INSTALL_INTERFACE_H
+#define LR_INSTALL_INTERFACE_H
 
 // Qt Includes
 #include <QDir>
 
 // Project Includes
-#include "launcher/lr-data.h"
+#include "launcher/interface/lr-data-interface.h"
 #include "import/settings.h"
 
 namespace Lr
@@ -13,7 +13,7 @@ namespace Lr
 
 class QX_ERROR_TYPE(RevertError, "Lr::RevertError", 1301)
 {
-    friend class InstallFoundation;
+    friend class IInstall;
 //-Class Enums-------------------------------------------------------------
 public:
     enum Type
@@ -59,7 +59,7 @@ private:
     QString deriveCaption() const override;
 };
 
-class InstallFoundation
+class IInstall
 {
 //-Class Structs------------------------------------------------------------------------------------------------------
 public:
@@ -104,68 +104,103 @@ private:
     QDir mRootDirectory;
 
     // Document tracking
-    QSet<DataDoc::Identifier> mExistingDocuments;
-    QSet<DataDoc::Identifier> mModifiedDocuments;
-    QSet<DataDoc::Identifier> mDeletedDocuments;
-    QSet<DataDoc::Identifier> mLeasedDocuments;
+    QSet<IDataDoc::Identifier> mExistingDocuments;
+    QSet<IDataDoc::Identifier> mModifiedDocuments;
+    QSet<IDataDoc::Identifier> mDeletedDocuments;
+    QSet<IDataDoc::Identifier> mLeasedDocuments;
 
     // Backup/Deletion tracking
     QStringList mRevertableFilePaths;
 
-protected:
     // Import details
-    std::unique_ptr<ImportDetails> mImportDetails;
+    std::optional<ImportDetails> mImportDetails;
 
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
-    InstallFoundation(const QString& installPath);
+    IInstall(const QString& installPath);
 
 //-Destructor-------------------------------------------------------------------------------------------------
 public:
-    virtual ~InstallFoundation();
+    virtual ~IInstall();
 
 //-Class Functions------------------------------------------------------------------------------------------------------
 private:
     static void ensureModifiable(const QString& filePath);
 
 public:
+    // TODO: Improve the backup system so that its more encapsulated and this doesn't need to be public
     static QString filePathToBackupPath(const QString& filePath);
 
 //-Instance Functions---------------------------------------------------------------------------------------------------------
 private:
-    bool containsAnyDataDoc(DataDoc::Type type, const QList<QString>& names) const;
-    QList<QString> modifiedDataDocs(DataDoc::Type type) const;
+    // Support
+    bool containsAnyDataDoc(IDataDoc::Type type, const QList<QString>& names) const;
+    bool supportsImageMode(Import::ImageMode imageMode) const; // TODO: UNUSED
+    QList<QString> modifiedDataDocs(IDataDoc::Type type) const;
 
 protected:
+    // Validity
     virtual void nullify();
-    virtual void softReset();
     void declareValid(bool valid);
-    virtual Qx::Error populateExistingDocs() = 0; // Stated redundantly again in Install to make it clear its part of the main interface
 
-    virtual QString translateDocName(const QString& originalName, DataDoc::Type type) const;
-    void catalogueExistingDoc(DataDoc::Identifier existingDoc);
-
-    DocHandlingError checkoutDataDocument(DataDoc* docToOpen, std::shared_ptr<DataDoc::Reader> docReader);
-    DocHandlingError commitDataDocument(DataDoc* docToSave, std::shared_ptr<DataDoc::Writer> docWriter);
-
+    // Docs
+    virtual Qx::Error populateExistingDocs() = 0;
+    void catalogueExistingDoc(IDataDoc::Identifier existingDoc);
+    DocHandlingError checkoutDataDocument(IDataDoc* docToOpen, std::shared_ptr<IDataDoc::Reader> docReader);
+    DocHandlingError commitDataDocument(IDataDoc* docToSave, std::shared_ptr<IDataDoc::Writer> docWriter);
     QList<QString> modifiedPlatforms() const;
     QList<QString> modifiedPlaylists() const;
 
 public:
+    // Details
+    virtual QString name() const = 0;
+    virtual QList<Import::ImageMode> preferredImageModeOrder() const = 0;
+    virtual QString versionString() const;
+    virtual bool isRunning() const = 0;
+
     bool isValid() const;
     QString path() const;
+    virtual void softReset();
 
+    // Import
+    ImportDetails importDetails() const;
+
+    // Docs
+    virtual QString translateDocName(const QString& originalName, IDataDoc::Type type) const;
     Qx::Error refreshExistingDocs(bool* changed = nullptr);
     bool containsPlatform(const QString& name) const;
     bool containsPlaylist(const QString& name) const;
     bool containsAnyPlatform(const QList<QString>& names) const;
     bool containsAnyPlaylist(const QList<QString>& names) const;
 
+    virtual DocHandlingError checkoutPlatformDoc(std::unique_ptr<IPlatformDoc>& returnBuffer, const QString& name) = 0;
+    virtual DocHandlingError checkoutPlaylistDoc(std::unique_ptr<IPlaylistDoc>& returnBuffer, const QString& name) = 0;
+    virtual DocHandlingError commitPlatformDoc(std::unique_ptr<IPlatformDoc> platformDoc) = 0;
+    virtual DocHandlingError commitPlaylistDoc(std::unique_ptr<IPlaylistDoc> playlistDoc) = 0;
+
+    // Reversion
     void addRevertableFile(const QString& filePath);
     int revertQueueCount() const;
     int revertNextChange(RevertError& error, bool skipOnFail);
+
+    // Import stage notifier hooks
+    virtual Qx::Error preImport(const ImportDetails& details);
+    virtual Qx::Error postImport();
+    virtual Qx::Error prePlatformsImport();
+    virtual Qx::Error postPlatformsImport();
+    virtual Qx::Error preImageProcessing(const ImagePaths& bulkSources);
+    virtual Qx::Error postImageProcessing();
+    virtual Qx::Error prePlaylistsImport();
+    virtual Qx::Error postPlaylistsImport();
+
+    // Images
+    virtual QString platformCategoryIconPath() const; // Unsupported in default implementation, needs to return path with .png extension
+    virtual std::optional<QDir> platformIconsDirectory() const; // Unsupported in default implementation
+    virtual std::optional<QDir> playlistIconsDirectory() const; // Unsupported in default implementation
+    // TODO: These might need to be changed to support launchers where the platform images are tied closely to the platform documents,
+    // but currently none do this so this works.
 };
 
 }
 
-#endif // LR_INSTALLFOUNDATION_H
+#endif // LR_INSTALL_INTERFACE_H
