@@ -573,21 +573,22 @@ Worker::Result Worker::processImages(Qx::Error& errorReport)
     // Update progress dialog label
     emit progressStepChanged(STEP_IMPORTING_IMAGES);
 
-    // Provide launcher with bulk reference locations and acquire any transfer tasks
-    Lr::ImagePaths bulkSources;
-    if(mOptionSet.imageMode == ImageMode::Reference)
-    {
-        bulkSources.setLogoPath(QDir::toNativeSeparators(mFlashpointInstall->entryLogosDirectory().absolutePath()));
-        bulkSources.setScreenshotPath(QDir::toNativeSeparators(mFlashpointInstall->entryScreenshotsDirectory().absolutePath()));
-    }
-
-    Qx::Error imageExchangeError = mLauncherInstall->preImageProcessing(bulkSources);
-
+    // Notify of step
+    Qx::Error imageExchangeError = mLauncherInstall->preImageProcessing();
     if(imageExchangeError.isValid())
     {
         // Emit import failure
         errorReport = imageExchangeError;
         return Failed;
+    }
+
+    // Provide launcher with bulk reference locations
+    if(mOptionSet.imageMode == ImageMode::Reference)
+    {
+        Lr::ImagePaths bulkSources(QDir::toNativeSeparators(mFlashpointInstall->entryLogosDirectory().absolutePath()),
+                                   QDir::toNativeSeparators(mFlashpointInstall->entryScreenshotsDirectory().absolutePath()));
+
+        mLauncherInstall->processBulkImageSources(bulkSources);
     }
 
     // Perform transfers if required

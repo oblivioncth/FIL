@@ -104,7 +104,7 @@ private:
     QString deriveSecondary() const override;
 };
 
-class ImagePaths
+class ImagePaths // TODO: Move me somewhere else
 {
 //-Instance Members--------------------------------------------------------------------------------------------------
 private:

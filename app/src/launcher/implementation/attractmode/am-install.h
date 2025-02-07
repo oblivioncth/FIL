@@ -116,10 +116,10 @@ public:
     Qx::Error preImport() override;
     Qx::Error prePlatformsImport() override;
     Qx::Error postPlatformsImport() override;
-    Qx::Error preImageProcessing(const Lr::ImagePaths& bulkSources) override;
     Qx::Error postImport() override;
 
     // Image handling
+    void processBulkImageSources(const Lr::ImagePaths& bulkSources) override;
     void convertToDestinationImages(const RomEntry& game, Lr::ImagePaths& images) override;
 };
 
