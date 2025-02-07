@@ -63,15 +63,6 @@ class IInstall
 {
 //-Class Structs------------------------------------------------------------------------------------------------------
 public:
-    struct ImportDetails
-    {
-        Import::UpdateOptions updateOptions;
-        Import::ImageMode imageMode;
-        QString clifpPath;
-        QList<QString> involvedPlatforms;
-        QList<QString> involvedPlaylists;
-    };
-
     struct ImageMap
     {
         QString sourcePath;
@@ -111,9 +102,6 @@ private:
 
     // Backup/Deletion tracking
     QStringList mRevertableFilePaths;
-
-    // Import details
-    std::optional<ImportDetails> mImportDetails;
 
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
@@ -162,9 +150,6 @@ public:
     QString path() const;
     virtual void softReset();
 
-    // Import
-    ImportDetails importDetails() const;
-
     // Docs
     virtual QString translateDocName(const QString& originalName, IDataDoc::Type type) const;
     Qx::Error refreshExistingDocs(bool* changed = nullptr);
@@ -184,7 +169,7 @@ public:
     int revertNextChange(RevertError& error, bool skipOnFail);
 
     // Import stage notifier hooks
-    virtual Qx::Error preImport(const ImportDetails& details);
+    virtual Qx::Error preImport();
     virtual Qx::Error postImport();
     virtual Qx::Error prePlatformsImport();
     virtual Qx::Error postPlatformsImport();

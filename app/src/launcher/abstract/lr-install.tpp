@@ -1,8 +1,7 @@
 #ifndef LR_INSTALL_TPP
 #define LR_INSTALL_TPP
 
-// Helpful for previewing code in IDE, but needs to be commented out when compiling
-//#include "lr-install.h"
+#include "lr-install.h" // Can ignore recursion warning
 
 // Qx Includes
 #include <qx/xml/qx-xmlstreamreadererror.h>

@@ -190,14 +190,6 @@ void IInstall::softReset()
     mModifiedDocuments.clear();
     mDeletedDocuments.clear();
     mLeasedDocuments.clear();
-    mImportDetails.reset();
-}
-
-IInstall::ImportDetails IInstall::importDetails() const
-{
-    // We just assert here because no install should ever use this before it's available
-    Q_ASSERT(mImportDetails);
-    return mImportDetails.value();
 }
 
 QString IInstall::translateDocName(const QString& originalName, IDataDoc::Type type) const
@@ -277,12 +269,7 @@ int IInstall::revertNextChange(RevertError& error, bool skipOnFail)
  * Work within them should be kept as minimal as possible since they are not accounted
  * for by the import progress indicator.
  */
-Qx::Error IInstall::preImport(const ImportDetails& details)
-{
-    mImportDetails = details;
-    return Qx::Error();
-}
-
+Qx::Error IInstall::preImport() { return {}; }
 Qx::Error IInstall::postImport() { return {}; }
 Qx::Error IInstall::prePlatformsImport() { return {}; }
 Qx::Error IInstall::postPlatformsImport() { return {}; }

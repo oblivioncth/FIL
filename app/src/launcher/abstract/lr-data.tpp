@@ -8,6 +8,7 @@
 #include <qx/xml/qx-common-xml.h>
 
 // Project Includes
+#include "import/details.h"
 #include "launcher/abstract/lr-install.h"
 
 namespace Lr
@@ -107,7 +108,7 @@ void PlatformDoc<Id>::addSet(const Fp::Set& set, ImagePaths& images)
          * the abstract base type.
          */
         auto install = static_cast<Install<Id>*>(IPlatformDoc::install());
-        if(game && install->importDetails().imageMode != Import::ImageMode::Reference)
+        if(game && Import::Details::current().imageMode != Import::ImageMode::Reference)
             install->convertToDestinationImages(*game, images);
     }
 }

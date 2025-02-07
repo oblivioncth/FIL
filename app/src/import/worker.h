@@ -136,6 +136,10 @@ private:
 public:
     Worker(Fp::Install* flashpoint, Lr::IInstall* launcher, Selections importSelections, OptionSet optionSet);
 
+//-Destructor---------------------------------------------------------------------------------------------------
+public:
+    ~Worker();
+
 //-Instance Functions---------------------------------------------------------------------------------------------------------
 private:
     Qx::ProgressGroup* initializeProgressGroup(const QString& groupName, quint64 weight);

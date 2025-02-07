@@ -10,6 +10,7 @@
 
 // Project Includes
 #include "kernel/clifp.h"
+#include "import/details.h"
 
 namespace Am
 {
@@ -169,7 +170,7 @@ Lr::DocHandlingError Install::checkoutMainConfig(std::unique_ptr<CrudeSettings>&
 Lr::DocHandlingError Install::checkoutFlashpointRomlist(std::unique_ptr<Romlist>& returnBuffer)
 {
     // Construct unopened document
-    returnBuffer = std::make_unique<Romlist>(this, mFpRomlist.fileName(), Fp::NAME, importDetails().updateOptions);
+    returnBuffer = std::make_unique<Romlist>(this, mFpRomlist.fileName(), Fp::NAME, Import::Details::current().updateOptions);
 
     // Construct doc reader
     std::shared_ptr<Romlist::Reader> docReader = std::make_shared<Romlist::Reader>(returnBuffer.get());
@@ -315,7 +316,7 @@ QString Install::translateDocName(const QString& originalName, Lr::IDataDoc::Typ
     return translatedName;
 }
 
-Qx::Error Install::preImport(const ImportDetails& details)
+Qx::Error Install::preImport()
 {
     //-Ensure that required directories exist----------------------------------------------------------------
 
@@ -331,6 +332,7 @@ Qx::Error Install::preImport(const ImportDetails& details)
             return Qx::IoOpReport(Qx::IO_OP_WRITE, Qx::IO_ERR_CANT_CREATE, overviewDir);
 
     // Logo and screenshot dir
+    auto details = Import::Details::current();
     if(details.imageMode == Import::ImageMode::Copy || details.imageMode == Import::ImageMode::Link)
     {
         QDir logoDir(mFpScraperDirectory.absoluteFilePath(LOGO_FOLDER_NAME));
@@ -345,7 +347,7 @@ Qx::Error Install::preImport(const ImportDetails& details)
     }
 
     // Perform base tasks
-    return Lr::IInstall::preImport(details);
+    return Lr::IInstall::preImport();
 }
 
 Qx::Error Install::prePlatformsImport()
@@ -382,7 +384,7 @@ Qx::Error Install::postImport()
         return emulatorConfigReadError;
 
     // General emulator setup
-    QString workingDir = QDir::toNativeSeparators(QFileInfo(importDetails().clifpPath).absolutePath());
+    QString workingDir = QDir::toNativeSeparators(QFileInfo(Import::Details::current().clifpPath).absolutePath());
     emulatorConfig->setExecutable(CLIFp::EXE_NAME);
     emulatorConfig->setArgs(uR"(play -i u"[romfilename]"_s)"_s);
     emulatorConfig->setWorkDir(workingDir);
