@@ -15,6 +15,9 @@
 #include <qx/core/qx-system.h>
 #include <qx/windows/qx-filedetails.h>
 
+// Project Includes
+#include "import/details.h"
+
 namespace Lb
 {
 //===============================================================================================================
@@ -158,7 +161,7 @@ std::unique_ptr<PlatformDoc> Install::preparePlatformDocCheckout(const QString& 
     Lr::IDataDoc::Identifier docId(Lr::IDataDoc::Type::Platform, translatedName);
 
     // Construct unopened document and return
-    return std::make_unique<PlatformDoc>(this, dataDocPath(docId), translatedName, importDetails().updateOptions);
+    return std::make_unique<PlatformDoc>(this, dataDocPath(docId), translatedName, Import::Details::current().updateOptions);
 }
 
 std::unique_ptr<PlaylistDoc> Install::preparePlaylistDocCheckout(const QString& translatedName)
@@ -167,7 +170,7 @@ std::unique_ptr<PlaylistDoc> Install::preparePlaylistDocCheckout(const QString& 
     Lr::IDataDoc::Identifier docId(Lr::IDataDoc::Type::Playlist, translatedName);
 
     // Construct unopened document
-    return std::make_unique<PlaylistDoc>(this, dataDocPath(docId), translatedName, importDetails().updateOptions);
+    return std::make_unique<PlaylistDoc>(this, dataDocPath(docId), translatedName, Import::Details::current().updateOptions);
 }
 
 Lr::DocHandlingError Install::checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc>& returnBuffer)
@@ -389,7 +392,7 @@ Qx::Error Install::preImageProcessing(const Lr::ImagePaths& bulkSources)
 
     //TODO Deal with the fact that when we drop bulk sources we need to still have the part of editBulkImageRefernces happen that purges old references
 
-    switch(importDetails().imageMode)
+    switch(Import::Details::current().imageMode)
     {
         case Import::ImageMode::Link:
         case Import::ImageMode::Copy:

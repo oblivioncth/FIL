@@ -113,7 +113,7 @@ public:
     QString translateDocName(const QString& originalName, Lr::IDataDoc::Type type) const override;
 
     // Import stage notifier hooks
-    Qx::Error preImport(const ImportDetails& details) override;
+    Qx::Error preImport() override;
     Qx::Error prePlatformsImport() override;
     Qx::Error postPlatformsImport() override;
     Qx::Error preImageProcessing(const Lr::ImagePaths& bulkSources) override;

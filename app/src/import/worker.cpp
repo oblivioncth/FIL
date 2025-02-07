@@ -13,10 +13,10 @@
 
 // Project Includes
 #include "kernel/clifp.h"
+#include "import/details.h"
 
 namespace Import
 {
-
 //===============================================================================================================
 // ImageTransferError
 //===============================================================================================================
@@ -62,6 +62,7 @@ QString ImageTransferError::deriveCaption() const { return CAPTION_IMAGE_ERR; }
 //===============================================================================================================
 
 //-Constructor---------------------------------------------------------------------------------------------------
+//Public:
 Worker::Worker(Fp::Install* flashpoint, Lr::IInstall* launcher, Selections importSelections, OptionSet optionSet) :
       mFlashpointInstall(flashpoint),
       mLauncherInstall(launcher),
@@ -70,6 +71,10 @@ Worker::Worker(Fp::Install* flashpoint, Lr::IInstall* launcher, Selections impor
       mCurrentProgress(0),
       mCanceled(false)
 {}
+
+//-Destructor---------------------------------------------------------------------------------------------------
+//Public:
+Worker::~Worker() { Details::clearCurrent(); }
 
 //-Instance Functions--------------------------------------------------------------------------------------------
 //Private:
@@ -842,15 +847,16 @@ Worker::Result Worker::doImport(Qx::Error& errorReport)
     connect(&mProgressManager, &Qx::GroupedProgressManager::progressUpdated, this, &Worker::pmProgressUpdated);
 
     //-Handle Launcher Specific Import Setup------------------------------
-    Lr::IInstall::ImportDetails details{
+    Details details{
         .updateOptions = mOptionSet.updateOptions,
         .imageMode = mOptionSet.imageMode,
         .clifpPath = CLIFp::standardCLIFpPath(*mFlashpointInstall),
         .involvedPlatforms = involvedPlatforms,
         .involvedPlaylists = mImportSelections.playlists
     };
+    Details::setCurrent(details);
 
-    errorReport = mLauncherInstall->preImport(details);
+    errorReport = mLauncherInstall->preImport();
     if(errorReport.isValid())
         return Failed;
 

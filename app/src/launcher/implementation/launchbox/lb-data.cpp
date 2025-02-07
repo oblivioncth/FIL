@@ -5,6 +5,7 @@
 #include <memory>
 
 // Project Includes
+#include "import/details.h"
 #include "launcher/implementation/launchbox/lb-install.h"
 
 namespace Xml
@@ -135,7 +136,7 @@ PlatformDoc::PlatformDoc(Install* install, const QString& xmlPath, QString docNa
 std::shared_ptr<Game> PlatformDoc::prepareGame(const Fp::Game& game)
 {
     // Convert to LaunchBox game
-    const QString& clifpPath = install()->importDetails().clifpPath;
+    const QString& clifpPath = Import::Details::current().clifpPath;
     std::shared_ptr<Game> lbGame = std::make_shared<Game>(game, clifpPath);
 
     // Add details to cache
@@ -155,7 +156,7 @@ std::shared_ptr<Game> PlatformDoc::prepareGame(const Fp::Game& game)
 std::shared_ptr<AddApp> PlatformDoc::prepareAddApp(const Fp::AddApp& addApp)
 {
     // Convert to LaunchBox add app
-    const QString& clifpPath = install()->importDetails().clifpPath;
+    const QString& clifpPath = Import::Details::current().clifpPath;
     std::shared_ptr<AddApp> lbAddApp = std::make_shared<AddApp>(addApp, clifpPath);
 
     // Return converted game
