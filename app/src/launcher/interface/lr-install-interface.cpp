@@ -273,13 +273,7 @@ Qx::Error IInstall::preImport() { return {}; }
 Qx::Error IInstall::postImport() { return {}; }
 Qx::Error IInstall::prePlatformsImport() { return {}; }
 Qx::Error IInstall::postPlatformsImport() { return {}; }
-
-Qx::Error IInstall::preImageProcessing(const ImagePaths& bulkSources)
-{
-    Q_UNUSED(bulkSources);
-    return {};
-}
-
+Qx::Error IInstall::preImageProcessing() { return {}; }
 Qx::Error IInstall::postImageProcessing() { return {}; }
 Qx::Error IInstall::prePlaylistsImport() { return {}; }
 Qx::Error IInstall::postPlaylistsImport() { return {}; }

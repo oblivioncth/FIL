@@ -385,27 +385,12 @@ Qx::Error Install::postPlatformsImport()
     return Qx::Error();
 }
 
-Qx::Error Install::preImageProcessing(const Lr::ImagePaths& bulkSources)
+Qx::Error Install::preImageProcessing()
 {
-    if(Qx::Error superErr = Lr::IInstall::preImageProcessing(bulkSources); superErr.isValid())
-        return superErr;
+    if(Import::Details::current().imageMode != Import::ImageMode::Reference)
+        editBulkImageReferences(Lr::ImagePaths());// Null arg will remove old references
 
-    //TODO Deal with the fact that when we drop bulk sources we need to still have the part of editBulkImageRefernces happen that purges old references
-
-    switch(Import::Details::current().imageMode)
-    {
-        case Import::ImageMode::Link:
-        case Import::ImageMode::Copy:
-            editBulkImageReferences(bulkSources);
-            break;
-        case Import::ImageMode::Reference:
-            editBulkImageReferences(bulkSources);
-            break;
-        default:
-            qWarning("unhandled image mode");
-    }
-
-    return Qx::Error();
+    return Lr::IInstall::preImageProcessing();
 }
 
 Qx::Error Install::postImageProcessing()
@@ -439,6 +424,11 @@ Qx::Error Install::postPlaylistsImport()
 
     // Close Parents.xml
     return commitParentsDoc(std::move(mParents));
+}
+
+void Install::processBulkImageSources(const Lr::ImagePaths& bulkSources)
+{
+    editBulkImageReferences(bulkSources);
 }
 
 void Install::convertToDestinationImages(const Game& game, Lr::ImagePaths& images)

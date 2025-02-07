@@ -114,11 +114,12 @@ public:
     // Import stage notifier hooks
     Qx::Error prePlatformsImport() override;
     Qx::Error postPlatformsImport() override;
-    Qx::Error preImageProcessing(const Lr::ImagePaths& bulkSources) override;
+    Qx::Error preImageProcessing() override;
     Qx::Error postImageProcessing() override;
     Qx::Error postPlaylistsImport() override;
 
     // Image handling
+    void processBulkImageSources(const Lr::ImagePaths& bulkSources) override;
     void convertToDestinationImages(const Game& game, Lr::ImagePaths& images) override;
     QString platformCategoryIconPath() const override;
     std::optional<QDir> platformIconsDirectory() const override;

@@ -365,12 +365,6 @@ Qx::Error Install::postPlatformsImport()
     return commitFlashpointRomlist(std::move(mRomlist));
 }
 
-Qx::Error Install::preImageProcessing(const Lr::ImagePaths& bulkSources)
-{
-    Q_UNUSED(bulkSources);
-    return {};
-}
-
 Qx::Error Install::postImport()
 {
     //-Create/update emulator settings-----------------------------------
@@ -502,6 +496,12 @@ Qx::Error Install::postImport()
 
     // Return success
     return Qx::Error();
+}
+
+void Install::processBulkImageSources(const Lr::ImagePaths& bulkSources)
+{
+    Q_UNUSED(bulkSources);
+    qFatal("Attract Mode does not support Reference image mode, and that option should not be available.");
 }
 
 void Install::convertToDestinationImages(const RomEntry& game, Lr::ImagePaths& images)
