@@ -926,7 +926,7 @@ void Worker::pmProgressUpdated(quint64 currentProgress)
 {
     /* NOTE: This is required because if the value isn't actually different than the current when
      * the connected QProgressDialog::setValue() is triggered then processEvents() won't be called.
-     * This is a problem because the fixed range of QGroupedProgressManager of 0-100 means that groups
+     * This is a problem because the fixed range of Qx::GroupedProgressManager of 0-100 means that groups
      * with a high number of steps won't actually trigger an emissions of the manager valueChanged() signal
      * until a large enough number of those steps have been completed to increase its weighted sum by 1.
      * processEvents() needs to be called every time progress is updated even a little in order to

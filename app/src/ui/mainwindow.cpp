@@ -143,10 +143,6 @@ void MainWindow::initializeForms()
     // If no link permissions, inform user
     if(!mImportProperties.hasLinkPermissions())
         ui->radioButton_link->setText(ui->radioButton_link->text().append(REQUIRE_ELEV));
-
-    // NOTE: THIS IS FOR DEBUG PURPOSES
-    //checkLaunchBoxInput("C:/Users/Player/Desktop/LBTest/LaunchBox");
-    //checkFlashpointInput("D:/FP/Flashpoint 8.1 Ultimate");
 }
 
 Qx::Bimap<Import::ImageMode, QRadioButton*> MainWindow::initializeImageModeMap() const

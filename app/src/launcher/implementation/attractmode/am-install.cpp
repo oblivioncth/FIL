@@ -7,6 +7,7 @@
 // Qx Includes
 #include <qx/core/qx-regularexpression.h>
 #include <qx/core/qx-system.h>
+#include <qx/core/qx-string.h>
 
 // Project Includes
 #include "kernel/clifp.h"
@@ -77,7 +78,7 @@ Qx::Error Install::populateExistingDocs()
     // Platforms and Playlists
     if(mFpTagDirectory.exists())
     {
-        /* NOTE: Qt globbing syntax is slightly weird (mainly '\' cannot be used as an escape character, and instead character to
+        /* NOTE: Qt globbing syntax is slightly weird (mainly '\' cannot be used as an escape character, and instead characters to
          * be escaped must individually be placed between braces. This makes using variables as part of the expression awkward
          * so instead they must be mostly written out and care must be taken to modify them if the file names change.
          *
@@ -468,9 +469,10 @@ Qx::Error Install::postImport()
     for(const QString& tagFile : tagFiles)
     {
         // Escape brackets in name since AM uses regex for value
-        // TODO: Use Qx for this
-        QString escaped = tagFile;
-        escaped.replace(u"["_s, u"\\["_s).replace(u"]"_s, u"\\]"_s);
+        QString escaped = Qx::String::mapArg(tagFile,{
+            {u"["_s, u"\\["_s},
+            {u"]"_s, u"\\]"_s}
+        });
 
         DisplayFilter::Builder dfb;
         dfb = DisplayFilter::Builder();

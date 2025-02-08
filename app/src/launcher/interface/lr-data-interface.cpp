@@ -1,6 +1,9 @@
 // Unit Include
 #include "lr-data-interface.h"
 
+// Qx Includes
+#include <qx/core/qx-string.h>
+
 // Project Includes
 #include "launcher/interface/lr-install-interface.h"
 
@@ -26,13 +29,11 @@ DocHandlingError::DocHandlingError(const IDataDoc& doc, Type t, const QString& s
 //Private:
 QString DocHandlingError::generatePrimaryString(const IDataDoc& doc, Type t)
 {
-    // TODO: Use Qx for this
-    QString formattedError = ERR_STRINGS[t];
-    formattedError.replace(M_DOC_TYPE, doc.identifier().docTypeString());
-    formattedError.replace(M_DOC_NAME, doc.identifier().docName());
-    formattedError.replace(M_DOC_PARENT, doc.install()->name());
-
-    return formattedError;
+    return Qx::String::mapArg(ERR_STRINGS[t],{
+        {M_DOC_TYPE, doc.identifier().docTypeString()},
+        {M_DOC_NAME, doc.identifier().docName()},
+        {M_DOC_PARENT, doc.install()->name()}
+    });
 }
 
 //-Instance Functions-------------------------------------------------------------

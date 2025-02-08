@@ -14,14 +14,6 @@
 #include "import/settings.h"
 #include "project_vars.h"
 
-/* TODO: PROBABLY OK NOW The number of properties here has gotten somewhat out of hand.
- * Mainwindow should probably just be given access to something like
- * const QBindable<const std::shared_ptr<Fp::Install>> (and same for
- * launcher) so that it can setup its own bindings/properties directly
- * off of that. Since it would be read only, that still lets Controller
- * have control of the instances.
- */
-
 namespace Lr { class IInstall; }
 namespace Fp { class Install; }
 

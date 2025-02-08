@@ -57,7 +57,7 @@ public:
     using IInstall::preferredImageModeOrder;
     using IInstall::isRunning;
     using IInstall::processBulkImageSources; // Just do nothing if Reference mode isn't supported
-    virtual void convertToDestinationImages(const GameT& game, Import::ImagePaths& images) = 0; // NOTE: The image paths provided here can be null (i.e. images unavailable).
+    virtual void convertToDestinationImages(const GameT& game, Import::ImagePaths& images) = 0; // NOTE: One or both of the image paths provided here can be null (i.e. images unavailable).
 
     // OPTIONALLY RE-IMPLEMENT
     using IInstall::preImport;
