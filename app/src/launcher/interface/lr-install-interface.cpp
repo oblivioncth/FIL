@@ -95,8 +95,10 @@ void IInstall::declareValid(bool valid)
 
 void IInstall::catalogueExistingDoc(IDataDoc::Identifier existingDoc) { mExistingDocuments.insert(existingDoc); }
 
-DocHandlingError IInstall::checkoutDataDocument(IDataDoc* docToOpen, std::shared_ptr<IDataDoc::Reader> docReader)
+DocHandlingError IInstall::checkoutDataDocument(std::shared_ptr<IDataDoc::Reader> docReader)
 {
+    auto docToOpen = docReader->target();
+
     // Error report to return
     DocHandlingError openReadError; // Defaults to no error
 
@@ -118,8 +120,9 @@ DocHandlingError IInstall::checkoutDataDocument(IDataDoc* docToOpen, std::shared
     return openReadError;
 }
 
-DocHandlingError IInstall::commitDataDocument(IDataDoc* docToSave, std::shared_ptr<IDataDoc::Writer> docWriter)
+DocHandlingError IInstall::commitDataDocument(std::shared_ptr<IDataDoc::Writer> docWriter)
 {
+    auto docToSave = docWriter->source();
     IDataDoc::Identifier id = docToSave->identifier();
 
     // Check if the doc was saved previously to prevent double-backups

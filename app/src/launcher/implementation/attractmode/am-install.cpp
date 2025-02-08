@@ -157,7 +157,7 @@ Lr::DocHandlingError Install::checkoutMainConfig(std::unique_ptr<CrudeSettings>&
     std::shared_ptr<CrudeSettingsReader> docReader = std::make_shared<CrudeSettingsReader>(returnBuffer.get());
 
     // Open document
-    Lr::DocHandlingError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
+    Lr::DocHandlingError readErrorStatus = checkoutDataDocument(docReader);
 
     // Set return null on failure
     if(readErrorStatus.isValid())
@@ -176,7 +176,7 @@ Lr::DocHandlingError Install::checkoutFlashpointRomlist(std::unique_ptr<Romlist>
     std::shared_ptr<Romlist::Reader> docReader = std::make_shared<Romlist::Reader>(returnBuffer.get());
 
     // Open document
-    Lr::DocHandlingError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
+    Lr::DocHandlingError readErrorStatus = checkoutDataDocument(docReader);
 
     // Set return null on failure
     if(readErrorStatus.isValid())
@@ -195,7 +195,7 @@ Lr::DocHandlingError Install::checkoutClifpEmulatorConfig(std::unique_ptr<Emulat
     std::shared_ptr<EmulatorReader> docReader = std::make_shared<EmulatorReader>(returnBuffer.get());
 
     // Open document
-    Lr::DocHandlingError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
+    Lr::DocHandlingError readErrorStatus = checkoutDataDocument(docReader);
 
     // Set return null on failure
     if(readErrorStatus.isValid())
@@ -213,7 +213,7 @@ Lr::DocHandlingError Install::commitMainConfig(std::unique_ptr<CrudeSettings> do
     std::shared_ptr<CrudeSettingsWriter> docWriter = std::make_shared<CrudeSettingsWriter>(document.get());
 
     // Write
-    Lr::DocHandlingError writeErrorStatus = commitDataDocument(document.get(), docWriter);
+    Lr::DocHandlingError writeErrorStatus = commitDataDocument(docWriter);
 
     // Ensure document is cleared
     document.reset();
@@ -230,7 +230,7 @@ Lr::DocHandlingError Install::commitFlashpointRomlist(std::unique_ptr<Romlist> d
     std::shared_ptr<Romlist::Writer> docWriter = std::make_shared<Romlist::Writer>(document.get());
 
     // Write
-    Lr::DocHandlingError writeErrorStatus = commitDataDocument(document.get(), docWriter);
+    Lr::DocHandlingError writeErrorStatus = commitDataDocument(docWriter);
 
     // Ensure document is cleared
     document.reset();
@@ -248,7 +248,7 @@ Lr::DocHandlingError Install::commitClifpEmulatorConfig(std::unique_ptr<Emulator
     std::shared_ptr<Emulator::Writer> docWriter = std::make_shared<Emulator::Writer>(document.get());
 
     // Write
-    Lr::DocHandlingError writeErrorStatus = commitDataDocument(document.get(), docWriter);
+    Lr::DocHandlingError writeErrorStatus = commitDataDocument(docWriter);
 
     // Ensure document is cleared
     document.reset();

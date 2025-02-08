@@ -60,10 +60,9 @@ public:
     virtual ~DataDocReader()  = default;
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
-protected:
+public:
     DocT* target() const;
 
-public:
     // IMPLEMENT
     using IDataDoc::Reader::readInto;
 };
@@ -80,10 +79,9 @@ public:
     virtual ~DataDocWriter() = default;
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
-protected:
+public:
     DocT* source() const;
 
-public:
     // IMPLEMENT
     using IDataDoc::Writer::writeOutOf;
 };

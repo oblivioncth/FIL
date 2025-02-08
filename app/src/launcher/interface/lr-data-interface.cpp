@@ -114,7 +114,7 @@ IDataDoc::Reader::Reader(IDataDoc* targetDoc) :
 IDataDoc::Reader::~Reader() {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
-//Protected:
+//Public:
 IDataDoc* IDataDoc::Reader::target() const { return mTargetDocument; }
 
 //===============================================================================================================
@@ -132,7 +132,7 @@ IDataDoc::Writer::Writer(IDataDoc* sourceDoc) :
 IDataDoc::Writer::~Writer() {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
-//Protected:
+//Public:
 IDataDoc* IDataDoc::Writer::source() const { return mSourceDocument; }
 
 //===============================================================================================================
