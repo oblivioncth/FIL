@@ -55,7 +55,7 @@ DocHandlingError Install<Id>::checkoutPlatformDoc(std::unique_ptr<IPlatformDoc>&
         docReader = std::make_shared<PlatformReaderT>(platformDoc.get());
 
     // Open document
-    DocHandlingError readErrorStatus = checkoutDataDocument(platformDoc.get(), docReader);
+    DocHandlingError readErrorStatus = checkoutDataDocument(docReader);
 
     // Fill return buffer on success
     if(!readErrorStatus.isValid())
@@ -78,7 +78,7 @@ DocHandlingError Install<Id>::checkoutPlaylistDoc(std::unique_ptr<IPlaylistDoc>&
         docReader = std::make_shared<PlaylistReaderT>(playlistDoc.get());
 
     // Open document
-    DocHandlingError readErrorStatus = checkoutDataDocument(playlistDoc.get(), docReader);
+    DocHandlingError readErrorStatus = checkoutDataDocument(docReader);
 
     // Fill return buffer on success
     if(!readErrorStatus.isValid())
@@ -102,7 +102,7 @@ DocHandlingError Install<Id>::commitPlatformDoc(std::unique_ptr<IPlatformDoc> do
 
     // Write
     std::shared_ptr<IPlatformDoc::Writer> docWriter = std::make_shared<PlatformWriterT>(nativeDoc);
-    DocHandlingError writeErrorStatus = commitDataDocument(nativeDoc, docWriter);
+    DocHandlingError writeErrorStatus = commitDataDocument(docWriter);
 
     // Return write status and let document ptr auto delete
     return writeErrorStatus;
@@ -122,7 +122,7 @@ DocHandlingError Install<Id>::commitPlaylistDoc(std::unique_ptr<IPlaylistDoc> do
 
     // Write
     std::shared_ptr<IPlaylistDoc::Writer> docWriter = std::make_shared<PlaylistWriterT>(nativeDoc);
-    DocHandlingError writeErrorStatus = commitDataDocument(nativeDoc, docWriter);
+    DocHandlingError writeErrorStatus = commitDataDocument(docWriter);
 
     // Return write status and let document ptr auto delete
     return writeErrorStatus;

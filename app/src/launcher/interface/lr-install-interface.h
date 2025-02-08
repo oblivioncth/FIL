@@ -125,8 +125,8 @@ protected:
 
     // Docs
     void catalogueExistingDoc(IDataDoc::Identifier existingDoc);
-    DocHandlingError checkoutDataDocument(IDataDoc* docToOpen, std::shared_ptr<IDataDoc::Reader> docReader);
-    DocHandlingError commitDataDocument(IDataDoc* docToSave, std::shared_ptr<IDataDoc::Writer> docWriter);
+    DocHandlingError checkoutDataDocument(std::shared_ptr<IDataDoc::Reader> docReader);
+    DocHandlingError commitDataDocument(std::shared_ptr<IDataDoc::Writer> docWriter);
     QList<QString> modifiedPlatforms() const;
     QList<QString> modifiedPlaylists() const;
     virtual Qx::Error populateExistingDocs() = 0;
@@ -147,8 +147,8 @@ public:
     Qx::Error refreshExistingDocs(bool* changed = nullptr);
     bool containsPlatform(const QString& name) const;
     bool containsPlaylist(const QString& name) const;
-    bool containsAnyPlatform(const QList<QString>& names) const;
-    bool containsAnyPlaylist(const QList<QString>& names) const;
+    bool containsAnyPlatform(const QList<QString>& names) const; // Unused
+    bool containsAnyPlaylist(const QList<QString>& names) const; // Unused
 
     virtual DocHandlingError checkoutPlatformDoc(std::unique_ptr<IPlatformDoc>& returnBuffer, const QString& name) = 0;
     virtual DocHandlingError checkoutPlaylistDoc(std::unique_ptr<IPlaylistDoc>& returnBuffer, const QString& name) = 0;

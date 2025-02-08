@@ -42,7 +42,7 @@ DataDocReader<DocT>::DataDocReader(DocT* targetDoc) :
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
-//Protected:
+//Public:
 template<class DocT>
 DocT* DataDocReader<DocT>::target() const { return static_cast<DocT*>(IDataDoc::Reader::target()); }
 
@@ -58,7 +58,7 @@ DataDocWriter<DocT>::DataDocWriter(DocT* sourceDoc) :
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
-//Protected:
+//Public:
 template<class DocT>
 DocT* DataDocWriter<DocT>::source() const { return static_cast<DocT*>(IDataDoc::Writer::source()); }
 

@@ -180,11 +180,9 @@ protected:
 public:
     virtual ~Reader();
 
-//-Instance Functions-------------------------------------------------------------------------------------------------
-protected:
-    IDataDoc* target() const;
-
+//-Instance Functions------------------------------------------------------------------------------------------------
 public:
+    IDataDoc* target() const;
     virtual DocHandlingError readInto() = 0;
 };
 
@@ -203,10 +201,8 @@ public:
     virtual ~Writer();
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
-protected:
-    IDataDoc* source() const;
-
 public:
+    IDataDoc* source() const;
     virtual DocHandlingError writeOutOf() = 0;
 };
 

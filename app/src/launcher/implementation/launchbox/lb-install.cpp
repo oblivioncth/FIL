@@ -186,7 +186,7 @@ Lr::DocHandlingError Install::checkoutPlatformsConfigDoc(std::unique_ptr<Platfor
     std::shared_ptr<PlatformsConfigDoc::Reader> docReader = std::make_shared<PlatformsConfigDoc::Reader>(returnBuffer.get());
 
     // Open document
-    Lr::DocHandlingError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
+    Lr::DocHandlingError readErrorStatus = checkoutDataDocument(docReader);
 
     // Set return null on failure
     if(readErrorStatus.isValid())
@@ -204,7 +204,7 @@ Lr::DocHandlingError Install::commitPlatformsConfigDoc(std::unique_ptr<Platforms
     std::shared_ptr<PlatformsConfigDoc::Writer> docWriter = std::make_shared<PlatformsConfigDoc::Writer>(document.get());
 
     // Write
-    Lr::DocHandlingError writeErrorStatus = commitDataDocument(document.get(), docWriter);
+    Lr::DocHandlingError writeErrorStatus = commitDataDocument(docWriter);
 
     // Ensure document is cleared
     document.reset();
@@ -225,7 +225,7 @@ Lr::DocHandlingError Install::checkoutParentsDoc(std::unique_ptr<ParentsDoc>& re
     std::shared_ptr<ParentsDoc::Reader> docReader = std::make_shared<ParentsDoc::Reader>(returnBuffer.get());
 
     // Open document
-    Lr::DocHandlingError readErrorStatus = checkoutDataDocument(returnBuffer.get(), docReader);
+    Lr::DocHandlingError readErrorStatus = checkoutDataDocument(docReader);
 
     // Set return null on failure
     if(readErrorStatus.isValid())
@@ -243,7 +243,7 @@ Lr::DocHandlingError Install::commitParentsDoc(std::unique_ptr<ParentsDoc> docum
     std::shared_ptr<ParentsDoc::Writer> docWriter = std::make_shared<ParentsDoc::Writer>(document.get());
 
     // Write
-    Lr::DocHandlingError writeErrorStatus = commitDataDocument(document.get(), docWriter);
+    Lr::DocHandlingError writeErrorStatus = commitDataDocument(docWriter);
 
     // Ensure document is cleared
     document.reset();
