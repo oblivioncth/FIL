@@ -95,7 +95,7 @@ template<LauncherId Id>
 Id::InstallT* PlatformDoc<Id>::install() const { return static_cast<InstallT*>(IDataDoc::install()); }
 
 template<LauncherId Id>
-void PlatformDoc<Id>::addSet(const Fp::Set& set, ImagePaths& images)
+void PlatformDoc<Id>::addSet(const Fp::Set& set, Import::ImagePaths& images)
 {
     if(!mError.isValid())
     {

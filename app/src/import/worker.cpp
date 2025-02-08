@@ -283,7 +283,7 @@ Worker::Result Worker::processPlatformGames(Qx::Error& errorReport, std::unique_
         QFileInfo ssLocalInfo(tk->entryImageLocalPath(Fp::ImageType::Screenshot, builtGame.id()));
         QString checkedLogoPath = (logoLocalInfo.exists() || mOptionSet.downloadImages) ? logoLocalInfo.absoluteFilePath() : QString();
         QString checkedScreenshotPath = (ssLocalInfo.exists() || mOptionSet.downloadImages) ? ssLocalInfo.absoluteFilePath() : QString();
-        Lr::ImagePaths imagePaths(checkedLogoPath, checkedScreenshotPath);
+        Import::ImagePaths imagePaths(checkedLogoPath, checkedScreenshotPath);
         ImageMap logoMap{.sourcePath = imagePaths.logoPath(), .destPath = ""};
         ImageMap screenshotMap{.sourcePath = imagePaths.screenshotPath(), .destPath = ""};
 
@@ -585,8 +585,8 @@ Worker::Result Worker::processImages(Qx::Error& errorReport)
     // Provide launcher with bulk reference locations
     if(mOptionSet.imageMode == ImageMode::Reference)
     {
-        Lr::ImagePaths bulkSources(QDir::toNativeSeparators(mFlashpointInstall->entryLogosDirectory().absolutePath()),
-                                   QDir::toNativeSeparators(mFlashpointInstall->entryScreenshotsDirectory().absolutePath()));
+        Import::ImagePaths bulkSources(QDir::toNativeSeparators(mFlashpointInstall->entryLogosDirectory().absolutePath()),
+                                       QDir::toNativeSeparators(mFlashpointInstall->entryScreenshotsDirectory().absolutePath()));
 
         mLauncherInstall->processBulkImageSources(bulkSources);
     }

@@ -1,3 +1,4 @@
+// Unit Includes
 #include "details.h"
 
 namespace Import
@@ -18,4 +19,5 @@ Details Details::current() { Q_ASSERT(mCurrent); return mCurrent.value(); }
 //Private:
 void Details::setCurrent(const Details& details) { Q_ASSERT(!mCurrent); mCurrent = details; }
 void Details::clearCurrent() { mCurrent = std::nullopt; }
+
 }

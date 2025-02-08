@@ -89,7 +89,7 @@ private:
 
     // Image Processing
     QString imageDestinationPath(Fp::ImageType imageType, const Lr::Game& game) const;
-    void editBulkImageReferences(const Lr::ImagePaths& imageSources);
+    void editBulkImageReferences(const Import::ImagePaths& imageSources);
 
     // Doc handling
     QString dataDocPath(Lr::IDataDoc::Identifier identifier) const;
@@ -119,8 +119,8 @@ public:
     Qx::Error postPlaylistsImport() override;
 
     // Image handling
-    void processBulkImageSources(const Lr::ImagePaths& bulkSources) override;
-    void convertToDestinationImages(const Game& game, Lr::ImagePaths& images) override;
+    void processBulkImageSources(const Import::ImagePaths& bulkSources) override;
+    void convertToDestinationImages(const Game& game, Import::ImagePaths& images) override;
     QString platformCategoryIconPath() const override;
     std::optional<QDir> platformIconsDirectory() const override;
     std::optional<QDir> playlistIconsDirectory() const override;

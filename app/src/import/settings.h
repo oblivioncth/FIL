@@ -45,6 +45,27 @@ struct OptionSet
     Fp::Db::InclusionOptions inclusionOptions;
 };
 
+class ImagePaths
+{
+//-Instance Members--------------------------------------------------------------------------------------------------
+private:
+    QString mLogoPath;
+    QString mScreenshotPath;
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+public:
+    ImagePaths();
+    ImagePaths(const QString& logoPath, const QString& screenshotPath);
+
+//-Instance Functions--------------------------------------------------------------------------------------------------
+public:
+    bool isNull() const;
+    QString logoPath() const;
+    QString screenshotPath() const;
+    void setLogoPath(const QString& path);
+    void setScreenshotPath(const QString& path);
+};
+
 }
 
 #endif // IMPORT_SETTINGS_H
