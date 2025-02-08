@@ -268,7 +268,7 @@ public:
 public:
     QString currentFilePath();
     QString fileErrorString();
-    bool writeOverview(const QUuid& gameId, const QString& overview);
+    bool writeOverview(const Overview& overview);
 };
 
 class PlatformInterface : public Lr::PlatformDoc<LauncherId>
@@ -277,10 +277,8 @@ class PlatformInterface : public Lr::PlatformDoc<LauncherId>
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
     PlatformTaglist mPlatformTaglist;
-    BulkOverviewWriter mOverviewWriter;
-    /* NOTE: Would just use Qx::writeStringToFile() but that is slower due to lots of checks/error handling, whereas
-     * this needs to be as fast as possible
-     */
+    QList<Overview> mOverviews;
+    QDir mOverviewDir;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -300,11 +298,13 @@ public:
 
 class PlatformInterfaceWriter : public Lr::DataDocWriter<PlatformInterface>
 {
-    // Shell for writing the taglist of the interface
-
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
     Taglist::Writer mTaglistWriter;
+    BulkOverviewWriter mOverviewWriter;
+    /* NOTE: Would just use Qx::writeStringToFile() but that is slower due to lots of checks/error handling, whereas
+     * this needs to be as fast as possible
+     */
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -337,8 +337,6 @@ public:
 
 class PlaylistInterfaceWriter : public Lr::DataDocWriter<PlaylistInterface>
 {
-    // Shell for writing the taglist of the interface
-
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
     Taglist::Writer mTaglistWriter;

@@ -111,6 +111,23 @@ public:
     Builder& wRating(const QString& rating);
 };
 
+class Overview
+{
+//-Instance Variables-----------------------------------------------------------------------------------------------
+private:
+    QUuid mGameId;
+    QString mText;
+
+//-Constructor-------------------------------------------------------------------------------------------------
+public:
+    Overview(const QUuid& gameId, const QString& text);
+
+//-Instance Functions------------------------------------------------------------------------------------------------------
+public:
+    QUuid gameId() const;
+    QString text() const;
+};
+
 class EmulatorArtworkEntry : public Lr::Item
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------

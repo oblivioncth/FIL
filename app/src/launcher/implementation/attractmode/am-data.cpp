@@ -388,17 +388,17 @@ BulkOverviewWriter::BulkOverviewWriter(const QDir& overviewDir) :
 QString BulkOverviewWriter::currentFilePath() { return mFile.fileName(); }
 QString BulkOverviewWriter::fileErrorString() { return mFile.errorString(); }
 
-bool BulkOverviewWriter::writeOverview(const QUuid& gameId, const QString& overview)
+bool BulkOverviewWriter::writeOverview(const Overview& overview)
 {
     // Set file to overview path
-    QString fileName = gameId.toString(QUuid::WithoutBraces) + u".txt"_s;
+    QString fileName = overview.gameId().toString(QUuid::WithoutBraces) + u".txt"_s;
     mFile.setFileName(mOverviewDir.absoluteFilePath(fileName));
 
     // Open file, always truncate
     mFile.open(QSaveFile::WriteOnly); // Write only implies truncate
 
     // Write overview
-    mFile.write(overview.toUtf8());
+    mFile.write(overview.text().toUtf8());
 
     // Save and return status
     return mFile.commit();
@@ -414,55 +414,40 @@ PlatformInterface::PlatformInterface(Install* install, const QString& platformTa
                                      const QDir& overviewDir) :
     Lr::PlatformDoc<LauncherId>(install, {}, platformName, {}),
     mPlatformTaglist(install, platformTaglistPath, platformName),
-    mOverviewWriter(overviewDir)
+    mOverviewDir(overviewDir)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
 std::shared_ptr<RomEntry> PlatformInterface::processSet(const Fp::Set& set)
 {
-    std::shared_ptr<RomEntry> romEntry;
+    //-Handle game----------------------------------------------------------
+    const Fp::Game& game = set.game();
 
-    if(!hasError())
+    // Add game ID to platform tag list
+    mPlatformTaglist.appendTag(game.id().toString(QUuid::WithoutBraces));
+
+    // Create game overview
+    QString overviewText = game.originalDescription();
+    if(!overviewText.isEmpty())
+        mOverviews.emplaceBack(game.id(), overviewText);
+
+    //-Handle add apps-------------------------------------------------------
+
+    // Add add app IDs to platform tag list
+    for(const Fp::AddApp& addApp : set.addApps())
     {
-        //-Handle game----------------------------------------------------------
-        const Fp::Game& game = set.game();
-
-        // Add game ID to platform tag list
-        mPlatformTaglist.appendTag(game.id().toString(QUuid::WithoutBraces));
-
-        // Create game overview
-        QString overview = game.originalDescription();
-
-        if(!overview.isEmpty())
-        {
-            bool written = mOverviewWriter.writeOverview(game.id(), overview);
-
-            if(written)
-                install()->addRevertableFile(mOverviewWriter.currentFilePath());
-            else
-                mError = Lr::DocHandlingError(*this, Lr::DocHandlingError::DocWriteFailed, mOverviewWriter.fileErrorString());
-        }
-
-        //-Handle add apps-------------------------------------------------------
-
-        // Add add app IDs to platform tag list
-        for(const Fp::AddApp& addApp : set.addApps())
-        {
-            /* Ignore non-playable add apps to avoid useless clutter in AM
-             * TODO: Consider doing this in Import Worker to make it a standard since
-             * LB doesn't actually need the non-playable entries either. Importing them
-             * is basically a leftover from an earlier CLIFp version
-             */
-            if(addApp.isPlayable())
-                mPlatformTaglist.appendTag(addApp.id().toString(QUuid::WithoutBraces));
-        }
-
-        //-Forward game insertion to main Romlist--------------------------------
-        romEntry = install()->mRomlist->processSet(set);
+        /* Ignore non-playable add apps to avoid useless clutter in AM
+         * TODO: Consider doing this in Import Worker to make it a standard since
+         * LB doesn't actually need the non-playable entries either. Importing them
+         * is basically a leftover from an earlier CLIFp version
+         */
+        if(addApp.isPlayable())
+            mPlatformTaglist.appendTag(addApp.id().toString(QUuid::WithoutBraces));
     }
 
-    return romEntry;
+    //-Forward game insertion to main Romlist--------------------------------
+    return install()->mRomlist->processSet(set);
 }
 
 //Public:
@@ -494,12 +479,29 @@ bool PlatformInterface::containsAddApp(QUuid addAppId) const
 //Public:
 PlatformInterfaceWriter::PlatformInterfaceWriter(PlatformInterface* sourceDoc) :
     Lr::DataDocWriter<PlatformInterface>(sourceDoc),
-    mTaglistWriter(&sourceDoc->mPlatformTaglist)
+    mTaglistWriter(&sourceDoc->mPlatformTaglist),
+    mOverviewWriter(sourceDoc->mOverviewDir) // TODO: Maybe a better way to pass this then it just sitting in the doc?
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-Lr::DocHandlingError PlatformInterfaceWriter::writeOutOf() { return mTaglistWriter.writeOutOf(); }
+Lr::DocHandlingError PlatformInterfaceWriter::writeOutOf()
+{
+    // Write tag list
+    if(auto err = mTaglistWriter.writeOutOf())
+        return err;
+
+    // Write overviews
+    for(const auto& o : std::as_const(source()->mOverviews))
+    {
+        if(mOverviewWriter.writeOverview(o))
+            source()->install()->addRevertableFile(mOverviewWriter.currentFilePath());
+        else
+            return Lr::DocHandlingError(*source(), Lr::DocHandlingError::DocWriteFailed, mOverviewWriter.fileErrorString());
+    }
+
+    return {};
+}
 
 //===============================================================================================================
 // PlaylistInterface

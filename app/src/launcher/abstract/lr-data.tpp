@@ -97,20 +97,18 @@ Id::InstallT* PlatformDoc<Id>::install() const { return static_cast<InstallT*>(I
 template<LauncherId Id>
 void PlatformDoc<Id>::addSet(const Fp::Set& set, Import::ImagePaths& images)
 {
-    if(!mError.isValid())
-    {
-        // Process set (technically this can fail and return nullptr)
-        std::shared_ptr<GameT> game = processSet(set);
+    // Process set
+    std::shared_ptr<GameT> game = processSet(set);
+    Q_ASSERT(game);
 
-        /* Process single image if applicable.
-         *
-         * The derived install type will not be defined at this point so we must access install() via
-         * the abstract base type.
-         */
-        auto install = static_cast<Install<Id>*>(IPlatformDoc::install());
-        if(game && Import::Details::current().imageMode != Import::ImageMode::Reference)
-            install->convertToDestinationImages(*game, images);
-    }
+    /* Process single image if applicable.
+     *
+     * The derived install type will not be defined at this point so we must access install() via
+     * the abstract base type.
+     */
+    auto install = static_cast<Install<Id>*>(IPlatformDoc::install());
+    if(Import::Details::current().imageMode != Import::ImageMode::Reference)
+        install->convertToDestinationImages(*game, images);
 }
 
 //===============================================================================================================
@@ -160,46 +158,40 @@ bool BasicPlatformDoc<Id>::containsAddApp(QUuid addAppId) const { return mAddApp
 template<LauncherId Id>
 std::shared_ptr<typename Id::GameT> BasicPlatformDoc<Id>::processSet(const Fp::Set& set)
 {
-    std::shared_ptr<GameT> game;
-    if(!mError.isValid())
+    // Prepare game
+    std::shared_ptr<GameT> game = prepareGame(set.game());
+
+    // Add game
+    addUpdateableItem(mGamesExisting, mGamesFinal, game);
+
+    // Handle additional apps
+    for(const Fp::AddApp& addApp : set.addApps())
     {
-        // Prepare game
-        game = prepareGame(set.game());
+        // Prepare
+        std::shared_ptr<AddAppT> lrAddApp = prepareAddApp(addApp);
 
-        // Add game
-        addUpdateableItem(mGamesExisting, mGamesFinal, game);
-
-        // Handle additional apps
-        for(const Fp::AddApp& addApp : set.addApps())
-        {
-            // Prepare
-            std::shared_ptr<AddAppT> lrAddApp = prepareAddApp(addApp);
-
-            // Add
-            addUpdateableItem(mAddAppsExisting, mAddAppsFinal, lrAddApp);
-        }
+        // Add
+        addUpdateableItem(mAddAppsExisting, mAddAppsFinal, lrAddApp);
     }
+
     return game;
 }
 
 template<LauncherId Id>
 void BasicPlatformDoc<Id>::finalize()
 {
-    if(!mError.isValid())
-    {
-        /* TODO: Have this (and all other implementations of finalize() do something like return
-         * the IDs of titles that were removed, or otherwise populate an internal variable so that afterwards
-         * the list can be used to purge all images or other title related files (like overviews with AM).
-         * Right now only the data portion of old games is removed)
-         */
+    /* TODO: Have this (and all other implementations of finalize() do something like return
+     * the IDs of titles that were removed, or otherwise populate an internal variable so that afterwards
+     * the list can be used to purge all images or other title related files (like overviews with AM).
+     * Right now only the data portion of old games is removed)
+     */
 
-        // Finalize item stores
-        finalizeUpdateableItems(mGamesExisting, mGamesFinal);
-        finalizeUpdateableItems(mAddAppsExisting, mAddAppsFinal);
+    // Finalize item stores
+    finalizeUpdateableItems(mGamesExisting, mGamesFinal);
+    finalizeUpdateableItems(mAddAppsExisting, mAddAppsFinal);
 
-        // Perform base finalization
-        IUpdateableDoc::finalize();
-    }
+    // Perform base finalization
+    IUpdateableDoc::finalize();
 }
 
 template<LauncherId Id>
@@ -243,39 +235,33 @@ bool BasicPlaylistDoc<Id>::containsPlaylistGame(QUuid gameId) const { return mPl
 template<LauncherId Id>
 void BasicPlaylistDoc<Id>::setPlaylistData(const Fp::Playlist& playlist)
 {
-    if(!mError.isValid())
+    std::shared_ptr<PlaylistHeaderT> lrPlaylistHeader = preparePlaylistHeader(playlist);
+
+    // Ensure doc already existed before transferring (null check)
+    if(mPlaylistHeader)
+        lrPlaylistHeader->transferOtherFields(mPlaylistHeader->otherFields());
+
+    // Set instance header to new one
+    mPlaylistHeader = lrPlaylistHeader;
+
+    for(const auto& plg : playlist.playlistGames())
     {
-        std::shared_ptr<PlaylistHeaderT> lrPlaylistHeader = preparePlaylistHeader(playlist);
+        // Prepare playlist game
+        std::shared_ptr<PlaylistGameT> lrPlaylistGame = preparePlaylistGame(plg);
 
-        // Ensure doc already existed before transferring (null check)
-        if(mPlaylistHeader)
-            lrPlaylistHeader->transferOtherFields(mPlaylistHeader->otherFields());
-
-        // Set instance header to new one
-        mPlaylistHeader = lrPlaylistHeader;
-
-        for(const auto& plg : playlist.playlistGames())
-        {
-            // Prepare playlist game
-            std::shared_ptr<PlaylistGameT> lrPlaylistGame = preparePlaylistGame(plg);
-
-            // Add playlist game
-            addUpdateableItem(mPlaylistGamesExisting, mPlaylistGamesFinal, lrPlaylistGame);
-        }
+        // Add playlist game
+        addUpdateableItem(mPlaylistGamesExisting, mPlaylistGamesFinal, lrPlaylistGame);
     }
 }
 
 template<LauncherId Id>
 void BasicPlaylistDoc<Id>::finalize()
 {
-    if(!mError.isValid())
-    {
-        // Finalize item stores
-        finalizeUpdateableItems(mPlaylistGamesExisting, mPlaylistGamesFinal);
+    // Finalize item stores
+    finalizeUpdateableItems(mPlaylistGamesExisting, mPlaylistGamesFinal);
 
-        // Perform base finalization
-        IUpdateableDoc::finalize();
-    }
+    // Perform base finalization
+    IUpdateableDoc::finalize();
 }
 
 template<LauncherId Id>
