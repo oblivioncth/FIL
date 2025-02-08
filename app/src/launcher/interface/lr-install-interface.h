@@ -171,7 +171,7 @@ public:
     virtual Qx::Error postPlaylistsImport();
 
     // Images
-    virtual void processBulkImageSources(const ImagePaths& bulkSources) = 0;
+    virtual void processBulkImageSources(const Import::ImagePaths& bulkSources) = 0;
     virtual QString platformCategoryIconPath() const; // Unsupported in default implementation, needs to return path with .png extension
     virtual std::optional<QDir> platformIconsDirectory() const; // Unsupported in default implementation
     virtual std::optional<QDir> playlistIconsDirectory() const; // Unsupported in default implementation

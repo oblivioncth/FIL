@@ -104,27 +104,6 @@ private:
     QString deriveSecondary() const override;
 };
 
-class ImagePaths // TODO: Move me somewhere else
-{
-//-Instance Members--------------------------------------------------------------------------------------------------
-private:
-    QString mLogoPath;
-    QString mScreenshotPath;
-
-//-Constructor--------------------------------------------------------------------------------------------------------
-public:
-    ImagePaths();
-    ImagePaths(const QString& logoPath, const QString& screenshotPath);
-
-//-Instance Functions--------------------------------------------------------------------------------------------------
-public:
-    bool isNull() const;
-    QString logoPath() const;
-    QString screenshotPath() const;
-    void setLogoPath(const QString& path);
-    void setScreenshotPath(const QString& path);
-};
-
 class IDataDoc
 {
 //-Class Enums---------------------------------------------------------------------------------------------------------
@@ -340,7 +319,7 @@ private:
 public:
     virtual bool containsGame(QUuid gameId) const = 0; // NOTE: UNUSED
     virtual bool containsAddApp(QUuid addAppId) const = 0; // NOTE: UNUSED
-    virtual void addSet(const Fp::Set& set, ImagePaths& images) = 0;
+    virtual void addSet(const Fp::Set& set, Import::ImagePaths& images) = 0;
 };
 
 class IPlaylistDoc : public IUpdateableDoc, public IErrorable

@@ -119,8 +119,8 @@ public:
     Qx::Error postImport() override;
 
     // Image handling
-    void processBulkImageSources(const Lr::ImagePaths& bulkSources) override;
-    void convertToDestinationImages(const RomEntry& game, Lr::ImagePaths& images) override;
+    void processBulkImageSources(const Import::ImagePaths& bulkSources) override;
+    void convertToDestinationImages(const RomEntry& game, Import::ImagePaths& images) override;
 };
 
 }

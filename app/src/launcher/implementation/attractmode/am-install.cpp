@@ -498,13 +498,13 @@ Qx::Error Install::postImport()
     return Qx::Error();
 }
 
-void Install::processBulkImageSources(const Lr::ImagePaths& bulkSources)
+void Install::processBulkImageSources(const Import::ImagePaths& bulkSources)
 {
     Q_UNUSED(bulkSources);
     qFatal("Attract Mode does not support Reference image mode, and that option should not be available.");
 }
 
-void Install::convertToDestinationImages(const RomEntry& game, Lr::ImagePaths& images)
+void Install::convertToDestinationImages(const RomEntry& game, Import::ImagePaths& images)
 {
     if(!images.logoPath().isEmpty())
         images.setLogoPath(imageDestinationPath(Fp::ImageType::Logo, game));

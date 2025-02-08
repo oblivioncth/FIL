@@ -107,7 +107,7 @@ QString Install::imageDestinationPath(Fp::ImageType imageType, const Lr::Game& g
            '.' + IMAGE_EXT;
 }
 
-void Install::editBulkImageReferences(const Lr::ImagePaths& imageSources)
+void Install::editBulkImageReferences(const Import::ImagePaths& imageSources)
 {
     // Set media folder paths
     const QList<QString> affectedPlatforms = modifiedPlatforms();
@@ -388,7 +388,7 @@ Qx::Error Install::postPlatformsImport()
 Qx::Error Install::preImageProcessing()
 {
     if(Import::Details::current().imageMode != Import::ImageMode::Reference)
-        editBulkImageReferences(Lr::ImagePaths());// Null arg will remove old references
+        editBulkImageReferences(Import::ImagePaths());// Null arg will remove old references
 
     return Lr::IInstall::preImageProcessing();
 }
@@ -426,12 +426,12 @@ Qx::Error Install::postPlaylistsImport()
     return commitParentsDoc(std::move(mParents));
 }
 
-void Install::processBulkImageSources(const Lr::ImagePaths& bulkSources)
+void Install::processBulkImageSources(const Import::ImagePaths& bulkSources)
 {
     editBulkImageReferences(bulkSources);
 }
 
-void Install::convertToDestinationImages(const Game& game, Lr::ImagePaths& images)
+void Install::convertToDestinationImages(const Game& game, Import::ImagePaths& images)
 {
     if(!images.logoPath().isEmpty())
         images.setLogoPath(imageDestinationPath(Fp::ImageType::Logo, game));

@@ -28,6 +28,7 @@ set(FIL_SOURCE
     import/properties.h
     import/properties.cpp
     import/settings.h
+    import/settings.cpp
     import/worker.h
     import/worker.cpp
     launcher/abstract/lr-data.h

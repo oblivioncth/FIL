@@ -126,7 +126,7 @@ private:
 public:
     InstallT* install() const;
 
-    void addSet(const Fp::Set& set, ImagePaths& images) override;
+    void addSet(const Fp::Set& set, Import::ImagePaths& images) override;
 
     // IMPLEMENT
     using IPlatformDoc::isEmpty;
