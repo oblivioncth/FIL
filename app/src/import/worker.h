@@ -93,6 +93,12 @@ private:
         static inline const QString PlaylistImport = u"PlaylistImport"_s;
     };
 
+    struct ImageMap
+    {
+        QString sourcePath;
+        QString destPath;
+    };
+
 //-Class Variables-----------------------------------------------------------------------------------------------
 public:
     // Import Steps
@@ -112,7 +118,7 @@ private:
 
     // Image processing
     Qx::SyncDownloadManager mImageDownloadManager;
-    QList<Lr::IInstall::ImageMap> mImageTransferJobs;
+    QList<ImageMap> mImageTransferJobs;
 
     // Job details
     Selections mImportSelections;
@@ -146,7 +152,7 @@ private:
     Qx::Error preloadPlaylists(QList<Fp::Playlist>& targetPlaylists);
     QList<QUuid> getPlaylistSpecificGameIds(const QList<Fp::Playlist>& playlists);
     ImageTransferError transferImage(bool symlink, QString sourcePath, QString destPath);
-    bool performImageJobs(const QList<Lr::IInstall::ImageMap>& jobs, bool symlink, Qx::ProgressGroup* pg = nullptr);
+    bool performImageJobs(const QList<ImageMap>& jobs, bool symlink, Qx::ProgressGroup* pg = nullptr);
     Result processPlatformGames(Qx::Error& errorReport, std::unique_ptr<Lr::IPlatformDoc>& platformDoc, Fp::Db::QueryBuffer& gameQueryResult);
     void cullUnimportedPlaylistGames(QList<Fp::Playlist>& playlists);
 

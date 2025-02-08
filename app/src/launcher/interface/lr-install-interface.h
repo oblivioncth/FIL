@@ -61,14 +61,6 @@ private:
 
 class IInstall
 {
-//-Class Structs------------------------------------------------------------------------------------------------------
-public:
-    struct ImageMap
-    {
-        QString sourcePath;
-        QString destPath;
-    };
-
 //-Class Variables-----------------------------------------------------------------------------------------------
 private:
     // Files
@@ -132,12 +124,12 @@ protected:
     void declareValid(bool valid);
 
     // Docs
-    virtual Qx::Error populateExistingDocs() = 0;
     void catalogueExistingDoc(IDataDoc::Identifier existingDoc);
     DocHandlingError checkoutDataDocument(IDataDoc* docToOpen, std::shared_ptr<IDataDoc::Reader> docReader);
     DocHandlingError commitDataDocument(IDataDoc* docToSave, std::shared_ptr<IDataDoc::Writer> docWriter);
     QList<QString> modifiedPlatforms() const;
     QList<QString> modifiedPlaylists() const;
+    virtual Qx::Error populateExistingDocs() = 0;
 
 public:
     // Details

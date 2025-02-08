@@ -202,14 +202,14 @@ ImageTransferError Worker::transferImage(bool symlink, QString sourcePath, QStri
     return ImageTransferError();
 }
 
-bool Worker::performImageJobs(const QList<Lr::IInstall::ImageMap>& jobs, bool symlink, Qx::ProgressGroup* pg)
+bool Worker::performImageJobs(const QList<ImageMap>& jobs, bool symlink, Qx::ProgressGroup* pg)
 {
     // Setup for image transfers
     ImageTransferError imageTransferError; // Error return reference
     *mBlockingErrorResponse = QMessageBox::NoToAll; // Default to choice "NoToAll" in case the signal is not correctly connected using Qt::BlockingQueuedConnection
     bool ignoreAllTransferErrors = false; // NoToAll response tracker
 
-    for(const Lr::IInstall::ImageMap& imageJob : jobs)
+    for(const ImageMap& imageJob : jobs)
     {
         while((imageTransferError = transferImage(symlink, imageJob.sourcePath, imageJob.destPath)).isValid() && !ignoreAllTransferErrors)
         {
@@ -284,8 +284,8 @@ Worker::Result Worker::processPlatformGames(Qx::Error& errorReport, std::unique_
         QString checkedLogoPath = (logoLocalInfo.exists() || mOptionSet.downloadImages) ? logoLocalInfo.absoluteFilePath() : QString();
         QString checkedScreenshotPath = (ssLocalInfo.exists() || mOptionSet.downloadImages) ? ssLocalInfo.absoluteFilePath() : QString();
         Lr::ImagePaths imagePaths(checkedLogoPath, checkedScreenshotPath);
-        Lr::IInstall::ImageMap logoMap{.sourcePath = imagePaths.logoPath(), .destPath = ""};
-        Lr::IInstall::ImageMap screenshotMap{.sourcePath = imagePaths.screenshotPath(), .destPath = ""};
+        ImageMap logoMap{.sourcePath = imagePaths.logoPath(), .destPath = ""};
+        ImageMap screenshotMap{.sourcePath = imagePaths.screenshotPath(), .destPath = ""};
 
         // Add set to doc
         platformDoc->addSet(builtSet, imagePaths);
@@ -620,7 +620,7 @@ Worker::Result Worker::processImages(Qx::Error& errorReport)
 
 Worker::Result Worker::processIcons(Qx::Error& errorReport, const QStringList& platforms, const QList<Fp::Playlist>& playlists)
 {
-    QList<Lr::IInstall::ImageMap> jobs;
+    QList<ImageMap> jobs;
     QString mainDest = mLauncherInstall->platformCategoryIconPath();
     std::optional<QDir> platformDestDir = mLauncherInstall->platformIconsDirectory();
     std::optional<QDir> playlistDestDir = mLauncherInstall->playlistIconsDirectory();
@@ -629,7 +629,7 @@ Worker::Result Worker::processIcons(Qx::Error& errorReport, const QStringList& p
 
     // Main Job
     if(!mainDest.isEmpty())
-        jobs.emplace_back(Lr::IInstall::ImageMap{.sourcePath = u":/flashpoint/icon.png"_s, .destPath = mainDest});
+        jobs.emplace_back(ImageMap{.sourcePath = u":/flashpoint/icon.png"_s, .destPath = mainDest});
 
     // Platform jobs
     if(platformDestDir)
@@ -639,8 +639,8 @@ Worker::Result Worker::processIcons(Qx::Error& errorReport, const QStringList& p
         {
             QString src = tk->platformLogoPath(p);
             if(QFile::exists(src))
-                jobs.emplace_back(Lr::IInstall::ImageMap{.sourcePath = src,
-                                                        .destPath = pdd.absoluteFilePath(p + ".png")});
+                jobs.emplace_back(ImageMap{.sourcePath = src,
+                                           .destPath = pdd.absoluteFilePath(p + ".png")});
         }
     }
 
@@ -690,7 +690,7 @@ Worker::Result Worker::processIcons(Qx::Error& errorReport, const QStringList& p
                 return Failed;
             }
 
-            jobs.emplace_back(Lr::IInstall::ImageMap{.sourcePath = source, .destPath = dest});
+            jobs.emplace_back(ImageMap{.sourcePath = source, .destPath = dest});
         }
     }
 
