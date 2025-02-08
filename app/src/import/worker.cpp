@@ -431,13 +431,6 @@ Worker::Result Worker::processGames(Qx::Error& errorReport, QList<Fp::Db::QueryB
             //---Finalize document----------------------------------
             currentPlatformDoc->finalize();
 
-            // Check for internal doc errors
-            if(currentPlatformDoc->hasError())
-            {
-                errorReport = currentPlatformDoc->error();
-                return Failed;
-            }
-
             // Forfeit document lease and save it
             Lr::DocHandlingError saveError;
             if((saveError = mLauncherInstall->commitPlatformDoc(std::move(currentPlatformDoc))).isValid())
@@ -491,13 +484,6 @@ Worker::Result Worker::processPlaylists(Qx::Error& errorReport, const QList<Fp::
 
         // Finalize document
         currentPlaylistDoc->finalize();
-
-        // Check for internal doc errors
-        if(currentPlaylistDoc->hasError())
-        {
-            errorReport = currentPlaylistDoc->error();
-            return Failed;
-        }
 
         // Forfeit document lease and save it
         Lr::DocHandlingError saveError;

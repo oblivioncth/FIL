@@ -165,7 +165,6 @@ protected:
     using InstallT = Id::InstallT;
     using GameT = Id::GameT;
     using AddAppT = Id::AddAppT;
-    using IErrorable::mError;
     using IUpdateableDoc::finalizeUpdateableItems;
     using IUpdateableDoc::addUpdateableItem;
 
@@ -208,7 +207,6 @@ protected:
     using InstallT = Id::InstallT;
     using PlaylistHeaderT = Id::PlaylistHeaderT;
     using PlaylistGameT = Id::PlaylistGameT;
-    using IErrorable::mError;
     using IUpdateableDoc::finalizeUpdateableItems;
     using IUpdateableDoc::addUpdateableItem;
 

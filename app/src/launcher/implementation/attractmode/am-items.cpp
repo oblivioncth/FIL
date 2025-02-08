@@ -144,6 +144,22 @@ RomEntry::Builder& RomEntry::Builder::wRegion(const QString& region) { mItemBlue
 RomEntry::Builder& RomEntry::Builder::wRating(const QString& rating) { mItemBlueprint.mRating = rating; return *this; }
 
 //===============================================================================================================
+// Overview
+//===============================================================================================================
+
+//-Constructor------------------------------------------------------------------------------------------------
+//Public:
+Overview::Overview(const QUuid& gameId, const QString& text) :
+    mGameId(gameId),
+    mText(text)
+{}
+
+//-Instance Functions------------------------------------------------------------------------------------------------
+//Public:
+QUuid Overview::gameId() const{ return mGameId; }
+QString Overview::text() const{ return mText; }
+
+//===============================================================================================================
 // EmulatorArtworkEntry
 //===============================================================================================================
 

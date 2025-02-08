@@ -206,25 +206,25 @@ public:
     virtual DocHandlingError writeOutOf() = 0;
 };
 
-class IErrorable
-{
-//-Instance Variables--------------------------------------------------------------------------------------------------
-protected:
-    Qx::Error mError;
+// class IErrorable
+// {
+// //-Instance Variables--------------------------------------------------------------------------------------------------
+// protected:
+//     Qx::Error mError;
 
-//-Constructor--------------------------------------------------------------------------------------------------------
-protected:
-    IErrorable();
+// //-Constructor--------------------------------------------------------------------------------------------------------
+// protected:
+//     IErrorable();
 
-//-Destructor-------------------------------------------------------------------------------------------------
-public:
-    virtual ~IErrorable();
+// //-Destructor-------------------------------------------------------------------------------------------------
+// public:
+//     virtual ~IErrorable();
 
-//-Instance Functions--------------------------------------------------------------------------------------------------
-public:
-    bool hasError() const;
-    Qx::Error error() const;
-};
+// //-Instance Functions--------------------------------------------------------------------------------------------------
+// public:
+//     bool hasError() const;
+//     Qx::Error error() const;
+// };
 
 class IUpdateableDoc : public IDataDoc
 {
@@ -302,7 +302,7 @@ public:
     virtual void finalize();
 };
 
-class IPlatformDoc : public IUpdateableDoc, public IErrorable
+class IPlatformDoc : public IUpdateableDoc
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
@@ -318,7 +318,7 @@ public:
     virtual void addSet(const Fp::Set& set, Import::ImagePaths& images) = 0;
 };
 
-class IPlaylistDoc : public IUpdateableDoc, public IErrorable
+class IPlaylistDoc : public IUpdateableDoc
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
