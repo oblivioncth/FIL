@@ -168,15 +168,20 @@ public:
 template<CompleteLauncherId Id>
 class Register
 {
+    /* NOTE: This is used by the REGISTER_LAUNCHER() macro to cause launcher registration
+     * at runtime, and to setup the StaticRegistry for the launcher of 'Id'. This has to
+     * be done separately from Registrar because we need the definition of the launcher's
+     * Install type to be available.
+     */
+
 private:
     static std::unique_ptr<IInstall> createInstall(const QString& path) {
-        return std::make_unique<Id::InstallT>(path);
+        return std::make_unique<typename Id::InstallT>(path);
     }
 
 public:
     Register()
     {
-        // TODO: MAKE NOTE HERE ABOUT USAGE AND WHY THIS HAS TO EXIST
         StaticRegistry<Id>::smEntry = Registry::registerInstall(Registry::Entry{
             .name = Id::Name,
             .make = createInstall,

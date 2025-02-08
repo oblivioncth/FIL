@@ -13,10 +13,13 @@
 #include <qx/core/qx-json.h>
 #include <qx/core/qx-versionnumber.h>
 #include <qx/core/qx-system.h>
+#include <qx/core/qx-string.h>
 #include <qx/windows/qx-filedetails.h>
 
 // Project Includes
 #include "import/details.h"
+
+using namespace Qt::StringLiterals;
 
 namespace Lb
 {
@@ -294,13 +297,12 @@ QString Install::translateDocName(const QString& originalName, Lr::IDataDoc::Typ
      * basis as they come up.
      */
 
-    QString translatedName = originalName;
-
     // LB matched changes (LB might replace all illegal characters with underscores, but these are is known for sure)
-    // TODO: Use Qx for this
-    translatedName.replace(':','_');
-    translatedName.replace('#','_');
-    translatedName.replace('\'','_');
+    QString translatedName = Qx::String::mapArg(originalName,{
+        {u":"_s, u"_"_s},
+        {u"#"_s, u"_"_s},
+        {u"'"_s, u"_"_s}
+    });
 
     // General kosherization
     translatedName = Qx::kosherizeFileName(translatedName);

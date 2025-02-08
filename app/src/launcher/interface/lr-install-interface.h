@@ -71,10 +71,6 @@ protected:
     static inline const QString IMAGE_EXT = u"png"_s;
 
 public:
-    // Base errors
-    // TODO: This is unused, should it be in-use somewhere?
-    static inline const QString ERR_UNSUPPORTED_FEATURE = u"A feature unsupported by the launcher was called upon!"_s;
-
     // Image Errors
     static inline const QString CAPTION_IMAGE_ERR = u"Error importing game image(s)"_s;
 
