@@ -303,14 +303,14 @@ void CrudeSettingsWriter::writeKeyValue(const QString& key, const QString& value
 bool CrudeSettingsWriter::writeConfigDoc()
 {
     // Write all display entries
-    for(const Display& display : qAsConst(source()->mDisplays))
+    for(const Display& display : std::as_const(source()->mDisplays))
     {
         if(!writeDisplay(display))
             return false;
     }
 
     // Write all other settings
-    for(const OtherSetting& setting : qAsConst(source()->mOtherSettings))
+    for(const OtherSetting& setting : std::as_const(source()->mOtherSettings))
     {
         if(!writeOtherSetting(setting))
             return false;

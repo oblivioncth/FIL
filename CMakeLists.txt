@@ -13,7 +13,7 @@ project(FIL
 
 # Get helper scripts
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FetchOBCMake.cmake)
-fetch_ob_cmake("e88d54a044319c0cd12a9e68c5538bf1194e6285")
+fetch_ob_cmake("d64498ec2654e7f3145d7efa36bfaa73ac30cc74")
 
 # Initialize project according to standard rules
 include(OB/Project)
@@ -74,20 +74,20 @@ endif()
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "a7ff0ecbabc51c89b99b93812145a0fa6b2f7283"
+    REF "1bfe8bdb6047c1d6c3246e431652869e63cbe797"
     COMPONENTS
         ${FIL_QX_COMPONENTS}
 )
 
 # Fetch libfp (build and import from source)
 include(OB/Fetchlibfp)
-ob_fetch_libfp("183a479d00235d332aa1046a9b5ba98f62699752")
+ob_fetch_libfp("d2b1960b76c10537f2beb933206d42a31576ab07")
 
 # Fetch CLIFp (build and import from source)
 include(OB/Utility)
 ob_cache_project_version(CLIFp)
 include(OB/FetchCLIFp)
-ob_fetch_clifp("7139ae998b292eb595e751ba4cb8599230435358")
+ob_fetch_clifp("f56246bad2504af08762d91ea1cc1361135c58ad")
 
 # TODO: The shared build of this is essentially useless as only the CLIFp executable
 # is deployed, which only works if it's statically linked. There isn't a simple way

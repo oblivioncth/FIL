@@ -364,7 +364,7 @@ bool PlatformDocWriter::writeSourceDoc()
     }
 
     // Write all custom fields
-    for(const std::shared_ptr<CustomField>& customField : qAsConst(source()->mCustomFieldsFinal))
+    for(const std::shared_ptr<CustomField>& customField : std::as_const(source()->mCustomFieldsFinal))
     {
         if(!writeCustomField(*customField))
             return false;

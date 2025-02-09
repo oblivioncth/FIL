@@ -740,7 +740,7 @@ Worker::Result Worker::doImport(Qx::Error& errorReport)
         // Make unselected platforms list
         QStringList availablePlatforms = fpDatabase->platformNames();
         QStringList unselectedPlatforms = QStringList(availablePlatforms);
-        for(const QString& selPlatform : qAsConst(mImportSelections.platforms))
+        for(const QString& selPlatform : std::as_const(mImportSelections.platforms))
             unselectedPlatforms.removeAll(selPlatform);
 
         // Make game query
@@ -768,7 +768,7 @@ Worker::Result Worker::doImport(Qx::Error& errorReport)
     quint64 totalGameCount = 0;
 
     QStringList playlistSpecPlatforms;
-    for(const Fp::Db::QueryBuffer& query : qAsConst(playlistSpecGameQueries))
+    for(const Fp::Db::QueryBuffer& query : std::as_const(playlistSpecGameQueries))
         playlistSpecPlatforms.append(query.source);
     QStringList involvedPlatforms = mImportSelections.platforms + playlistSpecPlatforms;
 
@@ -780,14 +780,14 @@ Worker::Result Worker::doImport(Qx::Error& errorReport)
     Qx::ProgressGroup* pgGameImport = initializeProgressGroup(Pg::GameImport, 2);
 
     // All games
-    for(const Fp::Db::QueryBuffer& query : qAsConst(gameQueries))
+    for(const Fp::Db::QueryBuffer& query : std::as_const(gameQueries))
     {
         pgGameImport->increaseMaximum(query.size);
         totalGameCount += query.size;
     }
 
     // All playlist specific games
-    for(const Fp::Db::QueryBuffer& query : qAsConst(playlistSpecGameQueries))
+    for(const Fp::Db::QueryBuffer& query : std::as_const(playlistSpecGameQueries))
     {
         pgGameImport->increaseMaximum(query.size);
         totalGameCount += query.size;

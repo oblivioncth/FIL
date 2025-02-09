@@ -8,9 +8,9 @@
 set(CLIFP_RES_PATH "${CMAKE_CURRENT_BINARY_DIR}/res/file/clifp")
 add_custom_command(OUTPUT
         "${CLIFP_RES_PATH}"
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:CLIFp::CLIFp>
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:CLIFp::FrontendGui>
         "${CLIFP_RES_PATH}"
-    DEPENDS CLIFp::CLIFp
+    DEPENDS CLIFp::FrontendGui
 )
 
 # This statement creates a target that by itself does nothing, but since it depends

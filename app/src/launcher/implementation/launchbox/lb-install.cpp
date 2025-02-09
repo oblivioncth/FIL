@@ -78,7 +78,7 @@ Qx::Error Install::populateExistingDocs()
     if(existingCheck.isFailure())
         return existingCheck;
 
-    for(const QFileInfo& platformFile : qAsConst(existingList))
+    for(const QFileInfo& platformFile : std::as_const(existingList))
          catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Platform, platformFile.baseName()));
 
     // Check for playlists
@@ -86,7 +86,7 @@ Qx::Error Install::populateExistingDocs()
     if(existingCheck.isFailure())
         return existingCheck;
 
-    for(const QFileInfo& playlistFile : qAsConst(existingList))
+    for(const QFileInfo& playlistFile : std::as_const(existingList))
         catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Playlist, playlistFile.baseName()));
 
     // Check for config docs
@@ -94,7 +94,7 @@ Qx::Error Install::populateExistingDocs()
     if(existingCheck.isFailure())
         return existingCheck;
 
-    for(const QFileInfo& configDocFile : qAsConst(existingList))
+    for(const QFileInfo& configDocFile : std::as_const(existingList))
         catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Config, configDocFile.baseName()));
 
     // Return success
@@ -410,7 +410,7 @@ Qx::Error Install::postImageProcessing()
 Qx::Error Install::postPlaylistsImport()
 {
     // Add playlists to Parents.xml
-    for(const QUuid& pId : qAsConst(mModifiedPlaylistIds))
+    for(const QUuid& pId : std::as_const(mModifiedPlaylistIds))
     {
         if(!mParents->containsPlaylist(pId, PLAYLISTS_PLATFORM_CATEGORY))
         {

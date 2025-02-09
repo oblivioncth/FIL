@@ -68,7 +68,7 @@ Taglist::Writer::Writer(Taglist* sourceDoc) :
 bool Taglist::Writer::writeSourceDoc()
 {
     // Write tags
-    for(const QString& tag : qAsConst(source()->mTags))
+    for(const QString& tag : std::as_const(source()->mTags))
         mStreamWriter << tag << '\n';
 
     // Return error status
@@ -327,7 +327,7 @@ bool Romlist::Writer::writeSourceDoc()
     mStreamWriter.writeLine(Romlist::HEADER);
 
     // Write all rom entries
-    for(const std::shared_ptr<RomEntry>& entry : qAsConst(source()->finalEntries()))
+    for(const std::shared_ptr<RomEntry>& entry : std::as_const(source()->finalEntries()))
     {
         if(!writeRomEntry(*entry))
             return false;
