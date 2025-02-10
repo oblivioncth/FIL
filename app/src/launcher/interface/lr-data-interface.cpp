@@ -61,12 +61,9 @@ bool operator== (const IDataDoc::Identifier& lhs, const IDataDoc::Identifier& rh
 }
 
 //-Hashing------------------------------------------------------------------------------------------------------
-uint qHash(const IDataDoc::Identifier& key, uint seed) noexcept
+size_t qHash(const IDataDoc::Identifier& key, size_t seed) noexcept
 {
-    seed = qHash(key.mDocType, seed);
-    seed = qHash(key.mDocName, seed);
-
-    return seed;
+    return qHashMulti(seed, key.mDocType, key.mDocName);
 }
 
 //-Constructor--------------------------------------------------------------------------------------------------------

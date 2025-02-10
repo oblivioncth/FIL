@@ -118,7 +118,7 @@ public:
     class Identifier
     {
         friend bool operator== (const Identifier& lhs, const Identifier& rhs) noexcept;
-        friend uint qHash(const Identifier& key, uint seed) noexcept;
+        friend size_t qHash(const Identifier& key, size_t seed) noexcept;
 
     private:
         Type mDocType;

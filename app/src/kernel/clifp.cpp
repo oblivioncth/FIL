@@ -32,7 +32,7 @@ Qx::VersionNumber CLIFp::installedVersion(const Fp::Install& fpInstall)
     {
 #ifdef _WIN32
         return Qx::FileDetails::readFileDetails(standardCLIFpPath(fpInstall)).fileVersion().normalized();
-#endif
+#else
         /* TODO: For now on Linux we just return a null version so that deployment always
          * occurs. Eventually, find a good way to grab version info from the installed ELF.
          *
@@ -40,6 +40,7 @@ Qx::VersionNumber CLIFp::installedVersion(const Fp::Install& fpInstall)
          * standardized way to embed the info as part of the ELF structure.
          */
         return Qx::VersionNumber();
+#endif
     }
 }
 

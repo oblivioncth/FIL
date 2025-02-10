@@ -367,8 +367,6 @@ Fp::Db::InclusionOptions MainWindow::getSelectedInclusionOptions() const
 
 Import::UpdateOptions MainWindow::getSelectedUpdateOptions() const
 {
-    return {ui->radioButton_onlyAdd->isChecked() ? Import::UpdateMode::OnlyNew : Import::UpdateMode::NewAndExisting, ui->checkBox_removeMissing->isChecked() };
-
     QRadioButton* sel = static_cast<QRadioButton*>(ui->buttonGroup_updateMode->checkedButton());
     Q_ASSERT(sel);
     return mUpdateModeMap[sel];

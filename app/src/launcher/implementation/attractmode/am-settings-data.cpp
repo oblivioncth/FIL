@@ -247,8 +247,8 @@ Lr::DocHandlingError CrudeSettingsReader::readTargetDoc()
             {
                 if(!mCurrentSubSettingParser->parse(key, value, depth))
                 {
-                    QString setting = mCurrentSubSettingParser->settingName();
-                    errorStatus = Lr::DocHandlingError(*target(), Lr::DocHandlingError::DocReadFailed, UNKNOWN_KEY_ERROR.arg(key, setting));
+                    QString subSetting = mCurrentSubSettingParser->settingName();
+                    errorStatus = Lr::DocHandlingError(*target(), Lr::DocHandlingError::DocReadFailed, UNKNOWN_KEY_ERROR.arg(key, subSetting));
                     break;
                 }
             }

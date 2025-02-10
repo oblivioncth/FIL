@@ -368,9 +368,9 @@ Qx::Error Install::postPlatformsImport()
     const QList<QString> affectedPlatforms = modifiedPlatforms();
     for(const QString& pn :affectedPlatforms)
     {
-        Lb::Platform::Builder pb;
-        pb.wName(pn);
-        mPlatformsConfig->addPlatform(pb.build());
+        Lb::Platform::Builder plb;
+        plb.wName(pn);
+        mPlatformsConfig->addPlatform(plb.build());
 
         if(!mParents->containsPlatform(pn, PLATFORMS_PLATFORM_CATEGORY))
         {
