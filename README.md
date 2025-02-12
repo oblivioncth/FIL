@@ -170,9 +170,11 @@ This tool automatically handles installing/updating the command-line interface F
 
 ### Summary
 
- - C++20
+ - C++23
  - CMake >= 3.24.0
- - Targets Windows 10 and above
+ - Targets
+    - Windows 10+
+    - Ubuntu 20.04+
 
 ### Dependencies
 - Qt6
