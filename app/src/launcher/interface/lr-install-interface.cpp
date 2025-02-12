@@ -1,37 +1,11 @@
 // Unit Include
 #include "lr-install-interface.h"
 
+// Project Includes
+#include "import/backup.h"
+
 namespace Lr
 {
-
-//===============================================================================================================
-// RevertError
-//===============================================================================================================
-
-//-Constructor-------------------------------------------------------------
-//Private:
-RevertError::RevertError(Type t, const QString& s) :
-    mType(t),
-    mSpecific(s)
-{}
-
-//Public:
-RevertError::RevertError() :
-    mType(NoError)
-{}
-
-//-Instance Functions-------------------------------------------------------------
-//Public:
-bool RevertError::isValid() const { return mType != NoError; }
-QString RevertError::specific() const { return mSpecific; }
-RevertError::Type RevertError::type() const { return mType; }
-
-//Private:
-Qx::Severity RevertError::deriveSeverity() const { return Qx::Err; }
-quint32 RevertError::deriveValue() const { return mType; }
-QString RevertError::derivePrimary() const { return ERR_STRINGS.value(mType); }
-QString RevertError::deriveSecondary() const { return mSpecific; }
-QString RevertError::deriveCaption() const { return CAPTION_REVERT_ERR; }
 
 //===============================================================================================================
 // IInstall
@@ -46,12 +20,6 @@ IInstall::IInstall(const QString& installPath) :
 //-Destructor------------------------------------------------------------------------------------------------
 //Public:
 IInstall::~IInstall() {}
-
-//Public:
-QString IInstall::filePathToBackupPath(const QString& filePath)
-{
-    return filePath + '.' + BACKUP_FILE_EXT;
-}
 
 //-Instance Functions--------------------------------------------------------------------------------------------
 //Private:
@@ -126,6 +94,7 @@ DocHandlingError IInstall::commitDataDocument(std::shared_ptr<IDataDoc::Writer> 
     IDataDoc::Identifier id = docToSave->identifier();
 
     // Check if the doc was saved previously to prevent double-backups
+    // TODO: SEE IF THIS LEVEL OF DISTINCTION IS NEEDED WITH NEW BACKUP STRAT
     bool wasDeleted = mDeletedDocuments.contains(id);
     bool wasModified = mModifiedDocuments.contains(id);
     bool wasUntouched = !wasDeleted && !wasModified;
@@ -133,23 +102,14 @@ DocHandlingError IInstall::commitDataDocument(std::shared_ptr<IDataDoc::Writer> 
     // Handle backup/revert prep
     if(wasUntouched)
     {
-        QString docPath = docToSave->path();
-        mRevertableFilePaths.append(docPath); // Correctly handles if doc ends up deleted
-
         // Backup
-        if(QFile::exists(docPath))
-        {
-            QString backupPath = filePathToBackupPath(docPath);
-
-            if(QFile::exists(backupPath) && QFileInfo(backupPath).isFile())
-            {
-                if(!QFile::remove(backupPath))
-                    return DocHandlingError(*docToSave, DocHandlingError::CantRemoveBackup);
-            }
-
-            if(!QFile::copy(docPath, backupPath))
-                return DocHandlingError(*docToSave, DocHandlingError::CantCreateBackup);
-        }
+        QString docPath = docToSave->path();
+        Import::BackupError bErr = Import::BackupManager::instance()->backupCopy(docPath);
+        if(bErr.type() == Import::BackupError::FileWontDelete)
+            return DocHandlingError(*docToSave, DocHandlingError::CantRemoveBackup);
+        else if(bErr.type() == Import::BackupError::FileWontBackup)
+            return DocHandlingError(*docToSave, DocHandlingError::CantCreateBackup);
+        Q_ASSERT(!bErr.isValid()); // All relevant types should be handled here
     }
 
     // Error State
@@ -189,7 +149,6 @@ QString IInstall::path() const { return mRootDirectory.absolutePath(); }
 
 void IInstall::softReset()
 {
-    mRevertableFilePaths.clear();
     mModifiedDocuments.clear();
     mDeletedDocuments.clear();
     mLeasedDocuments.clear();
@@ -229,43 +188,6 @@ bool IInstall::containsAnyPlatform(const QList<QString>& names) const
 bool IInstall::containsAnyPlaylist(const QList<QString>& names) const
 {
     return containsAnyDataDoc(IDataDoc::Type::Playlist, names);
-}
-
-void IInstall::addRevertableFile(const QString& filePath) { mRevertableFilePaths.append(filePath); }
-int IInstall::revertQueueCount() const { return mRevertableFilePaths.size(); }
-
-int IInstall::revertNextChange(RevertError& error, bool skipOnFail)
-{
-    // Ensure error message is null
-    error = RevertError();
-
-    // Get operation count for return
-    int operationsLeft = mRevertableFilePaths.size();
-
-    // Delete new files and restore backups if present
-    if(!mRevertableFilePaths.isEmpty())
-    {
-        QString filePath = mRevertableFilePaths.takeFirst();
-        QString backupPath = filePathToBackupPath(filePath);
-
-        if(QFile::exists(filePath) && !QFile::remove(filePath) && !skipOnFail)
-        {
-            error = RevertError(RevertError::FileWontDelete, filePath);
-            return operationsLeft;
-        }
-
-        if(!QFile::exists(filePath) && QFile::exists(backupPath) && !QFile::rename(backupPath, filePath) && !skipOnFail)
-        {
-            error = RevertError(RevertError::FileWontRestore, backupPath);
-            return operationsLeft;
-        }
-
-        // Decrement op count
-        return operationsLeft - 1;
-    }
-
-    // Return 0 if all empty (shouldn't be reached if function is used correctly)
-    return 0;
 }
 
 /* These functions can be overridden by children as needed.

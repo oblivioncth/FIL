@@ -14,6 +14,7 @@
 // Project Includes
 #include "kernel/clifp.h"
 #include "import/details.h"
+#include "import/backup.h"
 
 namespace Import
 {
@@ -148,6 +149,7 @@ ImageTransferError Worker::transferImage(bool symlink, QString sourcePath, QStri
             QString sourceChecksum;
             QString destinationChecksum;
 
+            // TODO: Probably better to just byte-wise compare
             if(!Qx::calculateFileChecksum(sourceChecksum, source, QCryptographicHash::Md5).isFailure() &&
                !Qx::calculateFileChecksum(destinationChecksum, destination, QCryptographicHash::Md5).isFailure() &&
                sourceChecksum.compare(destinationChecksum, Qt::CaseInsensitive) == 0)
@@ -160,42 +162,16 @@ ImageTransferError Worker::transferImage(bool symlink, QString sourcePath, QStri
     if(!destinationDir.mkpath(u"."_s))
         return ImageTransferError(ImageTransferError::CantCreateDirectory, QString(), destinationDir.absolutePath());
 
-    // Determine backup path
-    QString backupPath = Lr::IInstall::filePathToBackupPath(destinationInfo.absoluteFilePath());
-
-    // Temporarily backup image if it already exists (also acts as deletion marking in case images for the title were removed in an update)
-    if(destinationOccupied)
-        if(!QFile::rename(destinationPath, backupPath)) // Temp backup
+    // Transfer image
+    BackupError bErr = BackupManager::instance()->safeReplace(sourcePath, destinationPath, symlink);
+    if(bErr)
+    {
+        if(bErr.type() == BackupError::FileWontBackup)
             return ImageTransferError(ImageTransferError::ImageWontBackup, QString(), destinationPath);
-
-    // Linking error tracker
-    std::error_code linkError;
-
-    // Handle transfer
-    if(symlink)
-    {
-        std::filesystem::create_symlink(sourcePath.toStdString(), destinationPath.toStdString(), linkError);
-        if(linkError)
-        {
-            QFile::rename(backupPath, destinationPath); // Restore Backup
-            return ImageTransferError(ImageTransferError::ImageWontLink, sourcePath, destinationPath);
-        }
-        else if(QFile::exists(backupPath))
-            QFile::remove(backupPath);
+        else if(bErr.type() == BackupError::FileWontReplace)
+            return ImageTransferError(symlink ? ImageTransferError::ImageWontLink : ImageTransferError::ImageWontCopy, QString(), destinationPath);
         else
-            mLauncherInstall->addRevertableFile(destinationPath); // Only queue image to be removed on failure if its new, so existing images aren't deleted on revert
-    }
-    else
-    {
-        if(!QFile::copy(sourcePath, destinationPath))
-        {
-            QFile::rename(backupPath, destinationPath); // Restore Backup
-            return ImageTransferError(ImageTransferError::ImageWontCopy, sourcePath, destinationPath);
-        }
-        else if(QFile::exists(backupPath))
-            QFile::remove(backupPath);
-        else
-            mLauncherInstall->addRevertableFile(destinationPath); // Only queue image to be removed on failure if its new, so existing images aren't deleted on revert
+            qFatal("Unhandled image transfer error type.");
     }
 
     // Return null error on success
