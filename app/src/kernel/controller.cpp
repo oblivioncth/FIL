@@ -12,6 +12,7 @@
 
 // Project Includes
 #include "launcher/abstract/lr-registration.h"
+#include "import/backup.h"
 
 /* TODO: Consider having this tool deploy a .ini file (or the like) into the target launcher install
  * (with the exact location probably being guided by the specific Install child) that saves the settings
@@ -111,14 +112,15 @@ void Controller::revertAllLauncherChanges()
     // Trackers
     bool tempSkip = false;
     bool alwaysSkip = false;
-    Lr::RevertError currentError;
+    Import::BackupError currentError;
     int retryChoice;
 
     // Progress
+    auto bm = Import::BackupManager::instance();
     mProgressPresenter.setMinimum(0);
-    mProgressPresenter.setMaximum(launcher->revertQueueCount());
+    mProgressPresenter.setMaximum(bm->revertQueueCount());
     mProgressPresenter.setCaption(CAPTION_REVERT);
-    while(launcher->revertNextChange(currentError, alwaysSkip || tempSkip) != 0)
+    while(bm->revertNextChange(currentError, alwaysSkip || tempSkip) != 0)
     {
         // Check for error
         if(!currentError.isValid())

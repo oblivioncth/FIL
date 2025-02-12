@@ -23,6 +23,8 @@ add_custom_target(fil_copy_clifp
 
 # ------------------ Setup FIL --------------------------
 set(FIL_SOURCE
+    import/backup.h
+    import/backup.cpp
     import/details.h
     import/details.cpp
     import/properties.h

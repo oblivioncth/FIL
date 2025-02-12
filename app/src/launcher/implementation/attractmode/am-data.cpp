@@ -494,9 +494,8 @@ Lr::DocHandlingError PlatformInterfaceWriter::writeOutOf()
     // Write overviews
     for(const auto& o : std::as_const(source()->mOverviews))
     {
-        if(mOverviewWriter.writeOverview(o))
-            source()->install()->addRevertableFile(mOverviewWriter.currentFilePath());
-        else
+        // This uses QSaveFile as a form of "safe replace" write, so we don't need to manually back-up
+        if(!mOverviewWriter.writeOverview(o))
             return Lr::DocHandlingError(*source(), Lr::DocHandlingError::DocWriteFailed, mOverviewWriter.fileErrorString());
     }
 

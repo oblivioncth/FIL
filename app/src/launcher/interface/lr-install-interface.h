@@ -11,61 +11,9 @@
 namespace Lr
 {
 
-class QX_ERROR_TYPE(RevertError, "Lr::RevertError", 1301)
-{
-    friend class IInstall;
-//-Class Enums-------------------------------------------------------------
-public:
-    enum Type
-    {
-        NoError = 0,
-        FileWontDelete = 1,
-        FileWontRestore = 2
-    };
-
-//-Class Variables-------------------------------------------------------------
-private:
-    static inline const QHash<Type, QString> ERR_STRINGS{
-        {NoError, u""_s},
-        {FileWontDelete, u"Cannot remove a file. It may need to be deleted manually."_s},
-        {FileWontRestore, u"Cannot restore a file backup. It may need to be renamed manually.."_s}
-    };
-
-    static inline const QString CAPTION_REVERT_ERR = u"Error reverting changes"_s;
-
-//-Instance Variables-------------------------------------------------------------
-private:
-    Type mType;
-    QString mSpecific;
-
-//-Constructor-------------------------------------------------------------
-private:
-    RevertError(Type t, const QString& s);
-
-public:
-    RevertError();
-
-//-Instance Functions-------------------------------------------------------------
-public:
-    bool isValid() const;
-    Type type() const;
-    QString specific() const;
-
-private:
-    Qx::Severity deriveSeverity() const override;
-    quint32 deriveValue() const override;
-    QString derivePrimary() const override;
-    QString deriveSecondary() const override;
-    QString deriveCaption() const override;
-};
-
 class IInstall
 {
 //-Class Variables-----------------------------------------------------------------------------------------------
-private:
-    // Files
-    static inline const QString BACKUP_FILE_EXT = u"fbk"_s;
-
 protected:
     // Files
     static inline const QString IMAGE_EXT = u"png"_s;
@@ -88,9 +36,6 @@ private:
     QSet<IDataDoc::Identifier> mDeletedDocuments;
     QSet<IDataDoc::Identifier> mLeasedDocuments;
 
-    // Backup/Deletion tracking
-    QStringList mRevertableFilePaths;
-
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
     IInstall(const QString& installPath);
@@ -102,10 +47,6 @@ public:
 //-Class Functions------------------------------------------------------------------------------------------------------
 private:
     static void ensureModifiable(const QString& filePath);
-
-public:
-    // TODO: Improve the backup system so that its more encapsulated and this doesn't need to be public
-    static QString filePathToBackupPath(const QString& filePath);
 
 //-Instance Functions---------------------------------------------------------------------------------------------------------
 private:
@@ -150,11 +91,6 @@ public:
     virtual DocHandlingError checkoutPlaylistDoc(std::unique_ptr<IPlaylistDoc>& returnBuffer, const QString& name) = 0;
     virtual DocHandlingError commitPlatformDoc(std::unique_ptr<IPlatformDoc> platformDoc) = 0;
     virtual DocHandlingError commitPlaylistDoc(std::unique_ptr<IPlaylistDoc> playlistDoc) = 0;
-
-    // Reversion
-    void addRevertableFile(const QString& filePath);
-    int revertQueueCount() const;
-    int revertNextChange(RevertError& error, bool skipOnFail);
 
     // Import stage notifier hooks
     virtual Qx::Error preImport();
