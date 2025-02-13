@@ -3,6 +3,7 @@
 
 // Qx Includes
 #include <qx/core/qx-regularexpression.h>
+#include <qx/core/qx-system.h>
 
 namespace Am
 {
@@ -12,24 +13,8 @@ namespace Am
 
 QString Install::versionFromExecutable() const
 {
-    QProcess attract;
-    attract.setProgram(MAIN_EXE_PATH);
-    attract.setArguments({"--version"});
-
-    attract.start();
-    if(!attract.waitForStarted(1000))
-        return QString();
-
-    if(!attract.waitForFinished(1000))
-    {
-        attract.kill(); // Force close
-        attract.waitForFinished();
-
-        return QString();
-    }
-
-    QString versionInfo = QString::fromLatin1(attract.readAllStandardOutput());
-    QRegularExpressionMatch sv = Qx::RegularExpression::SEMANTIC_VERSION.match(versionInfo);
+    Qx::ExecuteResult res = Qx::execute(MAIN_EXE_PATH, {"--version"}, 1000);
+    QRegularExpressionMatch sv = Qx::RegularExpression::SEMANTIC_VERSION.match(res.output);
     return sv.hasMatch() ? sv.captured() : QString();
 }
 
