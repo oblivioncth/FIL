@@ -34,6 +34,8 @@ concept updateable_item_container = Qx::qassociative<K> && item<typename K::mapp
 template<class K>
 concept updateable_basicitem_container = Qx::qassociative<K> && basic_item<typename K::mapped_type> &&
                                          std::same_as<typename K::key_type, QUuid>;
+template<class K>
+concept updateable_data_set = Qx::specializes<K, QSet>;
 
 //-Classes-----------------------------------------------------------------------------------------------------------
 class QX_ERROR_TYPE(DocHandlingError, "Lr::DocHandlingError", 1310)
@@ -258,6 +260,19 @@ protected:
         existingItems.clear();
     }
 
+    template<typename C>
+        requires updateable_data_set<C>
+    void finalizeUpdateableData(C& existingData,
+                                C& finalData)
+    {
+        // Copy data to final list if obsolete entries are to be kept
+        if(!mUpdateOptions.removeObsolete)
+            finalData.unite(existingData);
+
+        // Clear existing lists
+        existingData.clear();
+    }
+
     template <typename C>
         requires updateable_item_container<C>
     void addUpdateableItem(C& existingItems,
@@ -280,7 +295,6 @@ protected:
                 finalItems[key] = std::move(existingItems[key]);
                 existingItems.remove(key);
             }
-
         }
         else
             finalItems[key] = newItem;
@@ -296,6 +310,19 @@ protected:
                           finalItems,
                           std::static_pointer_cast<BasicItem>(newItem)->id(),
                           newItem);
+    }
+
+    template <typename C>
+        requires updateable_data_set<C>
+    void addUpdateableData(C& existingData,
+                           C& finalData,
+                           typename C::value_type newData)
+    {
+        // Remove from existing if present
+        existingData.remove(newData);
+
+        // Add to final
+        finalData.insert(newData);
     }
 
 public:

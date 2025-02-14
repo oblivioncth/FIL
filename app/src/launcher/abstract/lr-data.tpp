@@ -347,6 +347,16 @@ void XmlDocWriter<DocT>::writeCleanTextElement(const QString& qualifiedName, con
 }
 
 template<class DocT>
+void XmlDocWriter<DocT>::writeCleanTextElement(const QString& qualifiedName, const QString& text, const QXmlStreamAttributes& attributes)
+{
+    mStreamWriter.writeStartElement(qualifiedName);
+    if(!text.isEmpty())
+        mStreamWriter.writeCharacters(text);
+    mStreamWriter.writeAttributes(attributes);
+    mStreamWriter.writeEndElement();
+}
+
+template<class DocT>
 void XmlDocWriter<DocT>::writeOtherFields(const QHash<QString, QString>& otherFields)
 {
     for(QHash<QString, QString>::const_iterator i = otherFields.constBegin(); i != otherFields.constEnd(); ++i)
