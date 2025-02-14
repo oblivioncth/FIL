@@ -93,24 +93,14 @@ DocHandlingError IInstall::commitDataDocument(std::shared_ptr<IDataDoc::Writer> 
     auto docToSave = docWriter->source();
     IDataDoc::Identifier id = docToSave->identifier();
 
-    // Check if the doc was saved previously to prevent double-backups
-    // TODO: SEE IF THIS LEVEL OF DISTINCTION IS NEEDED WITH NEW BACKUP STRAT
-    bool wasDeleted = mDeletedDocuments.contains(id);
-    bool wasModified = mModifiedDocuments.contains(id);
-    bool wasUntouched = !wasDeleted && !wasModified;
-
-    // Handle backup/revert prep
-    if(wasUntouched)
-    {
-        // Backup
-        QString docPath = docToSave->path();
-        Import::BackupError bErr = Import::BackupManager::instance()->backupCopy(docPath);
-        if(bErr.type() == Import::BackupError::FileWontDelete)
-            return DocHandlingError(*docToSave, DocHandlingError::CantRemoveBackup);
-        else if(bErr.type() == Import::BackupError::FileWontBackup)
-            return DocHandlingError(*docToSave, DocHandlingError::CantCreateBackup);
-        Q_ASSERT(!bErr.isValid()); // All relevant types should be handled here
-    }
+    // Backup (redundant backups are prevented). Acts as deletion for empty docs
+    QString docPath = docToSave->path();
+    Import::BackupError bErr = Import::BackupManager::instance()->backupCopy(docPath);
+    if(bErr.type() == Import::BackupError::FileWontDelete)
+        return DocHandlingError(*docToSave, DocHandlingError::CantRemoveBackup);
+    else if(bErr.type() == Import::BackupError::FileWontBackup)
+        return DocHandlingError(*docToSave, DocHandlingError::CantCreateBackup);
+    Q_ASSERT(!bErr.isValid()); // All relevant types should be handled here
 
     // Error State
     DocHandlingError commitError;
@@ -119,17 +109,8 @@ DocHandlingError IInstall::commitDataDocument(std::shared_ptr<IDataDoc::Writer> 
     if(!docToSave->isEmpty())
     {
         mModifiedDocuments.insert(id);
-        if(wasDeleted)
-            mDeletedDocuments.remove(id);
-
         commitError = docWriter->writeOutOf();
         ensureModifiable(docToSave->path());
-    }
-    else // Handle deletion
-    {
-        mDeletedDocuments.insert(id);
-        if(wasModified)
-            mModifiedDocuments.remove(id);
     }
 
     // Remove handle reservation
@@ -150,7 +131,6 @@ QString IInstall::path() const { return mRootDirectory.absolutePath(); }
 void IInstall::softReset()
 {
     mModifiedDocuments.clear();
-    mDeletedDocuments.clear();
     mLeasedDocuments.clear();
 }
 

@@ -59,7 +59,7 @@ BackupManager* BackupManager::instance() { static BackupManager inst; return &in
 //Private:
 BackupError BackupManager::backup(const QString& path, bool (*fn)(const QString& a, const QString& b))
 {
-    // Prevent double+ backups
+    // Prevent double+ backups (THIS IS CRITICAL, HENCE WHY A SET IS USED)
     if(mRevertablePaths.contains(path))
         return BackupError();
 

@@ -33,7 +33,6 @@ private:
     // Document tracking
     QSet<IDataDoc::Identifier> mExistingDocuments;
     QSet<IDataDoc::Identifier> mModifiedDocuments;
-    QSet<IDataDoc::Identifier> mDeletedDocuments;
     QSet<IDataDoc::Identifier> mLeasedDocuments;
 
 //-Constructor---------------------------------------------------------------------------------------------------
