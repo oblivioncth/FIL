@@ -20,7 +20,7 @@ namespace Import
 class QX_ERROR_TYPE(BackupError, "Lr::BackupError", 1301)
 {
     friend class BackupManager;
-    //-Class Enums-------------------------------------------------------------
+//-Class Enums-------------------------------------------------------------
 public:
     enum Type
     {

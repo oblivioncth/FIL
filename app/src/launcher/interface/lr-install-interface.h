@@ -18,10 +18,6 @@ protected:
     // Files
     static inline const QString IMAGE_EXT = u"png"_s;
 
-public:
-    // Image Errors
-    static inline const QString CAPTION_IMAGE_ERR = u"Error importing game image(s)"_s;
-
 //-Instance Variables--------------------------------------------------------------------------------------------
 private:
     // Validity

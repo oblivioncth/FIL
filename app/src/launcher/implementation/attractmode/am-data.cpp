@@ -440,7 +440,8 @@ std::shared_ptr<RomEntry> PlatformInterface::processSet(const Fp::Set& set)
         /* Ignore non-playable add apps to avoid useless clutter in AM
          * TODO: Consider doing this in Import Worker to make it a standard since
          * LB doesn't actually need the non-playable entries either. Importing them
-         * is basically a leftover from an earlier CLIFp version
+         * is basically a leftover from an earlier CLIFp version that required them
+         * for games to work (i.e. before auto mode).
          */
         if(addApp.isPlayable())
             mPlatformTaglist.appendTag(addApp.id().toString(QUuid::WithoutBraces));
