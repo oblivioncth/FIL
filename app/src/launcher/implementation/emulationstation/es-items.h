@@ -1,0 +1,9 @@
+#ifndef EMULATIONSTATION_ITEMS_H
+#define EMULATIONSTATION_ITEMS_H
+
+namespace Es
+{
+
+}
+
+#endif // EMULATIONSTATION_ITEMS_H
