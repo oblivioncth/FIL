@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.24.0...3.30.0)
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
 project(FIL
-    VERSION 0.7.5.5
+    VERSION 0.7.6
     LANGUAGES CXX
     DESCRIPTION "Flashpoint Importer for Launchers"
 )
@@ -20,7 +20,7 @@ include(OB/Project)
 ob_standard_project_setup()
 
 # Additional Project Variables
-set(TARGET_FP_VERSION_PREFIX 13.0)
+set(TARGET_FP_VERSION_PREFIX 14.0)
 
 # Configuration options
 # Handled by fetched libs, but set this here formally since they aren't part of the main project
@@ -81,13 +81,13 @@ ob_fetch_qx(
 
 # Fetch libfp (build and import from source)
 include(OB/Fetchlibfp)
-ob_fetch_libfp("34ff2c06224a4b97b1f3d1bcdc514a537c8116a8")
+ob_fetch_libfp("9995681fe222f240512e9bd83b211ecc585716db")
 
 # Fetch CLIFp (build and import from source)
 include(OB/Utility)
 ob_cache_project_version(CLIFp)
 include(OB/FetchCLIFp)
-ob_fetch_clifp("1fa81edb32119d0f0cdf7f9aa2180078361ca62b")
+ob_fetch_clifp("2853b88c193b1884f75bc85e262e02652a27aa26")
 
 # TODO: The shared build of this is essentially useless as only the CLIFp executable
 # is deployed, which only works if it's statically linked. There isn't a simple way
