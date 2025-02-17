@@ -6,28 +6,28 @@ cmake_minimum_required(VERSION 3.24.0...3.30.0)
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
 project(FIL
-    VERSION 0.7.5.5
+    VERSION 0.8
     LANGUAGES CXX
     DESCRIPTION "Flashpoint Importer for Launchers"
 )
 
 # Get helper scripts
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FetchOBCMake.cmake)
-fetch_ob_cmake("9f45dec8dc1cd09d99862b7b7ea335b361cf7ff7")
+fetch_ob_cmake("v0.3.9")
 
 # Initialize project according to standard rules
 include(OB/Project)
 ob_standard_project_setup()
 
 # Additional Project Variables
-set(TARGET_FP_VERSION_PREFIX 13.0)
+set(TARGET_FP_VERSION_PREFIX 14.0)
 
 # Configuration options
 # Handled by fetched libs, but set this here formally since they aren't part of the main project
 option(BUILD_SHARED_LIBS "Build FIL with shared libraries" OFF)
 
 # C++
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Build augmentation
@@ -74,20 +74,20 @@ endif()
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "0572d288936afd63ff6f5b6ce4b1fbfc0f03b0eb"
+    REF "v0.6.1"
     COMPONENTS
         ${FIL_QX_COMPONENTS}
 )
 
 # Fetch libfp (build and import from source)
 include(OB/Fetchlibfp)
-ob_fetch_libfp("183a479d00235d332aa1046a9b5ba98f62699752")
+ob_fetch_libfp("v0.5.5")
 
 # Fetch CLIFp (build and import from source)
 include(OB/Utility)
 ob_cache_project_version(CLIFp)
 include(OB/FetchCLIFp)
-ob_fetch_clifp("7139ae998b292eb595e751ba4cb8599230435358")
+ob_fetch_clifp("v0.9.13")
 
 # TODO: The shared build of this is essentially useless as only the CLIFp executable
 # is deployed, which only works if it's statically linked. There isn't a simple way
@@ -104,7 +104,7 @@ ob_fetch_clifp("7139ae998b292eb595e751ba4cb8599230435358")
 
 # Fetch Neargye's Magic Enum
 include(OB/FetchMagicEnum)
-ob_fetch_magicenum("v0.9.3")
+ob_fetch_magicenum("v0.9.7")
 
 # Process Targets
 set(APP_TARGET_NAME ${PROJECT_NAMESPACE_LC}_${PROJECT_NAMESPACE_LC})
