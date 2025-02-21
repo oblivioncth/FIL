@@ -87,7 +87,7 @@ ob_fetch_libfp("v0.5.5")
 include(OB/Utility)
 ob_cache_project_version(CLIFp)
 include(OB/FetchCLIFp)
-ob_fetch_clifp("v0.9.13")
+ob_fetch_clifp("v0.9.13.1")
 
 # TODO: The shared build of this is essentially useless as only the CLIFp executable
 # is deployed, which only works if it's statically linked. There isn't a simple way
