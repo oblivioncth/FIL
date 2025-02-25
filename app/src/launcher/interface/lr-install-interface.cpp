@@ -48,17 +48,9 @@ QList<QString> IInstall::modifiedDataDocs(IDataDoc::Type type) const
 }
 
 //Protected:
-void IInstall::nullify()
-{
-    mValid = false;
-    mRootDirectory = QDir();
-}
-
 void IInstall::declareValid(bool valid)
 {
     mValid = valid;
-    if(!valid)
-        nullify();
 }
 
 void IInstall::catalogueExistingDoc(IDataDoc::Identifier existingDoc) { mExistingDocuments.insert(existingDoc); }

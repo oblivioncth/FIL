@@ -30,9 +30,6 @@ public:
 
 //-Instance Functions---------------------------------------------------------------------------------------------------
 protected:
-    // RE-IMPLEMENT
-    using IInstall::nullify;
-
     // OPTIONALLY RE-IMPLEMENT
     virtual void preparePlatformDocCommit(const PlatformT& document); // Does nothing by default
     virtual void preparePlaylistDocCommit(const PlaylistT& document); // Does nothing by default

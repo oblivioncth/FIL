@@ -55,19 +55,6 @@ Install::Install(const QString& installPath) :
 
 //-Instance Functions----------------------------------------------------------------------------------------------
 //Private:
-void Install::nullify()
-{
-    Lr::IInstall::nullify();
-
-    mDataDirectory = QDir();
-    mPlatformsDirectory = QDir();
-    mPlaylistsDirectory = QDir();
-    mPlatformImagesDirectory = QDir();
-    mPlatformIconsDirectory = QDir();
-    mPlaylistIconsDirectory = QDir();
-    mPlatformCategoryIconsDirectory = QDir();
-}
-
 Qx::Error Install::populateExistingDocs()
 {
     // Temp storage

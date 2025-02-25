@@ -33,7 +33,7 @@ private:
 
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
-    IInstall(const QString& installPath);
+    IInstall(const QString& installPath); // TODO: Mabye make this default and have a virtual "init" method that takes the path and returns a bool instead of using declareValid()
 
 //-Destructor-------------------------------------------------------------------------------------------------
 public:
@@ -52,7 +52,6 @@ private:
 
 protected:
     // Validity
-    virtual void nullify();
     void declareValid(bool valid);
 
     // Docs

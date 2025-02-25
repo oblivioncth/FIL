@@ -233,7 +233,6 @@ void Controller::updateInstallPath(const QString& installPath, Import::Install t
         }
         case Flashpoint:
         {
-
             if(checkedPath.isEmpty())
                 mImportProperties.setFlashpoint(nullptr);
             else

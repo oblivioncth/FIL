@@ -55,21 +55,6 @@ Install::Install(const QString& installPath) :
 
 //-Instance Functions----------------------------------------------------------------------------------------------
 //Private:
-void Install::nullify()
-{
-    Lr::IInstall::nullify();
-
-    mEmulatorsDirectory = QDir();
-    mRomlistsDirectory = QDir();
-    mMainConfigFile.setFileName(u""_s);
-    mFpTagDirectory = QDir();
-    mFpScraperDirectory = QDir();
-    mMainExe.setFileName(u""_s);
-    mConsoleExe.setFileName(u""_s);
-    mFpRomlist.setFileName(u""_s);
-    mEmulatorConfigFile.setFileName(u""_s);
-}
-
 Qx::Error Install::populateExistingDocs()
 {
     // Temp storage

@@ -84,7 +84,6 @@ public:
 //-Instance Functions-----------------------------------------------------------------------------------------------
 private:
     // Install management
-    void nullify() override;
     Qx::Error populateExistingDocs() override;
     QString versionFromExecutable() const;
 
