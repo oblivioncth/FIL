@@ -133,39 +133,39 @@ PlatformDoc::PlatformDoc(Install* install, const QString& xmlPath, QString docNa
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-std::shared_ptr<Game> PlatformDoc::prepareGame(const Fp::Game& game)
+Game PlatformDoc::prepareGame(const Fp::Game& game)
 {
     // Convert to LaunchBox game
     const QString& clifpPath = Import::Details::current().clifpPath;
-    std::shared_ptr<Game> lbGame = std::make_shared<Game>(game, clifpPath);
+    Game lbGame(game, clifpPath);
 
     // Add details to cache
-    install()->mPlaylistGameDetailsCache.insert(game.id(), PlaylistGame::EntryDetails(*lbGame));
+    install()->mPlaylistGameDetailsCache.insert(game.id(), PlaylistGame::EntryDetails(lbGame));
 
     // Add language as custom field
     CustomField::Builder cfb;
     cfb.wGameId(game.id());
     cfb.wName(CustomField::LANGUAGE);
     cfb.wValue(game.language());
-    addCustomField(cfb.buildShared());
+    addCustomField(cfb.build());
 
     // Return converted game
     return lbGame;
 }
 
-std::shared_ptr<AddApp> PlatformDoc::prepareAddApp(const Fp::AddApp& addApp)
+AddApp PlatformDoc::prepareAddApp(const Fp::AddApp& addApp)
 {
     // Convert to LaunchBox add app
     const QString& clifpPath = Import::Details::current().clifpPath;
-    std::shared_ptr<AddApp> lbAddApp = std::make_shared<AddApp>(addApp, clifpPath);
+    AddApp lbAddApp(addApp, clifpPath);
 
     // Return converted game
     return lbAddApp;
 }
 
-void PlatformDoc::addCustomField(std::shared_ptr<CustomField> customField)
+void PlatformDoc::addCustomField(CustomField&& customField)
 {
-    QString key = customField->gameId().toString() + customField->name();
+    QString key = customField.gameId().toString() + customField.name();
     addUpdateableItem(mCustomFieldsExisting, mCustomFieldsFinal, key, customField);
 }
 
@@ -181,10 +181,10 @@ void PlatformDoc::finalize()
     finalizeUpdateableItems(mCustomFieldsExisting, mCustomFieldsFinal);
 
     // Ensure that custom fields for removed games are deleted
-    QHash<QString, std::shared_ptr<CustomField>>::iterator i = mCustomFieldsFinal.begin();
+    QHash<QString, CustomField>::iterator i = mCustomFieldsFinal.begin();
     while (i != mCustomFieldsFinal.end())
     {
-        if(!finalGames().contains(i.value()->gameId()))
+        if(!finalGames().contains(i.value().gameId()))
             i = mCustomFieldsFinal.erase(i);
         else
             ++i;
@@ -276,8 +276,8 @@ void PlatformDocReader::parseGame()
     }
 
     // Build Game and add to document
-    std::shared_ptr<Game> existingGame = gb.buildShared();
-    target()->mGamesExisting[existingGame->id()] = existingGame;
+    Game existingGame = gb.build();
+    target()->mGamesExisting[existingGame.id()] = existingGame;
 }
 
 void PlatformDocReader::parseAddApp()
@@ -307,8 +307,8 @@ void PlatformDocReader::parseAddApp()
     }
 
     // Build Additional App and add to document
-    std::shared_ptr<AddApp> existingAddApp = aab.buildShared();
-    target()->mAddAppsExisting[existingAddApp->id()] = existingAddApp;
+    AddApp existingAddApp = aab.build();
+    target()->mAddAppsExisting[existingAddApp.id()] = existingAddApp;
 }
 
 void PlatformDocReader::parseCustomField()
@@ -330,8 +330,8 @@ void PlatformDocReader::parseCustomField()
     }
 
     // Build Custom Field and add to document
-    std::shared_ptr<CustomField> existingCustomField = cfb.buildShared();
-    QString key = existingCustomField->gameId().toString() + existingCustomField->name();
+    CustomField existingCustomField = cfb.build();
+    QString key = existingCustomField.gameId().toString() + existingCustomField.name();
     target()->mCustomFieldsExisting[key] = existingCustomField;
 }
 
@@ -350,23 +350,23 @@ PlatformDocWriter::PlatformDocWriter(PlatformDoc* sourceDoc) :
 bool PlatformDocWriter::writeSourceDoc()
 {
     // Write all games
-    for(const std::shared_ptr<Game>& game : source()->finalGames())
+    for(const Game& game : source()->finalGames())
     {
-        if(!writeGame(*std::static_pointer_cast<Game>(game)))
+        if(!writeGame(game))
             return false;
     }
 
     // Write all additional apps
-    for(const std::shared_ptr<AddApp>& addApp : source()->finalAddApps())
+    for(const AddApp& addApp : source()->finalAddApps())
     {
-        if(!writeAddApp(*std::static_pointer_cast<AddApp>(addApp)))
+        if(!writeAddApp(addApp))
             return false;
     }
 
     // Write all custom fields
-    for(const std::shared_ptr<CustomField>& customField : std::as_const(source()->mCustomFieldsFinal))
+    for(const CustomField& customField : std::as_const(source()->mCustomFieldsFinal))
     {
-        if(!writeCustomField(*customField))
+        if(!writeCustomField(customField))
             return false;
     }
 
@@ -476,32 +476,29 @@ PlaylistDoc::PlaylistDoc(Install* install, const QString& xmlPath, QString docNa
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-std::shared_ptr<PlaylistHeader> PlaylistDoc::preparePlaylistHeader(const Fp::Playlist& playlist)
+PlaylistHeader PlaylistDoc::preparePlaylistHeader(const Fp::Playlist& playlist)
 {
     // Convert to LaunchBox playlist header
-    std::shared_ptr<PlaylistHeader> lbPlaylist = std::make_shared<PlaylistHeader>(playlist);
-
-    // Return converted playlist header
-    return lbPlaylist;
+    return PlaylistHeader(playlist);
 }
 
-std::shared_ptr<PlaylistGame> PlaylistDoc::preparePlaylistGame(const Fp::PlaylistGame& game)
+PlaylistGame PlaylistDoc::preparePlaylistGame(const Fp::PlaylistGame& game)
 {
     // Convert to LaunchBox playlist game
-    std::shared_ptr<PlaylistGame> lbPlaylistGame = std::make_shared<PlaylistGame>(game, install()->mPlaylistGameDetailsCache);
+    PlaylistGame lbPlaylistGame(game, install()->mPlaylistGameDetailsCache);
 
     // Set LB Database ID appropriately before hand-off
-    QUuid key = lbPlaylistGame->id();
+    QUuid key = lbPlaylistGame.id();
     if(mPlaylistGamesExisting.contains(key))
     {
         // Move LB playlist ID if applicable
         if(mUpdateOptions.importMode == Import::UpdateMode::NewAndExisting)
-            lbPlaylistGame->setLBDatabaseId(std::static_pointer_cast<PlaylistGame>(mPlaylistGamesExisting[key])->lbDatabaseId());
+            lbPlaylistGame.setLBDatabaseId(mPlaylistGamesExisting[key].lbDatabaseId());
     }
     else
     {
         auto optIdx = mLaunchBoxDatabaseIdTracker->reserveFirstFree();
-        lbPlaylistGame->setLBDatabaseId(optIdx.value_or(0));
+        lbPlaylistGame.setLBDatabaseId(optIdx.value_or(0));
     }
 
     // Return converted playlist game
@@ -557,7 +554,7 @@ void PlaylistDocReader::parsePlaylistHeader()
     }
 
     // Build Playlist Header and add to document
-    target()->mPlaylistHeader = phb.buildShared();
+    target()->mPlaylistHeader = phb.build();
 }
 
 void PlaylistDocReader::parsePlaylistGame()
@@ -585,19 +582,19 @@ void PlaylistDocReader::parsePlaylistGame()
     }
 
     // Build Playlist Game
-    std::shared_ptr<Lb::PlaylistGame> existingPlaylistGame = pgb.buildShared();
+    PlaylistGame existingPlaylistGame = pgb.build();
 
     // Correct LB ID if it is invalid and then add it to tracker
-    if(existingPlaylistGame->lbDatabaseId() < 0)
+    if(existingPlaylistGame.lbDatabaseId() < 0)
     {
         auto optIdx = target()->mLaunchBoxDatabaseIdTracker->reserveFirstFree();
-        existingPlaylistGame->setLBDatabaseId(optIdx.value_or(0));
+        existingPlaylistGame.setLBDatabaseId(optIdx.value_or(0));
     }
     else
-        target()->mLaunchBoxDatabaseIdTracker->reserve(existingPlaylistGame->lbDatabaseId());
+        target()->mLaunchBoxDatabaseIdTracker->reserve(existingPlaylistGame.lbDatabaseId());
 
     // Add to document
-    target()->mPlaylistGamesExisting[existingPlaylistGame->gameId()] = existingPlaylistGame;
+    target()->mPlaylistGamesExisting[existingPlaylistGame.gameId()] = existingPlaylistGame;
 }
 
 //===============================================================================================================
@@ -615,14 +612,14 @@ PlaylistDocWriter::PlaylistDocWriter(PlaylistDoc* sourceDoc) :
 bool PlaylistDocWriter::writeSourceDoc()
 {
     // Write playlist header
-    std::shared_ptr<Lr::PlaylistHeader> playlistHeader = source()->playlistHeader();
-    if(!writePlaylistHeader(*std::static_pointer_cast<PlaylistHeader>(playlistHeader)))
+    PlaylistHeader playlistHeader = source()->playlistHeader();
+    if(!writePlaylistHeader(playlistHeader))
         return false;
 
     // Write all playlist games
-    for(const std::shared_ptr<PlaylistGame>& playlistGame : source()->finalPlaylistGames())
+    for(const PlaylistGame& playlistGame : source()->finalPlaylistGames())
     {
-        if(!writePlaylistGame(*std::static_pointer_cast<PlaylistGame>(playlistGame)))
+        if(!writePlaylistGame(playlistGame))
             return false;
     }
 

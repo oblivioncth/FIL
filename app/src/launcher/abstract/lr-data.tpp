@@ -98,8 +98,7 @@ template<LauncherId Id>
 void PlatformDoc<Id>::addSet(const Fp::Set& set, Import::ImagePaths& images)
 {
     // Process set
-    std::shared_ptr<GameT> game = processSet(set);
-    Q_ASSERT(game);
+    auto game = processSet(set);
 
     /* Process single image if applicable.
      *
@@ -144,10 +143,10 @@ template<LauncherId Id>
 Id::InstallT* BasicPlatformDoc<Id>::install() const { return static_cast<InstallT*>(IDataDoc::install()); }
 
 template<LauncherId Id>
-const QHash<QUuid, std::shared_ptr<typename Id::GameT>>& BasicPlatformDoc<Id>::finalGames() const { return mGamesFinal; }
+const QHash<QUuid, typename Id::GameT>& BasicPlatformDoc<Id>::finalGames() const { return mGamesFinal; }
 
 template<LauncherId Id>
-const QHash<QUuid, std::shared_ptr<typename Id::AddAppT>>& BasicPlatformDoc<Id>::finalAddApps() const { return mAddAppsFinal; }
+const QHash<QUuid, typename Id::AddAppT>& BasicPlatformDoc<Id>::finalAddApps() const { return mAddAppsFinal; }
 
 template<LauncherId Id>
 bool BasicPlatformDoc<Id>::containsGame(QUuid gameId) const { return mGamesFinal.contains(gameId) || mGamesExisting.contains(gameId); }
@@ -156,10 +155,10 @@ template<LauncherId Id>
 bool BasicPlatformDoc<Id>::containsAddApp(QUuid addAppId) const { return mAddAppsFinal.contains(addAppId) || mAddAppsExisting.contains(addAppId); }
 
 template<LauncherId Id>
-std::shared_ptr<typename Id::GameT> BasicPlatformDoc<Id>::processSet(const Fp::Set& set)
+const typename Id::GameT* BasicPlatformDoc<Id>::processSet(const Fp::Set& set)
 {
     // Prepare game
-    std::shared_ptr<GameT> game = prepareGame(set.game());
+    GameT game = prepareGame(set.game());
 
     // Add game
     addUpdateableItem(mGamesExisting, mGamesFinal, game);
@@ -168,13 +167,13 @@ std::shared_ptr<typename Id::GameT> BasicPlatformDoc<Id>::processSet(const Fp::S
     for(const Fp::AddApp& addApp : set.addApps())
     {
         // Prepare
-        std::shared_ptr<AddAppT> lrAddApp = prepareAddApp(addApp);
+        AddAppT lrAddApp = prepareAddApp(addApp);
 
         // Add
         addUpdateableItem(mAddAppsExisting, mAddAppsFinal, lrAddApp);
     }
 
-    return game;
+    return nullptr; // TODO: Return actual pointer to game within container
 }
 
 template<LauncherId Id>
@@ -224,10 +223,10 @@ template<LauncherId Id>
 Id::InstallT* BasicPlaylistDoc<Id>::install() const { return static_cast<InstallT*>(IDataDoc::install()); }
 
 template<LauncherId Id>
-const std::shared_ptr<typename Id::PlaylistHeaderT>& BasicPlaylistDoc<Id>::playlistHeader() const { return mPlaylistHeader; }
+const typename Id::PlaylistHeaderT& BasicPlaylistDoc<Id>::playlistHeader() const { return mPlaylistHeader; }
 
 template<LauncherId Id>
-const QHash<QUuid, std::shared_ptr<typename Id::PlaylistGameT>>& BasicPlaylistDoc<Id>::finalPlaylistGames() const { return mPlaylistGamesFinal; }
+const QHash<QUuid, typename Id::PlaylistGameT>& BasicPlaylistDoc<Id>::finalPlaylistGames() const { return mPlaylistGamesFinal; }
 
 template<LauncherId Id>
 bool BasicPlaylistDoc<Id>::containsPlaylistGame(QUuid gameId) const { return mPlaylistGamesFinal.contains(gameId) || mPlaylistGamesExisting.contains(gameId); }
@@ -235,11 +234,10 @@ bool BasicPlaylistDoc<Id>::containsPlaylistGame(QUuid gameId) const { return mPl
 template<LauncherId Id>
 void BasicPlaylistDoc<Id>::setPlaylistData(const Fp::Playlist& playlist)
 {
-    std::shared_ptr<PlaylistHeaderT> lrPlaylistHeader = preparePlaylistHeader(playlist);
+    PlaylistHeaderT lrPlaylistHeader = preparePlaylistHeader(playlist);
 
-    // Ensure doc already existed before transferring (null check)
-    if(mPlaylistHeader)
-        lrPlaylistHeader->transferOtherFields(mPlaylistHeader->otherFields());
+    if(mPlaylistHeader.hasOtherFields())
+        lrPlaylistHeader.transferOtherFields(mPlaylistHeader.otherFields());
 
     // Set instance header to new one
     mPlaylistHeader = lrPlaylistHeader;
@@ -247,7 +245,7 @@ void BasicPlaylistDoc<Id>::setPlaylistData(const Fp::Playlist& playlist)
     for(const auto& plg : playlist.playlistGames())
     {
         // Prepare playlist game
-        std::shared_ptr<PlaylistGameT> lrPlaylistGame = preparePlaylistGame(plg);
+        PlaylistGameT lrPlaylistGame = preparePlaylistGame(plg);
 
         // Add playlist game
         addUpdateableItem(mPlaylistGamesExisting, mPlaylistGamesFinal, lrPlaylistGame);

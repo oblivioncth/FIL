@@ -119,7 +119,7 @@ protected:
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
     // IMPLEMENT
-    virtual std::shared_ptr<GameT> processSet(const Fp::Set& set) = 0;
+    virtual const GameT* processSet(const Fp::Set& set) = 0;
 
 public:
     InstallT* install() const;
@@ -170,10 +170,10 @@ protected:
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
-    QHash<QUuid, std::shared_ptr<GameT>> mGamesFinal;
-    QHash<QUuid, std::shared_ptr<GameT>> mGamesExisting;
-    QHash<QUuid, std::shared_ptr<AddAppT>> mAddAppsFinal;
-    QHash<QUuid, std::shared_ptr<AddAppT>> mAddAppsExisting;
+    QHash<QUuid, GameT> mGamesFinal;
+    QHash<QUuid, GameT> mGamesExisting;
+    QHash<QUuid, AddAppT> mAddAppsFinal;
+    QHash<QUuid, AddAppT> mAddAppsExisting;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
@@ -182,18 +182,18 @@ protected:
 //-Instance Functions--------------------------------------------------------------------------------------------------
 protected:
     // IMPLEMENT
-    virtual std::shared_ptr<GameT> prepareGame(const Fp::Game& game) = 0;
-    virtual std::shared_ptr<AddAppT> prepareAddApp(const Fp::AddApp& game) = 0;
+    virtual GameT prepareGame(const Fp::Game& game) = 0;
+    virtual AddAppT prepareAddApp(const Fp::AddApp& game) = 0;
 
 public:
     InstallT* install() const;
 
-    const QHash<QUuid, std::shared_ptr<GameT>>& finalGames() const;
-    const QHash<QUuid, std::shared_ptr<AddAppT>>& finalAddApps() const;
+    const QHash<QUuid, GameT>& finalGames() const;
+    const QHash<QUuid, AddAppT>& finalAddApps() const;
     bool containsGame(QUuid gameId) const override; // NOTE: UNUSED
     bool containsAddApp(QUuid addAppId) const override; // NOTE: UNUSED
 
-    std::shared_ptr<GameT> processSet(const Fp::Set& set) override;
+    const GameT* processSet(const Fp::Set& set) override;
     void finalize() override;
 
     // OPTIONALLY RE-IMPELEMENT
@@ -212,9 +212,9 @@ protected:
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
-    std::shared_ptr<PlaylistHeaderT> mPlaylistHeader;
-    QHash<QUuid, std::shared_ptr<PlaylistGameT>> mPlaylistGamesFinal;
-    QHash<QUuid, std::shared_ptr<PlaylistGameT>> mPlaylistGamesExisting;
+    PlaylistHeaderT mPlaylistHeader;
+    QHash<QUuid, PlaylistGameT> mPlaylistGamesFinal;
+    QHash<QUuid, PlaylistGameT> mPlaylistGamesExisting;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
@@ -223,14 +223,14 @@ protected:
 //-Instance Functions--------------------------------------------------------------------------------------------------
 protected:
     // IMPLEMENT
-    virtual std::shared_ptr<PlaylistHeaderT> preparePlaylistHeader(const Fp::Playlist& playlist) = 0;
-    virtual std::shared_ptr<PlaylistGameT> preparePlaylistGame(const Fp::PlaylistGame& game) = 0;
+    virtual PlaylistHeaderT preparePlaylistHeader(const Fp::Playlist& playlist) = 0;
+    virtual PlaylistGameT preparePlaylistGame(const Fp::PlaylistGame& game) = 0;
 
 public:
     InstallT* install() const;
 
-    const std::shared_ptr<PlaylistHeaderT>& playlistHeader() const;
-    const QHash<QUuid, std::shared_ptr<PlaylistGameT>>& finalPlaylistGames() const;
+    const PlaylistHeaderT& playlistHeader() const;
+    const QHash<QUuid, PlaylistGameT>& finalPlaylistGames() const;
     bool containsPlaylistGame(QUuid gameId) const override;
     void setPlaylistData(const Fp::Playlist& playlist) override;
     void finalize() override;

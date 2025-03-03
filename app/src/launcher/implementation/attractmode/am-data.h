@@ -204,8 +204,8 @@ private:
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
-    QHash<QUuid, std::shared_ptr<RomEntry>> mEntriesExisting;
-    QHash<QUuid, std::shared_ptr<RomEntry>> mEntriesFinal;
+    QHash<QUuid, RomEntry> mEntriesExisting;
+    QHash<QUuid, RomEntry> mEntriesFinal;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -216,12 +216,12 @@ public:
     IDataDoc::Type type() const override;
     bool isEmpty() const override;
 
-    const QHash<QUuid, std::shared_ptr<RomEntry>>& finalEntries() const;
+    const QHash<QUuid, RomEntry>& finalEntries() const;
 
     bool containsGame(QUuid gameId) const;
     bool containsAddApp(QUuid addAppId) const;
 
-    std::shared_ptr<RomEntry> processSet(const Fp::Set& set);
+    const RomEntry* processSet(const Fp::Set& set);
 
     void finalize() override;
 };
@@ -287,7 +287,7 @@ public:
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
-    std::shared_ptr<RomEntry> processSet(const Fp::Set& set) override;
+    const RomEntry* processSet(const Fp::Set& set) override;
 
 public:
     bool isEmpty() const override;

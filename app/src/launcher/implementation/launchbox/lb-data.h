@@ -25,8 +25,8 @@ class PlatformDoc : public Lr::BasicPlatformDoc<LauncherId>
     friend PlatformDocWriter;
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
-    QHash<QString, std::shared_ptr<CustomField>> mCustomFieldsFinal;
-    QHash<QString, std::shared_ptr<CustomField>> mCustomFieldsExisting;
+    QHash<QString, CustomField> mCustomFieldsFinal;
+    QHash<QString, CustomField> mCustomFieldsExisting;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -34,10 +34,10 @@ public:
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
-    std::shared_ptr<Game> prepareGame(const Fp::Game& game) override;
-    std::shared_ptr<AddApp> prepareAddApp(const Fp::AddApp& addApp) override;
+    Game prepareGame(const Fp::Game& game) override;
+    AddApp prepareAddApp(const Fp::AddApp& addApp) override;
 
-    void addCustomField(std::shared_ptr<CustomField> customField);
+    void addCustomField(CustomField&& customField);
 
 public:
     bool isEmpty() const override;
@@ -87,8 +87,8 @@ public:
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
-    std::shared_ptr<PlaylistHeader> preparePlaylistHeader(const Fp::Playlist& playlist) override;
-    std::shared_ptr<PlaylistGame> preparePlaylistGame(const Fp::PlaylistGame& game) override;
+    PlaylistHeader preparePlaylistHeader(const Fp::Playlist& playlist) override;
+    PlaylistGame preparePlaylistGame(const Fp::PlaylistGame& game) override;
 };
 
 class PlaylistDocReader : public Lr::XmlDocReader<PlaylistDoc>

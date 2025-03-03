@@ -12,12 +12,9 @@ namespace Lr
 //Public:
 Item::Item() {}
 
-//-Destructor------------------------------------------------------------------------------------------------
-//Public:
-Item::~Item() {}
-
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
+bool Item::hasOtherFields() const { return !mOtherFields.isEmpty(); }
 QHash<QString, QString>& Item::otherFields() { return mOtherFields; }
 const QHash<QString, QString>& Item::otherFields() const { return mOtherFields; }
 

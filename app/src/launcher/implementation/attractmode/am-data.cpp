@@ -122,15 +122,15 @@ bool Romlist::isEmpty() const
     return mEntriesExisting.isEmpty() && mEntriesFinal.isEmpty();
 }
 
-const QHash<QUuid, std::shared_ptr<RomEntry>>& Romlist::finalEntries() const { return mEntriesFinal; }
+const QHash<QUuid, RomEntry>& Romlist::finalEntries() const { return mEntriesFinal; }
 
 bool Romlist::containsGame(QUuid gameId) const { return mEntriesExisting.contains(gameId) || mEntriesFinal.contains(gameId); }
 bool Romlist::containsAddApp(QUuid addAppId) const { return mEntriesExisting.contains(addAppId) || mEntriesFinal.contains(addAppId); }
 
-std::shared_ptr<RomEntry> Romlist::processSet(const Fp::Set& set)
+const RomEntry* Romlist::processSet(const Fp::Set& set)
 {
     // Convert to romlist entry
-    std::shared_ptr<RomEntry> mainRomEntry = std::make_shared<RomEntry>(set.game());
+    RomEntry mainRomEntry(set.game());
 
     // Add entry
     addUpdateableItem(mEntriesExisting, mEntriesFinal, mainRomEntry);
@@ -142,16 +142,15 @@ std::shared_ptr<RomEntry> Romlist::processSet(const Fp::Set& set)
         if(addApp.isPlayable())
         {
             // Convert to romlist entry
-            std::shared_ptr<RomEntry> subRomEntry = std::make_shared<RomEntry>(addApp, set.game());
+            RomEntry subRomEntry(addApp, set.game());
 
             // Add entry
             addUpdateableItem(mEntriesExisting, mEntriesFinal, subRomEntry);
         }
     }
 
-    return mainRomEntry;
+    return nullptr; // TODO: Actually return rom entry in container
 }
-
 
 void Romlist::finalize()
 {
@@ -233,8 +232,8 @@ void Romlist::Reader::parseRomEntry(const QString& rawEntry)
         qWarning("Missing terminating '\"' character for ROM entry %s", qPrintable(rawEntry));
 
     // Build Entry and add to document
-    std::shared_ptr<RomEntry> existingEntry = reb.buildShared();
-    target()->mEntriesExisting[existingEntry->id()] = existingEntry;
+    RomEntry existingEntry = reb.build();
+    target()->mEntriesExisting[existingEntry.id()] = existingEntry;
 }
 
 void Romlist::Reader::addFieldToBuilder(RomEntry::Builder& builder, QString field, quint8 index)
@@ -327,9 +326,9 @@ bool Romlist::Writer::writeSourceDoc()
     mStreamWriter.writeLine(Romlist::HEADER);
 
     // Write all rom entries
-    for(const std::shared_ptr<RomEntry>& entry : std::as_const(source()->finalEntries()))
+    for(const RomEntry& entry : std::as_const(source()->finalEntries()))
     {
-        if(!writeRomEntry(*entry))
+        if(!writeRomEntry(entry))
             return false;
     }
 
@@ -419,7 +418,7 @@ PlatformInterface::PlatformInterface(Install* install, const QString& platformTa
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-std::shared_ptr<RomEntry> PlatformInterface::processSet(const Fp::Set& set)
+const RomEntry* PlatformInterface::processSet(const Fp::Set& set)
 {
     //-Handle game----------------------------------------------------------
     const Fp::Game& game = set.game();

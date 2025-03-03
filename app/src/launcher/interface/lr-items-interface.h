@@ -37,41 +37,29 @@ class PlaylistHeader;
 class PlaylistGame;
 
 template<typename T>
-concept raw_item = std::derived_from<T, Item>;
+concept item = std::derived_from<T, Item>;
 
 template<typename T>
-concept shared_item = Qx::specializes<T, std::shared_ptr> && std::derived_from<typename T::element_type, Item>;
+concept basic_item = std::derived_from<T, BasicItem>;
 
 template<typename T>
-concept raw_basic_item = std::derived_from<T, BasicItem>;
+concept game = std::derived_from<T, Game>;
 
 template<typename T>
-concept shared_basic_item = Qx::specializes<T, std::shared_ptr> && std::derived_from<typename T::element_type, BasicItem>;
+concept addapp = std::derived_from<T, AddApp>;
 
 template<typename T>
-concept item = raw_item<T> || shared_item<T>;
+concept playlistheader = std::derived_from<T, PlaylistHeader>;
 
 template<typename T>
-concept basic_item = raw_basic_item<T> || shared_basic_item<T>;
-
-template<typename T>
-concept raw_game = std::derived_from<T, Game>;
-
-template<typename T>
-concept raw_addapp = std::derived_from<T, AddApp>;
-
-template<typename T>
-concept raw_playlistheader = std::derived_from<T, PlaylistHeader>;
-
-template<typename T>
-concept raw_playlistgame = std::derived_from<T, PlaylistGame>;
+concept playlistgame = std::derived_from<T, PlaylistGame>;
 
 //-Namespace Global Classes-----------------------------------------------------------------------------------------
 class Item
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
-    template <raw_item T>
+    template<item T>
     class Builder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
@@ -82,18 +70,15 @@ protected:
 public:
     Item();
 
-//-Destructor-------------------------------------------------------------------------------------------------
-public:
-    virtual ~Item();
-
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
+    bool hasOtherFields() const; // TODO: This is probably unnecessary as the created Item will never have other fields so swapping with the existing is always best, even if it has none. Nothing will ever be lost.
     QHash<QString, QString>& otherFields();
     const QHash<QString, QString>& otherFields() const;
     void transferOtherFields(QHash<QString, QString>& otherFields);
 };
 
-template<raw_item T>
+template<item T>
 class Item::Builder
 {
 //-Instance Variables------------------------------------------------------------------------------------------
@@ -117,14 +102,14 @@ public:
         return self;
     }
     T build() { return mItemBlueprint; }
-    std::shared_ptr<T> buildShared() { return std::make_shared<T>(mItemBlueprint); }
+    //std::shared_ptr<T> buildShared() { return std::make_shared<T>(mItemBlueprint); }
 };
 
 class BasicItem : public Item
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
-    template<raw_basic_item T>
+    template<basic_item T>
     class Builder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
@@ -143,7 +128,7 @@ public:
     QString name() const;
 };
 
-template<raw_basic_item T>
+template<basic_item T>
 class BasicItem::Builder : public Item::Builder<T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
@@ -162,7 +147,7 @@ class Game : public BasicItem
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
-    template<raw_game T>
+    template<game T>
     class Builder;
 
 //-Class Variables--------------------------------------------------------------------------------------------------
@@ -184,7 +169,7 @@ public:
     QString platform() const;
 };
 
-template<raw_game T>
+template<game T>
 class Game::Builder : public BasicItem::Builder<T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
@@ -197,7 +182,7 @@ class AddApp : public BasicItem
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
-    template<raw_addapp T>
+    template<addapp T>
     class Builder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
@@ -214,7 +199,7 @@ public:
     QUuid gameId() const;
 };
 
-template<raw_addapp T>
+template<addapp T>
 class AddApp::Builder : public BasicItem::Builder<T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
@@ -230,7 +215,7 @@ class PlaylistHeader : public BasicItem
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
-    template<raw_playlistheader T>
+    template<playlistheader T>
     class Builder;
 
 //-Constructor-------------------------------------------------------------------------------------------------
@@ -239,7 +224,7 @@ protected:
     PlaylistHeader(QUuid id, QString name);
 };
 
-template<raw_playlistheader T>
+template<playlistheader T>
 class PlaylistHeader::Builder : public BasicItem::Builder<T>
 {};
 
@@ -247,7 +232,7 @@ class PlaylistGame : public BasicItem
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
-    template<raw_playlistgame T>
+    template<playlistgame T>
     class Builder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
@@ -263,7 +248,7 @@ public:
     QUuid gameId() const;
 };
 
-template<raw_playlistgame T>
+template<playlistgame T>
 class PlaylistGame::Builder : public BasicItem::Builder<T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------

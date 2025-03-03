@@ -294,7 +294,7 @@ protected:
     {
         addUpdateableItem(existingItems,
                           finalItems,
-                          std::static_pointer_cast<BasicItem>(newItem)->id(),
+                          newItem.id(),
                           newItem);
     }
 
