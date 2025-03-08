@@ -3,7 +3,7 @@
 
 // Standard Library Includes
 #include <concepts>
-#include <memory>
+#include <unordered_set>
 
 // Qt Includes
 #include <QFile>
@@ -34,6 +34,8 @@ concept updateable_item_container = Qx::qassociative<K> && item<typename K::mapp
 template<class K>
 concept updateable_basicitem_container = Qx::qassociative<K> && basic_item<typename K::mapped_type> &&
                                          std::same_as<typename K::key_type, QUuid>;
+template<class K>
+concept updateable_data_set = Qx::specializes<K, QSet>;
 
 //-Classes-----------------------------------------------------------------------------------------------------------
 class QX_ERROR_TYPE(DocHandlingError, "Lr::DocHandlingError", 1310)
@@ -125,7 +127,7 @@ public:
         QString mDocName;
 
     public:
-        Identifier(Type docType, QString docName);
+        Identifier(Type docType, const QString& docName);
 
         Type docType() const;
         QString docTypeString() const;
@@ -148,7 +150,7 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    IDataDoc(IInstall* install, const QString& docPath, QString docName);
+    IDataDoc(IInstall* install, const QString& docPath, const QString& docName);
 
 //-Destructor-------------------------------------------------------------------------------------------------
 public:
@@ -163,6 +165,8 @@ public:
     QString path() const;
     Identifier identifier() const;
     virtual bool isEmpty() const = 0;
+    virtual void postCheckout(); // Nothing by default
+    virtual void preCommit(); // Nothing by default
 };
 QX_SCOPED_ENUM_HASH_FUNC(IDataDoc::Type);
 
@@ -226,110 +230,354 @@ public:
 //     Qx::Error error() const;
 // };
 
-class IUpdateableDoc : public IDataDoc
+class IUpdatableDoc : public IDataDoc
 {
+//-Inner Classes--------------------------------------------------------------------------------------------------
+protected:
+    template<typename Data>
+    class UpdatableContainer;
+
 //-Instance Variables--------------------------------------------------------------------------------------------------
+private:
+    bool mUpdating;
+
 protected:
     Import::UpdateOptions mUpdateOptions;
 
+
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit IUpdateableDoc(IInstall* install, const QString& docPath, QString docName, const Import::UpdateOptions& updateOptions);
-
-//-Class Functions-----------------------------------------------------------------------------------------------------
-template<typename T>
-static T* itemPtr(T& item) { return &item; }
-
-template<typename T>
-static T* itemPtr(std::shared_ptr<T> item) { return item.get(); }
+    explicit IUpdatableDoc(IInstall* install, const QString& docPath, const QString& docName, const Import::UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
-protected:
-    template <typename C>
-        requires updateable_item_container<C>
-    void finalizeUpdateableItems(C& existingItems,
-                                 C& finalItems)
-    {
-        // Copy items to final list if obsolete entries are to be kept
-        if(!mUpdateOptions.removeObsolete)
-            finalItems.insert(existingItems);
+public:
+    virtual void postCheckout() override;
+};
 
-        // Clear existing lists
-        existingItems.clear();
-    }
+// These concepts help the following container
+template<typename C>
+concept HasHash = requires (typename C::Hash hasher, const C& key) {
+    { hasher(key) } -> std::convertible_to<std::size_t>;
+    // Only checks for main hash, but can have more for heterogeneous search
+};
 
-    template <typename C>
-        requires updateable_item_container<C>
-    void addUpdateableItem(C& existingItems,
-                           C& finalItems,
-                           typename C::key_type key,
-                           typename C::mapped_type newItem)
+template<typename C>
+concept HasKeyEqual = requires (typename C::KeyEqual comparator, const C& a, const C& b) {
+    { comparator(a, b) } -> std::convertible_to<bool>;
+    // Only checks for main compare, but can have more for heterogeneous search
+};
+
+template<typename C>
+concept CustomizedUpdateableContainer = HasHash<C> && HasKeyEqual<C>;
+
+/* NOTE: This specifically is a container that's useful for handling item/data updates for use within a data doc.
+ *
+ * To use types with this class, there must exist an equality operator and std::hash specialization for Data;
+ * alternative, public inner structs/classes Equals and Compare can be added to a type in order to further
+ * customize lookup behavior, such as enabling heterogeneous lookup with other types (see BasicItem) for an
+ * example, or just provide hashing/equality check facilities in a uniform place.
+ *
+ * Items derived from BasicItem are supported by default and use their id() for comparison/hashing
+ *
+ */
+
+template<typename Data>
+class IUpdatableDoc::UpdatableContainer
+{
+    template<typename D>
+    struct storage{ using type = std::unordered_set<D>; };
+
+    template<CustomizedUpdateableContainer D>
+    struct storage<D>{ using type = std::unordered_set<D, typename D::Hash, typename D::KeyEqual>; };
+
+    using Storage = storage<Data>::type;
+//-Instance Variables--------------------------------------------------------------------------------------------------
+private:
+    const IUpdatableDoc* mDoc;
+    Storage mExisting; // Holds obsolete entries after updates are complete if 'remove obsolete entries' is enabled
+    Storage mUpdated;
+    Storage mNew;
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+public:
+    explicit UpdatableContainer(const IUpdatableDoc* doc) : mDoc(doc) {}
+
+//-Class Functions--------------------------------------------------------------------------------------------------
+private:
+    template<typename F>
+    static auto forEach(F&& f, const Storage& s)
     {
-        // Check if item exists
-        if(existingItems.contains(key))
+        for(const auto& e : s)
         {
-            // Replace if existing update is on, move existing otherwise
-            if(mUpdateOptions.importMode == Import::UpdateMode::NewAndExisting)
+            if constexpr(std::predicate<F, Data>)
             {
-                itemPtr(newItem)->transferOtherFields(itemPtr(existingItems[key])->otherFields());
-                finalItems[key] = newItem;
-                existingItems.remove(key);
+                if(!f(e))
+                    return false;
             }
             else
-            {
-                finalItems[key] = std::move(existingItems[key]);
-                existingItems.remove(key);
-            }
-
+                f(e);
         }
-        else
-            finalItems[key] = newItem;
+
+        if constexpr(std::predicate<F, Data>)
+            return true;
     }
 
-    template <typename C>
-        requires updateable_basicitem_container<C>
-    void addUpdateableItem(C& existingItems,
-                           C& finalItems,
-                           typename C::mapped_type newItem)
+    template<typename F, typename... Stores>
+    static auto allForEach(F&& f, Stores&&... stores)
     {
-        addUpdateableItem(existingItems,
-                          finalItems,
-                          newItem.id(),
-                          newItem);
+        if constexpr(std::predicate<F, Data>)
+            return (forEach(f, stores) && ...);
+        else
+            ((forEach(f, stores)), ...);
+    }
+
+//-Instance Functions--------------------------------------------------------------------------------------------------
+private:
+    template<typename T>
+    const Data* insertInit(T&& d) { return &(*mExisting.insert(std::forward<T>(d)).first); }
+
+    template<typename T>
+    const Data* insertMod(T&& d)
+    {
+        // This could benefit from move semantics if QSet ever adds them, otherwise could use std::unordered_set
+        auto ex = mExisting.find(d);
+        if(ex == mExisting.end())
+            return &(*mNew.insert(std::forward<T>(d)).first);
+        else
+        {
+            const Data* inserted;
+
+            // Replace if NewAndExisting, otherwise retain exact original
+            if(mDoc->mUpdateOptions.importMode == Import::UpdateMode::NewAndExisting)
+            {
+                // Special case for Items (copy other fields)
+                if constexpr(item<Data>)
+                    d.copyOtherFields(*ex);
+
+                inserted = &(*mUpdated.insert(std::forward<T>(d)).first);
+            }
+            else
+                inserted = &(*mUpdated.insert(*ex).first);
+
+            mExisting.erase(ex);
+
+            return inserted;
+        }
     }
 
 public:
-    virtual void finalize();
+    template<typename T>
+        requires std::same_as<std::remove_cvref_t<T>, Data>
+    const Data* insert(T&& d)
+    {
+        if(!mDoc->mUpdating)
+            return insertInit(std::forward<T>(d));
+        else
+            return insertMod(std::forward<T>(d));
+    }
+
+    /* For posterity, even though the following function should likely never be used during the initial read,
+     * it would be more proper if they returned different results depending on mDoc->mUpdating (e.g.
+     * containsObsolete() would always return false when not in the updating phase).
+     *
+     * The templated functions essentially take 'Data' arguments, but T may be allowed to be more if Data defines
+     * as Hash and KeyEqual class that enable heterogeneous comparison.
+     */
+
+    template<typename T>
+    bool containsExisting(T&& t) const { return mExisting.contains(std::forward<T>(t)); }
+
+    template<typename T>
+    bool containsObsolete(T&& t) const { return mDoc->mUpdateOptions.removeObsolete && mExisting.contains(std::forward<T>(t)); }
+
+    template<typename T>
+    bool containsNew(T&& t) const { return mNew.contains(std::forward<T>(t)); }
+
+    template<typename T>
+    bool containsFinal(T&& t) const
+    {
+        return (!mDoc->mUpdateOptions.removeObsolete && mExisting.contains(std::forward<T>(t))) ||
+               mUpdated.contains(std::forward<T>(t)) ||
+               mNew.contains(std::forward<T>(t));
+    }
+
+    template<typename T>
+    bool contains(T&& t) const { return mExisting.contains(std::forward<T>(t)) || mUpdated.contains(std::forward<T>(t)) || mNew.contains(std::forward<T>(t)); }
+
+    template<typename T>
+    const Data* findExisting(T&& t) const
+    {
+        auto itr = mExisting.find(std::forward<T>(t));
+        return itr != mExisting.end() ? &(*itr) : nullptr;
+    }
+
+    template<typename T>
+    const Data* findObsolete(T&& t) const
+    {
+        auto itr = mDoc->mUpdateOptions.removeObsolete ? mExisting.find(std::forward<T>(t)) : mExisting.end();
+        return itr != mExisting.end() ? &(*itr) : nullptr;
+    }
+
+    template<typename T>
+    const Data* findNew(T&& t) const
+    {
+        auto itr = mNew.find(std::forward<T>(t));
+        return itr != mNew.end() ? &(*itr) : nullptr;
+    }
+
+    template<typename T>
+    const Data* findFinal(T&& t) const
+    {
+        auto itr = !mDoc->mUpdateOptions.removeObsolete ? mExisting.find(std::forward<T>(t)) : mExisting.end();
+        if(itr != mExisting.end())
+            return &(*itr);
+
+        itr = mUpdated.find(std::forward<T>(t));
+        if(itr != mExisting.end())
+            return &(*itr);
+
+        itr = mNew.find(std::forward<T>(t));
+        return itr != mExisting.end() ? &(*itr) : nullptr;
+    }
+
+    template<typename T>
+    const Data* find(T&& t) const
+    {
+        auto itr = mExisting.find(std::forward<T>(t));
+        if(itr != mExisting.end())
+            return &(*itr);
+
+        itr = mUpdated.find(std::forward<T>(t));
+        if(itr != mExisting.end())
+            return &(*itr);
+
+        itr = mNew.find(std::forward<T>(t));
+        return itr != mExisting.end() ? &(*itr) : nullptr;
+    }
+
+    template<typename T>
+    bool removeExisting(T&& t) { return mExisting.erase(std::forward<T>(t)); }
+
+    template<typename T>
+    bool removeObsolete(T&& t) { return mDoc->mUpdateOptions.removeObsolete && mExisting.erase(std::forward<T>(t)); }
+
+    template<typename T>
+    bool removeNew(T&& t) { return mNew.erase(std::forward<T>(t)); }
+
+    template<typename T>
+    bool removeFinal(T&& t)
+    {
+        return (!mDoc->mUpdateOptions.removeObsolete && mExisting.erase(std::forward<T>(t))) ||
+               mUpdated.erase(std::forward<T>(t)) ||
+               mNew.erase(std::forward<T>(t));
+    }
+
+    template<typename T>
+    bool remove(T&& t) { return mExisting.erase(std::forward<T>(t)) || mUpdated.erase(std::forward<T>(t)) || mNew.erase(std::forward<T>(t)); }
+
+    /* TODO: For now we use a return of auto to allow halting early if the functor is a predicate  but in the long run it would be more flexible to create
+     * an iterator type for each category (obsolete, new, final, etc.), but of course that would be annoying. Could try to have some kind of base class that handles
+     * most of the tasks with just an override for increment/decrement
+     */
+    template<typename F>
+    auto forEachExisting(F&& f) const
+    {
+        return allForEach(f, mExisting);
+    }
+
+    template<typename F>
+    auto forEachObsolete(F&& f) const
+    {
+        if(mDoc->mUpdateOptions.removeObsolete)
+            return allForEach(f, mExisting);
+        else if constexpr(std::predicate<F, Data>)
+            return true;
+    }
+
+    template<typename F>
+    auto forEachNew(F&& f) const
+    {
+        return allForEach(f, mNew);
+    }
+
+    template<typename F>
+    auto forEachFinal(F&& f) const
+    {
+        if(!mDoc->mUpdateOptions.removeObsolete)
+            return allForEach(f, mExisting, mUpdated, mNew);
+        else
+            return allForEach(f, mUpdated, mNew);
+    }
+
+    template<typename P>
+    Storage::size_type eraseObsoleteIf(P&& p)
+    {
+        if(mDoc->mUpdateOptions.removeObsolete)
+            return std::erase_if(mExisting, p);
+
+        return 0;
+    }
+
+    template<typename P>
+    Storage::size_type eraseNewIf(P&& p) { return std::erase_if(mNew, p); }
+
+    template<typename P>
+    Storage::size_type eraseFinalIf(P&& p)
+    {
+        typename Storage::size_type c = 0;
+
+        if(!mDoc->mUpdateOptions.removeObsolete)
+            c += std::erase_if(mExisting, p);
+
+        c += std::erase_if(mUpdated, p);
+        c += std::erase_if(mNew, p);
+
+        return c;
+    }
+
+    template<typename P>
+    Storage::size_type eraseIf(P&& p)
+    {
+        typename Storage::size_type c = 0;
+
+        c += std::erase_if(mExisting, p);
+        c += std::erase_if(mUpdated, p);
+        c += std::erase_if(mNew, p);
+
+        return c;
+    }
+
+    bool isEmpty() const { return mExisting.empty() && mUpdated.empty() && mNew.empty(); }
 };
 
-class IPlatformDoc : public IUpdateableDoc
+class IPlatformDoc : public IUpdatableDoc
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit IPlatformDoc(IInstall* install, const QString& docPath, QString docName, const Import::UpdateOptions& updateOptions);
+    explicit IPlatformDoc(IInstall* install, const QString& docPath, const QString& docName, const Import::UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
     Type type() const override;
 
 public:
-    virtual bool containsGame(QUuid gameId) const = 0; // NOTE: UNUSED
-    virtual bool containsAddApp(QUuid addAppId) const = 0; // NOTE: UNUSED
+    virtual bool containsGame(const QUuid& gameId) const = 0; // NOTE: UNUSED
+    virtual bool containsAddApp(const QUuid& addAppId) const = 0; // NOTE: UNUSED
     virtual void addSet(const Fp::Set& set, Import::ImagePaths& images) = 0;
 };
 
-class IPlaylistDoc : public IUpdateableDoc
+class IPlaylistDoc : public IUpdatableDoc
 {
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit IPlaylistDoc(IInstall* install, const QString& docPath, QString docName, const Import::UpdateOptions& updateOptions);
+    explicit IPlaylistDoc(IInstall* install, const QString& docPath, const QString& docName, const Import::UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
     Type type() const override;
 
 public:
-    virtual bool containsPlaylistGame(QUuid gameId) const = 0; // NOTE: UNUSED
+    virtual bool containsPlaylistGame(const QUuid& gameId) const = 0; // NOTE: UNUSED
     virtual void setPlaylistData(const Fp::Playlist& playlist) = 0;
 };
 

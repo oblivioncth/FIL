@@ -22,7 +22,7 @@ namespace Lr
  * the 'containsXXX' methods hairy and slow unless they're outright removed (which they can be, they're unused), and
  * the update situation is even rougher. The set couldn't really derive from Item because its not an item by itself,
  * and even if it was the other fields that would get transferred wouldn't actually be from the game/add apps of the set,
- * but just empty ones along side them. Likely an extra function would have to be added to UpdateableDoc like
+ * but just empty ones along side them. Likely an extra function would have to be added to UpdatableDoc like
  * "addUpdateableSet", and finalize be modified as well. Lastly there is the question of whether or not to have a fixed
  * set that just contains pointers to Lr::Game and a list of pointers to Lr::AddApp, or intended for the set to
  * be derived from as well. A fixed set is likely the better choice since any even remotely compatible launcher should
@@ -55,6 +55,19 @@ template<typename T>
 concept playlistgame = std::derived_from<T, PlaylistGame>;
 
 //-Namespace Global Classes-----------------------------------------------------------------------------------------
+
+template<typename T>
+class Builder
+{
+//-Instance Variables------------------------------------------------------------------------------------------
+protected:
+    T mBlueprint;
+
+//-Instance Functions------------------------------------------------------------------------------------------
+public:
+    T build() const { return mBlueprint; }
+};
+
 class Item
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
@@ -64,7 +77,7 @@ public:
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 protected:
-    QHash<QString, QString> mOtherFields;
+    QHash<QString, QString> mOtherFields; // TODO: Does this need to be a hash or can it just be a list of pairs (and is that better)?
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -72,43 +85,34 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    bool hasOtherFields() const; // TODO: This is probably unnecessary as the created Item will never have other fields so swapping with the existing is always best, even if it has none. Nothing will ever be lost.
     QHash<QString, QString>& otherFields();
     const QHash<QString, QString>& otherFields() const;
-    void transferOtherFields(QHash<QString, QString>& otherFields);
+    void copyOtherFields(const Item& other);
 };
 
 template<item T>
-class Item::Builder
+class Item::Builder : public Lr::Builder<T>
 {
-//-Instance Variables------------------------------------------------------------------------------------------
-protected:
-    T mItemBlueprint;
-
 //-Constructor-------------------------------------------------------------------------------------------------
 protected:
     Builder() {}
-
-//-Destructor-------------------------------------------------------------------------------------------------
-public:
-    virtual ~Builder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
     template<class Self>
     auto wOtherField(this Self&& self, QPair<QString, QString> otherField)
     {
-        self.mItemBlueprint.mOtherFields[otherField.first] = otherField.second;
+        self.mBlueprint.mOtherFields[otherField.first] = otherField.second;
         return self;
     }
-    T build() { return mItemBlueprint; }
-    //std::shared_ptr<T> buildShared() { return std::make_shared<T>(mItemBlueprint); }
 };
 
 class BasicItem : public Item
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
+    struct Hash;
+    struct KeyEqual;
     template<basic_item T>
     class Builder;
 
@@ -128,19 +132,33 @@ public:
     QString name() const;
 };
 
+struct BasicItem::Hash
+{
+    using is_transparent = void;
+    std::size_t operator()(const BasicItem& bi) const noexcept { return qHash(bi.mId, 0); }
+    std::size_t operator()(const QUuid& id) const noexcept { return qHash(id, 0); }
+};
+
+struct BasicItem::KeyEqual
+{
+    using is_transparent = void;
+    bool operator()(const BasicItem& a, const BasicItem& b) const noexcept { return a.mId == b.mId; }
+    bool operator()(const QUuid& id, const BasicItem& bi) const noexcept { return id == bi.mId; }
+};
+
 template<basic_item T>
 class BasicItem::Builder : public Item::Builder<T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
     template<class Self>
-    auto wId(this Self&& self, const QString& rawId) { self.mItemBlueprint.mId = QUuid(rawId); return self; }
+    auto wId(this Self&& self, const QString& rawId) { self.mBlueprint.mId = QUuid(rawId); return self; }
 
     template<class Self>
-    auto wId(this Self&& self, const QUuid& id) { self.mItemBlueprint.mId = id; return self; }
+    auto wId(this Self&& self, const QUuid& id) { self.mBlueprint.mId = id; return self; }
 
     template<class Self>
-    auto wName(this Self&& self, const QString& name) { self.mItemBlueprint.mName = name; return self;}
+    auto wName(this Self&& self, const QString& name) { self.mBlueprint.mName = name; return self;}
 };
 
 class Game : public BasicItem
@@ -175,7 +193,7 @@ class Game::Builder : public BasicItem::Builder<T>
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
     template<class Self>
-    auto wPlatform(this Self&& self, const QString& platform) { self.mItemBlueprint.mPlatform = platform; return self; }
+    auto wPlatform(this Self&& self, const QString& platform) { self.mBlueprint.mPlatform = platform; return self; }
 };
 
 class AddApp : public BasicItem
@@ -205,10 +223,10 @@ class AddApp::Builder : public BasicItem::Builder<T>
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
     template<class Self>
-    auto wGameId(this Self&& self, const QString& rawGameId) { self.mItemBlueprint.mGameId = QUuid(rawGameId); return self; }
+    auto wGameId(this Self&& self, const QString& rawGameId) { self.mBlueprint.mGameId = QUuid(rawGameId); return self; }
 
     template<class Self>
-    auto wGameId(this Self&& self, const QUuid& gameId) { self.mItemBlueprint.mGameId = gameId; return self; }
+    auto wGameId(this Self&& self, const QUuid& gameId) { self.mBlueprint.mGameId = gameId; return self; }
 };
 
 class PlaylistHeader : public BasicItem
@@ -255,10 +273,10 @@ class PlaylistGame::Builder : public BasicItem::Builder<T>
 public:
     // These reuse the main ID on purpose, in this case gameId is a proxy for Id
     template<class Self>
-    auto wGameId(this Self&& self, QString rawGameId) { self.mItemBlueprint.mId = QUuid(rawGameId); return self; }
+    auto wGameId(this Self&& self, QString rawGameId) { self.mBlueprint.mId = QUuid(rawGameId); return self; }
 
     template<class Self>
-    auto wGameId(this Self&& self, QUuid gameId) { self.mItemBlueprint.mId = gameId; return self; }
+    auto wGameId(this Self&& self, QUuid gameId) { self.mBlueprint.mId = gameId; return self; }
 };
 
 }

@@ -14,11 +14,9 @@ Item::Item() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-bool Item::hasOtherFields() const { return !mOtherFields.isEmpty(); }
 QHash<QString, QString>& Item::otherFields() { return mOtherFields; }
 const QHash<QString, QString>& Item::otherFields() const { return mOtherFields; }
-
-void Item::transferOtherFields(QHash<QString, QString>& otherFields) { mOtherFields = std::move(otherFields); }
+void Item::copyOtherFields(const Item& other) { mOtherFields = other.mOtherFields; }
 
 //===============================================================================================================
 // BASIC ITEM

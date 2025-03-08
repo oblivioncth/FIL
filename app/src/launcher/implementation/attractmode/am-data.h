@@ -184,7 +184,7 @@ public:
     Type type() const override;
 };
 
-class Romlist : public Lr::UpdateableDoc<LauncherId>
+class Romlist : public Lr::UpdatableDoc<LauncherId>
 {
     /* This class looks like it should inherit PlatformDoc, but it isn't truly one in the context of an Am install
      * since those are represented by tag lists, and if it did there would be the issue that once modified it would
@@ -204,8 +204,7 @@ private:
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
-    QHash<QUuid, RomEntry> mEntriesExisting;
-    QHash<QUuid, RomEntry> mEntriesFinal;
+    UpdatableContainer<RomEntry> mEntries;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -216,14 +215,10 @@ public:
     IDataDoc::Type type() const override;
     bool isEmpty() const override;
 
-    const QHash<QUuid, RomEntry>& finalEntries() const;
-
-    bool containsGame(QUuid gameId) const;
-    bool containsAddApp(QUuid addAppId) const;
+    bool containsGame(const QUuid& gameId) const;
+    bool containsAddApp(const QUuid& addAppId) const;
 
     const RomEntry* processSet(const Fp::Set& set);
-
-    void finalize() override;
 };
 
 class Romlist::Reader : public CommonDocReader<Romlist>
@@ -292,8 +287,8 @@ private:
 public:
     bool isEmpty() const override;
 
-    bool containsGame(QUuid gameId) const override;
-    bool containsAddApp(QUuid addAppId) const override;
+    bool containsGame(const QUuid& gameId) const override;
+    bool containsAddApp(const QUuid& addAppId) const override;
 };
 
 class PlatformInterfaceWriter : public Lr::DataDocWriter<PlatformInterface>
@@ -330,7 +325,7 @@ public:
 public:
     bool isEmpty() const override;
 
-    bool containsPlaylistGame(QUuid gameId) const override;
+    bool containsPlaylistGame(const QUuid& gameId) const override;
 
     void setPlaylistData(const Fp::Playlist& playlist) override;
 };

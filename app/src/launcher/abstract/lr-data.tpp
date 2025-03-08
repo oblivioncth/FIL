@@ -21,7 +21,7 @@ namespace Lr
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Protected:
 template<LauncherId Id>
-DataDoc<Id>::DataDoc(InstallT* install, const QString& docPath, QString docName) :
+DataDoc<Id>::DataDoc(InstallT* install, const QString& docPath, const QString& docName) :
     IDataDoc(install, docPath, docName)
 {}
 
@@ -63,20 +63,20 @@ template<class DocT>
 DocT* DataDocWriter<DocT>::source() const { return static_cast<DocT*>(IDataDoc::Writer::source()); }
 
 //===============================================================================================================
-// UpdateableDoc
+// UpdatableDoc
 //===============================================================================================================
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Protected:
 template<LauncherId Id>
-UpdateableDoc<Id>::UpdateableDoc(InstallT* install, const QString& docPath, QString docName, const Import::UpdateOptions& updateOptions) :
-    IUpdateableDoc(install, docPath, docName, updateOptions)
+UpdatableDoc<Id>::UpdatableDoc(InstallT* install, const QString& docPath, const QString& docName, const Import::UpdateOptions& updateOptions) :
+    IUpdatableDoc(install, docPath, docName, updateOptions)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
 template<LauncherId Id>
-Id::InstallT* UpdateableDoc<Id>::install() const { return static_cast<InstallT*>(IDataDoc::install()); }
+Id::InstallT* UpdatableDoc<Id>::install() const { return static_cast<InstallT*>(IDataDoc::install()); }
 
 //===============================================================================================================
 // PlatformDoc
@@ -85,7 +85,7 @@ Id::InstallT* UpdateableDoc<Id>::install() const { return static_cast<InstallT*>
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Protected:
 template<LauncherId Id>
-PlatformDoc<Id>::PlatformDoc(InstallT* install, const QString& docPath, QString docName, const Import::UpdateOptions& updateOptions) :
+PlatformDoc<Id>::PlatformDoc(InstallT* install, const QString& docPath, const QString& docName, const Import::UpdateOptions& updateOptions) :
     IPlatformDoc(install, docPath, docName, updateOptions)
 {}
 
@@ -117,7 +117,7 @@ void PlatformDoc<Id>::addSet(const Fp::Set& set, Import::ImagePaths& images)
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Protected:
 template<LauncherId Id>
-PlaylistDoc<Id>::PlaylistDoc(InstallT* install, const QString& docPath, QString docName, const Import::UpdateOptions& updateOptions) :
+PlaylistDoc<Id>::PlaylistDoc(InstallT* install, const QString& docPath, const QString& docName, const Import::UpdateOptions& updateOptions) :
     IPlaylistDoc(install, docPath, docName, updateOptions)
 {}
 
@@ -133,8 +133,10 @@ Id::InstallT* PlaylistDoc<Id>::install() const { return static_cast<InstallT*>(I
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Protected:
 template<LauncherId Id>
-BasicPlatformDoc<Id>::BasicPlatformDoc(InstallT* install, const QString& docPath, QString docName, const Import::UpdateOptions& updateOptions) :
-    PlatformDoc<Id>(install, docPath, docName, updateOptions)
+BasicPlatformDoc<Id>::BasicPlatformDoc(InstallT* install, const QString& docPath, const QString& docName, const Import::UpdateOptions& updateOptions) :
+    PlatformDoc<Id>(install, docPath, docName, updateOptions),
+    mGames(this),
+    mAddApps(this)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -143,60 +145,31 @@ template<LauncherId Id>
 Id::InstallT* BasicPlatformDoc<Id>::install() const { return static_cast<InstallT*>(IDataDoc::install()); }
 
 template<LauncherId Id>
-const QHash<QUuid, typename Id::GameT>& BasicPlatformDoc<Id>::finalGames() const { return mGamesFinal; }
+bool BasicPlatformDoc<Id>::containsGame(const QUuid& gameId) const { return mGames.contains(gameId); }
 
 template<LauncherId Id>
-const QHash<QUuid, typename Id::AddAppT>& BasicPlatformDoc<Id>::finalAddApps() const { return mAddAppsFinal; }
-
-template<LauncherId Id>
-bool BasicPlatformDoc<Id>::containsGame(QUuid gameId) const { return mGamesFinal.contains(gameId) || mGamesExisting.contains(gameId); }
-
-template<LauncherId Id>
-bool BasicPlatformDoc<Id>::containsAddApp(QUuid addAppId) const { return mAddAppsFinal.contains(addAppId) || mAddAppsExisting.contains(addAppId); }
+bool BasicPlatformDoc<Id>::containsAddApp(const QUuid& addAppId) const { return mAddApps.contains(addAppId); }
 
 template<LauncherId Id>
 const typename Id::GameT* BasicPlatformDoc<Id>::processSet(const Fp::Set& set)
 {
-    // Prepare game
-    GameT game = prepareGame(set.game());
-
-    // Add game
-    addUpdateableItem(mGamesExisting, mGamesFinal, game);
+    // Prepare and add game
+    const GameT* addedGame = mGames.insert(prepareGame(set.game()));
 
     // Handle additional apps
     for(const Fp::AddApp& addApp : set.addApps())
     {
-        // Prepare
-        AddAppT lrAddApp = prepareAddApp(addApp);
-
-        // Add
-        addUpdateableItem(mAddAppsExisting, mAddAppsFinal, lrAddApp);
+        // Prepare and add
+        mAddApps.insert(prepareAddApp(addApp));
     }
 
-    return nullptr; // TODO: Return actual pointer to game within container
-}
-
-template<LauncherId Id>
-void BasicPlatformDoc<Id>::finalize()
-{
-    /* TODO: Have this (and all other implementations of finalize() do something like return
-     * the IDs of titles that were removed, or otherwise populate an internal variable so that afterwards
-     * the list can be used to purge all images or other title related files (like overviews with AM).
-     * Right now only the data portion of old games is removed).
-     */
-
-    // Finalize item stores
-    finalizeUpdateableItems(mGamesExisting, mGamesFinal);
-    finalizeUpdateableItems(mAddAppsExisting, mAddAppsFinal);
-
-    // Perform base finalization
-    IUpdateableDoc::finalize();
+    return addedGame;
 }
 
 template<LauncherId Id>
 bool BasicPlatformDoc<Id>::isEmpty() const
 {
-    return mGamesFinal.isEmpty() && mGamesExisting.isEmpty() && mAddAppsFinal.isEmpty() && mAddAppsExisting.isEmpty();
+    return mGames.isEmpty() && mAddApps.isEmpty();
 }
 
 //===============================================================================================================
@@ -213,8 +186,9 @@ bool BasicPlatformDoc<Id>::isEmpty() const
  * a default (likely null/empty) playlist header.
  */
 template<LauncherId Id>
-BasicPlaylistDoc<Id>::BasicPlaylistDoc(InstallT* install, const QString& docPath, QString docName, const Import::UpdateOptions& updateOptions) :
-    PlaylistDoc<Id>(install, docPath, docName, updateOptions)
+BasicPlaylistDoc<Id>::BasicPlaylistDoc(InstallT* install, const QString& docPath, const QString& docName, const Import::UpdateOptions& updateOptions) :
+    PlaylistDoc<Id>(install, docPath, docName, updateOptions),
+    mPlaylistGames(this)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -223,50 +197,29 @@ template<LauncherId Id>
 Id::InstallT* BasicPlaylistDoc<Id>::install() const { return static_cast<InstallT*>(IDataDoc::install()); }
 
 template<LauncherId Id>
-const typename Id::PlaylistHeaderT& BasicPlaylistDoc<Id>::playlistHeader() const { return mPlaylistHeader; }
-
-template<LauncherId Id>
-const QHash<QUuid, typename Id::PlaylistGameT>& BasicPlaylistDoc<Id>::finalPlaylistGames() const { return mPlaylistGamesFinal; }
-
-template<LauncherId Id>
-bool BasicPlaylistDoc<Id>::containsPlaylistGame(QUuid gameId) const { return mPlaylistGamesFinal.contains(gameId) || mPlaylistGamesExisting.contains(gameId); }
+bool BasicPlaylistDoc<Id>::containsPlaylistGame(const QUuid& gameId) const { return mPlaylistGames.contains(gameId); }
 
 template<LauncherId Id>
 void BasicPlaylistDoc<Id>::setPlaylistData(const Fp::Playlist& playlist)
 {
     PlaylistHeaderT lrPlaylistHeader = preparePlaylistHeader(playlist);
-
-    if(mPlaylistHeader.hasOtherFields())
-        lrPlaylistHeader.transferOtherFields(mPlaylistHeader.otherFields());
+    lrPlaylistHeader.copyOtherFields(mPlaylistHeader);
 
     // Set instance header to new one
     mPlaylistHeader = lrPlaylistHeader;
 
     for(const auto& plg : playlist.playlistGames())
     {
-        // Prepare playlist game
-        PlaylistGameT lrPlaylistGame = preparePlaylistGame(plg);
-
-        // Add playlist game
-        addUpdateableItem(mPlaylistGamesExisting, mPlaylistGamesFinal, lrPlaylistGame);
+        // Prepare and add
+        mPlaylistGames.insert(preparePlaylistGame(plg));
     }
-}
-
-template<LauncherId Id>
-void BasicPlaylistDoc<Id>::finalize()
-{
-    // Finalize item stores
-    finalizeUpdateableItems(mPlaylistGamesExisting, mPlaylistGamesFinal);
-
-    // Perform base finalization
-    IUpdateableDoc::finalize();
 }
 
 template<LauncherId Id>
 bool BasicPlaylistDoc<Id>::isEmpty() const
 {
     // The playlist header doesn't matter if there are no games
-    return mPlaylistGamesFinal.isEmpty() && mPlaylistGamesExisting.isEmpty();
+    return mPlaylistGames.isEmpty();
 }
 
 //===============================================================================================================
@@ -342,6 +295,16 @@ void XmlDocWriter<DocT>::writeCleanTextElement(const QString& qualifiedName, con
         mStreamWriter.writeEmptyElement(qualifiedName);
     else
         mStreamWriter.writeTextElement(qualifiedName, Qx::xmlSanitized(text));
+}
+
+template<class DocT>
+void XmlDocWriter<DocT>::writeCleanTextElement(const QString& qualifiedName, const QString& text, const QXmlStreamAttributes& attributes)
+{
+    mStreamWriter.writeStartElement(qualifiedName);
+    if(!text.isEmpty())
+        mStreamWriter.writeCharacters(text);
+    mStreamWriter.writeAttributes(attributes);
+    mStreamWriter.writeEndElement();
 }
 
 template<class DocT>

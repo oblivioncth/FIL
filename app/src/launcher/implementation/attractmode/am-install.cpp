@@ -342,9 +342,6 @@ Qx::Error Install::prePlatformsImport()
 
 Qx::Error Install::postPlatformsImport()
 {
-    // Finalize romlist
-    mRomlist->finalize();
-
     // Commit romlist (this will also null out its pointer since it's moved)
     return commitFlashpointRomlist(std::move(mRomlist));
 }

@@ -25,12 +25,11 @@ class PlatformDoc : public Lr::BasicPlatformDoc<LauncherId>
     friend PlatformDocWriter;
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
-    QHash<QString, CustomField> mCustomFieldsFinal;
-    QHash<QString, CustomField> mCustomFieldsExisting;
+    UpdatableContainer<CustomField> mCustomFields;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlatformDoc(Install* install, const QString& xmlPath, QString docName, const Import::UpdateOptions& updateOptions);
+    explicit PlatformDoc(Install* install, const QString& xmlPath, const QString& docName, const Import::UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
@@ -42,7 +41,7 @@ private:
 public:
     bool isEmpty() const override;
 
-    void finalize() override;
+    void preCommit() override;
 };
 
 class PlatformDocReader : public Lr::XmlDocReader<PlatformDoc>
@@ -83,7 +82,7 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlaylistDoc(Install* install, const QString& xmlPath, QString docName, const Import::UpdateOptions& updateOptions);
+    explicit PlaylistDoc(Install* install, const QString& xmlPath, const QString& docName, const Import::UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
@@ -117,7 +116,7 @@ private:
     bool writePlaylistGame(const PlaylistGame& playlistGame);
 };
 
-class PlatformsConfigDoc : public Lr::UpdateableDoc<LauncherId>
+class PlatformsConfigDoc : public Lr::UpdatableDoc<LauncherId>
 {
 //-Inner Classes----------------------------------------------------------------------------------------------------
 public:
@@ -130,12 +129,9 @@ public:
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
-    QHash<QString, Platform> mPlatformsFinal;
-    QHash<QString, Platform> mPlatformsExisting;
-    QMap<QString, PlatformFolder> mPlatformFoldersFinal;
-    QMap<QString, PlatformFolder> mPlatformFoldersExisting;
-    QMap<QString, PlatformCategory> mPlatformCategoriesFinal;
-    QMap<QString, PlatformCategory> mPlatformCategoriesExisting;
+    UpdatableContainer<Platform> mPlatforms;
+    UpdatableContainer<PlatformFolder> mPlatformFolders;
+    UpdatableContainer<PlatformCategory> mPlatformCategories;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -148,20 +144,14 @@ private:
 public:
     bool isEmpty() const override;
 
-    const QHash<QString, Platform>& finalPlatforms() const;
-    const QMap<QString, PlatformFolder>& finalPlatformFolders() const;
-    const QMap<QString, PlatformCategory>& finalPlatformCategories() const;
-
-    void addPlatform(const Platform& platform);
+    void addPlatform(Platform&& platform);
     void removePlatform(const QString& platformName);
 
-    void addPlatformFolder(const PlatformFolder& platformFolder);
+    void addPlatformFolder(PlatformFolder&& platformFolder);
     void removePlatformFolders(const QString& platformName);
 
-    void addPlatformCategory(const PlatformCategory& platformCategory);
+    void addPlatformCategory(PlatformCategory&& platformCategory);
     void removePlatformCategory(const QString& categoryName);
-
-    void finalize() override;
 };
 
 class PlatformsConfigDoc::Reader : public Lr::XmlDocReader<PlatformsConfigDoc>

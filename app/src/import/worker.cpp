@@ -404,8 +404,7 @@ Worker::Result Worker::processGames(Qx::Error& errorReport, QList<Fp::Db::QueryB
             if((result = processPlatformGames(errorReport, currentPlatformDoc, currentQueryResult)) != Successful)
                 return result;
 
-            //---Finalize document----------------------------------
-            currentPlatformDoc->finalize();
+            //---Close out document----------------------------------
 
             // Forfeit document lease and save it
             Lr::DocHandlingError saveError;
@@ -457,9 +456,6 @@ Worker::Result Worker::processPlaylists(Qx::Error& errorReport, const QList<Fp::
 
         // Convert and set playlist header
         currentPlaylistDoc->setPlaylistData(currentPlaylist);
-
-        // Finalize document
-        currentPlaylistDoc->finalize();
 
         // Forfeit document lease and save it
         Lr::DocHandlingError saveError;

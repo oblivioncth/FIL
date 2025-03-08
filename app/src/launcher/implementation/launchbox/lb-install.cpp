@@ -388,7 +388,6 @@ Qx::Error Install::postImageProcessing()
             return superErr;
 
     // Save platforms document since it's no longer needed at this point
-    mPlatformsConfig->finalize();
     Lr::DocHandlingError saveError = commitPlatformsConfigDoc(std::move(mPlatformsConfig));
 
     return saveError;
