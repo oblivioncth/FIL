@@ -44,7 +44,8 @@ public:
     static bool deployCLIFp(QString& errorMsg, const Fp::Install& fpInstall);
 
     static QString parametersFromStandard(QStringView originalAppPath, QStringView originalAppParams);
-    static QString parametersFromStandard(QUuid titleId);
+    static QString parametersFromStandard(const QUuid& titleId);
+    static QString parametersFromStandard(const QString& titleId);
 };
 
 #endif // CLIFP_H

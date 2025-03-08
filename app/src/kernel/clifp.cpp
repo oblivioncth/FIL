@@ -95,4 +95,5 @@ QString CLIFp::parametersFromStandard(QStringView originalAppPath, QStringView o
     return clifpParam;
 }
 
-QString CLIFp::parametersFromStandard(QUuid titleId) { return u"-q "_s + PLAY_COMMAND + ' ' + ID_ARG.arg(titleId.toString(QUuid::WithoutBraces)); }
+QString CLIFp::parametersFromStandard(const QUuid& titleId) { return u"-q "_s + PLAY_COMMAND + ' ' + ID_ARG.arg(titleId.toString(QUuid::WithoutBraces)); }
+QString CLIFp::parametersFromStandard(const QString& titleId) { return u"-q "_s + PLAY_COMMAND + ' ' + ID_ARG.arg(titleId); }

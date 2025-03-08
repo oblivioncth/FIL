@@ -174,6 +174,8 @@ bool IInstall::containsAnyPlaylist(const QList<QString>& names) const
     return containsAnyDataDoc(IDataDoc::Type::Playlist, names);
 }
 
+bool IInstall::docIsLeased(IDataDoc::Identifier docId) const { return mLeasedDocuments.contains(docId); }
+
 /* These functions can be overridden by children as needed.
  * Work within them should be kept as minimal as possible since they are not accounted
  * for by the import progress indicator.

@@ -241,14 +241,17 @@ DocHandlingError XmlDocReader<DocT>::readInto()
     if(!mXmlFile.open(QFile::ReadOnly))
         return DocHandlingError(*target(), DocHandlingError::DocCantOpen, mXmlFile.errorString());
 
-    if(!mStreamReader.readNextStartElement())
+    if(!mRootElement.isEmpty())
     {
-        Qx::XmlStreamReaderError xmlError(mStreamReader);
-        return DocHandlingError(*target(), DocHandlingError::DocReadFailed, xmlError.text());
-    }
+        if(!mStreamReader.readNextStartElement())
+        {
+            Qx::XmlStreamReaderError xmlError(mStreamReader);
+            return DocHandlingError(*target(), DocHandlingError::DocReadFailed, xmlError.text());
+        }
 
-    if(mStreamReader.name() != mRootElement)
-        return DocHandlingError(*target(), DocHandlingError::NotParentDoc);
+        if(mStreamReader.name() != mRootElement)
+            return DocHandlingError(*target(), DocHandlingError::NotParentDoc);
+    }
 
     return readTargetDoc();
 
@@ -323,15 +326,17 @@ DocHandlingError XmlDocWriter<DocT>::writeOutOf()
     // Write standard XML header
     mStreamWriter.writeStartDocument(u"1.0"_s, true);
 
-    // Write main LaunchBox tag
-    mStreamWriter.writeStartElement(mRootElement);
+    // Write main element (if present)
+    if(!mRootElement.isEmpty())
+        mStreamWriter.writeStartElement(mRootElement);
 
     // Write main body
     if(!writeSourceDoc())
         return streamStatus();
 
-    // Close main LaunchBox tag
-    mStreamWriter.writeEndElement();
+    // Close main element (if present)
+    if(!mRootElement.isEmpty())
+        mStreamWriter.writeEndElement();
 
     // Finish document
     mStreamWriter.writeEndDocument();
