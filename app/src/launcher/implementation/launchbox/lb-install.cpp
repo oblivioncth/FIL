@@ -55,7 +55,7 @@ Install::Install(const QString& installPath) :
 
 //-Instance Functions----------------------------------------------------------------------------------------------
 //Private:
-Qx::Error Install::populateExistingDocs()
+Qx::Error Install::populateExistingDocs(QSet<Lr::IDataDoc::Identifier>& existingDocs)
 {
     // Temp storage
     QFileInfoList existingList;
@@ -66,7 +66,7 @@ Qx::Error Install::populateExistingDocs()
         return existingCheck;
 
     for(const QFileInfo& platformFile : std::as_const(existingList))
-         catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Platform, platformFile.baseName()));
+         existingDocs.insert(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Platform, platformFile.baseName()));
 
     // Check for playlists
     existingCheck = Qx::dirContentInfoList(existingList, mPlaylistsDirectory, {u"*."_s + XML_EXT}, QDir::NoFilter, QDirIterator::Subdirectories);
@@ -74,7 +74,7 @@ Qx::Error Install::populateExistingDocs()
         return existingCheck;
 
     for(const QFileInfo& playlistFile : std::as_const(existingList))
-        catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Playlist, playlistFile.baseName()));
+        existingDocs.insert(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Playlist, playlistFile.baseName()));
 
     // Check for config docs
     existingCheck = Qx::dirContentInfoList(existingList, mDataDirectory, {u"*."_s + XML_EXT});
@@ -82,7 +82,7 @@ Qx::Error Install::populateExistingDocs()
         return existingCheck;
 
     for(const QFileInfo& configDocFile : std::as_const(existingList))
-        catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Config, configDocFile.baseName()));
+        existingDocs.insert(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Config, configDocFile.baseName()));
 
     // Return success
     return Qx::Error();

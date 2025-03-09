@@ -55,13 +55,12 @@ protected:
     void declareValid(bool valid);
 
     // Docs
-    void catalogueExistingDoc(IDataDoc::Identifier existingDoc);
     DocHandlingError checkoutDataDocument(std::shared_ptr<IDataDoc::Reader> docReader);
     DocHandlingError commitDataDocument(std::shared_ptr<IDataDoc::Writer> docWriter);
     void closeDataDocument(std::unique_ptr<IDataDoc> doc);
     QList<QString> modifiedPlatforms() const;
     QList<QString> modifiedPlaylists() const;
-    virtual Qx::Error populateExistingDocs() = 0;
+    virtual Qx::Error populateExistingDocs(QSet<IDataDoc::Identifier>& existingDocs) = 0;
 
 public:
     // Details

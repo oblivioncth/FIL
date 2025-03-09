@@ -84,7 +84,7 @@ public:
 //-Instance Functions-----------------------------------------------------------------------------------------------
 private:
     // Install management
-    Qx::Error populateExistingDocs() override;
+    Qx::Error populateExistingDocs(QSet<Lr::IDataDoc::Identifier>& existingDocs) override;
     QString versionFromExecutable() const;
 
     // Image Processing

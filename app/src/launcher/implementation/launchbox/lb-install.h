@@ -84,7 +84,7 @@ public:
 //-Instance Functions------------------------------------------------------------------------------------------------------
 private:
     // Install management
-    Qx::Error populateExistingDocs() override;
+    Qx::Error populateExistingDocs(QSet<Lr::IDataDoc::Identifier>& existingDocs) override;
 
     // Image Processing
     QString imageDestinationPath(Fp::ImageType imageType, const Lr::Game& game) const;

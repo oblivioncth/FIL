@@ -53,8 +53,6 @@ void IInstall::declareValid(bool valid)
     mValid = valid;
 }
 
-void IInstall::catalogueExistingDoc(IDataDoc::Identifier existingDoc) { mExistingDocuments.insert(existingDoc); }
-
 DocHandlingError IInstall::checkoutDataDocument(std::shared_ptr<IDataDoc::Reader> docReader)
 {
     auto docToOpen = docReader->target();
@@ -150,7 +148,7 @@ Qx::Error IInstall::refreshExistingDocs(bool* changed)
 {
     QSet<IDataDoc::Identifier> oldDocSet;
     oldDocSet.swap(mExistingDocuments);
-    Qx::Error error = populateExistingDocs();
+    Qx::Error error = populateExistingDocs(mExistingDocuments);
     if(changed)
         *changed = mExistingDocuments != oldDocSet;
     return error;

@@ -55,7 +55,7 @@ Install::Install(const QString& installPath) :
 
 //-Instance Functions----------------------------------------------------------------------------------------------
 //Private:
-Qx::Error Install::populateExistingDocs()
+Qx::Error Install::populateExistingDocs(QSet<Lr::IDataDoc::Identifier>& existingDocs)
 {
     // Temp storage
     QFileInfoList existingList;
@@ -76,7 +76,7 @@ Qx::Error Install::populateExistingDocs()
             return existingCheck;
 
         for(const QFileInfo& platformFile : std::as_const(existingList))
-             catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Platform, platformFile.baseName()));
+             existingDocs.insert(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Platform, platformFile.baseName()));
 
         // Check for playlists
         existingCheck = Qx::dirContentInfoList(existingList, mFpTagDirectory, {u"[[]Playlist[]] *."_s + TAG_EXT},
@@ -85,21 +85,21 @@ Qx::Error Install::populateExistingDocs()
             return existingCheck;
 
         for(const QFileInfo& playlistFile : std::as_const(existingList))
-            catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Playlist, playlistFile.baseName()));
+            existingDocs.insert(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Playlist, playlistFile.baseName()));
 
         // Check for special "Flashpoint" platform (more like a config doc but OK for now)
         QFileInfo mainRomlistInfo(mFpRomlist);
         if(mainRomlistInfo.exists())
-            catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Platform, mainRomlistInfo.baseName()));
+            existingDocs.insert(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Platform, mainRomlistInfo.baseName()));
     }
 
     // Check for config docs
     QFileInfo mainCfgInfo(mMainConfigFile);
-    catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Config, mainCfgInfo.baseName())); // Must exist
+    existingDocs.insert(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Config, mainCfgInfo.baseName())); // Must exist
 
     QFileInfo emulatorCfgInfo(mEmulatorConfigFile);
     if(emulatorCfgInfo.exists())
-        catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Config, emulatorCfgInfo.baseName()));
+        existingDocs.insert(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Config, emulatorCfgInfo.baseName()));
 
     // Return success
     return Qx::Error();
