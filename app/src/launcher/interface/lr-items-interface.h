@@ -31,6 +31,7 @@ namespace Lr
 
 class Item;
 class BasicItem;
+class NamedItem;
 class Game;
 class AddApp;
 class PlaylistHeader;
@@ -41,6 +42,9 @@ concept item = std::derived_from<T, Item>;
 
 template<typename T>
 concept basic_item = std::derived_from<T, BasicItem>;
+
+template<typename T>
+concept named_item = std::derived_from<T, NamedItem>;
 
 template<typename T>
 concept game = std::derived_from<T, Game>;
@@ -119,17 +123,15 @@ public:
 //-Instance Variables-----------------------------------------------------------------------------------------------
 protected:
     QUuid mId;
-    QString mName;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 protected:
     BasicItem();
-    BasicItem(QUuid id, QString name);
+    BasicItem(const QUuid& id);
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
     QUuid id() const;
-    QString name() const;
 };
 
 struct BasicItem::Hash
@@ -156,12 +158,39 @@ public:
 
     template<class Self>
     auto wId(this Self&& self, const QUuid& id) { self.mBlueprint.mId = id; return self; }
+};
 
+class NamedItem : public BasicItem
+{
+//-Inner Classes---------------------------------------------------------------------------------------------------
+public:
+    template<named_item T>
+    class Builder;
+
+//-Instance Variables-----------------------------------------------------------------------------------------------
+protected:
+    QString mName;
+
+//-Constructor-------------------------------------------------------------------------------------------------
+protected:
+    NamedItem();
+    NamedItem(const QUuid& id, const QString& name);
+
+//-Instance Functions------------------------------------------------------------------------------------------
+public:
+    QString name() const;
+};
+
+template<named_item T>
+class NamedItem::Builder : public BasicItem::Builder<T>
+{
+//-Instance Functions------------------------------------------------------------------------------------------
+public:
     template<class Self>
     auto wName(this Self&& self, const QString& name) { self.mBlueprint.mName = name; return self;}
 };
 
-class Game : public BasicItem
+class Game : public NamedItem
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
@@ -180,7 +209,7 @@ protected:
 //-Constructor-------------------------------------------------------------------------------------------------
 protected:
     Game();
-    Game(QUuid id, QString name, QString platform);
+    Game(const QUuid& id, const QString& name, const QString& platform);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
@@ -188,7 +217,7 @@ public:
 };
 
 template<game T>
-class Game::Builder : public BasicItem::Builder<T>
+class Game::Builder : public NamedItem::Builder<T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
@@ -196,7 +225,7 @@ public:
     auto wPlatform(this Self&& self, const QString& platform) { self.mBlueprint.mPlatform = platform; return self; }
 };
 
-class AddApp : public BasicItem
+class AddApp : public NamedItem
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
@@ -210,7 +239,7 @@ protected:
 //-Constructor-------------------------------------------------------------------------------------------------
 protected:
     AddApp();
-    AddApp(QUuid id, QString name, QUuid gameId);
+    AddApp(const QUuid& id, const QString& name, const QUuid& gameId);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
@@ -218,7 +247,7 @@ public:
 };
 
 template<addapp T>
-class AddApp::Builder : public BasicItem::Builder<T>
+class AddApp::Builder : public NamedItem::Builder<T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
@@ -229,7 +258,7 @@ public:
     auto wGameId(this Self&& self, const QUuid& gameId) { self.mBlueprint.mGameId = gameId; return self; }
 };
 
-class PlaylistHeader : public BasicItem
+class PlaylistHeader : public NamedItem
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
@@ -239,14 +268,14 @@ public:
 //-Constructor-------------------------------------------------------------------------------------------------
 protected:
     PlaylistHeader();
-    PlaylistHeader(QUuid id, QString name);
+    PlaylistHeader(const QUuid& id, const QString& name);
 };
 
 template<playlistheader T>
-class PlaylistHeader::Builder : public BasicItem::Builder<T>
+class PlaylistHeader::Builder : public NamedItem::Builder<T>
 {};
 
-class PlaylistGame : public BasicItem
+class PlaylistGame : public NamedItem
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
@@ -259,7 +288,7 @@ protected:
 //-Constructor-------------------------------------------------------------------------------------------------
 protected:
     PlaylistGame();
-    PlaylistGame(QUuid id, QString name);
+    PlaylistGame(const QUuid& id, const QString& name);
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
@@ -267,7 +296,7 @@ public:
 };
 
 template<playlistgame T>
-class PlaylistGame::Builder : public BasicItem::Builder<T>
+class PlaylistGame::Builder : public NamedItem::Builder<T>
 {
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
