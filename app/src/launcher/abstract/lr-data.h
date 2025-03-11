@@ -284,7 +284,7 @@ public:
 protected:
     void writeCleanTextElement(const QString& qualifiedName, const QString& text);
     void writeCleanTextElement(const QString& qualifiedName, const QString& text, const QXmlStreamAttributes& attributes);
-    void writeOtherFields(const QHash<QString, QString>& otherFields);
+    void writeOtherFields(const Item& item);
     DocHandlingError streamStatus() const;
 
     // IMPLEMENT

@@ -29,6 +29,8 @@ namespace Lr
  * be able to work with it
  */
 
+// TODO: In the long run, a mild optimization would be to add "emplace()" style methods for things like builders
+
 class Item;
 class BasicItem;
 class NamedItem;
@@ -74,6 +76,20 @@ public:
 
 class Item
 {
+//-Structs---------------------------------------------------------------------------------------------------------
+protected:
+    /* Originally a QHash was used for other fields, which meant that if there was a duplicate element/key in a file
+     * then the value would be updated instead of there being a duplicate, which makes sense for the most common
+     * use case (XML); however, a list is significantly faster and really there should never be dupe entries as we
+     * don't cause them, and if there are due to the frontend's logic then perhaps they should remain. If they are
+     * redundant, often the frontend will cleanup the extra one.
+     */
+    struct OtherField
+    {
+        QString key;
+        QString value;
+    };
+
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
     template<item T>
@@ -81,7 +97,7 @@ public:
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 protected:
-    QHash<QString, QString> mOtherFields; // TODO: Does this need to be a hash or can it just be a list of pairs (and is that better)?
+    QList<OtherField> mOtherFields;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -89,8 +105,8 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    QHash<QString, QString>& otherFields();
-    const QHash<QString, QString>& otherFields() const;
+    QList<OtherField>& otherFields();
+    const QList<OtherField>& otherFields() const;
     void copyOtherFields(const Item& other);
 };
 
@@ -104,9 +120,9 @@ protected:
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
     template<class Self>
-    auto wOtherField(this Self&& self, QPair<QString, QString> otherField)
+    auto wOtherField(this Self&& self, OtherField&& otherField)
     {
-        self.mBlueprint.mOtherFields[otherField.first] = otherField.second;
+        self.mBlueprint.mOtherFields.append(std::move(otherField));
         return self;
     }
 };

@@ -14,8 +14,8 @@ Item::Item() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QHash<QString, QString>& Item::otherFields() { return mOtherFields; }
-const QHash<QString, QString>& Item::otherFields() const { return mOtherFields; }
+QList<Item::OtherField>& Item::otherFields() { return mOtherFields; }
+const QList<Item::OtherField>& Item::otherFields() const { return mOtherFields; }
 void Item::copyOtherFields(const Item& other) { mOtherFields = other.mOtherFields; }
 
 //===============================================================================================================

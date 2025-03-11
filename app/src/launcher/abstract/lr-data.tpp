@@ -308,10 +308,10 @@ void XmlDocWriter<DocT>::writeCleanTextElement(const QString& qualifiedName, con
 }
 
 template<class DocT>
-void XmlDocWriter<DocT>::writeOtherFields(const QHash<QString, QString>& otherFields)
+void XmlDocWriter<DocT>::writeOtherFields(const Item& item)
 {
-    for(QHash<QString, QString>::const_iterator i = otherFields.constBegin(); i != otherFields.constEnd(); ++i)
-        writeCleanTextElement(i.key(), i.value());
+    for(const auto& of : item.otherFields())
+        writeCleanTextElement(of.key, of.value);
 }
 
 template<class DocT>

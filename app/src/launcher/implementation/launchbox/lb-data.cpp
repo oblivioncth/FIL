@@ -381,7 +381,7 @@ bool PlatformDocWriter::writeGame(const Game& game)
     writeCleanTextElement(Xml::Element_Game::ELEMENT_RELEASE_TYPE, game.releaseType());
 
     // Write other tags
-    writeOtherFields(game.otherFields());
+    writeOtherFields(game);
 
     // Close game tag
     mStreamWriter.writeEndElement();
@@ -405,7 +405,7 @@ bool PlatformDocWriter::writeAddApp(const AddApp& addApp)
     writeCleanTextElement(Xml::Element_AddApp::ELEMENT_WAIT_FOR_EXIT, addApp.isWaitForExit() ? u"true"_s : u"false"_s);
 
     // Write other tags
-    writeOtherFields(addApp.otherFields());
+    writeOtherFields(addApp);
 
     // Close additional app tag
     mStreamWriter.writeEndElement();
@@ -425,7 +425,7 @@ bool PlatformDocWriter::writeCustomField(const CustomField& customField)
     writeCleanTextElement(Xml::Element_CustomField::ELEMENT_VALUE, customField.value());
 
     // Write other tags
-    writeOtherFields(customField.otherFields());
+    writeOtherFields(customField);
 
     // Close custom field tag
     mStreamWriter.writeEndElement();
@@ -606,7 +606,7 @@ bool PlaylistDocWriter::writePlaylistHeader(const PlaylistHeader& playlistHeader
     writeCleanTextElement(Xml::Element_PlaylistHeader::ELEMENT_NOTES, playlistHeader.notes());
 
     // Write other tags
-    writeOtherFields(playlistHeader.otherFields());
+    writeOtherFields(playlistHeader);
 
     // Close game tag
     mStreamWriter.writeEndElement();
@@ -628,7 +628,7 @@ bool PlaylistDocWriter::writePlaylistGame(const PlaylistGame& playlistGame)
     writeCleanTextElement(Xml::Element_PlaylistGame::ELEMENT_LB_DB_ID, QString::number(playlistGame.lbDatabaseId()));
 
     // Write other tags
-    writeOtherFields(playlistGame.otherFields());
+    writeOtherFields(playlistGame);
 
     // Close game tag
     mStreamWriter.writeEndElement();
@@ -821,7 +821,7 @@ bool PlatformsConfigDoc::Writer::writePlatform(const Platform& platform)
 //    writeCleanTextElement(Xml::Element_Platform::ELEMENT_CATEGORY, platform.category());
 
     // Write other tags
-    writeOtherFields(platform.otherFields());
+    writeOtherFields(platform);
 
     // Close game tag
     mStreamWriter.writeEndElement();
@@ -857,7 +857,7 @@ bool PlatformsConfigDoc::Writer::writePlatformCategory(const PlatformCategory& p
     writeCleanTextElement(Xml::Element_PlatformCategory::ELEMENT_NESTED_NAME, platformCategory.nestedName());
 
     // Write other tags
-    writeOtherFields(platformCategory.otherFields());
+    writeOtherFields(platformCategory);
 
     // Close game tag
     mStreamWriter.writeEndElement();
@@ -1030,7 +1030,7 @@ bool ParentsDoc::Writer::writeParent(const Parent& parent)
     writeCleanTextElement(Xml::Element_Parent::ELEMENT_PLAYLIST_ID, !parent.playlistId().isNull() ?  parent.playlistId().toString(QUuid::WithoutBraces): u""_s);
 
     // Write other tags
-    writeOtherFields(parent.otherFields());
+    writeOtherFields(parent);
 
     // Close tag
     mStreamWriter.writeEndElement();
