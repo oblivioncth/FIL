@@ -31,7 +31,6 @@ jobs:
         ]
       runs_include: >
         [
-            { "os": "ubuntu-20.04", "compiler": "clang++-18", "linkage": "static" }, 
             { "os": "ubuntu-22.04", "compiler": "clang++-18", "linkage": "static" }
         ]
       pre_build_steps: |
@@ -43,5 +42,4 @@ jobs:
             chmod u+x llvm.sh
             sudo ./llvm.sh 18
 
-            
-        
+
