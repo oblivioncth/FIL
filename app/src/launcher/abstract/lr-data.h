@@ -171,12 +171,11 @@ protected:
     using InstallT = Id::InstallT;
     using GameT = Id::GameT;
     using AddAppT = Id::AddAppT;
-    using IUpdatableDoc::UpdatableContainer;
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
-    UpdatableContainer<GameT> mGames;
-    UpdatableContainer<AddAppT> mAddApps;
+    IUpdatableDoc::UpdatableContainer<GameT> mGames;
+    IUpdatableDoc::UpdatableContainer<AddAppT> mAddApps;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
@@ -209,12 +208,11 @@ protected:
     using InstallT = Id::InstallT;
     using PlaylistHeaderT = Id::PlaylistHeaderT;
     using PlaylistGameT = Id::PlaylistGameT;
-    using IUpdatableDoc::UpdatableContainer;
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
     PlaylistHeaderT mPlaylistHeader;
-    UpdatableContainer<PlaylistGameT> mPlaylistGames;
+    IUpdatableDoc::UpdatableContainer<PlaylistGameT> mPlaylistGames;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
