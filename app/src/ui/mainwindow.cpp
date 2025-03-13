@@ -190,11 +190,8 @@ void MainWindow::initializeBindings()
             mImageModeMap.from(validModes.front())->setChecked(true);
 
         // Disable invalid mode buttons
-        magic_enum::enum_for_each<Import::ImageMode>([this, &validModes](auto val) {
-            constexpr Import::ImageMode im = val;
-            if(!validModes.contains(im))
-                mImageModeMap.from(im)->setChecked(false);
-        });
+        for(const auto[mode, button] : mImageModeMap)
+                button->setEnabled(validModes.contains(mode));
     });
 
     // Enabled
