@@ -21,6 +21,7 @@ jobs:
     secrets:
       ffynnon_access: ${{ secrets.OBYBOT_FFYNNON_ACCESS }}
     with:
+      qt_version: 6.8.2
       runs_exclude: >
         [
             { "linkage": "shared" },
@@ -31,15 +32,16 @@ jobs:
         ]
       runs_include: >
         [
-            { "os": "ubuntu-22.04", "compiler": "clang++-18", "linkage": "static" }
+            { "os": "ubuntu-22.04", "compiler": "clang++-18", "linkage": "static" },
+            { "os": "ubuntu-24.04", "compiler": "clang++-18", "linkage": "static" },
+            { "os": "ubuntu-24.04", "compiler": "g++-14", "linkage": "static" }
         ]
       pre_build_steps: |
         - name: Install Clang 18 [Linux]
-          if: env.run_is_linux == 'true' && env.run_compiler == 'clang++-18'
+          if: env.run_os == 'ubuntu-22.04' && env.run_compiler == 'clang++-18'
           shell: bash
           run: |
             wget https://apt.llvm.org/llvm.sh
             chmod u+x llvm.sh
             sudo ./llvm.sh 18
-
 
