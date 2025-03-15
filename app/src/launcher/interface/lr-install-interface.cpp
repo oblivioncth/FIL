@@ -112,6 +112,16 @@ DocHandlingError IInstall::commitDataDocument(std::shared_ptr<IDataDoc::Writer> 
     return commitError;
 }
 
+void IInstall::closeDataDocument(std::unique_ptr<IDataDoc> doc)
+{
+    // Closes without saving changes
+    if(doc)
+    {
+        mLeasedDocuments.remove(doc->identifier());
+        doc.reset();
+    }
+}
+
 QList<QString> IInstall::modifiedPlatforms() const { return modifiedDataDocs(IDataDoc::Type::Platform); }
 QList<QString> IInstall::modifiedPlaylists() const { return modifiedDataDocs(IDataDoc::Type::Playlist); }
 

@@ -247,9 +247,7 @@ Lr::DocHandlingError Install::commitClifpEmulatorConfig(std::unique_ptr<Emulator
 void Install::softReset()
 {
     Lr::IInstall::softReset();
-
-    if(mRomlist)
-        mRomlist.reset();
+    closeDataDocument(std::move(mRomlist));
 }
 
 QList<Import::ImageMode> Install::preferredImageModeOrder() const { return IMAGE_MODE_ORDER; }
