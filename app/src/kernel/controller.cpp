@@ -220,11 +220,8 @@ void Controller::updateInstallPath(const QString& installPath, Import::Install t
             {
                 std::unique_ptr<Lr::IInstall> launcher;
                 launcher = Lr::Registry::acquireMatch(checkedPath);
-                if(!launcher->isValid())
-                {
+                if(!launcher)
                     QMessageBox::critical(&mMainWindow, QApplication::applicationName(), MSG_LR_INSTALL_INVALID);
-                    launcher.reset();
-                }
 
                 mImportProperties.setLauncher(std::move(launcher));
             }
