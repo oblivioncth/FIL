@@ -325,6 +325,10 @@ DocHandlingError XmlDocWriter<DocT>::streamStatus() const
 template<class DocT>
 DocHandlingError XmlDocWriter<DocT>::writeOutOf()
 {
+    // Ensure path exists
+    if(!QFileInfo(mXmlFile).dir().mkpath(u"."_s))
+        return DocHandlingError(*source(), DocHandlingError::DocCantSave, u"Can't create dir path."_s);
+
     // Open File
     if(!mXmlFile.open(QFile::WriteOnly | QFile::Truncate)) // Discard previous contents
         return DocHandlingError(*source(), DocHandlingError::DocCantSave, mXmlFile.errorString());
