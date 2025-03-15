@@ -887,6 +887,9 @@ Worker::Result Worker::doImport(Qx::Error& errorReport)
     // Reset install
     mLauncherInstall->softReset();
 
+    // Purge purgeables
+    Import::BackupManager::instance()->purge();
+
     // Report successful import completion
     errorReport = Qx::Error();
     return Successful;

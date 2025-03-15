@@ -5,6 +5,9 @@
 #include <QFile>
 #include <QFileInfo>
 
+// Qx Includes
+#include <qx/io/qx-common-io.h>
+
 namespace Import
 {
 
@@ -59,12 +62,12 @@ BackupManager* BackupManager::instance() { static BackupManager inst; return &in
 //Private:
 BackupError BackupManager::backup(const QString& path, bool (*fn)(const QString& a, const QString& b))
 {
-    // Prevent double+ backups (THIS IS CRITICAL, HENCE WHY A SET IS USED)
-    if(mRevertablePaths.contains(path))
+    // Prevent double+ backups (THIS IS CRITICAL, HENCE WHY A HASH IS USED)
+    if(mRevertables.contains(path))
         return BackupError();
 
     // Note revertable
-    mRevertablePaths.insert(path);
+    mRevertables[path] = false;
 
     // Backup if exists
     if(QFile::exists(path))
@@ -84,12 +87,12 @@ BackupError BackupManager::backup(const QString& path, bool (*fn)(const QString&
     return BackupError();
 }
 
-BackupError BackupManager::restore(QSet<QString>::const_iterator pathItr)
+BackupError BackupManager::restore(RevertItr itr)
 {
-    Q_ASSERT(pathItr != mRevertablePaths.cend());
+    Q_ASSERT(itr != mRevertables.cend());
 
-    const QString path = *pathItr;
-    mRevertablePaths.erase(pathItr);
+    const QString path = itr.key();
+    mRevertables.erase(itr);
     QString backupPath = filePathToBackupPath(path);
 
     if(QFile::exists(path) && !QFile::remove(path))
@@ -114,8 +117,8 @@ BackupError BackupManager::backupRename(const QString& path)
 
 BackupError BackupManager::restore(const QString& path)
 {
-    auto store = mRevertablePaths.constFind(path);
-    if(store == mRevertablePaths.cend())
+    auto store = mRevertables.constFind(path);
+    if(store == mRevertables.cend())
         return BackupError();
 
     return restore(store);
@@ -151,12 +154,42 @@ BackupError BackupManager::safeReplace(const QString& src, const QString& dst, b
     if(dstOccupied)
         QFile::remove(backupPath);
     else // Mark new files (only) as revertible so that existing ones will remain in the event of a revert
-        mRevertablePaths.insert(dst);
+        mRevertables[dst] = false;
 
     return BackupError();
 }
 
-int BackupManager::revertQueueCount() const { return mRevertablePaths.size(); }
+BackupError BackupManager::revertableTouch(const QString& path)
+{
+    if(!Qx::createFile(path))
+        return BackupError(BackupError::FileWontCreate, path);
+
+    mRevertables[path] = false;
+    return BackupError();
+}
+
+// - Backs up the file at 'path' via copy, and then deletes the backup at the end of the import
+// - File is restored on revert.
+BackupError BackupManager::revertableRemove(const QString& path)
+{
+    // TODO: Use this for AM extra files
+    QString backupPath = filePathToBackupPath(path);
+
+    if(QFile::exists(backupPath) && QFileInfo(backupPath).isFile())
+    {
+        if(!QFile::remove(backupPath))
+            return BackupError(BackupError::FileWontDelete, backupPath);
+    }
+
+    if(!QFile::rename(path, backupPath))
+        return BackupError(BackupError::FileWontBackup, path);
+
+    mRevertables[path] = true;
+    return BackupError();
+}
+
+bool BackupManager::hasReversions() const { return !mRevertables.isEmpty(); }
+int BackupManager::revertQueueCount() const { return mRevertables.size(); }
 
 int BackupManager::revertNextChange(BackupError& error, bool skipOnFail)
 {
@@ -164,18 +197,29 @@ int BackupManager::revertNextChange(BackupError& error, bool skipOnFail)
     error = BackupError();
 
     // Delete new files and restore backups if present
-    if(!mRevertablePaths.isEmpty())
+    if(!mRevertables.isEmpty())
     {
-        BackupError rErr = restore(mRevertablePaths.cbegin());
+        BackupError rErr = restore(mRevertables.cbegin());
         if(rErr && !skipOnFail)
             error = rErr;
 
-        return mRevertablePaths.size();
+        return mRevertables.size();
     }
 
     // Return 0 if all empty (shouldn't be reached if function is used correctly)
     qWarning("Reversion function called with no reverts left!");
     return 0;
+}
+
+void BackupManager::purge()
+{
+    for(auto itr = mRevertables.cbegin(); itr != mRevertables.cend();)
+    {
+        bool purge = itr.value();
+        if(purge)
+            QFile::remove(itr.key());
+        itr = mRevertables.erase(itr); // clazy:exclude=strict-iterators
+    }
 }
 
 }
