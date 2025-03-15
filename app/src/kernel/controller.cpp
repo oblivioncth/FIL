@@ -108,39 +108,43 @@ void Controller::processImportResult(Import::Worker::Result importResult, const 
 void Controller::revertAllLauncherChanges()
 {
     auto launcher = mImportProperties.launcher();
-
-    // Trackers
-    bool tempSkip = false;
-    bool alwaysSkip = false;
-    Import::BackupError currentError;
-    int retryChoice;
-
-    // Progress
     auto bm = Import::BackupManager::instance();
-    mProgressPresenter.setMinimum(0);
-    mProgressPresenter.setMaximum(bm->revertQueueCount());
-    mProgressPresenter.setCaption(CAPTION_REVERT);
-    while(bm->revertNextChange(currentError, alwaysSkip || tempSkip) != 0)
+
+    if(bm->hasReversions())
     {
-        // Check for error
-        if(!currentError.isValid())
-        {
-            tempSkip = false;
-            mProgressPresenter.setValue(mProgressPresenter.value() + 1);
-        }
-        else
-        {
-            retryChoice = Qx::postBlockingError(currentError, QMessageBox::Retry | QMessageBox::Ignore | QMessageBox::Abort, QMessageBox::Retry);
+        // Trackers
+        bool tempSkip = false;
+        bool alwaysSkip = false;
+        Import::BackupError currentError;
+        int retryChoice;
 
-            if(retryChoice == QMessageBox::Ignore)
-                tempSkip = true;
-            else if(retryChoice == QMessageBox::Abort)
-                alwaysSkip = true;
+        // Progress
+
+        mProgressPresenter.setMinimum(0);
+        mProgressPresenter.setMaximum(bm->revertQueueCount());
+        mProgressPresenter.setCaption(CAPTION_REVERT);
+        while(bm->revertNextChange(currentError, alwaysSkip || tempSkip) != 0)
+        {
+            // Check for error
+            if(!currentError.isValid())
+            {
+                tempSkip = false;
+                mProgressPresenter.setValue(mProgressPresenter.value() + 1);
+            }
+            else
+            {
+                retryChoice = Qx::postBlockingError(currentError, QMessageBox::Retry | QMessageBox::Ignore | QMessageBox::Abort, QMessageBox::Retry);
+
+                if(retryChoice == QMessageBox::Ignore)
+                    tempSkip = true;
+                else if(retryChoice == QMessageBox::Abort)
+                    alwaysSkip = true;
+            }
         }
+
+        // Ensure progress dialog is closed
+        mProgressPresenter.reset();
     }
-
-    // Ensure progress dialog is closed
-    mProgressPresenter.reset();
 
     // Reset instance
     launcher->softReset();
