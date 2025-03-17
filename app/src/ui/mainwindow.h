@@ -142,7 +142,7 @@ private:
 
     Qx::Bimap<Import::ImageMode, QRadioButton*> mImageModeMap;
     QHash<QRadioButton*, Import::PlaylistGameMode> mPlaylistGameModeMap;
-    QHash<QRadioButton*, Import::UpdateOptions> mUpdateModeMap;
+    QHash<QRadioButton*, Import::UpdateMode> mUpdateModeMap;
     Qx::StandardItemModel mTagModel;
 
     QString mArgedPlaylistGameModeHelp;

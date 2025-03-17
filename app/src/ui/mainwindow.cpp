@@ -102,7 +102,8 @@ MainWindow::MainWindow(const Import::Properties& importProperties, QWidget* pare
     mPlaylistSelections(ui->listWidget_playlistChoices),
     mImportProperties(importProperties),
     mImageModeMap(initializeImageModeMap()),
-    mPlaylistGameModeMap(initializePlaylistGameModeMap())
+    mPlaylistGameModeMap(initializePlaylistGameModeMap()),
+    mUpdateModeMap(initializeUpdateModeMap())
 {
     // Prepare tag model
     mTagModel.setAutoTristate(true);
@@ -242,7 +243,7 @@ void MainWindow::initializeBindings()
     // Tag map
     mImportProperties.bindableTagMap().subscribeLifetime([&]{
         // Populate model
-        auto tagMap = mImportProperties.tagMap();
+        const auto tagMap = mImportProperties.tagMap();
         if(tagMap.isEmpty())
         {
             mTagModel.clear();
@@ -353,7 +354,7 @@ Import::PlaylistGameMode MainWindow::getSelectedPlaylistGameMode() const
     Q_UNUSED(mBindings.forceAllModeChecked.value());
 
     QRadioButton* sel = static_cast<QRadioButton*>(ui->buttonGroup_playlistGameMode->checkedButton());
-    Q_ASSERT(sel);
+    Q_ASSERT(sel && mPlaylistGameModeMap.contains(sel));
     return mPlaylistGameModeMap[sel];
 }
 
@@ -365,14 +366,14 @@ Fp::Db::InclusionOptions MainWindow::getSelectedInclusionOptions() const
 Import::UpdateOptions MainWindow::getSelectedUpdateOptions() const
 {
     QRadioButton* sel = static_cast<QRadioButton*>(ui->buttonGroup_updateMode->checkedButton());
-    Q_ASSERT(sel);
-    return mUpdateModeMap[sel];
+    Q_ASSERT(sel && mUpdateModeMap.contains(sel));
+    return {mUpdateModeMap[sel], ui->checkBox_removeMissing->isChecked()};
 }
 
 Import::ImageMode MainWindow::getSelectedImageMode() const
 {
     QRadioButton* sel = static_cast<QRadioButton*>(ui->buttonGroup_imageMode->checkedButton());
-    Q_ASSERT(sel);
+    Q_ASSERT(sel && mImageModeMap.containsRight(sel));
     return mImageModeMap.from(sel);
 }
 
