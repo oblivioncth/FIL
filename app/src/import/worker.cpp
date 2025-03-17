@@ -261,7 +261,10 @@ Worker::Result Worker::processPlatformGames(Qx::Error& errorReport, std::unique_
         sb.wTags(gameTags); // From above
         if(!mOptionSet.excludeAddApps)
         {
-            sb.wAddApps(mAddAppsCache.values(builtGame.id())); // All associated additional apps from cache
+            // Add playable add apps
+            auto addApps = mAddAppsCache.values(builtGame.id());
+            addApps.removeIf([](const Fp::AddApp& aa){ return !aa.isPlayable(); });
+            sb.wAddApps(addApps);
             mAddAppsCache.remove(builtGame.id());
         }
 

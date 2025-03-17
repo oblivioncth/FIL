@@ -130,11 +130,7 @@ const RomEntry* Romlist::processSet(const Fp::Set& set)
 
     // Handle additional apps
     for(const Fp::AddApp& addApp : set.addApps())
-    {
-        // Ignore if not playable
-        if(addApp.isPlayable())
-            mEntries.insert(RomEntry(addApp, set.game()));
-    }
+        mEntries.insert(RomEntry(addApp, set.game()));
 
     return mainRomEntry;
 }
@@ -412,16 +408,7 @@ const RomEntry* PlatformInterface::processSet(const Fp::Set& set)
 
     // Add add app IDs to platform tag list
     for(const Fp::AddApp& addApp : set.addApps())
-    {
-        /* Ignore non-playable add apps to avoid useless clutter in AM
-         * TODO: Consider doing this in Import Worker to make it a standard since
-         * LB doesn't actually need the non-playable entries either. Importing them
-         * is basically a leftover from an earlier CLIFp version that required them
-         * for games to work (i.e. before auto mode).
-         */
-        if(addApp.isPlayable())
-            mPlatformTaglist.appendTag(addApp.id().toString(QUuid::WithoutBraces));
-    }
+        mPlatformTaglist.appendTag(addApp.id().toString(QUuid::WithoutBraces));
 
     //-Forward game insertion to main Romlist--------------------------------
     return install()->mRomlist->processSet(set);
