@@ -259,8 +259,11 @@ Worker::Result Worker::processPlatformGames(Qx::Error& errorReport, std::unique_
         Fp::Set::Builder sb;
         sb.wGame(builtGame); // From above
         sb.wTags(gameTags); // From above
-        sb.wAddApps(mAddAppsCache.values(builtGame.id())); // All associated additional apps from cache
-        mAddAppsCache.remove(builtGame.id());
+        if(!mOptionSet.excludeAddApps)
+        {
+            sb.wAddApps(mAddAppsCache.values(builtGame.id())); // All associated additional apps from cache
+            mAddAppsCache.remove(builtGame.id());
+        }
 
         Fp::Set builtSet = sb.build();
 
@@ -739,11 +742,14 @@ Worker::Result Worker::doImport(Qx::Error& errorReport)
         return Taskless;
 
     // Make initial add apps query
-    queryError = fpDatabase->queryAllAddApps(addAppQuery);
-    if(queryError.isValid())
+    if(!mOptionSet.excludeAddApps)
     {
-        errorReport = queryError;
-        return Failed;
+        queryError = fpDatabase->queryAllAddApps(addAppQuery);
+        if(queryError.isValid())
+        {
+            errorReport = queryError;
+            return Failed;
+        }
     }
 
     //-Determine Workload-------------------------------------------------
@@ -836,8 +842,11 @@ Worker::Result Worker::doImport(Qx::Error& errorReport)
     //-Primary Import Stages-------------------------------------------------
 
     // Pre-load additional apps
-    if((importStepStatus = preloadAddApps(errorReport, addAppQuery)) != Successful)
-        return importStepStatus;
+    if(!mOptionSet.excludeAddApps)
+    {
+        if((importStepStatus = preloadAddApps(errorReport, addAppQuery)) != Successful)
+            return importStepStatus;
+    }
 
     // Handle Launcher specific pre-platform tasks
     errorReport = mLauncherInstall->prePlatformsImport();

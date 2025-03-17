@@ -179,6 +179,7 @@ private:
     Import::UpdateOptions getSelectedUpdateOptions() const;
     Import::ImageMode getSelectedImageMode() const;
     bool getForceDownloadImages() const;
+    bool getExcludeAddApps() const;
 
     // Import
     void prepareImport();

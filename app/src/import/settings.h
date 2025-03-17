@@ -43,6 +43,7 @@ struct OptionSet
     bool downloadImages;
     PlaylistGameMode playlistMode;
     Fp::Db::InclusionOptions inclusionOptions;
+    bool excludeAddApps;
 };
 
 class ImagePaths

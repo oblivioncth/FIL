@@ -382,6 +382,11 @@ bool MainWindow::getForceDownloadImages() const
     return ui->action_forceDownloadImages->isChecked();
 }
 
+bool MainWindow::getExcludeAddApps() const
+{
+    return ui->action_excludeAdditionalApps->isChecked();
+}
+
 void MainWindow::prepareImport()
 {
     // Gather selection's and notify controller
@@ -392,7 +397,8 @@ void MainWindow::prepareImport()
         getSelectedImageMode(),
         getForceDownloadImages(),
         getSelectedPlaylistGameMode(),
-        getSelectedInclusionOptions()
+        getSelectedInclusionOptions(),
+        getExcludeAddApps()
     };
 
     emit importTriggered(impSel, optSet, selectionsMayModify());
