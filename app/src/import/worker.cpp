@@ -2,7 +2,7 @@
 #include "worker.h"
 
 // Standard Library Includes
-#include <filesystem>
+//#include <filesystem>
 
 // Qt
 #include <QImageWriter>
@@ -734,6 +734,10 @@ Worker::Result Worker::doImport(Qx::Error& errorReport)
         }
     }
 
+    // Bail if there's no work to be done
+    if(gameQueries.isEmpty() && playlistSpecGameQueries.isEmpty() && targetPlaylists.isEmpty())
+        return Taskless;
+
     // Make initial add apps query
     queryError = fpDatabase->queryAllAddApps(addAppQuery);
     if(queryError.isValid())
@@ -741,10 +745,6 @@ Worker::Result Worker::doImport(Qx::Error& errorReport)
         errorReport = queryError;
         return Failed;
     }
-
-    // Bail if there's no work to be done
-    if(gameQueries.isEmpty() && playlistSpecGameQueries.isEmpty() && targetPlaylists.isEmpty())
-        return Taskless;
 
     //-Determine Workload-------------------------------------------------
     quint64 totalGameCount = 0;
