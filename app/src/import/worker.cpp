@@ -213,6 +213,7 @@ bool Worker::performImageJobs(const QList<ImageMap>& jobs, bool symlink, Qx::Pro
 Worker::Result Worker::processPlatformGames(Qx::Error& errorReport, std::unique_ptr<Lr::IPlatformDoc>& platformDoc, Fp::Db::QueryBuffer& gameQueryResult)
 {
     const Fp::Toolkit* tk = mFlashpointInstall->toolkit();
+    Fp::Db* db = mFlashpointInstall->database();
 
     // Add/Update games
     for(int j = 0; j < gameQueryResult.size; j++)
@@ -246,9 +247,18 @@ Worker::Result Worker::processPlatformGames(Qx::Error& errorReport, std::unique_
 
         Fp::Game builtGame = fpGb.build();
 
+        // Get tags
+        Fp::GameTags gameTags;
+        if(auto dbErr = db->getGameTags(gameTags, builtGame.id()); dbErr.isValid())
+        {
+            errorReport = Qx::Error();
+            return Failed;
+        }
+
         // Construct full game set
         Fp::Set::Builder sb;
         sb.wGame(builtGame); // From above
+        sb.wTags(gameTags); // From above
         sb.wAddApps(mAddAppsCache.values(builtGame.id())); // All associated additional apps from cache
         mAddAppsCache.remove(builtGame.id());
 
