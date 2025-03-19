@@ -86,6 +86,48 @@ ImageManager::ImageManager(Fp::Install* fp, Lr::IInstall* lr, bool& canceledFlag
 
 //-Instance Functions-------------------------------------------------------------
 //Private:
+ImageManager::ImageMap ImageManager::createImageTransfer(const Lr::Game& game, const QFileInfo& srcInfo, Fp::ImageType type)
+{
+    const QString fullPath = srcInfo.absoluteFilePath();
+
+    // Determine true extension
+    QString sfx = u"."_s;
+    if(srcInfo.exists())
+    {
+        /* QImageReader can be used to do this, but it's slow in the context of a tight loop as it checks extensions in order
+         * (of which it supports many) and performs some other processing.
+         */
+        static QFile imgFile;
+        QByteArray magic;
+        imgFile.setFileName(fullPath);
+        if(imgFile.open(QIODevice::ReadOnly))
+        {
+            magic = imgFile.read(3);
+            imgFile.close();
+        }
+        else
+            qWarning("Failed to open %s for image file type inspection.", qPrintable(fullPath));
+
+        // Use a map if there ends up being many more types
+        if(magic == PNG_MAGIC)
+            sfx += PNG_EXT;
+        else if(magic == JPG_MAGIC)
+            sfx += JPG_EXT;
+        else
+        {
+            qWarning("Unknown image format %s. Using PNG extension.", qPrintable(magic));
+            sfx += PNG_EXT;
+        }
+    }
+    else
+    {
+        auto compressed = mFlashpoint->preferences().onDemandImagesCompressed.value_or(false);
+        sfx += compressed ? u"jpg"_s : u"png"_s;
+    }
+
+    return {fullPath, mLauncher->getDestinationImagePath(game, type) + sfx};
+}
+
 ImageTransferError ImageManager::transferImage(bool symlink, const QString& sourcePath, const QString& destPath)
 {
     /* TODO: Ideally the error handlers here don't need to include "Retry?" text and therefore need less use of QString::arg(); however, this largely
@@ -194,8 +236,6 @@ void ImageManager::prepareGameImages(const Lr::Game& game)
     // Get image information
     QFileInfo logoLocalInfo(tk->entryImageLocalPath(Fp::ImageType::Logo, game.id()));
     QFileInfo ssLocalInfo(tk->entryImageLocalPath(Fp::ImageType::Screenshot, game.id()));
-    QString checkedLogoPath = (logoLocalInfo.exists() || mDownload) ? logoLocalInfo.absoluteFilePath() : QString();
-    QString checkedScreenshotPath = (ssLocalInfo.exists() || mDownload) ? ssLocalInfo.absoluteFilePath() : QString();
 
     // Setup image downloads if applicable
     if(mDownload)
@@ -220,13 +260,13 @@ void ImageManager::prepareGameImages(const Lr::Game& game)
     // Handle image transfer
     if(mMode == ImageMode::Copy || mMode == ImageMode::Link)
     {
-        if(!checkedLogoPath.isEmpty())
-            mTransferJobs.append({checkedLogoPath, mLauncher->getDestinationImagePath(game, Fp::ImageType::Logo)});
+        if(logoLocalInfo.exists() || mDownload)
+            mTransferJobs.append(createImageTransfer(game, logoLocalInfo, Fp::ImageType::Logo));
         else
             mImageProgress->decrementMaximum(); // Can't transfer image that doesn't/won't exist
 
-        if(!checkedScreenshotPath.isEmpty())
-            mTransferJobs.append({checkedLogoPath, mLauncher->getDestinationImagePath(game, Fp::ImageType::Screenshot)});
+        if(ssLocalInfo.exists() || mDownload)
+            mTransferJobs.append(createImageTransfer(game, ssLocalInfo, Fp::ImageType::Screenshot));
         else
             mImageProgress->decrementMaximum(); // Can't transfer image that doesn't/won't exist
     }

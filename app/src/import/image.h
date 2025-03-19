@@ -92,7 +92,10 @@ private:
 //-Class Variables-------------------------------------------------------------------
 private:
     // Files
-    //static inline const QString BACKUP_FILE_EXT = u"fbk"_s;
+    static inline const QString PNG_EXT = u"png"_s;
+    static inline const QByteArray PNG_MAGIC = "\x89\x50\x4E"_ba; // Missing the "G" but it's fine, lets us always read 3 bytes
+    static inline const QString JPG_EXT = u"jpg"_s;
+    static inline const QByteArray JPG_MAGIC = "\xFF\xD8\xFF"_ba;
 
 //-Instance Variables-------------------------------------------------------------
 private:
@@ -123,6 +126,8 @@ private:
 
 //-Instance Functions-------------------------------------------------------------
 private:
+    QString getFiletypeExtension(const QString& imgPath);
+    ImageMap createImageTransfer(const Lr::Game& game, const QFileInfo& srcInfo, Fp::ImageType type);
     ImageTransferError transferImage(bool symlink, const QString& sourcePath, const QString& destPath);
     bool performImageJobs(const QList<ImageMap>& jobs, bool symlink, Qx::ProgressGroup* pg);
 
