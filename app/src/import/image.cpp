@@ -137,12 +137,13 @@ ImageTransferError ImageManager::transferImage(bool symlink, const QString& sour
      */
 
     // Image info
+    QFileInfo sourceInfo(sourcePath);
     QFileInfo destinationInfo(destPath);
     QDir destinationDir(destinationInfo.absolutePath());
     bool destinationOccupied = destinationInfo.exists() && (destinationInfo.isFile() || destinationInfo.isSymLink());
 
     // Return if source in unexpectedly missing (i.e. download failure)
-    if(!QFile::exists(sourcePath))
+    if(!sourceInfo.exists())
         return ImageTransferError(ImageTransferError::ImageSourceUnavailable, sourcePath);
 
     // Return if image is already up-to-date
@@ -152,15 +153,8 @@ ImageTransferError ImageManager::transferImage(bool symlink, const QString& sour
             return ImageTransferError();
         else if(!destinationInfo.isSymLink() && !symlink)
         {
-            QFile source(sourcePath);
-            QFile destination(destPath);
-            QString sourceChecksum;
-            QString destinationChecksum;
-
-            // TODO: Probably better to just byte-wise compare
-            if(!Qx::calculateFileChecksum(sourceChecksum, source, QCryptographicHash::Md5).isFailure() &&
-                !Qx::calculateFileChecksum(destinationChecksum, destination, QCryptographicHash::Md5).isFailure() &&
-                sourceChecksum.compare(destinationChecksum, Qt::CaseInsensitive) == 0)
+            QDateTime lastChange = destinationInfo.birthTime(); // File is always replaced when mode is Copy so 'Creation Time' is fine
+            if(lastChange >= sourceInfo.birthTime() && lastChange >= sourceInfo.lastModified() && lastChange >= sourceInfo.metadataChangeTime())
                 return ImageTransferError();
         }
         // Image is always updated if changing between Link/Copy
