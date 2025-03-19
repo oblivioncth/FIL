@@ -105,14 +105,6 @@ Qx::Error Install::populateExistingDocs(QSet<Lr::IDataDoc::Identifier>& existing
     return Qx::Error();
 }
 
-QString Install::imageDestinationPath(Fp::ImageType imageType, const Lr::Game& game) const
-{
-    return mFpScraperDirectory.absolutePath() + '/' +
-           (imageType == Fp::ImageType::Logo ? LOGO_FOLDER_NAME : SCREENSHOT_FOLDER_NAME) + '/' +
-           game.id().toString(QUuid::WithoutBraces) +
-           '.' + IMAGE_EXT;
-}
-
 std::unique_ptr<PlatformInterface> Install::preparePlatformDocCheckout(const QString& translatedName)
 {
     // Determine path to the taglist that corresponds with the interface
@@ -486,13 +478,11 @@ void Install::processBulkImageSources(const Import::ImagePaths& bulkSources)
     qFatal("Attract Mode does not support Reference image mode, and that option should not be available.");
 }
 
-void Install::convertToDestinationImages(const RomEntry& game, Import::ImagePaths& images)
+QString Install::generateImagePath(const RomEntry& romEntry, Fp::ImageType type)
 {
-    if(!images.logoPath().isEmpty())
-        images.setLogoPath(imageDestinationPath(Fp::ImageType::Logo, game));
-
-    if(!images.screenshotPath().isEmpty())
-        images.setScreenshotPath(imageDestinationPath(Fp::ImageType::Screenshot, game));
+    return mFpScraperDirectory.absolutePath() + '/' +
+           (type == Fp::ImageType::Logo ? LOGO_FOLDER_NAME : SCREENSHOT_FOLDER_NAME) + '/' +
+           romEntry.id().toString(QUuid::WithoutBraces);
 }
 
 }

@@ -1,5 +1,5 @@
-#ifndef BACKUP_H
-#define BACKUP_H
+#ifndef IMPORT_BACKUP_H
+#define IMPORT_BACKUP_H
 
 // Qt Includes
 #include <QString>
@@ -142,4 +142,4 @@ public:
 
 }
 
-#endif // BACKUP_H
+#endif // IMPORT_BACKUP_H

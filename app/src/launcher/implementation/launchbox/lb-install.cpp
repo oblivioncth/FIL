@@ -88,15 +88,6 @@ Qx::Error Install::populateExistingDocs(QSet<Lr::IDataDoc::Identifier>& existing
     return Qx::Error();
 }
 
-QString Install::imageDestinationPath(Fp::ImageType imageType, const Lr::Game& game) const
-{
-    return mPlatformImagesDirectory.absolutePath() + '/' +
-           game.platform() + '/' +
-           (imageType == Fp::ImageType::Logo ? LOGO_PATH : SCREENSHOT_PATH) + '/' +
-           game.id().toString(QUuid::WithoutBraces) +
-           '.' + IMAGE_EXT;
-}
-
 void Install::editBulkImageReferences(const Import::ImagePaths& imageSources)
 {
     // Set media folder paths
@@ -414,18 +405,17 @@ Qx::Error Install::postPlaylistsImport()
     return commitParentsDoc(std::move(mParents));
 }
 
+QString Install::generateImagePath(const Game& game, Fp::ImageType type)
+{
+    return mPlatformImagesDirectory.absolutePath() + '/' +
+           game.platform() + '/' +
+           (type == Fp::ImageType::Logo ? LOGO_PATH : SCREENSHOT_PATH) + '/' +
+           game.id().toString(QUuid::WithoutBraces);
+}
+
 void Install::processBulkImageSources(const Import::ImagePaths& bulkSources)
 {
     editBulkImageReferences(bulkSources);
-}
-
-void Install::convertToDestinationImages(const Game& game, Import::ImagePaths& images)
-{
-    if(!images.logoPath().isEmpty())
-        images.setLogoPath(imageDestinationPath(Fp::ImageType::Logo, game));
-
-    if(!images.screenshotPath().isEmpty())
-        images.setScreenshotPath(imageDestinationPath(Fp::ImageType::Screenshot, game));
 }
 
 QString Install::platformCategoryIconPath() const { return mPlatformCategoryIconsDirectory.absoluteFilePath(u"Flashpoint.png"_s); }

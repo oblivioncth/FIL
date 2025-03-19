@@ -9,7 +9,6 @@
 #include <fp/fp-install.h>
 
 // Project Includes
-
 #include "launcher/abstract/lr-data.h"
 #include "launcher/implementation/attractmode/am-registration.h"
 #include "launcher/implementation/attractmode/am-items.h"

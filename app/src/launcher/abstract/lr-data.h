@@ -123,12 +123,12 @@ protected:
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
     // IMPLEMENT
-    virtual const GameT* processSet(const Fp::Set& set) = 0;
+    virtual const GameT* processSet(const Fp::Set& set) = 0; // Returned pointer must remain valid until at least the next time this method is called
 
 public:
     InstallT* install() const;
 
-    void addSet(const Fp::Set& set, Import::ImagePaths& images) override;
+    const Game* addSet(const Fp::Set& set) override;  // Might just want to have this overridden directly as GameT will naturally upcast to Game*
 
     // IMPLEMENT
     using IPlatformDoc::isEmpty;

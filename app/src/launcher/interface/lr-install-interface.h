@@ -13,11 +13,6 @@ namespace Lr
 
 class IInstall
 {
-//-Class Variables-----------------------------------------------------------------------------------------------
-protected:
-    // Files
-    static inline const QString IMAGE_EXT = u"png"_s;
-
 //-Instance Variables--------------------------------------------------------------------------------------------
 private:
     // Validity
@@ -97,6 +92,7 @@ public:
     virtual Qx::Error postPlaylistsImport();
 
     // Images
+    virtual QString getDestinationImagePath(const Game& game, Fp::ImageType type) = 0;
     virtual void processBulkImageSources(const Import::ImagePaths& bulkSources) = 0;
     virtual QString platformCategoryIconPath() const; // Unsupported in default implementation, needs to return path with .png extension
     virtual std::optional<QDir> platformIconsDirectory() const; // Unsupported in default implementation

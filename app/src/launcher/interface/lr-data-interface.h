@@ -563,7 +563,7 @@ private:
 public:
     virtual bool containsGame(const QUuid& gameId) const = 0; // NOTE: UNUSED
     virtual bool containsAddApp(const QUuid& addAppId) const = 0; // NOTE: UNUSED
-    virtual void addSet(const Fp::Set& set, Import::ImagePaths& images) = 0;
+    virtual const Game* addSet(const Fp::Set& set) = 0;
 };
 
 class IPlaylistDoc : public IUpdatableDoc

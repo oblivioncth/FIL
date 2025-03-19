@@ -7,10 +7,6 @@
 #include <qx/xml/qx-xmlstreamreadererror.h>
 #include <qx/xml/qx-common-xml.h>
 
-// Project Includes
-#include "import/details.h"
-#include "launcher/abstract/lr-install.h"
-
 namespace Lr
 {
 
@@ -95,20 +91,7 @@ template<LauncherId Id>
 Id::InstallT* PlatformDoc<Id>::install() const { return static_cast<InstallT*>(IDataDoc::install()); }
 
 template<LauncherId Id>
-void PlatformDoc<Id>::addSet(const Fp::Set& set, Import::ImagePaths& images)
-{
-    // Process set
-    auto game = processSet(set);
-
-    /* Process single image if applicable.
-     *
-     * The derived install type will not be defined at this point so we must access install() via
-     * the abstract base type.
-     */
-    auto install = static_cast<Install<Id>*>(IPlatformDoc::install());
-    if(Import::Details::current().imageMode != Import::ImageMode::Reference)
-        install->convertToDestinationImages(*game, images);
-}
+const Game* PlatformDoc<Id>::addSet(const Fp::Set& set) { return processSet(set); }
 
 //===============================================================================================================
 // PlaylistDoc

@@ -52,7 +52,7 @@ Properties::Properties() :
     });
     mImageDownloadable.setBinding([this]{
         return mFlashpointReady && mFlashpoint->preferences().onDemandImages;
-    }                                                           );
+    });
     mLauncherInfo.setBinding([this]{ return mLauncherReady ? mLauncher->name() + ' ' + mLauncher->versionString() : QString(); });
     mFlashpointInfo.setBinding([this]{ return mFlashpointReady ? mFlashpoint->versionInfo()->fullString() : QString(); });
     mTagMap.setBinding([this]{ return mFlashpointReady ? mFlashpoint->database()->tags() : QMap<int, Fp::Db::TagCategory>(); });
