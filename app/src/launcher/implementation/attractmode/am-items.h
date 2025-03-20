@@ -128,7 +128,7 @@ public:
     QString text() const;
 };
 
-class EmulatorArtworkEntry : public Lr::Item
+class EmulatorArtworkEntry
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
@@ -149,7 +149,7 @@ public:
     QStringList paths() const;
 };
 
-class EmulatorArtworkEntry::Builder : public Lr::Item::Builder<EmulatorArtworkEntry>
+class EmulatorArtworkEntry::Builder : public Lr::Builder<EmulatorArtworkEntry>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:

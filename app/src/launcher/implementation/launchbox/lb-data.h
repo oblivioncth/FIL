@@ -25,24 +25,23 @@ class PlatformDoc : public Lr::BasicPlatformDoc<LauncherId>
     friend PlatformDocWriter;
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
-    QHash<QString, std::shared_ptr<CustomField>> mCustomFieldsFinal;
-    QHash<QString, std::shared_ptr<CustomField>> mCustomFieldsExisting;
+    UpdatableContainer<CustomField> mCustomFields;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlatformDoc(Install* install, const QString& xmlPath, QString docName, const Import::UpdateOptions& updateOptions);
+    explicit PlatformDoc(Install* install, const QString& xmlPath, const QString& docName, const Import::UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
-    std::shared_ptr<Game> prepareGame(const Fp::Game& game) override;
-    std::shared_ptr<AddApp> prepareAddApp(const Fp::AddApp& addApp) override;
+    Game prepareGame(const Fp::Game& game) override;
+    AddApp prepareAddApp(const Fp::AddApp& addApp) override;
 
-    void addCustomField(std::shared_ptr<CustomField> customField);
+    void addCustomField(CustomField&& customField);
 
 public:
     bool isEmpty() const override;
 
-    void finalize() override;
+    void preCommit() override;
 };
 
 class PlatformDocReader : public Lr::XmlDocReader<PlatformDoc>
@@ -83,12 +82,12 @@ private:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    explicit PlaylistDoc(Install* install, const QString& xmlPath, QString docName, const Import::UpdateOptions& updateOptions);
+    explicit PlaylistDoc(Install* install, const QString& xmlPath, const QString& docName, const Import::UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
-    std::shared_ptr<PlaylistHeader> preparePlaylistHeader(const Fp::Playlist& playlist) override;
-    std::shared_ptr<PlaylistGame> preparePlaylistGame(const Fp::PlaylistGame& game) override;
+    PlaylistHeader preparePlaylistHeader(const Fp::Playlist& playlist) override;
+    PlaylistGame preparePlaylistGame(const Fp::PlaylistGame& game) override;
 };
 
 class PlaylistDocReader : public Lr::XmlDocReader<PlaylistDoc>
@@ -117,7 +116,7 @@ private:
     bool writePlaylistGame(const PlaylistGame& playlistGame);
 };
 
-class PlatformsConfigDoc : public Lr::UpdateableDoc<LauncherId>
+class PlatformsConfigDoc : public Lr::UpdatableDoc<LauncherId>
 {
 //-Inner Classes----------------------------------------------------------------------------------------------------
 public:
@@ -130,12 +129,9 @@ public:
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 private:
-    QHash<QString, Platform> mPlatformsFinal;
-    QHash<QString, Platform> mPlatformsExisting;
-    QMap<QString, PlatformFolder> mPlatformFoldersFinal;
-    QMap<QString, PlatformFolder> mPlatformFoldersExisting;
-    QMap<QString, PlatformCategory> mPlatformCategoriesFinal;
-    QMap<QString, PlatformCategory> mPlatformCategoriesExisting;
+    UpdatableContainer<Platform> mPlatforms;
+    UpdatableContainer<PlatformFolder> mPlatformFolders;
+    UpdatableContainer<PlatformCategory> mPlatformCategories;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
@@ -148,20 +144,14 @@ private:
 public:
     bool isEmpty() const override;
 
-    const QHash<QString, Platform>& finalPlatforms() const;
-    const QMap<QString, PlatformFolder>& finalPlatformFolders() const;
-    const QMap<QString, PlatformCategory>& finalPlatformCategories() const;
-
-    void addPlatform(const Platform& platform);
+    void addPlatform(Platform&& platform);
     void removePlatform(const QString& platformName);
 
-    void addPlatformFolder(const PlatformFolder& platformFolder);
+    void addPlatformFolder(PlatformFolder&& platformFolder);
     void removePlatformFolders(const QString& platformName);
 
-    void addPlatformCategory(const PlatformCategory& platformCategory);
+    void addPlatformCategory(PlatformCategory&& platformCategory);
     void removePlatformCategory(const QString& categoryName);
-
-    void finalize() override;
 };
 
 class PlatformsConfigDoc::Reader : public Lr::XmlDocReader<PlatformsConfigDoc>

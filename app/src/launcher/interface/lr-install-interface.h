@@ -13,11 +13,6 @@ namespace Lr
 
 class IInstall
 {
-//-Class Variables-----------------------------------------------------------------------------------------------
-protected:
-    // Files
-    static inline const QString IMAGE_EXT = u"png"_s;
-
 //-Instance Variables--------------------------------------------------------------------------------------------
 private:
     // Validity
@@ -55,13 +50,12 @@ protected:
     void declareValid(bool valid);
 
     // Docs
-    void catalogueExistingDoc(IDataDoc::Identifier existingDoc);
     DocHandlingError checkoutDataDocument(std::shared_ptr<IDataDoc::Reader> docReader);
     DocHandlingError commitDataDocument(std::shared_ptr<IDataDoc::Writer> docWriter);
     void closeDataDocument(std::unique_ptr<IDataDoc> doc);
     QList<QString> modifiedPlatforms() const;
     QList<QString> modifiedPlaylists() const;
-    virtual Qx::Error populateExistingDocs() = 0;
+    virtual Qx::Error populateExistingDocs(QSet<IDataDoc::Identifier>& existingDocs) = 0;
 
 public:
     // Details
@@ -98,6 +92,7 @@ public:
     virtual Qx::Error postPlaylistsImport();
 
     // Images
+    virtual QString getDestinationImagePath(const Game& game, Fp::ImageType type) = 0;
     virtual void processBulkImageSources(const Import::ImagePaths& bulkSources) = 0;
     virtual QString platformCategoryIconPath() const; // Unsupported in default implementation, needs to return path with .png extension
     virtual std::optional<QDir> platformIconsDirectory() const; // Unsupported in default implementation

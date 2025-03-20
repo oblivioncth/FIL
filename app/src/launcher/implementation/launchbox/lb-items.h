@@ -140,6 +140,8 @@ class CustomField : public Lr::Item
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
+    struct Hash;
+    struct KeyEqual;
     class Builder;
 
 //-Class Variables--------------------------------------------------------------------------------------------------
@@ -161,6 +163,16 @@ public:
     QUuid gameId() const;
     QString name() const;
     QString value() const;
+};
+
+struct CustomField::Hash
+{
+    std::size_t operator()(const CustomField& cf) const noexcept { return qHashMulti(0, cf.mGameId, cf.mName); }
+};
+
+struct CustomField::KeyEqual
+{
+    bool operator()(const CustomField& a, const CustomField& b) const noexcept { return a.mGameId == b.mGameId && a.mName == b.mName; }
 };
 
 class CustomField::Builder : public Lr::Item::Builder<CustomField>
@@ -279,6 +291,8 @@ class Platform : public Lr::Item
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
+    struct Hash;
+    struct KeyEqual;
     class Builder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
@@ -294,6 +308,21 @@ public:
 public:
     QString name() const;
 //    QString category() const;
+};
+
+struct Platform::Hash
+{
+    using is_transparent = void;
+    std::size_t operator()(const Platform& p) const noexcept { return qHash(p.mName, 0); }
+    std::size_t operator()(const QString& name) const noexcept { return qHash(name, 0); }
+};
+
+struct Platform::KeyEqual
+{
+    using is_transparent = void;
+    bool operator()(const Platform& a, const Platform& b) const noexcept { return a.mName == b.mName; }
+    bool operator()(const QString& name, const Platform& p) const noexcept { return name == p.mName; }
+    bool operator()(const Platform& p, const QString& name) const noexcept { return operator()(name, p); }
 };
 
 class Platform::Builder : public Lr::Item::Builder<Platform>
@@ -312,6 +341,8 @@ class PlatformFolder : public Lr::Item
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
+    struct Hash;
+    struct KeyEqual;
     class Builder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
@@ -332,6 +363,16 @@ public:
     QString identifier() const;
 };
 
+struct PlatformFolder::Hash
+{
+    std::size_t operator()(const PlatformFolder& pf) const noexcept { return qHash(pf.identifier(), 0); }
+};
+
+struct PlatformFolder::KeyEqual
+{
+    bool operator()(const PlatformFolder& a, const PlatformFolder& b) const noexcept { return a.identifier() == b.identifier(); }
+};
+
 class PlatformFolder::Builder : public Lr::Item::Builder<PlatformFolder>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
@@ -349,6 +390,8 @@ class PlatformCategory : public Lr::Item
 {
 //-Inner Classes---------------------------------------------------------------------------------------------------
 public:
+    struct Hash;
+    struct KeyEqual;
     class Builder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
@@ -364,6 +407,21 @@ public:
 public:
     QString name() const;
     QString nestedName() const;
+};
+
+struct PlatformCategory::Hash
+{
+    using is_transparent = void;
+    std::size_t operator()(const PlatformCategory& pc) const noexcept { return qHash(pc.mName, 0); }
+    std::size_t operator()(const QString& name) const noexcept { return qHash(name, 0); }
+};
+
+struct PlatformCategory::KeyEqual
+{
+    using is_transparent = void;
+    bool operator()(const PlatformCategory& a, const PlatformCategory& b) const noexcept { return a.mName == b.mName; }
+    bool operator()(const QString& name, const PlatformCategory& pc) const noexcept { return name == pc.mName; }
+    bool operator()(const PlatformCategory& pc, const QString& name) const noexcept { return operator()(name, pc); }
 };
 
 class PlatformCategory::Builder : public Lr::Item::Builder<PlatformCategory>

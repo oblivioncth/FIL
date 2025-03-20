@@ -53,8 +53,6 @@ void IInstall::declareValid(bool valid)
     mValid = valid;
 }
 
-void IInstall::catalogueExistingDoc(IDataDoc::Identifier existingDoc) { mExistingDocuments.insert(existingDoc); }
-
 DocHandlingError IInstall::checkoutDataDocument(std::shared_ptr<IDataDoc::Reader> docReader)
 {
     auto docToOpen = docReader->target();
@@ -71,9 +69,12 @@ DocHandlingError IInstall::checkoutDataDocument(std::shared_ptr<IDataDoc::Reader
         if(docReader && mExistingDocuments.contains(docToOpen->identifier()))
              openReadError = docReader->readInto();
 
-        // Add lease to ledger if no error occurred while reading
+        // Add lease to ledger if no error occurred while reading, and run any post checkout handling
         if(!openReadError.isValid())
+        {
             mLeasedDocuments.insert(docToOpen->identifier());
+            docToOpen->postCheckout();
+        }
     }
 
     // Return opened document and status
@@ -101,6 +102,7 @@ DocHandlingError IInstall::commitDataDocument(std::shared_ptr<IDataDoc::Writer> 
     if(!docToSave->isEmpty())
     {
         mModifiedDocuments.insert(id);
+        docToSave->preCommit();
         commitError = docWriter->writeOutOf();
         ensureModifiable(docToSave->path());
     }
@@ -146,7 +148,7 @@ Qx::Error IInstall::refreshExistingDocs(bool* changed)
 {
     QSet<IDataDoc::Identifier> oldDocSet;
     oldDocSet.swap(mExistingDocuments);
-    Qx::Error error = populateExistingDocs();
+    Qx::Error error = populateExistingDocs(mExistingDocuments);
     if(changed)
         *changed = mExistingDocuments != oldDocSet;
     return error;

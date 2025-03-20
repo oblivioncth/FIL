@@ -27,6 +27,8 @@ set(FIL_SOURCE
     import/backup.cpp
     import/details.h
     import/details.cpp
+    import/image.h
+    import/image.cpp
     import/properties.h
     import/properties.cpp
     import/settings.h

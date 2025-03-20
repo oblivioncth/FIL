@@ -29,6 +29,9 @@ public:
     Install(const QString& installPath);
 
 //-Instance Functions---------------------------------------------------------------------------------------------------
+private:
+    QString getDestinationImagePath(const Game& game, Fp::ImageType type) override;
+
 protected:
     // OPTIONALLY RE-IMPLEMENT
     virtual void preparePlatformDocCommit(const PlatformT& document); // Does nothing by default
@@ -54,7 +57,7 @@ public:
     using IInstall::preferredImageModeOrder;
     using IInstall::isRunning;
     using IInstall::processBulkImageSources; // Just do nothing if Reference mode isn't supported
-    virtual void convertToDestinationImages(const GameT& game, Import::ImagePaths& images) = 0; // NOTE: One or both of the image paths provided here can be null (i.e. images unavailable).
+    virtual QString generateImagePath(const GameT& game, Fp::ImageType type) = 0; // DO NOT ADD AN EXTENSION TO THIS PATH; added by worker later
 
     // OPTIONALLY RE-IMPLEMENT
     using IInstall::preImport;

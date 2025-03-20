@@ -68,7 +68,7 @@ size_t qHash(const IDataDoc::Identifier& key, size_t seed) noexcept
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-IDataDoc::Identifier::Identifier(Type docType, QString docName) :
+IDataDoc::Identifier::Identifier(Type docType, const QString& docName) :
     mDocType(docType),
     mDocName(docName)
 {}
@@ -85,7 +85,7 @@ QString IDataDoc::Identifier::docName() const { return mDocName; }
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-IDataDoc::IDataDoc(IInstall* install, const QString& docPath, QString docName) :
+IDataDoc::IDataDoc(IInstall* install, const QString& docPath, const QString& docName) :
       mInstall(install),
       mDocumentPath(docPath),
       mName(docName)
@@ -96,6 +96,8 @@ IDataDoc::IDataDoc(IInstall* install, const QString& docPath, QString docName) :
 IInstall* IDataDoc::install() const { return mInstall; }
 QString IDataDoc::path() const { return mDocumentPath; }
 IDataDoc::Identifier IDataDoc::identifier() const { return Identifier(type(), mName); }
+void IDataDoc::postCheckout() {}
+void IDataDoc::preCommit() {}
 
 //===============================================================================================================
 // IDataDoc::Reader
@@ -151,19 +153,20 @@ IDataDoc* IDataDoc::Writer::source() const { return mSourceDocument; }
 //Qx::Error IErrorable::error() const { return mError; }
 
 //===============================================================================================================
-// IUpdateableDoc
+// IUpdatableDoc
 //===============================================================================================================
 
 //-Constructor-----------------------------------------------------------------------------------------------------
 //Protected:
-IUpdateableDoc::IUpdateableDoc(IInstall* install, const QString& docPath, QString docName, const Import::UpdateOptions& updateOptions) :
+IUpdatableDoc::IUpdatableDoc(IInstall* install, const QString& docPath, const QString& docName, const Import::UpdateOptions& updateOptions) :
     IDataDoc(install, docPath, docName),
+    mUpdating(false),
     mUpdateOptions(updateOptions)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
-void IUpdateableDoc::finalize() {} // Does nothing for base class
+void IUpdatableDoc::postCheckout() { mUpdating = true; }
 
 //===============================================================================================================
 // IPlatformDoc
@@ -171,8 +174,8 @@ void IUpdateableDoc::finalize() {} // Does nothing for base class
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Protected:
-IPlatformDoc::IPlatformDoc(IInstall* install, const QString& docPath, QString docName, const Import::UpdateOptions& updateOptions) :
-    IUpdateableDoc(install, docPath, docName, updateOptions)
+IPlatformDoc::IPlatformDoc(IInstall* install, const QString& docPath, const QString& docName, const Import::UpdateOptions& updateOptions) :
+    IUpdatableDoc(install, docPath, docName, updateOptions)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
@@ -185,8 +188,8 @@ IDataDoc::Type IPlatformDoc::type() const { return Type::Platform; }
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-IPlaylistDoc::IPlaylistDoc(IInstall* install, const QString& docPath, QString docName, const Import::UpdateOptions& updateOptions) :
-    IUpdateableDoc(install, docPath, docName, updateOptions)
+IPlaylistDoc::IPlaylistDoc(IInstall* install, const QString& docPath, const QString& docName, const Import::UpdateOptions& updateOptions) :
+    IUpdatableDoc(install, docPath, docName, updateOptions)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------

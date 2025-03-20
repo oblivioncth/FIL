@@ -55,7 +55,7 @@ Install::Install(const QString& installPath) :
 
 //-Instance Functions----------------------------------------------------------------------------------------------
 //Private:
-Qx::Error Install::populateExistingDocs()
+Qx::Error Install::populateExistingDocs(QSet<Lr::IDataDoc::Identifier>& existingDocs)
 {
     // Temp storage
     QFileInfoList existingList;
@@ -66,7 +66,7 @@ Qx::Error Install::populateExistingDocs()
         return existingCheck;
 
     for(const QFileInfo& platformFile : std::as_const(existingList))
-         catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Platform, platformFile.baseName()));
+         existingDocs.insert(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Platform, platformFile.baseName()));
 
     // Check for playlists
     existingCheck = Qx::dirContentInfoList(existingList, mPlaylistsDirectory, {u"*."_s + XML_EXT}, QDir::NoFilter, QDirIterator::Subdirectories);
@@ -74,7 +74,7 @@ Qx::Error Install::populateExistingDocs()
         return existingCheck;
 
     for(const QFileInfo& playlistFile : std::as_const(existingList))
-        catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Playlist, playlistFile.baseName()));
+        existingDocs.insert(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Playlist, playlistFile.baseName()));
 
     // Check for config docs
     existingCheck = Qx::dirContentInfoList(existingList, mDataDirectory, {u"*."_s + XML_EXT});
@@ -82,19 +82,10 @@ Qx::Error Install::populateExistingDocs()
         return existingCheck;
 
     for(const QFileInfo& configDocFile : std::as_const(existingList))
-        catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Config, configDocFile.baseName()));
+        existingDocs.insert(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Config, configDocFile.baseName()));
 
     // Return success
     return Qx::Error();
-}
-
-QString Install::imageDestinationPath(Fp::ImageType imageType, const Lr::Game& game) const
-{
-    return mPlatformImagesDirectory.absolutePath() + '/' +
-           game.platform() + '/' +
-           (imageType == Fp::ImageType::Logo ? LOGO_PATH : SCREENSHOT_PATH) + '/' +
-           game.id().toString(QUuid::WithoutBraces) +
-           '.' + IMAGE_EXT;
 }
 
 void Install::editBulkImageReferences(const Import::ImagePaths& imageSources)
@@ -388,7 +379,6 @@ Qx::Error Install::postImageProcessing()
             return superErr;
 
     // Save platforms document since it's no longer needed at this point
-    mPlatformsConfig->finalize();
     Lr::DocHandlingError saveError = commitPlatformsConfigDoc(std::move(mPlatformsConfig));
 
     return saveError;
@@ -415,18 +405,17 @@ Qx::Error Install::postPlaylistsImport()
     return commitParentsDoc(std::move(mParents));
 }
 
+QString Install::generateImagePath(const Game& game, Fp::ImageType type)
+{
+    return mPlatformImagesDirectory.absolutePath() + '/' +
+           game.platform() + '/' +
+           (type == Fp::ImageType::Logo ? LOGO_PATH : SCREENSHOT_PATH) + '/' +
+           game.id().toString(QUuid::WithoutBraces);
+}
+
 void Install::processBulkImageSources(const Import::ImagePaths& bulkSources)
 {
     editBulkImageReferences(bulkSources);
-}
-
-void Install::convertToDestinationImages(const Game& game, Import::ImagePaths& images)
-{
-    if(!images.logoPath().isEmpty())
-        images.setLogoPath(imageDestinationPath(Fp::ImageType::Logo, game));
-
-    if(!images.screenshotPath().isEmpty())
-        images.setScreenshotPath(imageDestinationPath(Fp::ImageType::Screenshot, game));
 }
 
 QString Install::platformCategoryIconPath() const { return mPlatformCategoryIconsDirectory.absoluteFilePath(u"Flashpoint.png"_s); }

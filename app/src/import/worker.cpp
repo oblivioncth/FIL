@@ -1,15 +1,8 @@
 // Unit Include
 #include "worker.h"
 
-// Standard Library Includes
-#include <filesystem>
-
-// Qt
-#include <QImageWriter>
-
 // Qx Includes
 #include <qx/core/qx-regularexpression.h>
-#include <qx/core/qx-genericerror.h>
 
 // Project Includes
 #include "kernel/clifp.h"
@@ -18,45 +11,6 @@
 
 namespace Import
 {
-//===============================================================================================================
-// ImageTransferError
-//===============================================================================================================
-
-//-Constructor-------------------------------------------------------------
-//Private:
-ImageTransferError::ImageTransferError(Type t, const QString& src, const QString& dest) :
-    mType(t),
-    mSourcePath(src),
-    mDestinationPath(dest)
-{}
-
-//-Instance Functions-------------------------------------------------------------
-//Public:
-bool ImageTransferError::isValid() const { return mType != NoError; }
-ImageTransferError::Type ImageTransferError::type() const { return mType; }
-
-//Private:
-Qx::Severity ImageTransferError::deriveSeverity() const { return Qx::Err; }
-quint32 ImageTransferError::deriveValue() const { return mType; }
-QString ImageTransferError::derivePrimary() const { return ERR_STRINGS.value(mType); }
-QString ImageTransferError::deriveSecondary() const { return IMAGE_RETRY_PROMPT; }
-
-QString ImageTransferError::deriveDetails() const
-{
-    QString det;
-    if(!mSourcePath.isEmpty())
-        det += SRC_PATH_TEMPLATE.arg(mSourcePath) + '\n';
-    if(!mDestinationPath.isEmpty())
-    {
-        if(!det.isEmpty())
-            det += '\n';
-        det += DEST_PATH_TEMPLATE.arg(mDestinationPath) + '\n';
-    }
-
-    return det;
-}
-
-QString ImageTransferError::deriveCaption() const { return CAPTION_IMAGE_ERR; }
 
 //===============================================================================================================
 // Worker
@@ -65,13 +19,20 @@ QString ImageTransferError::deriveCaption() const { return CAPTION_IMAGE_ERR; }
 //-Constructor---------------------------------------------------------------------------------------------------
 //Public:
 Worker::Worker(Fp::Install* flashpoint, Lr::IInstall* launcher, Selections importSelections, OptionSet optionSet) :
-      mFlashpointInstall(flashpoint),
-      mLauncherInstall(launcher),
-      mImportSelections(importSelections),
-      mOptionSet(optionSet),
-      mCurrentProgress(0),
-      mCanceled(false)
-{}
+    mFlashpointInstall(flashpoint),
+    mLauncherInstall(launcher),
+    mImageManager(flashpoint, launcher, mCanceled),
+    mImportSelections(importSelections),
+    mOptionSet(optionSet),
+    mCurrentProgress(0),
+    mCanceled(false)
+{
+    mImageManager.setDownload(optionSet.downloadImages);
+    mImageManager.setMode(optionSet.imageMode);
+    connect(&mImageManager, &ImageManager::progressStepChanged, this, &Worker::progressStepChanged);
+    connect(&mImageManager, &ImageManager::blockingErrorOccured, this, &Worker::blockingErrorOccured);
+    connect(&mImageManager, &ImageManager::authenticationRequired, this, &Worker::authenticationRequired);
+}
 
 //-Destructor---------------------------------------------------------------------------------------------------
 //Public:
@@ -120,99 +81,9 @@ QList<QUuid> Worker::getPlaylistSpecificGameIds(const QList<Fp::Playlist>& playl
     return playlistSpecGameIds;
 }
 
-ImageTransferError Worker::transferImage(bool symlink, QString sourcePath, QString destinationPath)
-{
-    /* TODO: Ideally the error handlers here don't need to include "Retry?" text and therefore need less use of QString::arg(); however, this largely
-     * would require use of a button labeled "Ignore All" so that the errors could presented as is without a prompt, with the prompt being inferred
-     * through the button choices "Retry", "Ignore", and "Ignore All", but currently the last is not a standard button and due to how Qx::GenericError
-     * is implemented custom buttons aren't feasible. Honestly maybe just try adding it to Qt and see if its accepted.
-     */
-
-    // Image info
-    QFileInfo destinationInfo(destinationPath);
-    QDir destinationDir(destinationInfo.absolutePath());
-    bool destinationOccupied = destinationInfo.exists() && (destinationInfo.isFile() || destinationInfo.isSymLink());
-
-    // Return if source in unexpectedly missing (i.e. download failure)
-    if(!QFile::exists(sourcePath))
-        return ImageTransferError(ImageTransferError::ImageSourceUnavailable, sourcePath);
-
-    // Return if image is already up-to-date
-    if(destinationOccupied)
-    {
-        if(destinationInfo.isSymLink() && symlink)
-            return ImageTransferError();
-        else if(!destinationInfo.isSymLink() && !symlink)
-        {
-            QFile source(sourcePath);
-            QFile destination(destinationPath);
-            QString sourceChecksum;
-            QString destinationChecksum;
-
-            // TODO: Probably better to just byte-wise compare
-            if(!Qx::calculateFileChecksum(sourceChecksum, source, QCryptographicHash::Md5).isFailure() &&
-               !Qx::calculateFileChecksum(destinationChecksum, destination, QCryptographicHash::Md5).isFailure() &&
-               sourceChecksum.compare(destinationChecksum, Qt::CaseInsensitive) == 0)
-                return ImageTransferError();
-        }
-        // Image is always updated if changing between Link/Copy
-    }
-
-    // Ensure destination path exists
-    if(!destinationDir.mkpath(u"."_s))
-        return ImageTransferError(ImageTransferError::CantCreateDirectory, QString(), destinationDir.absolutePath());
-
-    // Transfer image
-    BackupError bErr = BackupManager::instance()->safeReplace(sourcePath, destinationPath, symlink);
-    if(bErr)
-    {
-        if(bErr.type() == BackupError::FileWontBackup)
-            return ImageTransferError(ImageTransferError::ImageWontBackup, QString(), destinationPath);
-        else if(bErr.type() == BackupError::FileWontReplace)
-            return ImageTransferError(symlink ? ImageTransferError::ImageWontLink : ImageTransferError::ImageWontCopy, QString(), destinationPath);
-        else
-            qFatal("Unhandled image transfer error type.");
-    }
-
-    // Return null error on success
-    return ImageTransferError();
-}
-
-bool Worker::performImageJobs(const QList<ImageMap>& jobs, bool symlink, Qx::ProgressGroup* pg)
-{
-    // Setup for image transfers
-    ImageTransferError imageTransferError; // Error return reference
-    *mBlockingErrorResponse = QMessageBox::NoToAll; // Default to choice "NoToAll" in case the signal is not correctly connected using Qt::BlockingQueuedConnection
-    bool ignoreAllTransferErrors = false; // NoToAll response tracker
-
-    for(const ImageMap& imageJob : jobs)
-    {
-        while((imageTransferError = transferImage(symlink, imageJob.sourcePath, imageJob.destPath)).isValid() && !ignoreAllTransferErrors)
-        {
-            // Notify GUI Thread of error
-            emit blockingErrorOccured(mBlockingErrorResponse, imageTransferError,
-                                      QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
-
-            // Check response
-            if(*mBlockingErrorResponse == QMessageBox::No)
-                break;
-            else if(*mBlockingErrorResponse == QMessageBox::NoToAll)
-                ignoreAllTransferErrors = true;
-        }
-
-        // Update progress dialog value
-        if(mCanceled)
-            return false;
-        else if(pg)
-            pg->incrementValue();
-    }
-
-    return true;
-}
-
 Worker::Result Worker::processPlatformGames(Qx::Error& errorReport, std::unique_ptr<Lr::IPlatformDoc>& platformDoc, Fp::Db::QueryBuffer& gameQueryResult)
 {
-    const Fp::Toolkit* tk = mFlashpointInstall->toolkit();
+    Fp::Db* db = mFlashpointInstall->database();
 
     // Add/Update games
     for(int j = 0; j < gameQueryResult.size; j++)
@@ -246,65 +117,36 @@ Worker::Result Worker::processPlatformGames(Qx::Error& errorReport, std::unique_
 
         Fp::Game builtGame = fpGb.build();
 
+        // Get tags
+        Fp::GameTags gameTags;
+        if(auto dbErr = db->getGameTags(gameTags, builtGame.id()); dbErr.isValid())
+        {
+            errorReport = Qx::Error();
+            return Failed;
+        }
+
         // Construct full game set
         Fp::Set::Builder sb;
         sb.wGame(builtGame); // From above
-        sb.wAddApps(mAddAppsCache.values(builtGame.id())); // All associated additional apps from cache
-        mAddAppsCache.remove(builtGame.id());
-
-        Fp::Set builtSet = sb.build();
-
-        // Get image information
-        QFileInfo logoLocalInfo(tk->entryImageLocalPath(Fp::ImageType::Logo, builtGame.id()));
-        QFileInfo ssLocalInfo(tk->entryImageLocalPath(Fp::ImageType::Screenshot, builtGame.id()));
-        QString checkedLogoPath = (logoLocalInfo.exists() || mOptionSet.downloadImages) ? logoLocalInfo.absoluteFilePath() : QString();
-        QString checkedScreenshotPath = (ssLocalInfo.exists() || mOptionSet.downloadImages) ? ssLocalInfo.absoluteFilePath() : QString();
-        Import::ImagePaths imagePaths(checkedLogoPath, checkedScreenshotPath);
-        ImageMap logoMap{.sourcePath = imagePaths.logoPath(), .destPath = ""};
-        ImageMap screenshotMap{.sourcePath = imagePaths.screenshotPath(), .destPath = ""};
+        sb.wTags(gameTags); // From above
+        if(!mOptionSet.excludeAddApps)
+        {
+            // Add playable add apps
+            auto addApps = mAddAppsCache.values(builtGame.id());
+            addApps.removeIf([](const Fp::AddApp& aa){ return !aa.isPlayable(); });
+            sb.wAddApps(addApps);
+            mAddAppsCache.remove(builtGame.id());
+        }
 
         // Add set to doc
-        platformDoc->addSet(builtSet, imagePaths);
+        const Lr::Game* addedGame = platformDoc->addSet(sb.build());
+        Q_ASSERT(addedGame);
 
         // Add ID to imported game cache
-        mImportedGameIdsCache.insert(builtGame.id());
+        mImportedGameIdsCache.insert(addedGame->id());
 
-        // Setup image downloads if applicable
-        if(mOptionSet.downloadImages)
-        {
-            if(!logoLocalInfo.exists())
-            {
-                QUrl logoRemotePath = tk->entryImageRemotePath(Fp::ImageType::Logo, builtGame.id());
-                mImageDownloadManager.appendTask(Qx::DownloadTask{logoRemotePath, logoLocalInfo.absoluteFilePath()});
-            }
-            else
-                mProgressManager.group(Pg::ImageDownload)->decrementMaximum(); // Already exists, remove download step from progress bar
-
-            if(!ssLocalInfo.exists())
-            {
-                QUrl ssRemotePath = tk->entryImageRemotePath(Fp::ImageType::Screenshot, builtGame.id());
-                mImageDownloadManager.appendTask(Qx::DownloadTask{ssRemotePath, ssLocalInfo.absoluteFilePath()});
-            }
-            else
-                mProgressManager.group(Pg::ImageDownload)->decrementMaximum(); // Already exists, remove download step from progress bar
-        }
-
-        // Handle image transfer
-        if(mOptionSet.imageMode == ImageMode::Copy || mOptionSet.imageMode == ImageMode::Link)
-        {
-            logoMap.destPath = imagePaths.logoPath();
-            screenshotMap.destPath = imagePaths.screenshotPath();
-
-            if(!logoMap.destPath.isEmpty())
-                mImageTransferJobs.append(logoMap);
-            else
-                mProgressManager.group(Pg::ImageTransfer)->decrementMaximum(); // Can't transfer image that doesn't/won't exist
-
-            if(!screenshotMap.destPath.isEmpty())
-                mImageTransferJobs.append(screenshotMap);
-            else
-                mProgressManager.group(Pg::ImageTransfer)->decrementMaximum(); // Can't transfer image that doesn't/won't exist
-        }
+        // Handle images
+        mImageManager.prepareGameImages(*addedGame);
 
         // Update progress dialog value for game addition
         if(mCanceled)
@@ -404,8 +246,7 @@ Worker::Result Worker::processGames(Qx::Error& errorReport, QList<Fp::Db::QueryB
             if((result = processPlatformGames(errorReport, currentPlatformDoc, currentQueryResult)) != Successful)
                 return result;
 
-            //---Finalize document----------------------------------
-            currentPlatformDoc->finalize();
+            //---Close out document----------------------------------
 
             // Forfeit document lease and save it
             Lr::DocHandlingError saveError;
@@ -458,9 +299,6 @@ Worker::Result Worker::processPlaylists(Qx::Error& errorReport, const QList<Fp::
         // Convert and set playlist header
         currentPlaylistDoc->setPlaylistData(currentPlaylist);
 
-        // Finalize document
-        currentPlaylistDoc->finalize();
-
         // Forfeit document lease and save it
         Lr::DocHandlingError saveError;
         if((saveError = mLauncherInstall->commitPlaylistDoc(std::move(currentPlaylistDoc))).isValid())
@@ -485,95 +323,39 @@ Worker::Result Worker::processPlaylists(Qx::Error& errorReport, const QList<Fp::
 }
 
 Worker::Result Worker::processImages(Qx::Error& errorReport)
-{
-    //-Image Download---------------------------------------------------------------------------------
-    if(mOptionSet.downloadImages && mImageDownloadManager.hasTasks())
+{    
+    // Download
+    if(Qx::DownloadManagerReport rep = mImageManager.downloadImages(); !rep.wasSuccessful())
     {
-        // Update progress dialog label
-        emit progressStepChanged(STEP_DOWNLOADING_IMAGES);
+        // Notify GUI Thread of error
+        emit blockingErrorOccured(mBlockingErrorResponse, rep, QMessageBox::Abort | QMessageBox::Ignore);
 
-        // Configure manager
-        mImageDownloadManager.setMaxSimultaneous(2);
-        mImageDownloadManager.setOverwrite(false); // Should be no attempts to overwrite, but here just in case
-        mImageDownloadManager.setStopOnError(false); // Get as many images as possible;
-        mImageDownloadManager.setSkipEnumeration(true); // Since progress is being tracked by task count, pre-enumeration of download size is unnecessary
-        mImageDownloadManager.setTransferTimeout(5000); // 5 seconds max to start downloading image before moving on
-
-        // Make connections
-        connect(&mImageDownloadManager, &Qx::SyncDownloadManager::sslErrors, this, [&](Qx::Error errorMsg, bool* ignore) {
-            emit blockingErrorOccured(mBlockingErrorResponse, errorMsg, QMessageBox::Yes | QMessageBox::Abort);
-            *ignore = *mBlockingErrorResponse == QMessageBox::Yes;
-        });
-
-        connect(&mImageDownloadManager, &Qx::SyncDownloadManager::authenticationRequired, this, &Worker::authenticationRequired);
-        connect(&mImageDownloadManager, &Qx::SyncDownloadManager::proxyAuthenticationRequired, this, &Worker::authenticationRequired);
-
-        connect(&mImageDownloadManager, &Qx::SyncDownloadManager::downloadFinished, this, [this]() { // clazy:exclude=lambda-in-connect
-                mProgressManager.group(Pg::ImageDownload)->incrementValue();
-        });
-
-        // Start download
-        Qx::DownloadManagerReport downloadReport = mImageDownloadManager.processQueue();
-
-        // Handle result
-        if(!downloadReport.wasSuccessful())
+        // Check response
+        if(*mBlockingErrorResponse == QMessageBox::Abort)
         {
-            // Notify GUI Thread of error
-            emit blockingErrorOccured(mBlockingErrorResponse, downloadReport, QMessageBox::Abort | QMessageBox::Ignore);
-
-            // Check response
-            if(*mBlockingErrorResponse == QMessageBox::Abort)
-            {
-                errorReport = Qx::Error();
-                return Canceled;
-            }
+            errorReport = Qx::Error();
+            return Canceled;
         }
     }
 
-    //-Image Import---------------------------------------------------------------------------
-
-    // Update progress dialog label
-    emit progressStepChanged(STEP_IMPORTING_IMAGES);
-
-    // Notify of step
-    Qx::Error imageExchangeError = mLauncherInstall->preImageProcessing();
-    if(imageExchangeError.isValid())
+    // Import
+    if(Qx::Error err = mLauncherInstall->preImageProcessing(); err.isValid())
     {
-        // Emit import failure
-        errorReport = imageExchangeError;
+        errorReport = err;
         return Failed;
     }
 
-    // Provide launcher with bulk reference locations
-    if(mOptionSet.imageMode == ImageMode::Reference)
+    if(!mImageManager.importImages())
     {
-        Import::ImagePaths bulkSources(QDir::toNativeSeparators(mFlashpointInstall->entryLogosDirectory().absolutePath()),
-                                       QDir::toNativeSeparators(mFlashpointInstall->entryScreenshotsDirectory().absolutePath()));
-
-        mLauncherInstall->processBulkImageSources(bulkSources);
+        errorReport = Qx::Error();
+        return Canceled;
     }
 
-    // Perform transfers if required
-    if(mOptionSet.imageMode == ImageMode::Copy || mOptionSet.imageMode == ImageMode::Link)
+    if(Qx::Error err = mLauncherInstall->postImageProcessing(); err.isValid())
     {
-        /*
-         * Account for potential mismatch between assumed and actual job count.
-         * For example, this may happen with infinity if a game hasn't been clicked on, as the logo
-         * will have been downloaded but not the screenshot
-         */
-        if(static_cast<quint64>(mImageTransferJobs.size()) != mProgressManager.group(Pg::ImageTransfer)->maximum())
-            mProgressManager.group(Pg::ImageTransfer)->setMaximum(mImageTransferJobs.size());
-
-        if(!performImageJobs(mImageTransferJobs, mOptionSet.imageMode == ImageMode::Link, mProgressManager.group(Pg::ImageTransfer)))
-            return Canceled;
-
-        mImageTransferJobs.clear();
+        errorReport = err;
+        return Failed;
     }
-    else if(!mImageTransferJobs.isEmpty())
-        qFatal("the launcher provided image transfers when the mode wasn't link/copy");
-
-    // Handle launcher specific actions
-    mLauncherInstall->postImageProcessing();
 
     // Report successful step completion
     errorReport = Qx::Error();
@@ -582,91 +364,9 @@ Worker::Result Worker::processImages(Qx::Error& errorReport)
 
 Worker::Result Worker::processIcons(Qx::Error& errorReport, const QStringList& platforms, const QList<Fp::Playlist>& playlists)
 {
-    QList<ImageMap> jobs;
-    QString mainDest = mLauncherInstall->platformCategoryIconPath();
-    std::optional<QDir> platformDestDir = mLauncherInstall->platformIconsDirectory();
-    std::optional<QDir> playlistDestDir = mLauncherInstall->playlistIconsDirectory();
-
-    const Fp::Toolkit* tk = mFlashpointInstall->toolkit();
-
-    // Main Job
-    if(!mainDest.isEmpty())
-        jobs.emplace_back(ImageMap{.sourcePath = u":/flashpoint/icon.png"_s, .destPath = mainDest});
-
-    // Platform jobs
-    if(platformDestDir)
-    {
-        QDir pdd = platformDestDir.value();
-        for(const QString& p : platforms)
-        {
-            QString src = tk->platformLogoPath(p);
-            if(QFile::exists(src))
-                jobs.emplace_back(ImageMap{.sourcePath = src,
-                                           .destPath = pdd.absoluteFilePath(p + ".png")});
-        }
-    }
-
-    // Create temp directory for playlist jobs
-    QTemporaryDir iconInflateDir; // Needed at this scope
-
-    // Playlist jobs
-    if(playlistDestDir)
-    {
-        // Validate temp dir
-        if(!iconInflateDir.isValid())
-        {
-            errorReport = Qx::GenericError(Qx::Critical, 13501, u"Failed to create directory for playlist icons inflation."_s, iconInflateDir.errorString());
-            return Failed;
-        }
-
-        // Setup playlist image jobs
-        QImageWriter iw;
-        QDir pdd = playlistDestDir.value();
-        for(const Fp::Playlist& p : playlists)
-        {
-            const QImage& icon = p.icon();
-            if(icon.isNull())
-                continue;
-
-            /* NOTE: This is LaunchBox specific since it's currently the only FE to support icons. If this changes a general solution is needed
-             * Like allowing the launcher to filter out specific icons
-             *
-             * Don't copy the favorites icon as LB already has its own.
-             */
-            if(p.title().trimmed() == u"Favorites"_s)
-                continue;
-
-            /* NOTE: This may not work for all launchers
-             *
-             * Use translated name for destination since that's what the launcher is expecting
-             */
-            QString sFilename = p.title() + ".png";
-            QString dFilename = mLauncherInstall->translateDocName(p.title(), Lr::IDataDoc::Type::Playlist) + ".png";;
-            QString source = iconInflateDir.filePath(sFilename);
-            QString dest = pdd.absoluteFilePath(dFilename);
-
-            iw.setFileName(source);
-            if(!iw.write(icon))
-            {
-                errorReport = Qx::GenericError(Qx::Critical, 13502, u"Failed to inflate playlist icon"_s, iw.errorString());
-                return Failed;
-            }
-
-            jobs.emplace_back(ImageMap{.sourcePath = source, .destPath = dest});
-        }
-    }
-
-    // Perform
-    if(!jobs.isEmpty())
-    {
-        if(!performImageJobs(jobs, false, mProgressManager.group(Pg::IconTransfer))) // Always copy
-        {
-            errorReport = Qx::Error();
-            return Canceled;
-        }
-    }
-
-    return Successful;
+    bool canceled;
+    errorReport = mImageManager.importIcons(canceled, platforms, playlists);
+    return canceled ? Canceled : errorReport.isValid() ? Failed : Successful;
 }
 
 //Public
@@ -728,17 +428,20 @@ Worker::Result Worker::doImport(Qx::Error& errorReport)
         }
     }
 
-    // Make initial add apps query
-    queryError = fpDatabase->queryAllAddApps(addAppQuery);
-    if(queryError.isValid())
-    {
-        errorReport = queryError;
-        return Failed;
-    }
-
     // Bail if there's no work to be done
     if(gameQueries.isEmpty() && playlistSpecGameQueries.isEmpty() && targetPlaylists.isEmpty())
         return Taskless;
+
+    // Make initial add apps query
+    if(!mOptionSet.excludeAddApps)
+    {
+        queryError = fpDatabase->queryAllAddApps(addAppQuery);
+        if(queryError.isValid())
+        {
+            errorReport = queryError;
+            return Failed;
+        }
+    }
 
     //-Determine Workload-------------------------------------------------
     quint64 totalGameCount = 0;
@@ -769,22 +472,27 @@ Worker::Result Worker::doImport(Qx::Error& errorReport)
         totalGameCount += query.size;
     }
 
+    // TODO: Maybe move initial progress setup of image related tasks to ImageManager
+    Qx::ProgressGroup* pgImageDownload = nullptr;
+    Qx::ProgressGroup* pgImageTransfer = nullptr;
+    Qx::ProgressGroup* pgIconTransfer = nullptr;
+
     // Screenshot and Logo downloads
     if(mOptionSet.downloadImages)
     {
-        Qx::ProgressGroup* pgImageDownload = initializeProgressGroup(Pg::ImageDownload, 3);
+        pgImageDownload = initializeProgressGroup(Pg::ImageDownload, 3);
         pgImageDownload->setMaximum(totalGameCount * 2);
     }
 
     // Screenshot and Logo transfer
     if(mOptionSet.imageMode != ImageMode::Reference)
     {
-        Qx::ProgressGroup* pgImageTransfer = initializeProgressGroup(Pg::ImageTransfer, 3);
+        pgImageTransfer = initializeProgressGroup(Pg::ImageTransfer, 3);
         pgImageTransfer->setMaximum(totalGameCount * 2);
     }
 
     // Icon transfers
-    // TOD: Somewhat wasteful because these create a temporary copy, but not a big deal for now
+    // TODO: Somewhat wasteful because these create a temporary copy, but not a big deal for now
     quint64 iconCount = 0;
     if(!mLauncherInstall->platformCategoryIconPath().isEmpty())
         iconCount++;
@@ -795,7 +503,7 @@ Worker::Result Worker::doImport(Qx::Error& errorReport)
 
     if(iconCount > 0)
     {
-        Qx::ProgressGroup* pgIconTransfer = initializeProgressGroup(Pg::IconTransfer, 3);
+        pgIconTransfer = initializeProgressGroup(Pg::IconTransfer, 3);
         pgIconTransfer->increaseMaximum(iconCount);
     }
 
@@ -805,6 +513,9 @@ Worker::Result Worker::doImport(Qx::Error& errorReport)
         Qx::ProgressGroup* pgPlaylistImport = initializeProgressGroup(Pg::PlaylistImport, 4);
         pgPlaylistImport->increaseMaximum(targetPlaylists.size());
     }
+
+    // Install image progress groups
+    mImageManager.setProgressGroups(pgImageDownload, pgImageTransfer, pgIconTransfer);
 
     // Connect progress manager signal
     connect(&mProgressManager, &Qx::GroupedProgressManager::progressUpdated, this, &Worker::pmProgressUpdated);
@@ -830,8 +541,11 @@ Worker::Result Worker::doImport(Qx::Error& errorReport)
     //-Primary Import Stages-------------------------------------------------
 
     // Pre-load additional apps
-    if((importStepStatus = preloadAddApps(errorReport, addAppQuery)) != Successful)
-        return importStepStatus;
+    if(!mOptionSet.excludeAddApps)
+    {
+        if((importStepStatus = preloadAddApps(errorReport, addAppQuery)) != Successful)
+            return importStepStatus;
+    }
 
     // Handle Launcher specific pre-platform tasks
     errorReport = mLauncherInstall->prePlatformsImport();
@@ -890,6 +604,9 @@ Worker::Result Worker::doImport(Qx::Error& errorReport)
 
     // Reset install
     mLauncherInstall->softReset();
+
+    // Purge purgeables
+    Import::BackupManager::instance()->purge();
 
     // Report successful import completion
     errorReport = Qx::Error();
