@@ -75,6 +75,7 @@ public:
     bool containsPlaylist(const QString& name) const;
     bool containsAnyPlatform(const QList<QString>& names) const; // Unused
     bool containsAnyPlaylist(const QList<QString>& names) const; // Unused
+    bool docIsLeased(IDataDoc::Identifier docId) const;
 
     virtual DocHandlingError checkoutPlatformDoc(std::unique_ptr<IPlatformDoc>& returnBuffer, const QString& name) = 0;
     virtual DocHandlingError checkoutPlaylistDoc(std::unique_ptr<IPlaylistDoc>& returnBuffer, const QString& name) = 0;

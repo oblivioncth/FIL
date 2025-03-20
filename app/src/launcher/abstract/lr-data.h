@@ -249,7 +249,7 @@ protected:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    XmlDocReader(DocT* targetDoc, const QString& root);
+    XmlDocReader(DocT* targetDoc, const QString& root = {});
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
@@ -276,7 +276,7 @@ protected:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    XmlDocWriter(DocT* sourceDoc, const QString& root);
+    XmlDocWriter(DocT* sourceDoc, const QString& root = {});
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 protected:

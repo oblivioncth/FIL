@@ -66,7 +66,7 @@ RomEntry::RomEntry(const Fp::AddApp& flashpointAddApp, const Fp::Game& parentGam
 {}
 
 //-Class Functions-----------------------------------------------------------------------------------------------
-//Public:
+//Private:
 QString RomEntry::addAppTitle(const QString& parentTitle, const QString& originalAddAppTitle)
 {
     return parentTitle + u" |> "_s + originalAddAppTitle;

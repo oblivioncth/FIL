@@ -56,6 +56,16 @@ set(FIL_SOURCE
     launcher/implementation/attractmode/am-settings-items.cpp
     launcher/implementation/attractmode/am-registration.h
     launcher/implementation/attractmode/am-registration.cpp
+    launcher/implementation/emulationstation/es-data.h
+    launcher/implementation/emulationstation/es-data.cpp
+    launcher/implementation/emulationstation/es-install.h
+    launcher/implementation/emulationstation/es-install.cpp
+    launcher/implementation/emulationstation/es-install_win.cpp
+    launcher/implementation/emulationstation/es-install_linux.cpp
+    launcher/implementation/emulationstation/es-items.h
+    launcher/implementation/emulationstation/es-items.cpp
+    launcher/implementation/emulationstation/es-registration.h
+    launcher/implementation/emulationstation/es-registration.cpp
     launcher/interface/lr-data-interface.h
     launcher/interface/lr-data-interface.cpp
     launcher/interface/lr-install-interface.h

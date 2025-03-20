@@ -6,7 +6,6 @@
 // Qt Includes
 #include <QString>
 #include <QFile>
-#include <memory>
 
 // Qx Includes
 #include <qx/core/qx-freeindextracker.h>

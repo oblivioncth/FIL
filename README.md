@@ -25,6 +25,7 @@ You will still be able to use the standard Flashpoint launcher as normal after c
 ### Supported Launchers
  - [LaunchBox](https://www.launchbox-app.com/)
  - [AttractMode](http://attractmode.org/)
+ - [ES-DE](https://es-de.org/)
 
 ### Flashpoint
 While testing for 100% compatibility is infeasible given the size of Flashpoint, FIL was designed with full compatibility in mind.
