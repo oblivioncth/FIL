@@ -5,51 +5,62 @@ namespace Lr
 {
 
 //===============================================================================================================
-// ITEM
+// Item
 //===============================================================================================================
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 Item::Item() {}
 
-//-Destructor------------------------------------------------------------------------------------------------
-//Public:
-Item::~Item() {}
-
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QHash<QString, QString>& Item::otherFields() { return mOtherFields; }
-const QHash<QString, QString>& Item::otherFields() const { return mOtherFields; }
-
-void Item::transferOtherFields(QHash<QString, QString>& otherFields) { mOtherFields = std::move(otherFields); }
+QList<Item::OtherField>& Item::otherFields() { return mOtherFields; }
+const QList<Item::OtherField>& Item::otherFields() const { return mOtherFields; }
+void Item::copyOtherFields(const Item& other) { mOtherFields = other.mOtherFields; }
 
 //===============================================================================================================
-// BASIC ITEM
+// BasicItem
 //===============================================================================================================
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 BasicItem::BasicItem() {}
 
-BasicItem::BasicItem(QUuid id, QString name) :
-    mId(id),
-    mName(name)
+BasicItem::BasicItem(const QUuid& id) :
+    mId(id)
 {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
 QUuid BasicItem::id() const { return mId; }
-QString BasicItem::name() const { return mName; }
 
 //===============================================================================================================
-// GAME
+// NamedItem
+//===============================================================================================================
+
+//-Constructor------------------------------------------------------------------------------------------------
+//Public:
+NamedItem::NamedItem() {}
+
+NamedItem::NamedItem(const QUuid& id, const QString& name) :
+    BasicItem(id),
+    mName(name)
+{}
+
+//-Instance Functions------------------------------------------------------------------------------------------------
+//Public:
+QString NamedItem::name() const { return mName; }
+
+//===============================================================================================================
+// Game
 //===============================================================================================================
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 Game::Game() {}
-Game::Game(QUuid id, QString name, QString platform) :
-    BasicItem(id, name),
+
+Game::Game(const QUuid& id, const QString& name, const QString& platform) :
+    NamedItem(id, name),
     mPlatform(platform)
 {}
 
@@ -58,15 +69,15 @@ Game::Game(QUuid id, QString name, QString platform) :
 QString Game::platform() const { return mPlatform; }
 
 //===============================================================================================================
-// ADD APP
+// AddApp
 //===============================================================================================================
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 AddApp::AddApp() {}
 
-AddApp::AddApp(QUuid id, QString name, QUuid gameId) :
-    BasicItem(id, name),
+AddApp::AddApp(const QUuid& id, const QString& name, const QUuid& gameId) :
+    NamedItem(id, name),
     mGameId(gameId)
 {}
 
@@ -75,27 +86,27 @@ AddApp::AddApp(QUuid id, QString name, QUuid gameId) :
 QUuid AddApp::gameId() const { return mGameId; }
 
 //===============================================================================================================
-// PLAYLIST HEADER
+// PlaylistHeader
 //===============================================================================================================
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 PlaylistHeader::PlaylistHeader() {}
 
-PlaylistHeader::PlaylistHeader(QUuid id, QString name) :
-    BasicItem(id, name)
+PlaylistHeader::PlaylistHeader(const QUuid& id, const QString& name) :
+    NamedItem(id, name)
 {}
 
 //===============================================================================================================
-// PLAYLIST GAME
+// PlaylistGame
 //===============================================================================================================
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 PlaylistGame::PlaylistGame() {}
 
-PlaylistGame::PlaylistGame(QUuid id, QString name) :
-    BasicItem(id, name)
+PlaylistGame::PlaylistGame(const QUuid& id, const QString& name) :
+    NamedItem(id, name)
 {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------

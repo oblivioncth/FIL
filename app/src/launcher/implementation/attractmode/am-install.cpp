@@ -55,22 +55,7 @@ Install::Install(const QString& installPath) :
 
 //-Instance Functions----------------------------------------------------------------------------------------------
 //Private:
-void Install::nullify()
-{
-    Lr::IInstall::nullify();
-
-    mEmulatorsDirectory = QDir();
-    mRomlistsDirectory = QDir();
-    mMainConfigFile.setFileName(u""_s);
-    mFpTagDirectory = QDir();
-    mFpScraperDirectory = QDir();
-    mMainExe.setFileName(u""_s);
-    mConsoleExe.setFileName(u""_s);
-    mFpRomlist.setFileName(u""_s);
-    mEmulatorConfigFile.setFileName(u""_s);
-}
-
-Qx::Error Install::populateExistingDocs()
+Qx::Error Install::populateExistingDocs(QSet<Lr::IDataDoc::Identifier>& existingDocs)
 {
     // Temp storage
     QFileInfoList existingList;
@@ -91,7 +76,7 @@ Qx::Error Install::populateExistingDocs()
             return existingCheck;
 
         for(const QFileInfo& platformFile : std::as_const(existingList))
-             catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Platform, platformFile.baseName()));
+             existingDocs.insert(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Platform, platformFile.baseName()));
 
         // Check for playlists
         existingCheck = Qx::dirContentInfoList(existingList, mFpTagDirectory, {u"[[]Playlist[]] *."_s + TAG_EXT},
@@ -100,32 +85,24 @@ Qx::Error Install::populateExistingDocs()
             return existingCheck;
 
         for(const QFileInfo& playlistFile : std::as_const(existingList))
-            catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Playlist, playlistFile.baseName()));
+            existingDocs.insert(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Playlist, playlistFile.baseName()));
 
         // Check for special "Flashpoint" platform (more like a config doc but OK for now)
         QFileInfo mainRomlistInfo(mFpRomlist);
         if(mainRomlistInfo.exists())
-            catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Platform, mainRomlistInfo.baseName()));
+            existingDocs.insert(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Platform, mainRomlistInfo.baseName()));
     }
 
     // Check for config docs
     QFileInfo mainCfgInfo(mMainConfigFile);
-    catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Config, mainCfgInfo.baseName())); // Must exist
+    existingDocs.insert(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Config, mainCfgInfo.baseName())); // Must exist
 
     QFileInfo emulatorCfgInfo(mEmulatorConfigFile);
     if(emulatorCfgInfo.exists())
-        catalogueExistingDoc(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Config, emulatorCfgInfo.baseName()));
+        existingDocs.insert(Lr::IDataDoc::Identifier(Lr::IDataDoc::Type::Config, emulatorCfgInfo.baseName()));
 
     // Return success
     return Qx::Error();
-}
-
-QString Install::imageDestinationPath(Fp::ImageType imageType, const Lr::Game& game) const
-{
-    return mFpScraperDirectory.absolutePath() + '/' +
-           (imageType == Fp::ImageType::Logo ? LOGO_FOLDER_NAME : SCREENSHOT_FOLDER_NAME) + '/' +
-           game.id().toString(QUuid::WithoutBraces) +
-           '.' + IMAGE_EXT;
 }
 
 std::unique_ptr<PlatformInterface> Install::preparePlatformDocCheckout(const QString& translatedName)
@@ -262,9 +239,7 @@ Lr::DocHandlingError Install::commitClifpEmulatorConfig(std::unique_ptr<Emulator
 void Install::softReset()
 {
     Lr::IInstall::softReset();
-
-    if(mRomlist)
-        mRomlist.reset();
+    closeDataDocument(std::move(mRomlist));
 }
 
 QList<Import::ImageMode> Install::preferredImageModeOrder() const { return IMAGE_MODE_ORDER; }
@@ -359,9 +334,6 @@ Qx::Error Install::prePlatformsImport()
 
 Qx::Error Install::postPlatformsImport()
 {
-    // Finalize romlist
-    mRomlist->finalize();
-
     // Commit romlist (this will also null out its pointer since it's moved)
     return commitFlashpointRomlist(std::move(mRomlist));
 }
@@ -506,13 +478,11 @@ void Install::processBulkImageSources(const Import::ImagePaths& bulkSources)
     qFatal("Attract Mode does not support Reference image mode, and that option should not be available.");
 }
 
-void Install::convertToDestinationImages(const RomEntry& game, Import::ImagePaths& images)
+QString Install::generateImagePath(const RomEntry& romEntry, Fp::ImageType type)
 {
-    if(!images.logoPath().isEmpty())
-        images.setLogoPath(imageDestinationPath(Fp::ImageType::Logo, game));
-
-    if(!images.screenshotPath().isEmpty())
-        images.setScreenshotPath(imageDestinationPath(Fp::ImageType::Screenshot, game));
+    return mFpScraperDirectory.absolutePath() + '/' +
+           (type == Fp::ImageType::Logo ? LOGO_FOLDER_NAME : SCREENSHOT_FOLDER_NAME) + '/' +
+           romEntry.id().toString(QUuid::WithoutBraces);
 }
 
 }

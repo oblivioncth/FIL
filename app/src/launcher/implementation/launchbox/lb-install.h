@@ -6,7 +6,6 @@
 #include <QDir>
 #include <QSet>
 #include <QIcon>
-#include <QtXml>
 
 // Project Includes
 #include "launcher/abstract/lr-install.h"
@@ -84,11 +83,9 @@ public:
 //-Instance Functions------------------------------------------------------------------------------------------------------
 private:
     // Install management
-    void nullify() override;
-    Qx::Error populateExistingDocs() override;
+    Qx::Error populateExistingDocs(QSet<Lr::IDataDoc::Identifier>& existingDocs) override;
 
     // Image Processing
-    QString imageDestinationPath(Fp::ImageType imageType, const Lr::Game& game) const;
     void editBulkImageReferences(const Import::ImagePaths& imageSources);
 
     // Doc handling
@@ -119,8 +116,8 @@ public:
     Qx::Error postPlaylistsImport() override;
 
     // Image handling
+    QString generateImagePath(const Game& game, Fp::ImageType type) override;
     void processBulkImageSources(const Import::ImagePaths& bulkSources) override;
-    void convertToDestinationImages(const Game& game, Import::ImagePaths& images) override;
     QString platformCategoryIconPath() const override;
     std::optional<QDir> platformIconsDirectory() const override;
     std::optional<QDir> playlistIconsDirectory() const override;

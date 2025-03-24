@@ -10,9 +10,42 @@ All entry metadata is converted to its nearest LaunchBox equivalent, with nearly
 
 Everything should work out-of-the-box after an import.
 
+## ES-DE
+
+### Summary
+- Platforms are added as gamelists with an `[FE]` prefix
+- Playlists are added as collections with an `[FE]` prefix
+ - Additional applications are added as gamelist entries using the following naming scheme for their title `[parent_game_name] |> [add_app_name]`
+
+### Details
+
+The gamelist fields are mapped as follows:
+
+| ES-DE                | Flashpoint                            |
+|----------------------|---------------------------------------|
+| Path                 | Title ID (converted to dummy file)    |
+| Name                 | Title                                 |
+| Sort Name            | Order Title                           |
+| Collection Sort Name | Order Title                           |
+| Release Date         | Release date-time (date portion only) |
+| Developer            | Developer                             |
+| Publisher            | Publisher                             |
+| Players              | Play Mode                             |
+
+Any fields not listed are unused or set to a general default.
+
+By default, ES-DE insists on using it's scanner at every startup, even when it's unnecessary or doesn't make sense for a current system (i.e. one with static, or externally populated content, like FP). Because of this, even if platform's gamelist.xml file has all of the correct metadata to launch titles, they will not show up in your list of games unless actual files exist on disk that correspond to those entries. Since Flashpoint doesn't use traditional ROM files, FIL must create dummy files to "satisfy" the scanner, which unfortunately adds noticeable overhead if you import a large number of titles.
+
+You can avoid this issue by enabling the `Only show games from gamelist.xml files` option in your configuration, though unfortunately this affects every system in your collection, which may, or may not be a problem for you.
+
+In the long run it would be better if ES-DE supported the ability to enable "rely on gamelist.xml only" behavior on a per-system basis. This concept has been mentioned to maintainer, but unfortunately they don't seem very open to PRs.
+
+Platform/Playlist icons cannot easily be added to ES-DE in a global manner since system artwork is theme dependent; therefore, these icons are added to a non-function theme folder in the ES-DE directory that you can place into the theme you actually want to use.
+
+
 ## AttractMode
 
-Summary:
+### Summary
  - Everything is considered to be tied to the platform/system "Flashpoint", as well as an emulator by the same name
  - All selections are imported to a master "Flashpoint" romlist
  - A tag list is created for each Platform and Playlist with the prefixes "[Platform]" and "[Playlist]" respectively
@@ -23,26 +56,28 @@ Summary:
  - Title images are added as 'flyers' and screenshots are added as 'snaps'
  - Everything should work out-of-the-box after an import
 
-Details:
+### Details
 
 The default Display entry will only be created if it's missing, allowing you to customize it as you see fit afterwards; however, the Platform/Playlist specific filters will always be updated to match your selections from the most recent import. Alternatively you can simply make your own Display entry under a different name and leave the default alone (as well as potentially.
 
 The default sort of all Display filters uses the 'AltTitle' field, which is based on Flashpoint's 'sortTitle' field. This guarantees the that all games appear in the same order as they do within Flashpoint and that  additional applications appear directly under their parent games.
 
-The romlist fields are mapped as follows (AttractMode `->` Flashpoint):
+The romlist fields are mapped as follows:
 
- - Name `->` Title ID
- - Title `->` Title
- - Platform `->` Platform
- - Emulator `->` "Flashpoint"
- - CloneOf `->` Parent Title ID (if an additional app)
- - Year `->` Release date-time (date portion only)
- - Manufacturer `->` Developer
- - Players `->` Play Mode
- - Status `->` Status
- - AltTitle `->` Sort Title (use for correct sorting)
- - Series `->` Series
- - Language `->` Language
+| AttractMode  | Flashpoint                             |
+|--------------|----------------------------------------|
+| Name         | Title ID                               |
+| Title        | Title                                  |
+| Platform     | Platform                               |
+| Emulator     | "Flashpoint"                           |
+| CloneOf      | Parent Title ID (if an additional app) |
+| Year         | Release date-time (date portion only)  |
+| Manufacturer | Developer                              |
+| Players      | Play Mode                              |
+| AltTitle     | Sort Title (used for correct sorting)  |
+| Status       | Status                                 |
+| Series       | Series                                 |
+| Language     | Language                               |
 
 Any fields not listed are unused or set to a general default.
 

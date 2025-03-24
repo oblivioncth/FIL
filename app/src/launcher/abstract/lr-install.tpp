@@ -25,6 +25,13 @@ Install<Id>::Install(const QString& installPath) :
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------
+//Private:
+template<LauncherId Id>
+QString Install<Id>::getDestinationImagePath(const Game& game, Fp::ImageType type)
+{
+    return generateImagePath(static_cast<const GameT&>(game), type);
+}
+
 //Protected:
 template<LauncherId Id>
 void Install<Id>::preparePlatformDocCommit(const PlatformT& document)

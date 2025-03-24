@@ -26,14 +26,14 @@ The symbolic link related options for handling images require the importer to be
 
 **Example:**
 
-![FIL Example Usage](docs/images/main_window.png)
+![FIL Example Usage](images/main_window.png)
 
 # Usage (Tools)
 
 ## Tag Filter
 The tag filter editor allows you to customize which titles will be imported based on their tags.
 
-![Tag Filter](docs/images/tag_filter.png)
+![Tag Filter](images/tag_filter.png)
 
 Tags are listed alphabetically, nested under their categories names so that you can select or unselect an entire category easily. Exclusions take precedence, so if a title features a single tag that you have unselected it will not be included in the import.
 

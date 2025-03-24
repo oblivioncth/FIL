@@ -13,11 +13,6 @@ namespace Lr
 
 class IInstall
 {
-//-Class Variables-----------------------------------------------------------------------------------------------
-protected:
-    // Files
-    static inline const QString IMAGE_EXT = u"png"_s;
-
 //-Instance Variables--------------------------------------------------------------------------------------------
 private:
     // Validity
@@ -33,7 +28,7 @@ private:
 
 //-Constructor---------------------------------------------------------------------------------------------------
 public:
-    IInstall(const QString& installPath);
+    IInstall(const QString& installPath); // TODO: Mabye make this default and have a virtual "init" method that takes the path and returns a bool instead of using declareValid()
 
 //-Destructor-------------------------------------------------------------------------------------------------
 public:
@@ -52,16 +47,15 @@ private:
 
 protected:
     // Validity
-    virtual void nullify();
     void declareValid(bool valid);
 
     // Docs
-    void catalogueExistingDoc(IDataDoc::Identifier existingDoc);
     DocHandlingError checkoutDataDocument(std::shared_ptr<IDataDoc::Reader> docReader);
     DocHandlingError commitDataDocument(std::shared_ptr<IDataDoc::Writer> docWriter);
+    void closeDataDocument(std::unique_ptr<IDataDoc> doc);
     QList<QString> modifiedPlatforms() const;
     QList<QString> modifiedPlaylists() const;
-    virtual Qx::Error populateExistingDocs() = 0;
+    virtual Qx::Error populateExistingDocs(QSet<IDataDoc::Identifier>& existingDocs) = 0;
 
 public:
     // Details
@@ -81,6 +75,7 @@ public:
     bool containsPlaylist(const QString& name) const;
     bool containsAnyPlatform(const QList<QString>& names) const; // Unused
     bool containsAnyPlaylist(const QList<QString>& names) const; // Unused
+    bool docIsLeased(IDataDoc::Identifier docId) const;
 
     virtual DocHandlingError checkoutPlatformDoc(std::unique_ptr<IPlatformDoc>& returnBuffer, const QString& name) = 0;
     virtual DocHandlingError checkoutPlaylistDoc(std::unique_ptr<IPlaylistDoc>& returnBuffer, const QString& name) = 0;
@@ -98,6 +93,7 @@ public:
     virtual Qx::Error postPlaylistsImport();
 
     // Images
+    virtual QString getDestinationImagePath(const Game& game, Fp::ImageType type) = 0;
     virtual void processBulkImageSources(const Import::ImagePaths& bulkSources) = 0;
     virtual QString platformCategoryIconPath() const; // Unsupported in default implementation, needs to return path with .png extension
     virtual std::optional<QDir> platformIconsDirectory() const; // Unsupported in default implementation

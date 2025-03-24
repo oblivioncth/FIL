@@ -31,8 +31,6 @@ QString ConfigDoc::versionedTagline()
     return TAGLINE + install()->versionString();
 }
 
-
-
 //===============================================================================================================
 // Taglist
 //===============================================================================================================
@@ -110,53 +108,29 @@ Lr::IDataDoc::Type PlaylistTaglist::type() const { return Lr::IDataDoc::Type::Pl
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
 Romlist::Romlist(Install* install, const QString& listPath, QString docName, const Import::UpdateOptions& updateOptions) :
-    Lr::UpdateableDoc<LauncherId>(install, listPath, docName, updateOptions)
+    Lr::UpdatableDoc<LauncherId>(install, listPath, docName, updateOptions),
+    mEntries(this)
 {}
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Public:
 Lr::IDataDoc::Type Romlist::type() const { return Lr::IDataDoc::Type::Config; }
 
-bool Romlist::isEmpty() const
+bool Romlist::isEmpty() const { return mEntries.isEmpty(); }
+
+bool Romlist::containsGame(const QUuid& gameId) const { return mEntries.contains(gameId); }
+bool Romlist::containsAddApp(const QUuid& addAppId) const { return mEntries.contains(addAppId); }
+
+const RomEntry* Romlist::processSet(const Fp::Set& set)
 {
-    return mEntriesExisting.isEmpty() && mEntriesFinal.isEmpty();
-}
-
-const QHash<QUuid, std::shared_ptr<RomEntry>>& Romlist::finalEntries() const { return mEntriesFinal; }
-
-bool Romlist::containsGame(QUuid gameId) const { return mEntriesExisting.contains(gameId) || mEntriesFinal.contains(gameId); }
-bool Romlist::containsAddApp(QUuid addAppId) const { return mEntriesExisting.contains(addAppId) || mEntriesFinal.contains(addAppId); }
-
-std::shared_ptr<RomEntry> Romlist::processSet(const Fp::Set& set)
-{
-    // Convert to romlist entry
-    std::shared_ptr<RomEntry> mainRomEntry = std::make_shared<RomEntry>(set.game());
-
-    // Add entry
-    addUpdateableItem(mEntriesExisting, mEntriesFinal, mainRomEntry);
+    // Prepare and romlist entry
+    const RomEntry* mainRomEntry = mEntries.insert(RomEntry(set.game()));
 
     // Handle additional apps
     for(const Fp::AddApp& addApp : set.addApps())
-    {
-        // Ignore if not playable
-        if(addApp.isPlayable())
-        {
-            // Convert to romlist entry
-            std::shared_ptr<RomEntry> subRomEntry = std::make_shared<RomEntry>(addApp, set.game());
-
-            // Add entry
-            addUpdateableItem(mEntriesExisting, mEntriesFinal, subRomEntry);
-        }
-    }
+        mEntries.insert(RomEntry(addApp, set.game()));
 
     return mainRomEntry;
-}
-
-
-void Romlist::finalize()
-{
-    finalizeUpdateableItems(mEntriesExisting, mEntriesFinal);
-    Lr::IUpdateableDoc::finalize();
 }
 
 //===============================================================================================================
@@ -233,8 +207,7 @@ void Romlist::Reader::parseRomEntry(const QString& rawEntry)
         qWarning("Missing terminating '\"' character for ROM entry %s", qPrintable(rawEntry));
 
     // Build Entry and add to document
-    std::shared_ptr<RomEntry> existingEntry = reb.buildShared();
-    target()->mEntriesExisting[existingEntry->id()] = existingEntry;
+    target()->mEntries.insert(reb.build());
 }
 
 void Romlist::Reader::addFieldToBuilder(RomEntry::Builder& builder, QString field, quint8 index)
@@ -327,11 +300,8 @@ bool Romlist::Writer::writeSourceDoc()
     mStreamWriter.writeLine(Romlist::HEADER);
 
     // Write all rom entries
-    for(const std::shared_ptr<RomEntry>& entry : std::as_const(source()->finalEntries()))
-    {
-        if(!writeRomEntry(*entry))
-            return false;
-    }
+    if(!source()->mEntries.forEachFinal([this](const RomEntry& re){ return writeRomEntry(re); }))
+        return false;
 
     // Return true on success
     return true;
@@ -419,7 +389,7 @@ PlatformInterface::PlatformInterface(Install* install, const QString& platformTa
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 //Private:
-std::shared_ptr<RomEntry> PlatformInterface::processSet(const Fp::Set& set)
+const RomEntry* PlatformInterface::processSet(const Fp::Set& set)
 {
     //-Handle game----------------------------------------------------------
     const Fp::Game& game = set.game();
@@ -436,16 +406,7 @@ std::shared_ptr<RomEntry> PlatformInterface::processSet(const Fp::Set& set)
 
     // Add add app IDs to platform tag list
     for(const Fp::AddApp& addApp : set.addApps())
-    {
-        /* Ignore non-playable add apps to avoid useless clutter in AM
-         * TODO: Consider doing this in Import Worker to make it a standard since
-         * LB doesn't actually need the non-playable entries either. Importing them
-         * is basically a leftover from an earlier CLIFp version that required them
-         * for games to work (i.e. before auto mode).
-         */
-        if(addApp.isPlayable())
-            mPlatformTaglist.appendTag(addApp.id().toString(QUuid::WithoutBraces));
-    }
+        mPlatformTaglist.appendTag(addApp.id().toString(QUuid::WithoutBraces));
 
     //-Forward game insertion to main Romlist--------------------------------
     return install()->mRomlist->processSet(set);
@@ -454,7 +415,7 @@ std::shared_ptr<RomEntry> PlatformInterface::processSet(const Fp::Set& set)
 //Public:
 bool PlatformInterface::isEmpty() const { return mPlatformTaglist.isEmpty(); }
 
-bool PlatformInterface::containsGame(QUuid gameId) const
+bool PlatformInterface::containsGame(const QUuid& gameId) const
 {
     /* Check main romlist for ID. Could check the taglist instead, which would be more "correct" since only the current
      * platform should contain the ID, but this doesn't matter given correct design and the lookup is performed via
@@ -463,7 +424,7 @@ bool PlatformInterface::containsGame(QUuid gameId) const
     return install()->mRomlist->containsGame(gameId);
 }
 
-bool PlatformInterface::containsAddApp(QUuid addAppId) const
+bool PlatformInterface::containsAddApp(const QUuid& addAppId) const
 {
     /* Check main romlist for ID. Could check the taglist instead, which would be more "correct" since only the current
      * platform should contain the ID, but this doesn't matter given correct design and the lookup is performed via
@@ -518,7 +479,7 @@ PlaylistInterface::PlaylistInterface(Install* install, const QString& playlistTa
 //Public:
 bool PlaylistInterface::isEmpty() const { return mPlaylistTaglist.isEmpty(); }
 
-bool PlaylistInterface::containsPlaylistGame(QUuid gameId) const
+bool PlaylistInterface::containsPlaylistGame(const QUuid& gameId) const
 {
     return mPlaylistTaglist.containsTag(gameId.toString(QUuid::WithoutBraces));
 }

@@ -21,7 +21,6 @@ namespace Lr
  * interface type. Maybe its not worth the clutter, but doing it this way for now.
  */
 
-
 /* This was going to have another parameter for Type (doc type), but it created trouble when using
  * the readers/writers and dealing with diamond inheritance where one of the branches already defined
  * type().
@@ -33,7 +32,7 @@ protected:
     using InstallT = Id::InstallT;
 //-Constructor------------------------------------------------------------------------------------------------------
 protected:
-    DataDoc(InstallT* install, const QString& docPath, QString docName);
+    DataDoc(InstallT* install, const QString& docPath, const QString& docName);
 
 //-Destructor-------------------------------------------------------------------------------------------------
 public:
@@ -46,6 +45,10 @@ public:
     // IMPLEMENT
     using IDataDoc::type;
     using IDataDoc::isEmpty;
+
+    // OPTIONALLY RE-IMPELEMENT
+    using IDataDoc::postCheckout; // Does nothing by default
+    using IDataDoc::preCommit; // Does nothing by default
 };
 
 template<class DocT>
@@ -87,23 +90,24 @@ public:
 };
 
 template<LauncherId Id>
-class UpdateableDoc : public IUpdateableDoc
+class UpdatableDoc : public IUpdatableDoc
 {
 protected:
     using InstallT = Id::InstallT;
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit UpdateableDoc(InstallT* install, const QString& docPath, QString docName, const Import::UpdateOptions& updateOptions);
+    explicit UpdatableDoc(InstallT* install, const QString& docPath, const QString& docName, const Import::UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 public:
     InstallT* install() const;
 
     // IMPLEMENT
-    using IUpdateableDoc::isEmpty;
+    using IUpdatableDoc::isEmpty;
 
     // OPTIONALLY RE-IMPELEMENT
-    using IUpdateableDoc::finalize;
+    using IDataDoc::postCheckout;
+    using IDataDoc::preCommit; // Does nothing by default
 };
 
 template<LauncherId Id>
@@ -114,17 +118,17 @@ protected:
     using GameT = Id::GameT;
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit PlatformDoc(InstallT* install, const QString& docPath, QString docName, const Import::UpdateOptions& updateOptions);
+    explicit PlatformDoc(InstallT* install, const QString& docPath, const QString& docName, const Import::UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 private:
     // IMPLEMENT
-    virtual std::shared_ptr<GameT> processSet(const Fp::Set& set) = 0;
+    virtual const GameT* processSet(const Fp::Set& set) = 0; // Returned pointer must remain valid until at least the next time this method is called
 
 public:
     InstallT* install() const;
 
-    void addSet(const Fp::Set& set, Import::ImagePaths& images) override;
+    const Game* addSet(const Fp::Set& set) override;  // Might just want to have this overridden directly as GameT will naturally upcast to Game*
 
     // IMPLEMENT
     using IPlatformDoc::isEmpty;
@@ -132,7 +136,8 @@ public:
     using IPlatformDoc::containsAddApp; // NOTE: UNUSED
 
     // OPTIONALLY RE-IMPELEMENT
-    using IPlatformDoc::finalize;
+    using IDataDoc::postCheckout;
+    using IDataDoc::preCommit; // Does nothing by default
 };
 
 template<LauncherId Id>
@@ -142,7 +147,7 @@ protected:
     using InstallT = Id::InstallT;
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit PlaylistDoc(InstallT* install, const QString& docPath, QString docName, const Import::UpdateOptions& updateOptions);
+    explicit PlaylistDoc(InstallT* install, const QString& docPath, const QString& docName, const Import::UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 public:
@@ -154,7 +159,8 @@ public:
     using IPlaylistDoc::setPlaylistData;
 
     // OPTIONALLY RE-IMPELEMENT
-    using IPlaylistDoc::finalize;
+    using IDataDoc::postCheckout;
+    using IDataDoc::preCommit; // Does nothing by default
 };
 
 
@@ -165,39 +171,34 @@ protected:
     using InstallT = Id::InstallT;
     using GameT = Id::GameT;
     using AddAppT = Id::AddAppT;
-    using IUpdateableDoc::finalizeUpdateableItems;
-    using IUpdateableDoc::addUpdateableItem;
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
-    QHash<QUuid, std::shared_ptr<GameT>> mGamesFinal;
-    QHash<QUuid, std::shared_ptr<GameT>> mGamesExisting;
-    QHash<QUuid, std::shared_ptr<AddAppT>> mAddAppsFinal;
-    QHash<QUuid, std::shared_ptr<AddAppT>> mAddAppsExisting;
+    IUpdatableDoc::UpdatableContainer<GameT> mGames;
+    IUpdatableDoc::UpdatableContainer<AddAppT> mAddApps;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit BasicPlatformDoc(InstallT* install, const QString& docPath, QString docName, const Import::UpdateOptions& updateOptions);
+    explicit BasicPlatformDoc(InstallT* install, const QString& docPath, const QString& docName, const Import::UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 protected:
     // IMPLEMENT
-    virtual std::shared_ptr<GameT> prepareGame(const Fp::Game& game) = 0;
-    virtual std::shared_ptr<AddAppT> prepareAddApp(const Fp::AddApp& game) = 0;
+    virtual GameT prepareGame(const Fp::Game& game) = 0;
+    virtual AddAppT prepareAddApp(const Fp::AddApp& game) = 0;
 
 public:
     InstallT* install() const;
 
-    const QHash<QUuid, std::shared_ptr<GameT>>& finalGames() const;
-    const QHash<QUuid, std::shared_ptr<AddAppT>>& finalAddApps() const;
-    bool containsGame(QUuid gameId) const override; // NOTE: UNUSED
-    bool containsAddApp(QUuid addAppId) const override; // NOTE: UNUSED
+    bool containsGame(const QUuid& gameId) const override; // NOTE: UNUSED
+    bool containsAddApp(const QUuid& addAppId) const override; // NOTE: UNUSED
 
-    std::shared_ptr<GameT> processSet(const Fp::Set& set) override;
-    void finalize() override;
+    const GameT* processSet(const Fp::Set& set) override;
 
     // OPTIONALLY RE-IMPELEMENT
     virtual bool isEmpty() const override;
+    using IDataDoc::postCheckout;
+    using IDataDoc::preCommit; // Does nothing by default
 };
 
 template<LauncherId Id>
@@ -207,36 +208,32 @@ protected:
     using InstallT = Id::InstallT;
     using PlaylistHeaderT = Id::PlaylistHeaderT;
     using PlaylistGameT = Id::PlaylistGameT;
-    using IUpdateableDoc::finalizeUpdateableItems;
-    using IUpdateableDoc::addUpdateableItem;
 
 //-Instance Variables--------------------------------------------------------------------------------------------------
 protected:
-    std::shared_ptr<PlaylistHeaderT> mPlaylistHeader;
-    QHash<QUuid, std::shared_ptr<PlaylistGameT>> mPlaylistGamesFinal;
-    QHash<QUuid, std::shared_ptr<PlaylistGameT>> mPlaylistGamesExisting;
+    PlaylistHeaderT mPlaylistHeader;
+    IUpdatableDoc::UpdatableContainer<PlaylistGameT> mPlaylistGames;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 protected:
-    explicit BasicPlaylistDoc(InstallT* install, const QString& docPath, QString docName, const Import::UpdateOptions& updateOptions);
+    explicit BasicPlaylistDoc(InstallT* install, const QString& docPath, const QString& docName, const Import::UpdateOptions& updateOptions);
 
 //-Instance Functions--------------------------------------------------------------------------------------------------
 protected:
     // IMPLEMENT
-    virtual std::shared_ptr<PlaylistHeaderT> preparePlaylistHeader(const Fp::Playlist& playlist) = 0;
-    virtual std::shared_ptr<PlaylistGameT> preparePlaylistGame(const Fp::PlaylistGame& game) = 0;
+    virtual PlaylistHeaderT preparePlaylistHeader(const Fp::Playlist& playlist) = 0;
+    virtual PlaylistGameT preparePlaylistGame(const Fp::PlaylistGame& game) = 0;
 
 public:
     InstallT* install() const;
 
-    const std::shared_ptr<PlaylistHeaderT>& playlistHeader() const;
-    const QHash<QUuid, std::shared_ptr<PlaylistGameT>>& finalPlaylistGames() const;
-    bool containsPlaylistGame(QUuid gameId) const override;
+    bool containsPlaylistGame(const QUuid& gameId) const override;
     void setPlaylistData(const Fp::Playlist& playlist) override;
-    void finalize() override;
 
     // OPTIONALLY RE-IMPELEMENT
     virtual bool isEmpty() const override;
+    using IDataDoc::postCheckout;
+    using IDataDoc::preCommit; // Does nothing by default
 };
 
 template<class DocT>
@@ -252,7 +249,7 @@ protected:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    XmlDocReader(DocT* targetDoc, const QString& root);
+    XmlDocReader(DocT* targetDoc, const QString& root = {});
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
@@ -279,12 +276,13 @@ protected:
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    XmlDocWriter(DocT* sourceDoc, const QString& root);
+    XmlDocWriter(DocT* sourceDoc, const QString& root = {});
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 protected:
     void writeCleanTextElement(const QString& qualifiedName, const QString& text);
-    void writeOtherFields(const QHash<QString, QString>& otherFields);
+    void writeCleanTextElement(const QString& qualifiedName, const QString& text, const QXmlStreamAttributes& attributes);
+    void writeOtherFields(const Item& item);
     DocHandlingError streamStatus() const;
 
     // IMPLEMENT

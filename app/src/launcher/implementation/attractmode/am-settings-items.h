@@ -9,7 +9,7 @@ using namespace Qt::Literals::StringLiterals;
 namespace Am
 {
 
-class SettingsItem : public Lr::Item
+class SettingsItem
 {
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -50,7 +50,7 @@ public:
     QStringList exceptions() const;
 };
 
-class DisplayGlobalFilter::Builder : public Lr::Item::Builder<DisplayGlobalFilter>
+class DisplayGlobalFilter::Builder : public Lr::Builder<DisplayGlobalFilter>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -129,7 +129,7 @@ public:
     int listLimit() const;
 };
 
-class DisplayFilter::Builder : public Lr::Item::Builder<DisplayFilter>
+class DisplayFilter::Builder : public Lr::Builder<DisplayFilter>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -183,7 +183,7 @@ public:
     const QList<DisplayFilter>& filters() const;
 };
 
-class Display::Builder : public Lr::Item::Builder<Display>
+class Display::Builder : public Lr::Builder<Display>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -243,7 +243,7 @@ public:
     QList<ContentLine> contents() const;
 };
 
-class OtherSetting::Builder : public Lr::Item::Builder<OtherSetting>
+class OtherSetting::Builder : public Lr::Builder<OtherSetting>
 {
 //-Constructor-------------------------------------------------------------------------------------------------
 public:

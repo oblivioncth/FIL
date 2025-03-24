@@ -48,20 +48,10 @@ QList<QString> IInstall::modifiedDataDocs(IDataDoc::Type type) const
 }
 
 //Protected:
-void IInstall::nullify()
-{
-    mValid = false;
-    mRootDirectory = QDir();
-}
-
 void IInstall::declareValid(bool valid)
 {
     mValid = valid;
-    if(!valid)
-        nullify();
 }
-
-void IInstall::catalogueExistingDoc(IDataDoc::Identifier existingDoc) { mExistingDocuments.insert(existingDoc); }
 
 DocHandlingError IInstall::checkoutDataDocument(std::shared_ptr<IDataDoc::Reader> docReader)
 {
@@ -79,9 +69,12 @@ DocHandlingError IInstall::checkoutDataDocument(std::shared_ptr<IDataDoc::Reader
         if(docReader && mExistingDocuments.contains(docToOpen->identifier()))
              openReadError = docReader->readInto();
 
-        // Add lease to ledger if no error occurred while reading
+        // Add lease to ledger if no error occurred while reading, and run any post checkout handling
         if(!openReadError.isValid())
+        {
             mLeasedDocuments.insert(docToOpen->identifier());
+            docToOpen->postCheckout();
+        }
     }
 
     // Return opened document and status
@@ -109,6 +102,7 @@ DocHandlingError IInstall::commitDataDocument(std::shared_ptr<IDataDoc::Writer> 
     if(!docToSave->isEmpty())
     {
         mModifiedDocuments.insert(id);
+        docToSave->preCommit();
         commitError = docWriter->writeOutOf();
         ensureModifiable(docToSave->path());
     }
@@ -118,6 +112,16 @@ DocHandlingError IInstall::commitDataDocument(std::shared_ptr<IDataDoc::Writer> 
 
     // Return write status and let document ptr auto delete
     return commitError;
+}
+
+void IInstall::closeDataDocument(std::unique_ptr<IDataDoc> doc)
+{
+    // Closes without saving changes
+    if(doc)
+    {
+        mLeasedDocuments.remove(doc->identifier());
+        doc.reset();
+    }
 }
 
 QList<QString> IInstall::modifiedPlatforms() const { return modifiedDataDocs(IDataDoc::Type::Platform); }
@@ -144,7 +148,7 @@ Qx::Error IInstall::refreshExistingDocs(bool* changed)
 {
     QSet<IDataDoc::Identifier> oldDocSet;
     oldDocSet.swap(mExistingDocuments);
-    Qx::Error error = populateExistingDocs();
+    Qx::Error error = populateExistingDocs(mExistingDocuments);
     if(changed)
         *changed = mExistingDocuments != oldDocSet;
     return error;
@@ -169,6 +173,8 @@ bool IInstall::containsAnyPlaylist(const QList<QString>& names) const
 {
     return containsAnyDataDoc(IDataDoc::Type::Playlist, names);
 }
+
+bool IInstall::docIsLeased(IDataDoc::Identifier docId) const { return mLeasedDocuments.contains(docId); }
 
 /* These functions can be overridden by children as needed.
  * Work within them should be kept as minimal as possible since they are not accounted

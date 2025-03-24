@@ -1,5 +1,5 @@
-#ifndef BACKUP_H
-#define BACKUP_H
+#ifndef IMPORT_BACKUP_H
+#define IMPORT_BACKUP_H
 
 // Qt Includes
 #include <QString>
@@ -28,7 +28,8 @@ public:
         FileWontDelete,
         FileWontRestore,
         FileWontBackup,
-        FileWontReplace
+        FileWontReplace,
+        FileWontCreate
     };
 
 //-Class Variables-------------------------------------------------------------
@@ -38,7 +39,8 @@ private:
         {FileWontDelete, u"Cannot remove a file. It may need to be deleted manually."_s},
         {FileWontRestore, u"Cannot restore a file backup. It may need to be renamed manually.."_s},
         {FileWontBackup, u"Cannot backup file."_s},
-        {FileWontReplace, u"A file that was part of a safe replace operation could not be transfered."_s}
+        {FileWontReplace, u"A file that was part of a safe replace operation could not be transferred."_s},
+        {FileWontCreate, u"A file that was part of a safe touch operation could not be created."_s}
     };
 
     static inline const QString CAPTION_REVERT_ERR = u"Error managing backups"_s;
@@ -71,14 +73,21 @@ private:
 
 class BackupManager
 {
-//-Class Variables-----------------------------------------------------------------------------------------------
+//-Aliases---------------------------------------------------------------------------
+private:
+    using OriginalPath = QString;
+    using Purge = bool;
+    using Reverts = QHash<OriginalPath, Purge>;
+    using RevertItr = Reverts::const_iterator;
+
+//-Class Variables-------------------------------------------------------------------
 private:
     // Files
     static inline const QString BACKUP_FILE_EXT = u"fbk"_s;
 
 //-Instance Variables-------------------------------------------------------------
 private:
-    QSet<QString> mRevertablePaths;
+    Reverts mRevertables;
 
 //-Constructor-------------------------------------------------------------
 private:
@@ -94,18 +103,43 @@ public:
 //-Instance Functions-------------------------------------------------------------
 private:
     BackupError backup(const QString& path, bool (*fn)(const QString& a, const QString& b));
-    BackupError restore(QSet<QString>::const_iterator pathItr);
+    BackupError restore(RevertItr itr);
 
 public:
+    // - If it exists, backs up 'path' via copy, original remains in place to be worked on
+    // - Backup is restored on revert
+    // - 'path' is marked such that any new file placed there is deleted on revert
     BackupError backupCopy(const QString& path);
+
+    // - If it exists, backs up 'path' via rename, original remains in place to be worked on
+    // - Backup is restored on revert
+    // - 'path' is marked such that any new file placed there is deleted on revert
     BackupError backupRename(const QString& path);
+
+    // - Immediately restores a backed up file using its original path
     BackupError restore(const QString& path);
+
+    // - Replaces dst with src (via a copy or symlink)
+    // - dst, if present, if temporarily backed up in case the replacement fails and is immediately
+    //   is restored if so. If the replacement succeeds the backup is immediately deleted
+    // - If dst is new (did not originally exist), the file is marked as revertable for if
+    //   a revert occurs
     BackupError safeReplace(const QString& src, const QString& dst, bool symlink);
 
+    // - Creates an empty file at 'path' (fails if it already exists) and marks it for deletion
+    //   in the event of a revert
+    BackupError revertableTouch(const QString& path);
+
+    // - Backs up the file at 'path' via copy, and then deletes the backup at the end of the import
+    // - File is restored on revert.
+    BackupError revertableRemove(const QString& path);
+
+    bool hasReversions() const;
     int revertQueueCount() const;
     int revertNextChange(BackupError& error, bool skipOnFail);
+    void purge();
 };
 
 }
 
-#endif // BACKUP_H
+#endif // IMPORT_BACKUP_H

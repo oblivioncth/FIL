@@ -84,12 +84,8 @@ public:
 //-Instance Functions-----------------------------------------------------------------------------------------------
 private:
     // Install management
-    void nullify() override;
-    Qx::Error populateExistingDocs() override;
+    Qx::Error populateExistingDocs(QSet<Lr::IDataDoc::Identifier>& existingDocs) override;
     QString versionFromExecutable() const;
-
-    // Image Processing
-    QString imageDestinationPath(Fp::ImageType imageType, const Lr::Game& game) const;
 
     // Doc handling
     std::unique_ptr<PlatformInterface> preparePlatformDocCheckout(const QString& translatedName) override;
@@ -119,8 +115,8 @@ public:
     Qx::Error postImport() override;
 
     // Image handling
+    QString generateImagePath(const RomEntry& romEntry, Fp::ImageType type) override;
     void processBulkImageSources(const Import::ImagePaths& bulkSources) override;
-    void convertToDestinationImages(const RomEntry& game, Import::ImagePaths& images) override;
 };
 
 }

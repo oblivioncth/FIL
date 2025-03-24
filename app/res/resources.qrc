@@ -11,6 +11,7 @@
         <file>launcher/LaunchBox/icon.svg</file>
         <file>launcher/AttractMode/icon.png</file>
         <file>launcher/AttractMode/marquee.png</file>
+        <file>launcher/EmulationStation/icon.png</file>
         <file>flashpoint/icon.png</file>
         <file>ui/About.png</file>
     </qresource>
