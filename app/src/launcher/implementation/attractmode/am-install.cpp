@@ -353,7 +353,7 @@ Qx::Error Install::postImport()
     // General emulator setup
     QString workingDir = QDir::toNativeSeparators(QFileInfo(Import::Details::current().clifpPath).absolutePath());
     emulatorConfig->setExecutable(CLIFp::EXE_NAME);
-    emulatorConfig->setArgs(uR"(play -i u"[romfilename]"_s)"_s);
+    emulatorConfig->setArgs(CLIFp::parametersFromStandard(u"[romfilename]"_s));
     emulatorConfig->setWorkDir(workingDir);
     emulatorConfig->setRomPath(u""_s);
     emulatorConfig->setRomExt(u""_s);
