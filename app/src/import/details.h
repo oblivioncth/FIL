@@ -3,7 +3,8 @@
 
 /* Although somewhat redundant with settings.h, this is a collection of
  * Import related info that is specifically collected to be shared with
- * Installs
+ * Installs or other faculties that don't get passed the details
+ * directly.
  */
 
 // Project Includes
@@ -20,6 +21,7 @@ struct Details
     QString clifpPath;
     QList<QString> involvedPlatforms;
     QList<QString> involvedPlaylists;
+    bool forceFullscreen; // TODO: This doesn't quite fit here as installs don't need to know this directly
 
     static Details current();
 

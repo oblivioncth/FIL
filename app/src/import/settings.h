@@ -44,6 +44,7 @@ struct OptionSet
     PlaylistGameMode playlistMode;
     Fp::Db::InclusionOptions inclusionOptions;
     bool excludeAddApps;
+    bool forceFullscreen;
 };
 
 class ImagePaths
