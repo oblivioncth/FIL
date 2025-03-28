@@ -180,6 +180,7 @@ private:
     Import::ImageMode getSelectedImageMode() const;
     bool getForceDownloadImages() const;
     bool getExcludeAddApps() const;
+    bool getForceFullscreen() const;
 
     // Import
     void prepareImport();

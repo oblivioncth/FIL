@@ -387,6 +387,11 @@ bool MainWindow::getExcludeAddApps() const
     return ui->action_excludeAdditionalApps->isChecked();
 }
 
+bool MainWindow::getForceFullscreen() const
+{
+    return ui->action_forceFullscreen->isChecked();
+}
+
 void MainWindow::prepareImport()
 {
     // Gather selection's and notify controller
@@ -398,7 +403,8 @@ void MainWindow::prepareImport()
         getForceDownloadImages(),
         getSelectedPlaylistGameMode(),
         getSelectedInclusionOptions(),
-        getExcludeAddApps()
+        getExcludeAddApps(),
+        getForceFullscreen()
     };
 
     emit importTriggered(impSel, optSet, selectionsMayModify());

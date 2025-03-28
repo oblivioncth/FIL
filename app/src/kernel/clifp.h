@@ -28,6 +28,7 @@ public:
     static inline const QString PARAM_ARG = uR"(--param="%1")"_s;
     static inline const QString MSG_ARG = uR"(--msg="%1")"_s;
     static inline const QString EXTRA_ARG = uR"(--extra="%1")"_s;
+    static inline const QString FULLSCREEN_SWITCH = uR"(--fullscreen)"_s;
 
     static inline const QString ERR_FP_CANT_DEPLOY_CLIFP = u"Failed to deploy "_s + EXE_NAME + u" to the selected Flashpoint install.\n"_s
                                                            "\n"

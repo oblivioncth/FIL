@@ -956,6 +956,7 @@
     <addaction name="action_forceDownloadImages"/>
     <addaction name="action_includeAnimations"/>
     <addaction name="action_excludeAdditionalApps"/>
+    <addaction name="action_forceFullscreen"/>
     <addaction name="separator"/>
     <addaction name="action_deployCLIFp"/>
    </widget>
@@ -1080,6 +1081,14 @@
    </property>
    <property name="text">
     <string>Exclude Additional Apps</string>
+   </property>
+  </action>
+  <action name="action_forceFullscreen">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Force Fullscreen (If Supported)</string>
    </property>
   </action>
  </widget>
@@ -1404,7 +1413,7 @@
  </slots>
  <buttongroups>
   <buttongroup name="buttonGroup_playlistGameMode"/>
-  <buttongroup name="buttonGroup_updateMode"/>
   <buttongroup name="buttonGroup_imageMode"/>
+  <buttongroup name="buttonGroup_updateMode"/>
  </buttongroups>
 </ui>

@@ -526,7 +526,8 @@ Worker::Result Worker::doImport(Qx::Error& errorReport)
         .imageMode = mOptionSet.imageMode,
         .clifpPath = CLIFp::standardCLIFpPath(*mFlashpointInstall),
         .involvedPlatforms = involvedPlatforms,
-        .involvedPlaylists = mImportSelections.playlists
+        .involvedPlaylists = mImportSelections.playlists,
+        .forceFullscreen = mOptionSet.forceFullscreen
     };
     Details::setCurrent(details);
 
