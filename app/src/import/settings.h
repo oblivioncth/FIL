@@ -36,13 +36,19 @@ struct UpdateOptions
     bool removeObsolete;
 };
 
+struct InclusionOptions
+{
+    QList<int> excludedTagIds;
+    bool includeAnimations;
+};
+
 struct OptionSet
 {
     UpdateOptions updateOptions;
     ImageMode imageMode;
     bool downloadImages;
     PlaylistGameMode playlistMode;
-    Fp::Db::InclusionOptions inclusionOptions;
+    InclusionOptions inclusionOptions;
     bool excludeAddApps;
     bool forceFullscreen;
 };

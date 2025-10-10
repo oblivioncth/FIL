@@ -358,7 +358,7 @@ Import::PlaylistGameMode MainWindow::getSelectedPlaylistGameMode() const
     return mPlaylistGameModeMap[sel];
 }
 
-Fp::Db::InclusionOptions MainWindow::getSelectedInclusionOptions() const
+Import::InclusionOptions MainWindow::getSelectedInclusionOptions() const
 {
     return {generateTagExlusionSet(), ui->action_includeAnimations->isChecked()};
 }
@@ -435,13 +435,13 @@ void MainWindow::showTagSelectionDialog()
         mTagModel.forEachItem([&](QStandardItem* item) { item->setCheckState(originalCheckStates[item]); });
 }
 
-QSet<int> MainWindow::generateTagExlusionSet() const
+QList<int> MainWindow::generateTagExlusionSet() const
 {
-    QSet<int> exclusionSet;
+    QList<int> exclusionSet;
 
     mTagModel.forEachItem([&exclusionSet](QStandardItem* item){
         if(item->data(USER_ROLE_TAG_ID).isValid() && item->checkState() == Qt::Unchecked)
-            exclusionSet.insert(item->data(USER_ROLE_TAG_ID).toInt());
+            exclusionSet.append(item->data(USER_ROLE_TAG_ID).toInt());
     });
 
     return exclusionSet;

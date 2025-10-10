@@ -1,6 +1,9 @@
 #ifndef LR_REGISTRATION_H
 #define LR_REGISTRATION_H
 
+// Qt Includes
+#include <QUrl>
+
 // Qx Includes
 #include <qx/utility/qx-concepts.h>
 #include <qx/utility/qx-stringliteral.h>
@@ -25,9 +28,9 @@ template<
     class AddApp, // Voidable, if not using the BasicXXXDoc types
     class PlaylistHeader, // Voidable, if not using the BasicXXXDoc types
     class PlaylistGame, // Voidable, if not using the BasicXXXDoc types
-    Qx::StringLiteral16 NameS,
-    Qx::StringLiteral16 IconPathS,
-    Qx::StringLiteral16 HelpUrlS
+    Qx::U16StringLiteral NameS,
+    Qx::U16StringLiteral IconPathS,
+    Qx::U16StringLiteral HelpUrlS
 >
 struct Registrar
 {
@@ -42,9 +45,9 @@ struct Registrar
     using AddAppT = AddApp;
     using PlaylistHeaderT = PlaylistHeader;
     using PlaylistGameT = PlaylistGame;
-    static constexpr QStringView Name = NameS.value;
-    static constexpr QStringView IconPath = IconPathS.value;
-    static constexpr QStringView HelpUrl = HelpUrlS.value;
+    static constexpr QStringView Name = NameS;
+    static constexpr QStringView IconPath = IconPathS;
+    static constexpr QStringView HelpUrl = HelpUrlS;
 };
 
 /* This is shitty, but there is no good way to check if a type is a specialization of a template when

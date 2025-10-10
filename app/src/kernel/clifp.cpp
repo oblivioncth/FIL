@@ -82,20 +82,6 @@ bool CLIFp::deployCLIFp(QString& errorMsg, const Fp::Install& fpInstall)
     return true;
 }
 
-QString CLIFp::parametersFromStandard(QStringView originalAppPath, QStringView originalAppParams)
-{
-    QString clifpParam = u"-q "_s; // Start with global quiet switch
-
-    if(originalAppPath == Fp::Db::Table_Add_App::ENTRY_MESSAGE)
-        clifpParam += SHOW_COMMAND + ' ' + MSG_ARG.arg(originalAppParams);
-    else if(originalAppPath == Fp::Db::Table_Add_App::ENTRY_EXTRAS)
-        clifpParam += SHOW_COMMAND + ' ' + EXTRA_ARG.arg(originalAppParams);
-    else
-        clifpParam += RUN_COMMAND + ' ' +  APP_ARG.arg(originalAppPath) + ' ' + PARAM_ARG.arg(originalAppParams);
-
-    return clifpParam;
-}
-
 QString CLIFp::parametersFromStandard(const QUuid& titleId) { return parametersFromStandard(titleId.toString(QUuid::WithoutBraces)); }
 
 QString CLIFp::parametersFromStandard(const QString& titleId)
