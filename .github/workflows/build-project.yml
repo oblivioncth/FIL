@@ -25,16 +25,12 @@ jobs:
       runs_exclude: >
         [
             { "linkage": "shared" },
-            { "compiler": "g++-10" },
             { "compiler": "g++-12" },
-            { "compiler": "clang++-12" },
-            { "compiler": "clang++-14" }
+            { "compiler": "clang++-15" }
         ]
       runs_include: >
         [
-            { "os": "ubuntu-22.04", "compiler": "clang++-18", "linkage": "static" },
-            { "os": "ubuntu-24.04", "compiler": "clang++-18", "linkage": "static" },
-            { "os": "ubuntu-24.04", "compiler": "g++-14", "linkage": "static" }
+            { "os": "ubuntu-22.04", "compiler": "clang++-18", "linkage": "static" }
         ]
       pre_build_steps: |
         - name: Install Clang 18 [Linux]
