@@ -218,40 +218,34 @@ void Controller::updateInstallPath(const QString& installPath, Import::Install t
     {
         case Launcher:
         {
-            if(checkedPath.isEmpty())
-                mImportProperties.setLauncher(nullptr);
-            else
-            {
-                std::unique_ptr<Lr::IInstall> launcher;
-                launcher = Lr::Registry::acquireMatch(checkedPath);
-                if(!launcher)
-                    QMessageBox::critical(&mMainWindow, QApplication::applicationName(), MSG_LR_INSTALL_INVALID);
+            // Always clear old install in a discrete step to ensure property updates fire completely for the new path, if present
+            mImportProperties.setLauncher(nullptr);
 
-                mImportProperties.setLauncher(std::move(launcher));
+            if(!checkedPath.isEmpty())
+            {
+                if(auto lr = Lr::Registry::acquireMatch(checkedPath))
+                     mImportProperties.setLauncher(std::move(lr));
+                else
+                    QMessageBox::critical(&mMainWindow, QApplication::applicationName(), MSG_LR_INSTALL_INVALID);
             }
 
             break;
         }
         case Flashpoint:
         {
-            if(checkedPath.isEmpty())
-                mImportProperties.setFlashpoint(nullptr);
-            else
-            {
-                std::unique_ptr<Fp::Install> flashpoint;
-                flashpoint = std::make_unique<Fp::Install>(checkedPath, true);
-                if(!flashpoint->isValid())
+            // Always clear old install in a discrete step to ensure property updates fire completely for the new path, if present
+            mImportProperties.setFlashpoint(nullptr);
+
+            if(!checkedPath.isEmpty())
+            {                
+                if(auto fp = std::make_unique<Fp::Install>(checkedPath, true); fp->isValid())
                 {
-                    Qx::postBlockingError(flashpoint->error(), QMessageBox::Ok);
-                    flashpoint.reset();
-                    mImportProperties.setFlashpoint(std::move(flashpoint));
-                }
-                else
-                {
-                    mImportProperties.setFlashpoint(std::move(flashpoint));  // Updates target series property (important for status icon)
+                    mImportProperties.setFlashpoint(std::move(fp));  // Updates target series property (important for status icon)
                     if(!mImportProperties.isFlashpointTargetSeries())
                         QMessageBox::warning(&mMainWindow, QApplication::applicationName(), MSG_FP_VER_NOT_TARGET);
                 }
+                else
+                    Qx::postBlockingError(fp->error(), QMessageBox::Ok);
             }
 
             break;

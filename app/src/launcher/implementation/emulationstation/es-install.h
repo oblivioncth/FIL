@@ -1,6 +1,9 @@
 #ifndef EMULATIONSTATION_INSTALL_H
 #define EMULATIONSTATION_INSTALL_H
 
+// Qt Includes
+#include <QRegularExpression>
+
 // Project Includes
 #include "launcher/abstract/lr-install.h"
 #include "launcher/implementation/emulationstation/es-data.h"

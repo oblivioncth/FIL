@@ -44,7 +44,7 @@ RomEntry::RomEntry(const Fp::Game& flashpointGame) :
 RomEntry::RomEntry(const Fp::AddApp& flashpointAddApp, const Fp::Game& parentGame) :
     Lr::Game(flashpointAddApp.id(), ESCAPE(addAppTitle(parentGame.title(), flashpointAddApp.name())), parentGame.platformName()),
     mEmulator(Fp::NAME),
-    mCloneOf(flashpointAddApp.parentId().toString(QUuid::WithoutBraces)),
+    mCloneOf(flashpointAddApp.parentGameId().toString(QUuid::WithoutBraces)),
     mYear(parentGame.releaseDate().date()),
     mManufacturer(ESCAPE(parentGame.developer())),
     mPlayers(),

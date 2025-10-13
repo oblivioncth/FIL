@@ -33,7 +33,7 @@ Game::Game(const Fp::Game& flashpointGame, const QString& fullCLIFpPath) :
     mCommandLine(CLIFp::parametersFromStandard(flashpointGame.id())),
     mReleaseDate(flashpointGame.releaseDate()),
     mVersion(flashpointGame.version()),
-    mReleaseType(flashpointGame.library() == Fp::Db::Table_Game::ENTRY_GAME_LIBRARY ? RELEASE_TYPE_GAME : RELEASE_TYPE_ANIM)
+    mReleaseType(flashpointGame.library() == Fp::Library::Game ? RELEASE_TYPE_GAME : RELEASE_TYPE_ANIM)
 {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
@@ -112,12 +112,11 @@ Game::Builder& Game::Builder::wReleaseType(const QString& releaseType) { mBluepr
 AddApp::AddApp() {}
 
 AddApp::AddApp(const Fp::AddApp& flashpointAddApp, const QString& fullCLIFpPath) :
-    Lr::AddApp(flashpointAddApp.id(), flashpointAddApp.name(), flashpointAddApp.parentId()),
+    Lr::AddApp(flashpointAddApp.id(), flashpointAddApp.name(), flashpointAddApp.parentGameId()),
     mAppPath(QDir::toNativeSeparators(fullCLIFpPath)),
-    mCommandLine(flashpointAddApp.isPlayable() ? CLIFp::parametersFromStandard(mId)
-                   : CLIFp::parametersFromStandard(flashpointAddApp.appPath(), flashpointAddApp.launchCommand())),
+    mCommandLine(CLIFp::parametersFromStandard(mId)),
     mAutorunBefore(false),
-    mWaitForExit(flashpointAddApp.isWaitExit())
+    mWaitForExit(flashpointAddApp.isWaitForExit())
 {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
