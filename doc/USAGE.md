@@ -49,3 +49,6 @@ Since most launchers are game oriented, animations are ignored by default. If yo
 
 ## CLIFp Distribution
 This tool automatically handles installing/updating the command-line interface Flashpoint client as needed; however, if for whatever reason you deem it necessary/useful to manually insert a copy of FIL's bundled CLIFp version, you can do so using the "Deploy CLIFp" option.
+
+# Usage (Other)
+When using the tool with Flashpoint Ultimate, keeping games in their archive sets `GameData_x.zip` within `Data/ArchiveData` is supported, but the image sets must still be extracted, since no third party launch can be configured by an external tool (i.e. FIL) to load images in through such a special mechanism.
