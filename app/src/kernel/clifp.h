@@ -24,10 +24,10 @@ public:
     static inline const QString RUN_COMMAND = u"run"_s;
     static inline const QString SHOW_COMMAND = u"show"_s;
     static inline const QString ID_ARG = uR"(--id="%1")"_s;
-    static inline const QString APP_ARG = uR"(--app="%1")"_s;
-    static inline const QString PARAM_ARG = uR"(--param="%1")"_s;
-    static inline const QString MSG_ARG = uR"(--msg="%1")"_s;
-    static inline const QString EXTRA_ARG = uR"(--extra="%1")"_s;
+    // static inline const QString APP_ARG = uR"(--app="%1")"_s;
+    // static inline const QString PARAM_ARG = uR"(--param="%1")"_s;
+    // static inline const QString MSG_ARG = uR"(--msg="%1")"_s;
+    // static inline const QString EXTRA_ARG = uR"(--extra="%1")"_s;
     static inline const QString FULLSCREEN_SWITCH = uR"(--fullscreen)"_s;
 
     static inline const QString ERR_FP_CANT_DEPLOY_CLIFP = u"Failed to deploy "_s + EXE_NAME + u" to the selected Flashpoint install.\n"_s
@@ -44,7 +44,6 @@ public:
     static bool hasCLIFp(const Fp::Install& fpInstall);
     static bool deployCLIFp(QString& errorMsg, const Fp::Install& fpInstall);
 
-    static QString parametersFromStandard(QStringView originalAppPath, QStringView originalAppParams);
     static QString parametersFromStandard(const QUuid& titleId);
     static QString parametersFromStandard(const QString& titleId);
 };

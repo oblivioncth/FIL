@@ -62,6 +62,7 @@ set(FIL_QX_COMPONENTS
     Network
     Widgets
     Xml
+    Sql
 )
 
 if(CMAKE_SYSTEM_NAME STREQUAL Windows)
@@ -74,20 +75,20 @@ endif()
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "v0.6.2"
+    REF "97b43dadb1781af183e2d9825aec291db97546b1"
     COMPONENTS
         ${FIL_QX_COMPONENTS}
 )
 
 # Fetch libfp (build and import from source)
 include(OB/Fetchlibfp)
-ob_fetch_libfp("v0.5.6")
+ob_fetch_libfp("037153fb5c4b59d5cda97be31e6f06e5bda5a920")
 
 # Fetch CLIFp (build and import from source)
 include(OB/Utility)
 ob_cache_project_version(CLIFp)
 include(OB/FetchCLIFp)
-ob_fetch_clifp("v0.9.14")
+ob_fetch_clifp("5dba3a55a550585c16769a788327a6fd22a23c6f")
 
 # TODO: The shared build of this is essentially useless as only the CLIFp executable
 # is deployed, which only works if it's statically linked. There isn't a simple way

@@ -43,6 +43,12 @@ private:
         static inline const QString PlaylistImport = u"PlaylistImport"_s;
     };
 
+    struct PlatformQueryResult
+    {
+        QString platform;
+        QList<Fp::Game> result;
+    };
+
 //-Class Variables-----------------------------------------------------------------------------------------------
 private:
     // Import Steps
@@ -90,13 +96,14 @@ public:
 //-Instance Functions---------------------------------------------------------------------------------------------------------
 private:
     Qx::ProgressGroup* initializeProgressGroup(const QString& groupName, quint64 weight);
+    Fp::DbError loadGamesByPlatform(QList<PlatformQueryResult>& games, const QStringList& platforms, const InclusionOptions& inclusions, const QList<QUuid>& idWhitelist = {});
     Qx::Error preloadPlaylists(QList<Fp::Playlist>& targetPlaylists);
     QList<QUuid> getPlaylistSpecificGameIds(const QList<Fp::Playlist>& playlists);
-    Result processPlatformGames(Qx::Error& errorReport, std::unique_ptr<Lr::IPlatformDoc>& platformDoc, Fp::Db::QueryBuffer& gameQueryResult);
+    Result processPlatformGames(Qx::Error& errorReport, std::unique_ptr<Lr::IPlatformDoc>& platformDoc, const PlatformQueryResult& gameQueryResult);
     void cullUnimportedPlaylistGames(QList<Fp::Playlist>& playlists);
 
-    Result preloadAddApps(Qx::Error& errorReport, Fp::Db::QueryBuffer& addAppQuery);
-    Result processGames(Qx::Error& errorReport, QList<Fp::Db::QueryBuffer>& primary, QList<Fp::Db::QueryBuffer>& playlistSpecific);
+    Result preloadAddApps(Qx::Error& errorReport, const QList<Fp::AddApp>& addAppQuery);
+    Result processGames(Qx::Error& errorReport, QList<PlatformQueryResult>& primary, QList<PlatformQueryResult>& playlistSpecific);
     Result processPlaylists(Qx::Error& errorReport, const QList<Fp::Playlist>& playlists);
     Result processImages(Qx::Error& errorReport);
     Result processIcons(Qx::Error& errorReport, const QStringList& platforms, const QList<Fp::Playlist>& playlists);

@@ -5,6 +5,7 @@
 #include <QMainWindow>
 #include <QListWidgetItem>
 #include <QMessageBox>
+#include <QUrl>
 
 // Qx Includes
 #include <qx/widgets/qx-standarditemmodel.h>
@@ -175,7 +176,7 @@ private:
     QStringList getSelectedPlatforms() const;
     QStringList getSelectedPlaylists() const;
     Import::PlaylistGameMode getSelectedPlaylistGameMode() const;
-    Fp::Db::InclusionOptions getSelectedInclusionOptions() const;
+    Import::InclusionOptions getSelectedInclusionOptions() const;
     Import::UpdateOptions getSelectedUpdateOptions() const;
     Import::ImageMode getSelectedImageMode() const;
     bool getForceDownloadImages() const;
@@ -187,7 +188,7 @@ private:
 
     // Tags (move to controller?)
     void showTagSelectionDialog();
-    QSet<int> generateTagExlusionSet() const;
+    QList<int> generateTagExlusionSet() const;
 
 //-Signals & Slots----------------------------------------------------------------------------------------------------
 private slots:
