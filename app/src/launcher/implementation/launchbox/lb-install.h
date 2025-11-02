@@ -26,9 +26,9 @@ private:
     static inline const QString CORE_PATH = u"Core"_s;
     static inline const QString MAIN_EXE_PATH = u"Core/LaunchBox.exe"_s;
     static inline const QString PLATFORM_IMAGES_PATH = u"Images"_s;
-    static inline const QString PLATFORM_ICONS_PATH = u"Images/Platform Icons/Platforms"_s;
-    static inline const QString PLAYLIST_ICONS_PATH = u"Images/Platform Icons/Playlists"_s;
-    static inline const QString PLATFORM_CATEGORY_ICONS_PATH = u"Images/Platform Icons/Platform Categories"_s;
+    static inline const QString PLATFORM_ICONS_PATH = u"Images/Media Packs/Platform Icons/Nostalgic Platform Icons/Platforms"_s;
+    static inline const QString PLAYLIST_ICONS_PATH = u"Images/Media Packs/Platform Icons/Nostalgic Platform Icons/Playlists"_s;
+    static inline const QString PLATFORM_CATEGORY_ICONS_PATH = u"Images/Media Packs/Platform Icons/Nostalgic Platform Icons/Platform Categories"_s;
     static inline const QString LOGO_PATH = u"Box - Front"_s;
     static inline const QString SCREENSHOT_PATH = u"Screenshot - Gameplay"_s;
 
