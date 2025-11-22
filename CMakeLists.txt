@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.24.0...3.30.0)
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
 project(FIL
-    VERSION 0.8.3.1
+    VERSION 0.8.3.2
     LANGUAGES CXX
     DESCRIPTION "Flashpoint Importer for Launchers"
 )
@@ -75,7 +75,7 @@ endif()
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "v0.7"
+    REF "v0.7.0.1"
     COMPONENTS
         ${FIL_QX_COMPONENTS}
 )

@@ -229,6 +229,7 @@ public:
 
     bool containsPlaylistGame(const QUuid& gameId) const override;
     void setPlaylistData(const Fp::Playlist& playlist) override;
+    PlaylistHeaderT header() const;
 
     // OPTIONALLY RE-IMPELEMENT
     virtual bool isEmpty() const override;

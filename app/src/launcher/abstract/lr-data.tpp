@@ -199,6 +199,9 @@ void BasicPlaylistDoc<Id>::setPlaylistData(const Fp::Playlist& playlist)
 }
 
 template<LauncherId Id>
+BasicPlaylistDoc<Id>::PlaylistHeaderT BasicPlaylistDoc<Id>::header() const { return mPlaylistHeader; }
+
+template<LauncherId Id>
 bool BasicPlaylistDoc<Id>::isEmpty() const
 {
     // The playlist header doesn't matter if there are no games
