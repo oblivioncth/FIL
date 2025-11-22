@@ -154,6 +154,17 @@ std::unique_ptr<PlaylistDoc> Install::preparePlaylistDocCheckout(const QString& 
     return std::make_unique<PlaylistDoc>(this, dataDocPath(docId), translatedName, Import::Details::current().updateOptions);
 }
 
+void Install::preparePlaylistDocCommit(const PlaylistDoc& document)
+{
+    /* Store playlist ID (if playlist will remain)
+     *
+     * This is easier than trying to use modifiedPlaylists() and translating from the name to ID, which would just require
+     * another cache of sorts anyway.
+     */
+    if(!document.isEmpty())
+        mModifiedPlaylistIds.insert(document.header().playlistId());
+}
+
 Lr::DocHandlingError Install::checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc>& returnBuffer)
 {
     // Create doc file reference

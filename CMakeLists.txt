@@ -75,7 +75,7 @@ endif()
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "v0.7"
+    REF "49a4d85c7a50daca28395dd66190d5a440709daa"
     COMPONENTS
         ${FIL_QX_COMPONENTS}
 )

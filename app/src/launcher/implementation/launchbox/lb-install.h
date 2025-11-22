@@ -92,6 +92,7 @@ private:
     QString dataDocPath(Lr::IDataDoc::Identifier identifier) const;
     std::unique_ptr<PlatformDoc> preparePlatformDocCheckout(const QString& translatedName) override;
     std::unique_ptr<PlaylistDoc> preparePlaylistDocCheckout(const QString& translatedName) override;
+    void preparePlaylistDocCommit(const PlaylistDoc& document) override;
 
     Lr::DocHandlingError checkoutPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc>& returnBuffer);
     Lr::DocHandlingError commitPlatformsConfigDoc(std::unique_ptr<PlatformsConfigDoc> document);
