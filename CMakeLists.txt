@@ -43,7 +43,6 @@ endif()
 
 set(FIL_QT_COMPONENTS
     Core
-    Core5Compat
     Gui
     Network
     Widgets
@@ -51,9 +50,20 @@ set(FIL_QT_COMPONENTS
     Sql
 )
 
+set(FIL_QT_OPTIONAL_COMPONENTS
+    Core5Compat
+)
+
+if(CMAKE_SYSTEM_NAME STREQUAL Linux)
+     list(APPEND FIL_QT_COMPONENTS WaylandClient) # To enable wayland support
+endif()
+
 # Import Qt
 include(OB/Qt)
-ob_find_package_qt(REQUIRED COMPONENTS ${FIL_QT_COMPONENTS})
+ob_find_package_qt(
+    REQUIRED COMPONENTS ${FIL_QT_COMPONENTS}
+    OPTIONAL_COMPONENTS ${FIL_QT_OPTIONAL_COMPONENTS}
+)
 
 # Fetch Qx (build and import from source)
 set(FIL_QX_COMPONENTS
