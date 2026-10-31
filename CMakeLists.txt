@@ -6,25 +6,26 @@ cmake_minimum_required(VERSION 3.24.0...3.30.0)
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
 project(FIL
-    VERSION 0.8.3.3
+    VERSION 0.8.4
     LANGUAGES CXX
     DESCRIPTION "Flashpoint Importer for Launchers"
 )
 
 # Get helper scripts
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FetchOBCMake.cmake)
-fetch_ob_cmake("v0.3.9")
+fetch_ob_cmake("v0.4.1")
 
 # Initialize project according to standard rules
 include(OB/Project)
 ob_standard_project_setup()
 
 # Additional Project Variables
-set(TARGET_FP_VERSION_PREFIX 14.0)
+set(TARGET_FP_VERSION_PREFIX 14.0.3)
 
 # Configuration options
 # Handled by fetched libs, but set this here formally since they aren't part of the main project
 option(BUILD_SHARED_LIBS "Build FIL with shared libraries" OFF)
+option(FIL_INSTALL_MISC "Enable installation of misc components (e.g README.md/LICENSE)" ON)
 
 # C++
 set(CMAKE_CXX_STANDARD 23)
@@ -42,7 +43,6 @@ endif()
 
 set(FIL_QT_COMPONENTS
     Core
-    Core5Compat
     Gui
     Network
     Widgets
@@ -50,9 +50,20 @@ set(FIL_QT_COMPONENTS
     Sql
 )
 
+set(FIL_QT_OPTIONAL_COMPONENTS
+    Core5Compat
+)
+
+if(CMAKE_SYSTEM_NAME STREQUAL Linux)
+     list(APPEND FIL_QT_COMPONENTS WaylandClient) # To enable wayland support
+endif()
+
 # Import Qt
 include(OB/Qt)
-ob_find_package_qt(REQUIRED COMPONENTS ${FIL_QT_COMPONENTS})
+ob_find_package_qt(
+    REQUIRED COMPONENTS ${FIL_QT_COMPONENTS}
+    OPTIONAL_COMPONENTS ${FIL_QT_OPTIONAL_COMPONENTS}
+)
 
 # Fetch Qx (build and import from source)
 set(FIL_QX_COMPONENTS
@@ -75,20 +86,20 @@ endif()
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "v0.7.0.2"
+    REF "v0.7.1.1"
     COMPONENTS
         ${FIL_QX_COMPONENTS}
 )
 
 # Fetch libfp (build and import from source)
 include(OB/Fetchlibfp)
-ob_fetch_libfp("v0.6")
+ob_fetch_libfp("v0.6.2.1")
 
 # Fetch CLIFp (build and import from source)
 include(OB/Utility)
 ob_cache_project_version(CLIFp)
 include(OB/FetchCLIFp)
-ob_fetch_clifp("v0.9.15")
+ob_fetch_clifp("v0.9.17")
 
 # TODO: The shared build of this is essentially useless as only the CLIFp executable
 # is deployed, which only works if it's statically linked. There isn't a simple way
@@ -123,7 +134,9 @@ ob_standard_project_package_config(
 
 #================= Install ==========================
 
-ob_standard_project_misc_install()
+if(FIL_INSTALL_MISC)
+    ob_standard_project_misc_install()
+endif()
 
 #====================== CPack ==============================
 
