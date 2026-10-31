@@ -21,7 +21,7 @@ jobs:
     secrets:
       ffynnon_access: ${{ secrets.OBYBOT_FFYNNON_ACCESS }}
     with:
-      qt_version: 6.8.2
+      qt_version: 6.11.2
       runs_exclude: >
         [
             { "linkage": "shared" },
