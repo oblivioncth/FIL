@@ -2,7 +2,7 @@
 name: Feature request
 about: Suggest an idea for this project
 title: "[Feature] Your suggestion here..."
-labels: bug
+labels: enhancement
 assignees: oblivioncth
 
 ---
